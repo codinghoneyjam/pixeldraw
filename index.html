@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Draw Tool v2</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<div id="dt-app">
+  <header id="dt-menubar" aria-label="메뉴">
+    <div class="dt-menu">
+      <button type="button" data-menu="file" aria-haspopup="true" aria-expanded="false">파일</button>
+      <div role="menu" aria-label="파일" hidden>
+        <button type="button" role="menuitem" data-action="file.new">새로 만들기 (Ctrl+N)</button>
+        <button type="button" role="menuitem" data-action="file.open">열기 (Ctrl+O)</button>
+        <button type="button" role="menuitem" data-action="file.save">저장 (Ctrl+S)</button>
+        <button type="button" role="menuitem" data-action="file.exportLayer">레이어 내보내기</button>
+        <button type="button" role="menuitem" data-action="file.importLayer">레이어 가져오기</button>
+        <button type="button" role="menuitem" data-action="file.exportPng">PNG 내보내기 (Ctrl+E)</button>
+      </div>
+    </div>
+    <div class="dt-menu">
+      <button type="button" data-menu="edit" aria-haspopup="true" aria-expanded="false">편집</button>
+      <div role="menu" aria-label="편집" hidden>
+        <button type="button" role="menuitem" data-action="edit.undo">실행 취소 (Ctrl+Z)</button>
+        <button type="button" role="menuitem" data-action="edit.redo">다시 실행 (Ctrl+Y)</button>
+        <button type="button" role="menuitem" data-action="canvas.resize">캔버스 크기</button>
+      </div>
+    </div>
+    <div class="dt-menu">
+      <button type="button" data-menu="view" aria-haspopup="true" aria-expanded="false">보기</button>
+      <div role="menu" aria-label="보기" hidden>
+        <button type="button" role="menuitem" data-action="view.zoomIn">확대 (+)</button>
+        <button type="button" role="menuitem" data-action="view.zoomOut">축소 (-)</button>
+        <button type="button" role="menuitem" data-action="view.fit">화면에 맞춤 (0)</button>
+        <button type="button" role="menuitem" data-action="view.actual">100% (1)</button>
+        <button type="button" role="menuitem" data-action="view.gridCycle">그리드 순환 (Ctrl+')</button>
+      </div>
+    </div>
+    <div class="dt-menu">
+      <button type="button" data-menu="layer" aria-haspopup="true" aria-expanded="false">레이어</button>
+      <div role="menu" aria-label="레이어" hidden>
+        <button type="button" role="menuitem" data-action="layer.add">추가 (Ctrl+Shift+N)</button>
+        <button type="button" role="menuitem" data-action="layer.duplicate">복제 (Ctrl+J)</button>
+        <button type="button" role="menuitem" data-action="layer.remove">삭제</button>
+        <button type="button" role="menuitem" data-action="layer.mergeDown">아래로 병합 (Ctrl+Shift+M)</button>
+        <button type="button" role="menuitem" data-action="layer.up">위로 (Ctrl+])</button>
+        <button type="button" role="menuitem" data-action="layer.down">아래로 (Ctrl+[)</button>
+      </div>
+    </div>
+    <div class="dt-menubar-actions" role="group" aria-label="편집 기록">
+      <button type="button" data-action="edit.undo" title="실행 취소 (Ctrl+Z)" aria-label="실행 취소" disabled>실행 취소</button>
+      <button type="button" data-action="edit.redo" title="다시 실행 (Ctrl+Y)" aria-label="다시 실행" disabled>다시 실행</button>
+    </div>
+  </header>
+  <div id="dt-optionbar" aria-label="도구 옵션">
+    <section data-for-tools="pen eraser fill eyedropper line rect rrect ellipse hand">
+      <label for="dt-grid-mode">그리드</label>
+      <select id="dt-grid-mode">
+        <option value="off">끔</option>
+        <option value="unit">32px</option>
+        <option value="tile">64px</option>
+        <option value="pixel">픽셀</option>
+      </select>
+      <label for="dt-zoom-select">확대</label>
+      <select id="dt-zoom-select"></select>
+      <button type="button" id="dt-zoom-fit">맞춤</button>
+      <button type="button" id="dt-zoom-actual">100%</button>
+    </section>
+    <section data-for-tools="pen eraser">
+      <span>굵기 <span id="dt-option-pen-size">1px</span></span>
+      <button type="button" class="dt-tip-trigger" data-tip="Shift+클릭 = 직선, Alt+클릭 = 스포이트(펜)" aria-label="도움말" aria-expanded="false">?</button>
+    </section>
+    <section data-for-tools="line rect rrect ellipse">
+      <label><input type="radio" name="dt-shape-fill" id="dt-shape-fill-outline" value="outline" checked>테두리</label>
+      <label><input type="radio" name="dt-shape-fill" id="dt-shape-fill-fill" value="fill">채움</label>
+      <label for="dt-shape-radius">반경</label>
+      <input type="number" id="dt-shape-radius" min="0" value="8">
+      <label><input type="checkbox" id="dt-shape-lock">비율 고정</label>
+      <label><input type="checkbox" id="dt-snap-unit">32px 스냅</label>
+      <label for="dt-shape-x">X</label><input type="number" id="dt-shape-x">
+      <label for="dt-shape-y">Y</label><input type="number" id="dt-shape-y">
+      <label for="dt-shape-w">W</label><input type="number" id="dt-shape-w">
+      <label for="dt-shape-h">H</label><input type="number" id="dt-shape-h">
+      <button type="button" id="dt-shape-commit">확정</button>
+      <button type="button" id="dt-shape-cancel">취소</button>
+    </section>
+    <section data-for-tools="fill">
+      <button type="button" class="dt-tip-trigger" data-tip="클릭한 영역을 주색으로 채웁니다 (4방향, 허용오차 0)" aria-label="도움말" aria-expanded="false">?</button>
+    </section>
+    <section data-for-tools="eyedropper">
+      <button type="button" class="dt-tip-trigger" data-tip="클릭 = 주색, Shift+클릭 = 보조색, Alt = 활성 레이어 기준" aria-label="도움말" aria-expanded="false">?</button>
+    </section>
+    <section data-for-tools="hand">
+      <button type="button" class="dt-tip-trigger" data-tip="드래그로 화면 이동, 휠로 확대/축소" aria-label="도움말" aria-expanded="false">?</button>
+    </section>
+  </div>
+  <aside id="dt-toolbar" aria-label="도구">
+    <button type="button" data-tool="pen" aria-label="펜" title="펜 (B)" aria-pressed="true"></button>
+    <button type="button" data-tool="eraser" aria-label="지우개" title="지우개 (E)" aria-pressed="false"></button>
+    <button type="button" data-tool="fill" aria-label="페인트통" title="페인트통 (G)" aria-pressed="false"></button>
+    <button type="button" data-tool="eyedropper" aria-label="스포이트" title="스포이트 (I)" aria-pressed="false"></button>
+    <div class="dt-sep" role="separator"></div>
+    <button type="button" data-tool="line" aria-label="직선" title="직선 (L)" aria-pressed="false"></button>
+    <button type="button" data-tool="rect" aria-label="사각형" title="사각형 (R)" aria-pressed="false"></button>
+    <button type="button" data-tool="rrect" aria-label="둥근 사각형" title="둥근 사각형 (U)" aria-pressed="false"></button>
+    <button type="button" data-tool="ellipse" aria-label="타원" title="타원 (O)" aria-pressed="false"></button>
+    <div class="dt-sep" role="separator"></div>
+    <button type="button" data-tool="hand" aria-label="손" title="손 (H)" aria-pressed="false"></button>
+  </aside>
+  <aside id="dt-left-panels" aria-label="왼쪽 패널">
+    <section id="dt-color-panel" aria-label="색상" data-collapsed="false">
+      <button type="button" class="dt-panel-head" aria-expanded="true" aria-controls="dt-color-body">색상</button>
+      <div class="dt-panel-body" id="dt-color-body">
+      <div class="dt-picker">
+        <div class="dt-picker-head">
+          <div class="dt-slots">
+            <div class="dt-fgbg" id="dt-fgbg" role="button" tabindex="0"
+                 aria-label="전경·배경 교체 (X)" title="클릭하면 전경색과 배경색을 교체합니다">
+              <button type="button" id="dt-color-secondary" aria-label="배경색(버퍼)"></button>
+              <button type="button" id="dt-color-primary" aria-label="전경색"></button>
+            </div>
+            <button type="button" id="dt-color-reset" aria-label="기본색" title="기본색 (D)">◐</button>
+          </div>
+        </div>
+        <div class="dt-wheel-wrap">
+          <canvas id="dt-hue-wheel" width="176" height="176" aria-label="색상환"></canvas>
+          <canvas id="dt-sv-square" width="98" height="98" aria-label="채도 명도"></canvas>
+        </div>
+        <div class="dt-color-fields">
+          <div class="dt-color-field" data-ch="r">
+            <label for="dt-color-r">R</label>
+            <input type="number" id="dt-color-r" min="0" max="255" step="1" value="0">
+          </div>
+          <div class="dt-color-field" data-ch="g">
+            <label for="dt-color-g">G</label>
+            <input type="number" id="dt-color-g" min="0" max="255" step="1" value="0">
+          </div>
+          <div class="dt-color-field" data-ch="b">
+            <label for="dt-color-b">B</label>
+            <input type="number" id="dt-color-b" min="0" max="255" step="1" value="0">
+          </div>
+          <div class="dt-color-field dt-color-field--hex">
+            <label for="dt-color-hex">HEX</label>
+            <input type="text" id="dt-color-hex" value="#000000" maxlength="7" spellcheck="false" autocomplete="off">
+          </div>
+        </div>
+      </div>
+      <h3>팔레트</h3>
+      <div id="dt-palette"></div>
+      <h3>최근 색</h3>
+      <div id="dt-recent"></div>
+      </div>
+    </section>
+    <section id="dt-brush-panel" aria-label="브러시" data-collapsed="false">
+      <button type="button" class="dt-panel-head" aria-expanded="true" aria-controls="dt-brush-body">브러시</button>
+      <div class="dt-panel-body" id="dt-brush-body">
+        <label for="dt-pen-size">굵기</label>
+        <input type="number" id="dt-pen-size" min="1" max="64" value="1">
+        <div class="dt-brush-row">
+          <input type="range" id="dt-pen-size-range" min="1" max="64" value="1" aria-label="굵기 슬라이더">
+          <canvas id="dt-brush-preview" width="64" height="64" aria-label="브러시 미리보기"></canvas>
+        </div>
+        <div id="dt-size-presets"></div>
+      </div>
+    </section>
+  </aside>
+  <main id="dt-canvas-host" aria-label="캔버스"></main>
+  <aside id="dt-right-panels" aria-label="오른쪽 패널">
+    <section id="dt-layer-panel" aria-label="레이어" data-collapsed="false">
+      <button type="button" class="dt-panel-head" aria-expanded="true" aria-controls="dt-layer-body">레이어</button>
+      <div class="dt-panel-body" id="dt-layer-body">
+        <div class="dt-opacity-row">
+          <label for="dt-layer-opacity">불투명도</label>
+          <input type="range" id="dt-layer-opacity" min="0" max="100" value="100">
+          <input type="number" id="dt-layer-opacity-number" min="0" max="100" value="100" aria-label="불투명도 수치">
+        </div>
+        <ul id="dt-layer-list" role="listbox" aria-label="레이어 목록"></ul>
+        <div class="dt-layer-buttons">
+          <button type="button" id="dt-layer-add" title="추가">+</button>
+          <button type="button" id="dt-layer-duplicate" title="복제">⧉</button>
+          <button type="button" id="dt-layer-remove" title="삭제">−</button>
+          <button type="button" id="dt-layer-merge" title="아래로 병합">⬇</button>
+          <button type="button" id="dt-layer-up" title="위로">↑</button>
+          <button type="button" id="dt-layer-down" title="아래로">↓</button>
+        </div>
+      </div>
+    </section>
+  </aside>
+  <footer id="dt-statusbar" aria-label="상태">
+    <span id="dt-status-message" role="status"></span>
+    <span id="dt-status-cursor"></span>
+    <span id="dt-status-tile"></span>
+    <span id="dt-status-zoom"></span>
+    <span id="dt-status-canvas"></span>
+    <span id="dt-status-tool"></span>
+    <span id="dt-status-dirty"></span>
+  </footer>
+  <div id="dt-dialog-root"></div>
+  <div id="dt-toast" aria-live="polite"></div>
+</div>
+<script type="module" src="./src/ui/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+// Single error type for the whole tool (docs/contract.md §3).
+
+export const ERROR_CODES = Object.freeze({
+  SCHEMA: "SCHEMA",
+  DUP_LAYER_ID: "DUP_LAYER_ID",
+  ACTIVE_LAYER_MISSING: "ACTIVE_LAYER_MISSING",
+  CHUNK_DUPLICATE: "CHUNK_DUPLICATE",
+  CHUNK_OUT_OF_CANVAS: "CHUNK_OUT_OF_CANVAS",
+  CHUNK_BAD_PNG: "CHUNK_BAD_PNG",
+  UNSUPPORTED_LAYER_TYPE: "UNSUPPORTED_LAYER_TYPE",
+  PNG_UNSUPPORTED: "PNG_UNSUPPORTED",
+  PNG_CRC: "PNG_CRC",
+  PNG_SIGNATURE: "PNG_SIGNATURE",
+  FILE_TOO_LARGE: "FILE_TOO_LARGE",
+  LAYER_NOT_FOUND: "LAYER_NOT_FOUND",
+  LAYER_LOCKED: "LAYER_LOCKED",
+  LAYER_HIDDEN: "LAYER_HIDDEN",
+  LAYER_LIMIT: "LAYER_LIMIT",
+  CANVAS_SIZE_INVALID: "CANVAS_SIZE_INVALID",
+  OUT_OF_RANGE: "OUT_OF_RANGE",
+  INVALID_STATE: "INVALID_STATE",
+  STORAGE_QUOTA: "STORAGE_QUOTA",
+});
+
+export class DrawToolError extends Error {
+  constructor(code, message, details = undefined) {
+    super(message);
+    this.name = "DrawToolError";
+    this.code = code;
+    this.details = details;
+  }
+}

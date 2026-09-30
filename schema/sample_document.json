@@ -1,0 +1,126 @@
+{
+  "schema_version": "2.0.0",
+  "format": "draw_tool.document",
+  "document_id": "sample-2x1_5-tiles",
+  "name": "sample (2.5 x 1.5 tiles)",
+  "canvas": {
+    "tile_px": 64,
+    "unit_px": 32,
+    "width_px": 160,
+    "height_px": 96,
+    "background": "transparent"
+  },
+  "active_layer_id": "layer-0002",
+  "layers": [
+    {
+      "layer_id": "layer-0001",
+      "name": "base",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "normal",
+      "raster": {
+        "chunk_px": 32,
+        "encoding": "png_base64",
+        "chunks": [
+          {
+            "cx": 0,
+            "cy": 0,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAANklEQVR4nO3QQQ0AMAgEwVJ9qMYYBBV85gzsZSKr+x3uX8YdIECAAAECBAgQIECAAAECBJZgAC/UA0xHOdskAAAAAElFTkSuQmCC"
+          },
+          {
+            "cx": 1,
+            "cy": 0,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAANklEQVR4nO3QQQ0AMAgEwVJ9qMYYBBV85gzsZSKr+x3uX8YdIECAAAECBAgQIECAAAECBJZgAC/UA0xHOdskAAAAAElFTkSuQmCC"
+          },
+          {
+            "cx": 4,
+            "cy": 2,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAM0lEQVR4nO3QQQ0AAAgDMUA9riGo4NMZuKU5HROPq8+4AwQIECBAgAABAgQIECBAgMARLMFLAsao81ikAAAAAElFTkSuQmCC"
+          }
+        ]
+      }
+    },
+    {
+      "layer_id": "layer-0002",
+      "name": "line art",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.8,
+      "blend": "normal",
+      "raster": {
+        "chunk_px": 32,
+        "encoding": "png_base64",
+        "chunks": [
+          {
+            "cx": 0,
+            "cy": 0,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAQUlEQVR4nO3QQQ3AMBDAsMNQOIMx/lzazyKVwT42giiznnfP35aIjxNxIk7EiTgRJ+JEnIgTcSJOxIk4ESfmOnEANJAzoUA/kDgAAAAASUVORK5CYII="
+          },
+          {
+            "cx": 1,
+            "cy": 1,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAQUlEQVR4nO3QQQ3AMBDAsMNQOIMx/lzazyKVwT42giiznnfP35aIjxNxIk7EiTgRJ+JEnIgTcSJOxIk4ESfmOnEANJAzoUA/kDgAAAAASUVORK5CYII="
+          }
+        ]
+      }
+    },
+    {
+      "layer_id": "legacy-shapes",
+      "name": "legacy-shapes",
+      "type": "vector",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "normal",
+      "shapes": [
+        {
+          "shape_id": "shape-000001",
+          "kind": "line",
+          "points": [
+            [
+              8.0,
+              8.0
+            ],
+            [
+              150.0,
+              90.0
+            ]
+          ],
+          "fill": "#4cc2ff",
+          "stroke": "#123a52",
+          "corner_radius": 0.0,
+          "stroke_width": 2
+        },
+        {
+          "shape_id": "shape-000002",
+          "kind": "bezier",
+          "points": [
+            [
+              5.0,
+              5.0
+            ],
+            [
+              30.0,
+              80.0
+            ],
+            [
+              60.0,
+              10.0
+            ],
+            [
+              90.0,
+              90.0
+            ]
+          ],
+          "fill": "none",
+          "stroke": "#ff8800",
+          "corner_radius": 0.0,
+          "stroke_width": 2
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1062 @@
+:root {
+  --bg: #1e1f22;
+  --panel: #2b2d31;
+  --panel-2: #232428;
+  --border: #3a3d43;
+  --text: #e6e6e6;
+  --text-dim: #9aa0a6;
+  --accent: #4cc2ff;
+  --accent-strong: #1e88c7;
+  --danger: #ff5c5c;
+  --warn: #ffb020;
+  --canvas-bg: #3c3f45;
+  --radius: 4px;
+  --gap: 8px;
+  --font-ui: system-ui, "Noto Sans KR", "Malgun Gothic", sans-serif;
+  --font-mono: ui-monospace, Consolas, monospace;
+  /* Container chrome: thin rounded box + inner highlight / outer drop for depth.
+     --radius-box is px (containers are large; a % radius would balloon on them).
+     --radius-pct is a PERCENTAGE radius for small elements (swatches, buttons,
+     markers) so a 5% / 10% step keeps the same visual proportion at any size. */
+  --radius-box: 8px;
+  --radius-pct: 10%;
+  --box-line: #454a52;
+  --box-line-hi: #565c66;
+  --box-inner-hi: rgba(255, 255, 255, 0.055);
+  --box-outer: rgba(0, 0, 0, 0.38);
+  /* Selection target marker: red corner arcs over a black rim so it reads on red
+     artwork too. --dt-arm-l/d is the fixed corner-arm length; the middle of each
+     side is cut away so only the four corners are drawn. */
+  --sel-red: #ff3b30;
+  --sel-black: #000000;
+  --dt-target-t: 2px;
+  --dt-target-rim: 2px;
+  --dt-arm-l: 11px;
+  --dt-arm-d: 11px;
+  --toolbar-w: 44px;
+  --panel-w: 240px;
+  --right-w: 260px;
+}
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font: 13px var(--font-ui);
+}
+#dt-app {
+  display: grid;
+  grid-template-columns: 44px 240px minmax(0, 1fr) 260px;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  height: 100dvh;
+}
+#dt-menubar, #dt-optionbar, #dt-statusbar {
+  grid-column: 1 / -1;
+}
+#dt-menubar {
+  display: flex;
+  gap: var(--gap);
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--border);
+  padding: 4px 8px;
+}
+#dt-optionbar {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  padding: 4px 8px;
+  min-height: 32px;
+}
+#dt-toolbar {
+  background: var(--panel-2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  user-select: none;
+}
+#dt-left-panels {
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: var(--gap);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+#dt-canvas-host {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--canvas-bg);
+  touch-action: none;
+  user-select: none;
+}
+.dt-display {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+#dt-right-panels {
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  padding: var(--gap);
+}
+#dt-statusbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: var(--panel-2);
+  border-top: 1px solid var(--border);
+  padding: 4px 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  min-height: 24px;
+}
+button, select, input {
+  font: inherit;
+  color: var(--text);
+}
+button {
+  min-width: 32px;
+  min-height: 32px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+button[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-strong);
+  color: #fff;
+}
+input, select {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  min-height: 28px;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+}
+[hidden] {
+  display: none !important;
+}
+.dt-menu {
+  position: relative;
+}
+.dt-menu div[role="menu"] {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px;
+  min-width: 200px;
+}
+.dt-menu div[role="menu"] button {
+  text-align: left;
+  border: none;
+  background: transparent;
+  white-space: nowrap;
+}
+.dt-menu div[role="menu"] button:hover {
+  background: var(--accent-strong);
+}
+.dt-sep {
+  width: 28px;
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+#dt-toolbar button {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+#dt-toolbar button svg {
+  width: 24px;
+  height: 24px;
+}
+.dt-slots {
+  display: flex;
+  gap: var(--gap);
+  align-items: center;
+}
+/* --- J10. Foreground / background as two OVERLAPPING rectangles.
+       Classic paint-app idiom: the background card sits behind and offset, the
+       foreground card on top and inset. The pair is a single click target that swaps
+       them. The background is a BUFFER only — nothing ever paints with it. --- */
+.dt-slots {
+  display: flex;
+  gap: var(--gap);
+  align-items: center;
+}
+.dt-fgbg {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex: none;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+.dt-fgbg #dt-color-secondary,
+.dt-fgbg #dt-color-primary {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-pct);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+.dt-fgbg #dt-color-secondary { left: 0; top: 0; z-index: 1; }
+.dt-fgbg #dt-color-primary { right: 0; bottom: 0; z-index: 2; }
+/* The foreground card carries the selection ring so it reads as "this one paints". */
+.dt-fgbg #dt-color-primary { border-color: var(--text); }
+.dt-fgbg:hover #dt-color-primary,
+.dt-fgbg:focus-visible #dt-color-primary {
+  border-color: var(--accent);
+}
+.dt-fgbg:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+#dt-palette, #dt-recent {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+}
+.dt-swatch {
+  width: 100%;
+  aspect-ratio: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+}
+#dt-brush-preview, .dt-layer-thumb {
+  image-rendering: pixelated;
+}
+#dt-brush-preview {
+  width: 64px;
+  height: 64px;
+  border: 1px solid var(--border);
+  background: #fff;
+}
+#dt-layer-list {
+  list-style: none;
+  margin: 8px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+li.dt-layer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+li.dt-layer[aria-selected="true"] {
+  border-color: var(--accent);
+}
+li.dt-layer.is-locked .dt-layer-name, li.dt-layer.is-hidden .dt-layer-name {
+  opacity: 0.45;
+}
+.dt-layer-thumb {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  flex: none;
+}
+.dt-layer-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#dt-status-message[data-level="warn"] {
+  color: var(--warn);
+}
+#dt-status-message[data-level="error"] {
+  color: var(--danger);
+}
+#dt-status-dirty {
+  color: var(--warn);
+}
+.dt-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.dt-dialog {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  min-width: 320px;
+  max-width: 480px;
+}
+.dt-dialog-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--gap);
+  margin-top: 12px;
+}
+.dt-form-error {
+  color: var(--danger);
+}
+.dt-progress {
+  position: fixed;
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 16px;
+  z-index: 90;
+}
+.dt-progress-track {
+  width: 240px;
+  height: 8px;
+  background: var(--panel-2);
+  margin-top: 4px;
+}
+.dt-progress-bar {
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+}
+#dt-toast {
+  position: fixed;
+  bottom: 48px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  z-index: 95;
+}
+.dt-toast-item {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+}
+.dt-toast-warn {
+  border-color: var(--warn);
+}
+.dt-toast-error {
+  border-color: var(--danger);
+}
+#dt-size-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+#dt-size-presets button {
+  min-width: 32px;
+  min-height: 32px;
+}
+
+/* === UI POLISH (controls polish + optionbar anti-shift + juicy; compositor-only motion) === */
+
+/* --- 1a. Selects: custom dropdown arrow (appearance:none + SVG data-URI) --- */
+#dt-optionbar select,
+.dt-dialog select {
+  appearance: none;
+  -webkit-appearance: none;
+  min-height: 32px;
+  padding: 0 26px 0 8px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%239aa0a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 12px 12px;
+  cursor: pointer;
+  text-overflow: ellipsis;
+}
+#dt-optionbar select:disabled,
+.dt-dialog select:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* --- 1b. Range inputs: round accent thumbs --- */
+#dt-brush-panel input[type="range"],
+#dt-layer-panel input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 32px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+#dt-brush-panel input[type="range"]::-webkit-slider-runnable-track,
+#dt-layer-panel input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+}
+#dt-brush-panel input[type="range"]::-webkit-slider-thumb,
+#dt-layer-panel input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--panel);
+  cursor: pointer;
+}
+#dt-brush-panel input[type="range"]::-moz-range-track,
+#dt-layer-panel input[type="range"]::-moz-range-track {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+}
+#dt-brush-panel input[type="range"]::-moz-range-thumb,
+#dt-layer-panel input[type="range"]::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--panel);
+  cursor: pointer;
+}
+
+/* --- 1c. Number inputs: no spinners, right-aligned --- */
+#dt-optionbar input[type="number"],
+#dt-brush-panel input[type="number"],
+#dt-layer-panel input[type="number"],
+#dt-color-panel input[type="number"],
+.dt-dialog input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+  text-align: right;
+  min-height: 32px;
+  padding: 0 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+#dt-optionbar input[type="number"]::-webkit-outer-spin-button,
+#dt-brush-panel input[type="number"]::-webkit-outer-spin-button,
+#dt-layer-panel input[type="number"]::-webkit-outer-spin-button,
+#dt-color-panel input[type="number"]::-webkit-outer-spin-button,
+.dt-dialog input[type="number"]::-webkit-outer-spin-button,
+#dt-optionbar input[type="number"]::-webkit-inner-spin-button,
+#dt-brush-panel input[type="number"]::-webkit-inner-spin-button,
+#dt-layer-panel input[type="number"]::-webkit-inner-spin-button,
+#dt-color-panel input[type="number"]::-webkit-inner-spin-button,
+.dt-dialog input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+#dt-optionbar input[type="number"] {
+  width: 64px;
+  flex: none;
+}
+#dt-color-panel #dt-color-hex {
+  min-height: 32px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+#dt-layer-list input.dt-rename {
+  min-height: 32px;
+}
+#dt-optionbar input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+
+/* --- 1d. Shape-fill radios as segmented buttons (native input kept focusable) --- */
+#dt-optionbar section[data-for-tools] label:has(input[name="dt-shape-fill"]) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--panel-2);
+  cursor: pointer;
+  transition: background-color 120ms ease-out, border-color 120ms ease-out, color 120ms ease-out;
+}
+#dt-optionbar label:has(#dt-shape-fill-outline) {
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+#dt-optionbar label:has(#dt-shape-fill-fill) {
+  margin-left: -1px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+#dt-optionbar label:has(input[name="dt-shape-fill"]:checked) {
+  background: var(--accent-strong);
+  border-color: var(--accent);
+  color: #fff;
+}
+#dt-optionbar label:has(input[name="dt-shape-fill"]:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+#dt-optionbar label:has(input[name="dt-shape-fill"]:disabled) {
+  opacity: 0.4;
+  cursor: default;
+}
+#dt-optionbar label:has(input[name="dt-shape-fill"]) input[name="dt-shape-fill"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 0;
+  height: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+/* --- 2. Optionbar: single row, sections never wrap.
+       The old rule reserved two rows (80px) to stop the bar jumping when tool
+       sections changed height. That reserve existed only because each section used
+       to carry a long always-visible `.dt-hint` line. The hints are now tooltips,
+       so the bar is one 32px row again and the reserve is dead weight. --- */
+#dt-optionbar {
+  min-height: 40px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  align-content: center;
+  scrollbar-width: thin;
+}
+#dt-optionbar section[data-for-tools]:not([hidden]) {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+/* --- 3a. Buttons: background fade on hover + press scale (transform/opacity only) --- */
+#dt-app button {
+  transition: background-color 120ms ease-out, border-color 120ms ease-out, transform 120ms ease-out, opacity 120ms ease-out;
+}
+#dt-menubar .dt-menu > button:hover:not(:disabled),
+#dt-toolbar button:hover:not(:disabled):not([aria-pressed="true"]),
+#dt-left-panels button:hover:not(:disabled),
+#dt-right-panels button:hover:not(:disabled),
+#dt-optionbar button:hover:not(:disabled),
+.dt-dialog-buttons button:hover:not(:disabled) {
+  background-color: var(--panel);
+}
+#dt-menubar .dt-menu div[role="menu"] button:hover:not(:disabled) {
+  background-color: var(--accent-strong);
+}
+#dt-app button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+/* --- 3b. Toolbar selection: one-shot 300ms pulse (transform only) --- */
+@keyframes dt-press-pulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+#dt-toolbar button[aria-pressed="true"] {
+  animation: dt-press-pulse 300ms ease-out 1;
+}
+
+/* --- 3c. Toasts: slide + fade in (transform/opacity only) --- */
+@keyframes dt-toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+#dt-toast .dt-toast-item {
+  animation: dt-toast-in 180ms ease-out;
+}
+
+/* --- 3d. Layer list: background fade --- */
+#dt-layer-list li.dt-layer {
+  transition: background-color 150ms ease-out, border-color 150ms ease-out, opacity 150ms ease-out;
+}
+#dt-layer-list li.dt-layer:hover {
+  background-color: var(--panel-2);
+}
+
+/* --- 3e. Keep focus-visible working (offset only; outline color unchanged) --- */
+:focus-visible {
+  outline-offset: 1px;
+}
+
+/* --- Reduced motion: kill juicy motion, keep state changes instant --- */
+@media (prefers-reduced-motion: reduce) {
+  #dt-app button,
+  #dt-toolbar button[aria-pressed="true"],
+  #dt-toast .dt-toast-item,
+  #dt-layer-list li.dt-layer,
+  #dt-optionbar section[data-for-tools] label:has(input[name="dt-shape-fill"]) {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* === END UI POLISH === */
+
+/* === JUICY PIXEL PASS (containers + pixel numerals + selection brackets) === */
+
+/* --- J0. Cursor baseline: shell stays default, only the canvas host owns a tool cursor.
+       Inline styles from InputController._applyCursor override this while inside. --- */
+#dt-app { cursor: default; }
+#dt-canvas-host { cursor: crosshair; }
+
+/* --- J1. Thin rounded container boxes.
+       `overflow: hidden` is load-bearing: without it the border is rounded but the
+       panel background and any square child (palette grid, button row) paint over
+       the corner arcs, so the box reads as "rounded border on a square interior".
+       Clipping to border-radius makes the interior follow the outline. --- */
+#dt-left-panels > section,
+#dt-right-panels > section,
+#dt-optionbar section[data-for-tools]:not([hidden]),
+.dt-dialog,
+.dt-toast-item,
+.dt-progress {
+  border: 1px solid var(--box-line);
+  border-radius: var(--radius-box);
+  background: var(--panel-2);
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 var(--box-inner-hi),
+    0 1px 0 var(--box-outer);
+}
+
+#dt-left-panels > section,
+#dt-right-panels > section {
+  padding: 10px;
+}
+#dt-optionbar section[data-for-tools]:not([hidden]) {
+  padding: 3px 10px;
+  border-radius: var(--radius-box);
+}
+
+/* Panel titles: dim label with a hairline rule filling the remaining width. */
+#dt-left-panels h2,
+#dt-right-panels h2,
+#dt-color-panel h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+#dt-left-panels h2 { margin-bottom: 8px; }
+#dt-color-panel h3 { margin-top: 12px; margin-bottom: 6px; }
+#dt-left-panels h2::after,
+#dt-right-panels h2::after,
+#dt-color-panel h3::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--box-line);
+}
+
+/* --- J2. Recessed wells: numeric/hex/select containers read as carved-in --- */
+#dt-optionbar input[type="number"],
+#dt-brush-panel input[type="number"],
+#dt-layer-panel input[type="number"],
+#dt-color-panel input[type="number"],
+#dt-color-panel #dt-color-hex,
+#dt-layer-list input.dt-rename,
+.dt-dialog input[type="number"],
+.dt-dialog input[type="text"],
+.dt-dialog select {
+  border-radius: var(--radius-box);
+  box-shadow:
+    inset 0 2px 0 rgba(0, 0, 0, 0.32),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* --- J3. Numeric fields stay on the UI/mono faces (readability over theme).
+       `box-sizing: border-box` is REQUIRED here, not a nicety: without it a 47.5px
+       cell produced a 61px input (47.5 content + 12 padding + 2 border) that spilled
+       3px past the panel edge and pushed the HEX value out of view. This sheet has
+       no global border-box reset.
+       Columns are weighted so the three 0-255 channels get only what a 3-digit number
+       needs and the HEX field (7 glyphs) gets the rest. --- */
+.dt-color-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 0.72fr)) minmax(0, 1.84fr);
+  grid-template-rows: auto auto;
+  gap: 4px;
+  align-items: center;
+  margin-top: 6px;
+}
+.dt-color-field {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  /* The grid is declared 2 rows x 4 columns and EVERY field spans both rows, so the
+     four render as one aligned strip (R G B | HEX) instead of R/G/B sitting in row 1
+     with a dead row 2 underneath. This is the "2행 4열" intent from the request. */
+  grid-row: 1 / span 2;
+}
+.dt-color-field--hex {
+  grid-column: 4;
+  align-self: stretch;
+}
+.dt-color-field > label {
+  flex: none;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-dim);
+}
+/* Channel letters are colour-coded so R/G/B are identifiable at a glance. */
+.dt-color-field[data-ch="r"] > label { color: #ff5c5c; }
+.dt-color-field[data-ch="g"] > label { color: #3ddc5c; }
+.dt-color-field[data-ch="b"] > label { color: #5c9bff; }
+.dt-color-field input {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  min-height: 24px;
+  padding: 0 4px;
+  font-size: 11px;
+  text-align: right;
+}
+.dt-color-field--hex input { text-align: left; }
+#dt-color-panel #dt-color-hex { width: 100%; }
+
+/* --- J4. Selection target marker.
+       Shape: only the four CORNERS of a rounded rectangle are drawn, giving the
+       "target acquired" read the user asked for. The black rim sits UNDER the red
+       stroke (box-shadow spread), so the marker stays legible on top of red artwork.
+
+       How "corners only" works: the pseudo paints a FULL rounded outline, then both
+       the border and its shadow are cut by one `clip-path` polygon that notches out
+       the middle of each side. Corner arcs survive; the straight edges do not.
+       `inset` is negative by rim+1 so the black rim is never clipped by the box.
+
+       One `:is()` list covers every selectable surface: active tool icon, active
+       brush preset, active size preset, active colour slot, the palette swatch
+       matching the current colour, and the active layer row. --- */
+/* NOTE: the FG/BG swatches are deliberately NOT marker targets. Clicking them swaps,
+   so there is no "selected slot" state to mark — and this rule's `position: relative`
+   would otherwise override `.dt-fgbg #dt-color-* { position: absolute }`, collapsing
+   the two overlapping cards onto the same spot. */
+:is(
+  li.dt-layer[aria-selected="true"],
+  #dt-toolbar button[aria-pressed="true"],
+  #dt-size-presets button[aria-pressed="true"],
+  .dt-swatch[data-active="true"]
+) {
+  position: relative;
+}
+:is(
+  li.dt-layer[aria-selected="true"],
+  #dt-toolbar button[aria-pressed="true"],
+  #dt-size-presets button[aria-pressed="true"],
+  .dt-swatch[data-active="true"]
+)::before {
+  content: "";
+  position: absolute;
+  inset: calc(-1 * (var(--dt-target-rim) + 1px));
+  border: var(--dt-target-t) solid var(--sel-red);
+  border-radius: var(--radius-pct);
+  box-shadow: 0 0 0 var(--dt-target-rim) var(--sel-black);
+  /* Cut away everything between the corner arms. The arms are a FIXED length from
+     each corner (--dt-arm-l/d), not a fixed gap: a fixed gap makes the arms grow
+     with the element, so on a wide row they nearly meet and the marker degrades
+     into a plain full red border. */
+  clip-path: polygon(
+    0 0,
+    var(--dt-arm-l) 0,
+    var(--dt-arm-l) var(--dt-arm-d),
+    calc(100% - var(--dt-arm-l)) var(--dt-arm-d),
+    calc(100% - var(--dt-arm-l)) 0,
+    100% 0,
+    100% var(--dt-arm-d),
+    calc(100% - var(--dt-arm-l)) var(--dt-arm-d),
+    calc(100% - var(--dt-arm-l)) calc(100% - var(--dt-arm-d)),
+    100% calc(100% - var(--dt-arm-d)),
+    100% 100%,
+    calc(100% - var(--dt-arm-l)) 100%,
+    calc(100% - var(--dt-arm-l)) calc(100% - var(--dt-arm-d)),
+    var(--dt-arm-l) calc(100% - var(--dt-arm-d)),
+    var(--dt-arm-l) 100%,
+    0 100%,
+    0 calc(100% - var(--dt-arm-d)),
+    var(--dt-arm-l) calc(100% - var(--dt-arm-d)),
+    var(--dt-arm-l) var(--dt-arm-d),
+    0 var(--dt-arm-d)
+  );
+  pointer-events: none;
+  z-index: 3;
+}
+/* Active layer row: faint red wash + the corner marker. The border stays neutral on
+   purpose — a full red outline would read as the very "red rectangle" emphasis the
+   corner marker exists to replace. */
+li.dt-layer[aria-selected="true"] {
+  background-color: rgba(255, 59, 48, 0.10);
+  border-color: var(--box-line-hi);
+}
+
+/* --- J5. Brush size presets: strict 4x4 grid.
+       The old flex-wrap row produced a 6/5/5 shape. panel_brush.js emits the 16
+       buttons flat and publishes --dt-preset-cols/--dt-preset-rows; the old
+       `min-width: 32px` is overridden to 0 or it would force the wrap back. --- */
+#dt-size-presets.dt-preset-grid,
+.dt-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--dt-preset-cols, 4), 1fr);
+  grid-template-rows: repeat(var(--dt-preset-rows, 4), 1fr);
+  gap: 3px;
+}
+#dt-size-presets.dt-preset-grid button,
+.dt-preset-grid .dt-preset {
+  min-width: 0;
+  min-height: 30px;
+  border-radius: var(--radius-pct);
+}
+
+/* --- J6. Tooltips. `.dt-tip-trigger` replaces the old always-visible `.dt-hint`
+       text; the floating `.dt-tooltip` node is appended to document.body by
+       tooltip.js (the option bar is overflow-hidden, so it must not live inside).
+       JS sets only left/top inline; everything else belongs here. --- */
+.dt-tip-trigger {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--text-dim);
+  cursor: help;
+}
+.dt-tip-trigger:hover,
+.dt-tip-trigger:focus-visible,
+.dt-tip-trigger[aria-expanded="true"] {
+  color: var(--text);
+  border-color: var(--accent);
+}
+.dt-tooltip {
+  position: fixed;
+  z-index: 120;
+  max-width: 260px;
+  padding: 6px 10px;
+  border: 1px solid var(--box-line-hi);
+  border-radius: var(--radius-box);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: normal;
+  pointer-events: none;
+}
+.dt-tooltip[hidden] { display: none; }
+/* --- J7. Collapsible panel sections.
+       A panel section carries `data-collapsed="true"|"false"`. The header is a
+       real <button> so it is keyboard reachable and keeps focus-visible; the body is
+       a plain wrapper we simply hide, so nothing inside needs to know about this. --- */
+.dt-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 0;
+  min-height: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: left;
+  cursor: pointer;
+}
+.dt-panel-head::before {
+  content: "";
+  flex: none;
+  width: 0;
+  height: 0;
+  border: 4px solid transparent;
+  border-top-color: currentColor;
+  transform: translateY(2px);
+  transition: transform 140ms ease-out;
+}
+.dt-panel-head::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--box-line);
+}
+.dt-panel-head:hover { color: var(--text); background: transparent; }
+.dt-panel-head:focus-visible { outline-offset: 2px; }
+[data-collapsed="true"] .dt-panel-head { margin-bottom: 0; }
+[data-collapsed="true"] .dt-panel-head::before { transform: rotate(-90deg) translateX(-2px); }
+[data-collapsed="true"] .dt-panel-body { display: none; }
+
+/* --- J8. Menubar action row (undo / redo).
+       These are primary actions, so they get first-class buttons in the top bar
+       rather than being buried in the 편집 dropdown. --- */
+#dt-menubar { justify-content: space-between; }
+.dt-menubar-actions {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.dt-menubar-actions button {
+  min-height: 26px;
+  min-width: 0;
+  padding: 0 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.dt-menubar-actions button[data-action="edit.undo"]::before { content: "\21B6 "; }
+.dt-menubar-actions button[data-action="edit.redo"]::before { content: "\21B7 "; }
+
+/* --- J9. Brush row: size slider and its 1:1 preview side by side. --- */
+.dt-brush-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dt-brush-row > * { min-width: 0; }
+.dt-brush-row #dt-pen-size-range { flex: 1 1 auto; }
+.dt-brush-row #dt-brush-preview {
+  flex: none;
+  width: 56px;
+  height: 56px;
+}
+/* === END JUICY PIXEL PASS === */
+
+/* === COLOR PICKER ===
+   Layout mirrors the reference: head (slots + native input) -> hue wheel with the
+   SV square centred INSIDE the ring -> stacked R/G/B -> hex. panel_color.js supplies
+   the canvas pixel sizes and the centring transform inline; everything structural
+   lives here. The old `.dt-wheel-row` side-by-side layout is gone: 140px + 112px
+   could not fit the 240px panel and was the source of the RGB overflow. */
+.dt-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+}
+.dt-picker-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* The two 48px slots + swap/reset + the native input need ~240px but the panel
+     inner width is ~203px, so the input must be allowed to wrap to its own line
+     rather than being clipped. */
+  flex-wrap: wrap;
+}
+.dt-picker-head .dt-slots { flex: none; }
+#dt-color-panel input[type="color"] {
+  flex: none;
+  width: 40px;
+  height: 26px;
+  min-height: 26px;
+  padding: 0;
+  border-radius: var(--radius-pct);
+  cursor: pointer;
+}
+/* The wheel wrap is the positioning context: the SV square is centred INSIDE the hue
+   ring. panel_color_wheel.js used to write these as inline styles; it no longer does,
+   so this stylesheet is the single owner of the picker's layout. `WHEEL_PX`/`SV_PX`
+   in that module must stay in sync with the numbers here. */
+.dt-wheel-wrap {
+  position: relative;
+  width: 176px;
+  height: 176px;
+  align-self: center;
+  margin: 2px 0;
+}
+/* The picker is a precise pointing instrument, not a drawing surface: the user asked
+   for the plain default arrow here, not `crosshair`. */
+#dt-hue-wheel,
+#dt-sv-square {
+  cursor: default;
+}
+#dt-hue-wheel {
+  display: block;
+  width: 176px;
+  height: 176px;
+  touch-action: none;
+  border-radius: 50%;
+}
+#dt-sv-square {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  display: block;
+  width: 98px;
+  height: 98px;
+  touch-action: none;
+  border: 1px solid var(--border);
+  /* Square corners: the rounded clipping made some colours unreachable.
+     `box-sizing: border-box` is set explicitly — this sheet has no global
+     border-box reset, so without it the 1px border would push the 98px box out of
+     the ring's inner hole and eat the clearance panel_color_wheel.js computed. */
+  box-sizing: border-box;
+  border-radius: 0;
+}
+
+/* Swatches: percentage corners so they stay in proportion, and the moiré
+   placeholder cell for unused recent-colour slots. */
+#dt-palette, #dt-recent {
+  border-radius: var(--radius-pct);
+}
+.dt-swatch {
+  border-radius: var(--radius-pct);
+}
+.dt-swatch.is-empty {
+  cursor: default;
+  background: repeating-conic-gradient(
+    #ffffff 0% 25%, #dcdcdc 0% 50%
+  ) 0 0 / 8px 8px;
+  opacity: 0.5;
+}
+/* === END COLOR PICKER === */

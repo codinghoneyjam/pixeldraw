@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/draw-tool/layer_schema.v2.json",
+  "title": "DrawToolLayerFile",
+  "description": "Single exported layer (format draw_tool.layer). Also hosts the shared $defs (canvas, layer, raster, chunk, shape) used by document_schema.v2.json. Raster chunks are addressed in SOURCE-canvas chunk coordinates; importers place them at the same coordinates and drop chunks outside the target canvas. Semantic rules JSON Schema cannot express (unique ids/chunks, chunk inside canvas, PNG decodes to exactly 32x32) live in schema_selfcheck.py.",
+  "type": "object",
+  "required": ["schema_version", "format", "source_canvas", "layer"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "2.0.0" },
+    "format": { "const": "draw_tool.layer" },
+    "source_canvas": { "$ref": "#/$defs/canvas" },
+    "layer": { "$ref": "#/$defs/layer" }
+  },
+  "$defs": {
+    "color": {
+      "type": "string",
+      "pattern": "^(none|#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$"
+    },
+    "canvas": {
+      "type": "object",
+      "description": "tile_px=64 and unit_px=32 are fixed contract constants (0.5 tile = minimum edit unit). Size is stored in px and must be a multiple of unit_px, so the canvas is always a whole number of 32px chunks.",
+      "required": ["tile_px", "unit_px", "width_px", "height_px"],
+      "additionalProperties": false,
+      "properties": {
+        "tile_px": { "const": 64 },
+        "unit_px": { "const": 32 },
+        "width_px": { "type": "integer", "minimum": 32, "maximum": 1920, "multipleOf": 32 },
+        "height_px": { "type": "integer", "minimum": 32, "maximum": 1088, "multipleOf": 32 },
+        "background": {
+          "type": "string",
+          "pattern": "^(transparent|#([0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$",
+          "default": "transparent"
+        }
+      }
+    },
+    "chunk": {
+      "type": "object",
+      "required": ["cx", "cy", "png"],
+      "additionalProperties": false,
+      "properties": {
+        "cx": { "type": "integer", "minimum": 0, "maximum": 59, "description": "Chunk column; pixel x = cx * 32." },
+        "cy": { "type": "integer", "minimum": 0, "maximum": 33, "description": "Chunk row; pixel y = cy * 32." },
+        "png": {
+          "type": "string",
+          "pattern": "^iVBORw0KGgo[A-Za-z0-9+/]*={0,2}$",
+          "description": "Base64 of a 32x32 RGBA PNG (no data: prefix). Must start with the PNG signature."
+        }
+      }
+    },
+    "raster": {
+      "type": "object",
+      "description": "Sparse chunk store: a fully transparent chunk is simply absent. Writers sort chunks by (cy, cx). Parity is decoded-RGBA, never PNG byte equality.",
+      "required": ["chunk_px", "encoding", "chunks"],
+      "additionalProperties": false,
+      "properties": {
+        "chunk_px": { "const": 32 },
+        "encoding": { "const": "png_base64" },
+        "chunks": { "type": "array", "maxItems": 2040, "items": { "$ref": "#/$defs/chunk" } }
+      }
+    },
+    "shape": {
+      "type": "object",
+      "description": "v1 shape plus stroke_width (v1 hard-coded 2). Erase is still an undo-history op, never a shape kind.",
+      "required": ["shape_id", "kind", "points", "fill", "stroke", "stroke_width", "corner_radius"],
+      "additionalProperties": false,
+      "properties": {
+        "shape_id": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["line", "bezier", "rounded_rect", "ellipse"] },
+        "points": {
+          "type": "array",
+          "minItems": 2,
+          "items": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number" } }
+        },
+        "fill": { "$ref": "#/$defs/color" },
+        "stroke": { "$ref": "#/$defs/color" },
+        "stroke_width": { "type": "number", "minimum": 0, "maximum": 64 },
+        "corner_radius": { "type": "number", "minimum": 0 }
+      },
+      "allOf": [
+        { "if": { "properties": { "kind": { "const": "bezier" } } },
+          "then": { "properties": { "points": { "minItems": 4 } } } }
+      ]
+    },
+    "layer": {
+      "type": "object",
+      "description": "Position in the parent array is the ONLY stacking order (index 0 = bottom). There is no separate order field.",
+      "required": ["layer_id", "name", "type", "visible", "locked", "opacity", "blend"],
+      "additionalProperties": false,
+      "properties": {
+        "layer_id": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "name": { "type": "string", "maxLength": 128 },
+        "type": { "enum": ["raster", "vector"] },
+        "visible": { "type": "boolean" },
+        "locked": { "type": "boolean" },
+        "opacity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "blend": { "enum": ["normal", "multiply", "screen", "overlay", "darken", "lighten"] },
+        "raster": { "$ref": "#/$defs/raster" },
+        "shapes": { "type": "array", "items": { "$ref": "#/$defs/shape" } }
+      },
+      "allOf": [
+        { "if": { "properties": { "type": { "const": "raster" } } },
+          "then": { "required": ["raster"], "not": { "required": ["shapes"] } } },
+        { "if": { "properties": { "type": { "const": "vector" } } },
+          "then": { "required": ["shapes"], "not": { "required": ["raster"] } } }
+      ]
+    }
+  }
+}

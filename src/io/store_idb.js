@@ -1,10 +1,10 @@
 // <META - FILE SUMMARY - Chunk-level IndexedDB autosave with debounce + force interval>
 // Node-importable: all browser APIs touched lazily. Pure record builders exported for tests.
 import { EVENTS } from "../core/events.js";
-import { openDatabase, promisify } from "./idb_schema.js";
+import { openDatabase, promisify, _INTERNALS as _INTERNALS_SCHEMA } from "./idb_schema.js";
 import { buildMetaRecord, buildChunkRecords, chunkRecordKey } from "./idb_record_builder.js";
-import { FlushScheduler } from "./idb_scheduler.js";
-import { load, isMetaValid, clear } from "./idb_loader.js";
+import { FlushScheduler, _INTERNALS as _INTERNALS_SCHEDULER } from "./idb_scheduler.js";
+import { load, isMetaValid, clear, _INTERNALS as _INTERNALS_LOADER } from "./idb_loader.js";
 
 // <META - ROLE : Autosave store bound to a session | L13-163>
 export class AutosaveStore {
@@ -130,7 +130,7 @@ export class AutosaveStore {
   // <META - ROLE : Peek meta summary | L135-145>
   async peek() {
     const tx = this._db.transaction("meta", "readonly");
-    const meta = await promisify(tx.objectStore("meta").get("current");
+    const meta = await promisify(tx.objectStore("meta").get("current"));
     if (!meta) return null;
     return { documentId: meta.documentId, name: meta.name, updatedAt: meta.updatedAt };
   }
@@ -224,4 +224,37 @@ export class AutosaveStore {
             }
           } else {
             for (const { cx, cy } of entry.values()) {
-              const data = laye
+              const data = layer.store.getChunk(cx, cy);
+              if (!data) {
+                await promisify(chunkStore.delete(chunkRecordKey(layerId, cx, cy)));
+              } else {
+                const copy = data.slice();
+                await promisify(chunkStore.put({ key: chunkRecordKey(layerId, cx, cy), layerId, cx, cy, data: copy.buffer }));
+              }
+            }
+          }
+        }
+      };
+      run().catch((e) => {
+        try {
+          tx.abort();
+        } catch {
+          /* ignore */
+        }
+        reject(e);
+      });
+    });
+  }
+
+  // <META - ROLE : Rebuild document from storage (delegated) | L249-252>
+  async load() {
+    return load(this._db);
+  }
+
+  // <META - ROLE : Clear both stores (delegated) | L254-257>
+  async clear() {
+    return clear(this._db);
+  }
+}
+
+export const _INTERNALS = { ..._INTERNALS_SCHEMA, ..._INTERNALS_LOADER, ..._INTERNALS_SCHEDULER };
