@@ -1,21 +1,21 @@
 // <META - FILE SUMMARY - Color panel core: mountColor entry point>
-import { EVENTS } from "../core/events.js";
-import { DrawToolError } from "../core/errors.js";
-import { parseHex } from "../core/pixel.js";
+import { EVENTS } from "../../core/events.js";
+import { DrawToolError } from "../../core/errors.js";
+import { parseHex } from "../../core/pixel.js";
 import {
   mountColorFields,
   normHex,
   paintColorFields,
   resolveColorFields,
 } from "./panel_color_fields.js";
-import { buildRecentGrid, paintRecent, pushRecent } from "./color_recent.js";
-import { mountPalette, syncActiveSwatches } from "./color_palette.js";
-import { mountWheel } from "./color_wheel.js";
-import { mountSlotButtons } from "./color_slots.js";
+import { buildRecentGrid, paintRecent, pushRecent } from "../color_recent.js";
+import { mountPalette, syncActiveSwatches } from "../color_palette.js";
+import { mountWheel } from "../color_wheel.js";
+import { mountSlotButtons } from "../color_slots.js";
 import { mountSessionEvents } from "./color_events.js";
 
-export { DEFAULT_PALETTE } from "./color_palette_data.js";
-import { DEFAULT_PALETTE } from "./color_palette_data.js";
+export { DEFAULT_PALETTE } from "../color_palette_data.js";
+import { DEFAULT_PALETTE } from "../color_palette_data.js";
 
 const PRIMARY = "primaryColor";
 const SECONDARY = "secondaryColor";

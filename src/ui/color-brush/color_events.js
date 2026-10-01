@@ -1,5 +1,5 @@
 // <META - FILE SUMMARY - Session event subscriptions for the color panel>
-import { EVENTS } from "../core/events.js";
+import { EVENTS } from "../../core/events.js";
 import { normHex } from "./panel_color_fields.js";
 
 const PRIMARY = "primaryColor";

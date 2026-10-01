@@ -1,9 +1,9 @@
 // <META - FILE SUMMARY - Brush panel: pen size inputs, wheel stepping, preset grid, footprint preview>
-import { brushFootprint } from "../core/brush.js";
-import { PEN_MAX, PEN_MIN } from "../core/constants.js";
-import { EVENTS } from "../core/events.js";
-import { DrawToolError } from "../core/errors.js";
-import { parseHex } from "../core/pixel.js";
+import { brushFootprint } from "../../core/brush.js";
+import { PEN_MAX, PEN_MIN } from "../../core/constants.js";
+import { EVENTS } from "../../core/events.js";
+import { DrawToolError } from "../../core/errors.js";
+import { parseHex } from "../../core/pixel.js";
 
 export const SIZE_PRESETS = Object.freeze([1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48, 64]);
 

@@ -1,5 +1,5 @@
 // <META - FILE SUMMARY - Hue ring + centered SV square: HSV math, raster cache, pointer pick>
-import { toHex } from "../core/pixel.js";
+import { toHex } from "../../core/pixel.js";
 
 export const WHEEL_PX = 176;
 export const RING_OUT = 88;

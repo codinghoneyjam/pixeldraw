@@ -1,5 +1,5 @@
 // <META - FILE SUMMARY - Picker cells + R/G/B + HEX fields: build, read, commit, repaint>
-import { parseHex, toHex } from "../core/pixel.js";
+import { parseHex, toHex } from "../../core/pixel.js";
 
 export const CHANNELS = ["r", "g", "b"];
 
