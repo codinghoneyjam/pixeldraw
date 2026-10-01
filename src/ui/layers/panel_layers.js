@@ -1,7 +1,7 @@
 // <META - FILE SUMMARY - Layer panel: opacity, top-first listbox, thumbs, reorder>
-import { EVENTS } from "../core/events.js";
-import { DrawToolError } from "../core/errors.js";
-import { unpackRGBA } from "../core/pixel.js";
+import { EVENTS } from "../../core/events.js";
+import { DrawToolError } from "../../core/errors.js";
+import { unpackRGBA } from "../../core/pixel.js";
 
 const THUMB = 32;
 const THUMB_THROTTLE_MS = 250;

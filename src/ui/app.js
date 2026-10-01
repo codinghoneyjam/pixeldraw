@@ -14,7 +14,7 @@ import { ShapeTool } from "../tools/shape.js";
 import { AutosaveStore } from "../io/store_idb.js";
 import { mountColor } from "./panel_color.js";
 import { mountBrush } from "./panel_brush.js";
-import { mountLayers } from "./panel_layers.js";
+import { mountLayers } from "./layers/panel_layers.js";
 import { mountCollapsibleSections, mountOptions } from "./panel_options.js";
 import { mountStatus } from "./statusbar/statusbar.js";
 import { showRestoreDialog } from "./dialogs.js";
@@ -28,7 +28,7 @@ import { refreshPanelCanvases } from "./panel_refresh.js";
 import { doSave, doOpen, doExportLayer, doImportLayer, doExportPng, doNew } from "./actions/file_actions.js";
 import { requestUndo, requestRedo } from "./actions/edit_actions.js";
 import { zoomIn, zoomOut, fit, actual, gridCycle, canvasResize } from "./actions/view_actions.js";
-import { layerAdd, layerDuplicate, layerRemove, layerMergeDown, layerUp, layerDown } from "./actions/layer_actions.js";
+import { layerAdd, layerDuplicate, layerRemove, layerMergeDown, layerUp, layerDown } from "./layers/actions/layer_actions.js";
 import { brushStep, colorSwap, colorReset } from "./actions/tool_actions.js";
 
 const SETTINGS_KEY = "dt.settings.v1";
