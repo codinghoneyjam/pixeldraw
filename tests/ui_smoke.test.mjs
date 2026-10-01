@@ -2,13 +2,13 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { STRINGS } from "../src/ui/strings.js";
-import { ICONS, iconFor, hasIcon } from "../src/ui/icons.js";
+import { ICONS, iconFor, hasIcon } from "../src/ui/toolbar/icons.js";
 import { el, qs, qsa, on, setHidden } from "../src/ui/dom.js";
-import { DEFAULT_PALETTE, mountColor } from "../src/ui/panel_color.js";
-import { SIZE_PRESETS, mountBrush, paintPreview } from "../src/ui/panel_brush.js";
-import { mountLayers, paintThumb } from "../src/ui/panel_layers.js";
+import { DEFAULT_PALETTE, mountColor } from "../src/ui/color-brush/panel_color.js";
+import { SIZE_PRESETS, mountBrush, paintPreview } from "../src/ui/color-brush/panel_brush.js";
+import { mountLayers, paintThumb } from "../src/ui/layers/panel_layers.js";
 import { mountOptions } from "../src/ui/panel_options.js";
-import { mountStatus } from "../src/ui/statusbar.js";
+import { mountStatus } from "../src/ui/statusbar/statusbar.js";
 import {
   confirmDiscardChanges,
   showNewDocumentDialog,
@@ -16,7 +16,7 @@ import {
   showResizeCanvasDialog,
   showRestoreDialog,
 } from "../src/ui/dialogs.js";
-import { createShortcuts, isEditableTarget, resolveShortcut } from "../src/ui/shortcuts.js";
+import { createShortcuts, isEditableTarget, resolveShortcut } from "../src/ui/toolbar/shortcuts.js";
 
 describe("strings", () => {
   it("has Korean catalog", () => {
