@@ -1,4 +1,4 @@
-// <META - FILE SUMMARY - Hue ring + centered SV square: HSV math, raster cache, pointer pick>
+// <META - FILE SUMMARY - Hue ring + centered SV square: HSV math, raster cache, pointer pick, mount>
 import { toHex } from "../../core/pixel.js";
 
 export const WHEEL_PX = 176;
@@ -266,4 +266,14 @@ export function createColorWheel(options = {}) {
       created.length = 0;
     },
   };
+}
+
+// <META - ROLE : Hue ring + SV square; the wheel is a view fed only by paint() | L229-272>
+export function mountWheel(ui) {
+  ui.wheel = createColorWheel({
+    container: ui.els.wheelWrap,
+    onChange: (hex) => ui.safe(() => ui.applyColor(ui.slot, hex, { record: false })),
+    onCommit: () => ui.safe(() => ui.pushRecent(ui.canonical())),
+  });
+  return () => ui.wheel?.dispose();
 }
