@@ -3,7 +3,12 @@
 // Pure module: no DOM, no Session, ESM, Node-importable.
 // All decisions are integer math; rounding is always rnd(v)=floor(v+0.5).
 
-function assertBrushSize(n) {
+/**
+ * Canonical brush-size guard. Stays with brush code through Slice D split.
+ * @param {number} n brush size
+ * @returns {void}
+ */
+export function assertBrushSize(n) {
   if (!Number.isInteger(n) || n < 1 || n > 64) {
     throw new RangeError(`brush size must be an integer in [1,64], got ${n}`);
   }

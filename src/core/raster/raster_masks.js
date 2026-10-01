@@ -4,9 +4,15 @@
 // Mask = { w, h, data: Uint8Array } row-major, 1 = painted.
 // Points accept [x, y] arrays or { x, y } objects.
 
-import { brushFootprint, forEachBresenham } from "./raster_brush.js";
+import { assertBrushSize, brushFootprint, forEachBresenham } from "./raster_brush.js";
 
-function assertMaskSize(w, h) {
+/**
+ * Canonical mask-size guard. Every mask entry asserts at entry (Slice D boundary).
+ * @param {number} w mask width
+ * @param {number} h mask height
+ * @returns {void}
+ */
+export function assertMaskSize(w, h) {
   if (!Number.isInteger(w) || !Number.isInteger(h) || w < 1 || h < 1) {
     throw new RangeError(`mask size must be integers >= 1, got ${w}x${h}`);
   }
@@ -92,10 +98,15 @@ export function outlineRing(kind, w, h, r = 0, n = 1) {
 }
 
 // <META - ROLE : line mask as brush-stamp union with minimal bbox | L101-139>
+/**
+ * Line mask as brush-stamp union. Brush guard lives in raster_brush.js.
+ * @param {[number, number]|{x:number,y:number}} p0 start point
+ * @param {[number, number]|{x:number,y:number}} p1 end point
+ * @param {number} n brush size
+ * @returns {{x:number,y:number,w:number,h:number,data:Uint8Array}} line mask
+ */
 export function lineMask(p0, p1, n) {
-  if (!Number.isInteger(n) || n < 1 || n > 64) {
-    throw new RangeError(`brush size must be an integer in [1,64], got ${n}`);
-  }
+  assertBrushSize(n);
   const [x0, y0] = toXY(p0);
   const [x1, y1] = toXY(p1);
   const { offset, mask: bm } = brushFootprint(n);

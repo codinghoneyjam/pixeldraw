@@ -3,21 +3,12 @@
 // Pure module: no DOM, no Session, ESM, Node-importable.
 // Delegates to raster_brush, raster_masks, raster_snap submodules.
 
-import { ellipseMask, lineMask, outlineRing, rrectMask } from "./raster_masks.js";
+import { assertMaskSize, ellipseMask, lineMask, outlineRing, rrectMask } from "./raster_masks.js";
+import { assertBrushSize } from "./raster_brush.js";
+// Guards are single-sourced: assertMaskSize lives in raster_masks.js,
+// assertBrushSize lives in raster_brush.js (Slice D separation boundary).
 
 const toBBox = (b) => (Array.isArray(b) ? [b[0], b[1], b[2], b[3]] : [b.x, b.y, b.w, b.h]);
-
-function assertMaskSize(w, h) {
-  if (!Number.isInteger(w) || !Number.isInteger(h) || w < 1 || h < 1) {
-    throw new RangeError(`mask size must be integers >= 1, got ${w}x${h}`);
-  }
-}
-
-function assertBrushSize(n) {
-  if (!Number.isInteger(n) || n < 1 || n > 64) {
-    throw new RangeError(`brush size must be an integer in [1,64], got ${n}`);
-  }
-}
 
 function writeMask(writer, mask, dx, dy, packed) {
   let count = 0;
@@ -33,6 +24,15 @@ function writeMask(writer, mask, dx, dy, packed) {
 }
 
 // <META - ROLE : rasterize a ShapeSpec through a PixelWriter | L28-68>
+/**
+ * Rasterize a ShapeSpec through a PixelWriter. Guards: sw undefined->1,
+ * trunc+assertBrushSize, zero-area bbox fails via assertMaskSize.
+ * @param {{set:(x:number,y:number,p:number)=>void}} writer pixel writer
+ * @param {{kind:string,strokeWidth?:number,bbox?:*,p0?:*,p1?:*,radius?:number,fillMode?:string}} spec shape spec
+ * @param {number} primaryPacked primary color
+ * @param {number} secondaryPacked secondary color
+ * @returns {number} painted pixel count
+ */
 export function applyShape(writer, spec, primaryPacked, secondaryPacked) {
   const kind = spec.kind;
   const sw = spec.strokeWidth === undefined ? 1 : Math.trunc(spec.strokeWidth);
