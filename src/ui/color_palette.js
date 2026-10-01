@@ -1,5 +1,5 @@
 // <META - FILE SUMMARY - Palette grid: mount swatches and sync active markers>
-import { makeSwatchButton, normHex } from "./panel_color_fields.js";
+import { makeSwatchButton, normHex } from "./color-brush/panel_color_fields.js";
 export { DEFAULT_PALETTE } from "./color_palette_data.js";
 
 const PRIMARY = "primaryColor";
