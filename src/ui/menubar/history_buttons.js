@@ -1,5 +1,5 @@
 // <META - FILE SUMMARY - Top-bar undo/redo enable state from history caps>
-import { EVENTS } from "../core/events.js";
+import { EVENTS } from "../../core/events.js";
 
 // <META - ROLE : Top-bar undo/redo enable state from history caps, inert under a dialog | L1-46>
 export function createHistoryButtons(root, session) {

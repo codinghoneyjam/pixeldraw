@@ -1,9 +1,9 @@
 // <META - FILE SUMMARY - Option bar: grid/zoom + per-tool sections + shape bbox>
-import { ZOOM_LEVELS } from "../core/constants.js";
-import { EVENTS } from "../core/events.js";
-import { DrawToolError } from "../core/errors.js";
-import { createTooltips } from "./tooltip.js";
-export { mountCollapsibleSections } from "./collapsible_sections.js";
+import { ZOOM_LEVELS } from "../../core/constants.js";
+import { EVENTS } from "../../core/events.js";
+import { DrawToolError } from "../../core/errors.js";
+import { createTooltips } from "../tooltip.js";
+export { mountCollapsibleSections } from "../collapsible_sections.js";
 
 const SHAPE_TOOLS = ["line", "rect", "rrect", "ellipse"];
 

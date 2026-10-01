@@ -7,7 +7,7 @@ import { el, qs, qsa, on, setHidden } from "../src/ui/dom.js";
 import { DEFAULT_PALETTE, mountColor } from "../src/ui/color-brush/panel_color.js";
 import { SIZE_PRESETS, mountBrush, paintPreview } from "../src/ui/color-brush/panel_brush.js";
 import { mountLayers, paintThumb } from "../src/ui/layers/panel_layers.js";
-import { mountOptions } from "../src/ui/panel_options.js";
+import { mountOptions } from "../src/ui/optionbar/panel_options.js";
 import { mountStatus } from "../src/ui/statusbar/statusbar.js";
 import {
   confirmDiscardChanges,
