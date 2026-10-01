@@ -26,10 +26,9 @@ import { createMenubar } from "./menubar/menubar.js";
 import { createHistoryButtons } from "./menubar/history_buttons.js";
 import { refreshPanelCanvases } from "./panel_refresh.js";
 import { doSave, doOpen, doExportLayer, doImportLayer, doExportPng, doNew } from "./actions/file_actions.js";
-import { requestUndo, requestRedo } from "./actions/edit_actions.js";
-import { zoomIn, zoomOut, fit, actual, gridCycle, canvasResize } from "./actions/view_actions.js";
+import { requestUndo, requestRedo, brushStep, colorSwap, colorReset } from "./actions/edit_actions.js";
+import { zoomIn, zoomOut, fit, actual, gridCycle, canvasResize } from "./actions/edit_actions.js";
 import { layerAdd, layerDuplicate, layerRemove, layerMergeDown, layerUp, layerDown } from "./layers/actions/layer_actions.js";
-import { brushStep, colorSwap, colorReset } from "./actions/tool_actions.js";
 
 const SETTINGS_KEY = "dt.settings.v1";
 const RECENT_KEY = "dt.recentColors";
