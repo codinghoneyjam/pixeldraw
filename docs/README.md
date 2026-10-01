@@ -34,7 +34,7 @@ core → model → render ─┤→ tools → ui
 core → shape_raster → shape 도구 ─┘
 ```
 
-- `core`: 상수·에러·이벤트·픽셀·합성·청크저장·브러시·도형 래스터. DOM 금지.
+- `core`: 상수·에러·이벤트·픽셀·합성·청크저장·브러시·도형 래스터(`core/raster/` 4파일). DOM 금지.
 - `model`: 문서·레이어·Command·Undo·Session(EventTarget). DOM 금지.
 - `io`: PNG·검증·직렬화·파일·IndexedDB. `file_io`·`store_idb`만 브라우저 API 접촉(지연 접근).
 - `render`: `view`·`composite`는 DOM-free(Node import 가능), `renderer`·`grid`·`background`는 캔버스 표시용.
@@ -46,7 +46,7 @@ core → shape_raster → shape 도구 ─┘
 | 파일 | 범위 |
 |---|---|
 | `contract.md` | 고정 상수·전역 불변 조건·에러 코드 카탈로그·DOM 금지 구역·의존 DAG |
-| `core.md` | 상수·에러·이벤트·픽셀·합성·청크·브러시·도형 래스터 |
+| `core.md` | 상수·에러·이벤트·픽셀·합성·청크·브러시·도형 래스터(`raster/` 4파일) |
 | `model.md` | Layer·Document·IdGen·Command·History·Session+Edit |
 | `io.md` | base64·PNG·검증·직렬화·내보내기·파일·자동저장 |
 | `render.md` | view·composite·renderer·grid·background |
@@ -62,6 +62,14 @@ node tools/png_cases_check.mjs
 node tools/view_check.mjs
 python schema/schema_selfcheck.py
 ```
+
+### 알려진 상태 (2026-10-01)
+
+- `npm test`의 `node --test tests/`는 Node 24에서 디렉터리 인자를 받지 않아 실패한다.
+  대신 `node --test "tests/*.test.mjs"`를 직접 실행해야 한다.
+- 그 명령 기준 **152건 중 148건 통과, 4건 실패**다. 실패 내역은
+  `docs/tools.md` §11-1(커서 기대값 3건)과 `docs/io.md` §11(import 경로 1건)에 기술되어 있다.
+- `npm run parity`(115 골든 검사)는 통과한다. 래스터 수학 자체는 안전하다.
 
 ## 전역 주의점
 

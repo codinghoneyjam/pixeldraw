@@ -1,0 +1,397 @@
+/* Split from style.css lines 1-396; cascade order: base-polish-juicy-picker. */
+:root {
+  --bg: #1e1f22;
+  --panel: #2b2d31;
+  --panel-2: #232428;
+  --border: #3a3d43;
+  --text: #e6e6e6;
+  --text-dim: #9aa0a6;
+  --accent: #4cc2ff;
+  --accent-strong: #1e88c7;
+  --danger: #ff5c5c;
+  --warn: #ffb020;
+  --canvas-bg: #3c3f45;
+  --radius: 4px;
+  --gap: 8px;
+  --font-ui: system-ui, "Noto Sans KR", "Malgun Gothic", sans-serif;
+  --font-mono: ui-monospace, Consolas, monospace;
+  /* Container chrome: thin rounded box + inner highlight / outer drop for depth.
+     --radius-box is px (containers are large; a % radius would balloon on them).
+     --radius-pct is a PERCENTAGE radius for small elements (swatches, buttons,
+     markers) so a 5% / 10% step keeps the same visual proportion at any size. */
+  --radius-box: 8px;
+  --radius-pct: 10%;
+  --box-line: #454a52;
+  --box-line-hi: #565c66;
+  --box-inner-hi: rgba(255, 255, 255, 0.055);
+  --box-outer: rgba(0, 0, 0, 0.38);
+  /* Selection target marker: red corner arcs over a black rim so it reads on red
+     artwork too. --dt-arm-l/d is the fixed corner-arm length; the middle of each
+     side is cut away so only the four corners are drawn. */
+  --sel-red: #ff3b30;
+  --sel-black: #000000;
+  --dt-target-t: 2px;
+  --dt-target-rim: 2px;
+  --dt-arm-l: 11px;
+  --dt-arm-d: 11px;
+  --toolbar-w: 44px;
+  --panel-w: 240px;
+  --right-w: 260px;
+}
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font: 13px var(--font-ui);
+}
+#dt-app {
+  display: grid;
+  grid-template-columns: 44px 240px minmax(0, 1fr) 260px;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  height: 100dvh;
+}
+#dt-menubar, #dt-optionbar, #dt-statusbar {
+  grid-column: 1 / -1;
+}
+#dt-menubar {
+  display: flex;
+  gap: var(--gap);
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--border);
+  padding: 4px 8px;
+}
+#dt-optionbar {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  padding: 4px 8px;
+  min-height: 32px;
+}
+#dt-toolbar {
+  background: var(--panel-2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  user-select: none;
+}
+#dt-left-panels {
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: var(--gap);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+#dt-canvas-host {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--canvas-bg);
+  touch-action: none;
+  user-select: none;
+}
+.dt-display {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+#dt-right-panels {
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  padding: var(--gap);
+}
+#dt-statusbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: var(--panel-2);
+  border-top: 1px solid var(--border);
+  padding: 4px 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  min-height: 24px;
+}
+button, select, input {
+  font: inherit;
+  color: var(--text);
+}
+button {
+  min-width: 32px;
+  min-height: 32px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+button[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-strong);
+  color: #fff;
+}
+input, select {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  min-height: 28px;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+}
+[hidden] {
+  display: none !important;
+}
+.dt-menu {
+  position: relative;
+}
+.dt-menu div[role="menu"] {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px;
+  min-width: 200px;
+}
+.dt-menu div[role="menu"] button {
+  text-align: left;
+  border: none;
+  background: transparent;
+  white-space: nowrap;
+}
+.dt-menu div[role="menu"] button:hover {
+  background: var(--accent-strong);
+}
+.dt-sep {
+  width: 28px;
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+#dt-toolbar button {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+#dt-toolbar button svg {
+  width: 24px;
+  height: 24px;
+}
+.dt-slots {
+  display: flex;
+  gap: var(--gap);
+  align-items: center;
+}
+/* --- J10. Foreground / background as two OVERLAPPING rectangles.
+       Classic paint-app idiom: the background card sits behind and offset, the
+       foreground card on top and inset. The pair is a single click target that swaps
+       them. The background is a BUFFER only — nothing ever paints with it. --- */
+.dt-slots {
+  display: flex;
+  gap: var(--gap);
+  align-items: center;
+}
+.dt-fgbg {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex: none;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+.dt-fgbg #dt-color-secondary,
+.dt-fgbg #dt-color-primary {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-pct);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+.dt-fgbg #dt-color-secondary { left: 0; top: 0; z-index: 1; }
+.dt-fgbg #dt-color-primary { right: 0; bottom: 0; z-index: 2; }
+/* The foreground card carries the selection ring so it reads as "this one paints". */
+.dt-fgbg #dt-color-primary { border-color: var(--text); }
+.dt-fgbg:hover #dt-color-primary,
+.dt-fgbg:focus-visible #dt-color-primary {
+  border-color: var(--accent);
+}
+.dt-fgbg:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+#dt-palette, #dt-recent {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+}
+.dt-swatch {
+  width: 100%;
+  aspect-ratio: 1;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+}
+#dt-brush-preview, .dt-layer-thumb {
+  image-rendering: pixelated;
+}
+#dt-brush-preview {
+  width: 64px;
+  height: 64px;
+  border: 1px solid var(--border);
+  background: #fff;
+}
+#dt-layer-list {
+  list-style: none;
+  margin: 8px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+li.dt-layer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+li.dt-layer[aria-selected="true"] {
+  border-color: var(--accent);
+}
+li.dt-layer.is-locked .dt-layer-name, li.dt-layer.is-hidden .dt-layer-name {
+  opacity: 0.45;
+}
+.dt-layer-thumb {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  flex: none;
+}
+.dt-layer-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#dt-status-message[data-level="warn"] {
+  color: var(--warn);
+}
+#dt-status-message[data-level="error"] {
+  color: var(--danger);
+}
+#dt-status-dirty {
+  color: var(--warn);
+}
+.dt-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.dt-dialog {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  min-width: 320px;
+  max-width: 480px;
+}
+.dt-dialog-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--gap);
+  margin-top: 12px;
+}
+.dt-form-error {
+  color: var(--danger);
+}
+.dt-progress {
+  position: fixed;
+  bottom: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 16px;
+  z-index: 90;
+}
+.dt-progress-track {
+  width: 240px;
+  height: 8px;
+  background: var(--panel-2);
+  margin-top: 4px;
+}
+.dt-progress-bar {
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+}
+#dt-toast {
+  position: fixed;
+  bottom: 48px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  z-index: 95;
+}
+.dt-toast-item {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+}
+.dt-toast-warn {
+  border-color: var(--warn);
+}
+.dt-toast-error {
+  border-color: var(--danger);
+}
+#dt-size-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+#dt-size-presets button {
+  min-width: 32px;
+  min-height: 32px;
+}
+

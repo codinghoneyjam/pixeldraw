@@ -1,88 +1,131 @@
-# io — 저장·불러오기·내보내기·자동저장
+# io — 직렬화·PNG·검증·파일·자동저장
 
-## 역할 요약
+## 1. 개요와 책임
 
-- JSON v2 문서/레이어 직렬화와 PNG 인코딩·디코딩(자체 코덱, 의존성 0).
-- 검증은 throw 없이 `{ok, errors}` 수집(최대 50개, 구조 오류 우선).
-- 브라우저 파일 저장·열기 + IndexedDB 청크 단위 자동저장.
+io 모듈은 문서의 바깥 경계를 담당한다. 메모리 안의 Document를 JSON v2 파일로 내보내고, 다시 검증해서 복원하며, PNG로 평탄화하고, 브라우저 파일과 IndexedDB에 저장한다. 의존성은 아래 방향으로만 흐른다. core의 상수·에러·청크 저장소와 model의 Document·Layer를 읽되, 그 반대 방향 참조는 없다.
+다섯 가지 책임은 다음과 같다. 첫째 직렬화는 빈 청크 제외와 결정적 정렬을 보장한다. 둘째 PNG는 의존성 없는 자체 코덱으로 8비트 RGBA만 다룬다. 셋째 검증은 절대 throw하지 않고 구조 검사 뒤 의미 검사를 수행한다. 넷째 파일 입출력은 브라우저 API를 지연 접근으로 감싸 Node import를 깨지 않는다. 다섯째 자동저장은 청크 단위 dirty 집합을 하나의 트랜잭션으로 기록한다.
 
-## 파일별 API
+## 2. base64.js — 청크 PNG 페이로드 변환
 
-### base64.js
+`bytesToBase64(u8)`는 바이트 배열을 base64 문자열로 바꾼다. Node에서는 Buffer를 우선 사용하고, 브라우저에서는 0x8000 바이트씩 잘라 `String.fromCharCode.apply`로 이진 문자열을 만든 뒤 `btoa`한다. 청크로 나누는 이유는 대용량 청크에서 호출 스택 오버플로를 막기 위해서다.
+`base64ToBytes(s)`는 역변환이다. 정규식으로 허용 문자와 패딩을 먼저 검사하고, 어긋나면 `SCHEMA` 에러를 던진다. Node에서는 `Buffer.from(s, base64)`로 복원하고, 브라우저에서는 `atob` 뒤 문자 코드를 바이트로 펼친다. 디코드 실패 역시 `SCHEMA`로 통일해서 상위 검증이 한 가지 코드만 보게 한다.
 
-| 이름 | 시그니처 | 설명 |
-|---|---|---|
-| `bytesToBase64` | `bytesToBase64(u8)` | Node Buffer 또는 btoa 청크 방식 |
-| `base64ToBytes` | `base64ToBytes(s)` | 부정합 시 `SCHEMA` throw |
+## 3. png.js — 8비트 RGBA 자체 코덱
 
-### png.js (8bit RGBA 자체 코덱)
+`encodePng(rgba, width, height)`는 너비·높이가 양의 정수가 아니면 `PNG_UNSUPPORTED`를 던진다. 행마다 필터 바이트 0을 앞에 붙인 raw 버퍼를 만들고, `CompressionStream(deflate)`으로 압축한 뒤 IHDR 한 개와 IDAT 한 개, IEND 순서로 조립한다. IHDR은 폭·높이·비트깊이 8·컬러타입 6·압축·필터·인터레이스 0을 기록한다. 각 청크는 길이와 타입·데이터에 대한 CRC32를 덧붙인다.
+`decodePng(bytes)`는 먼저 8바이트 시그니처를 대조하고, 틀리면 `PNG_SIGNATURE`를 던진다. 이후 길이·타입·데이터·CRC 순서로 순회하며 CRC가 어긋나거나 헤더가 잘리면 `PNG_CRC`를 던진다. IHDR에서 비트깊이 8·컬러타입 6·인터레이스 0이 아니면 `PNG_UNSUPPORTED`이며, 면적이 core 상한을 넘겨도 같은 코드다. IDAT 조각을 이어 `DecompressionStream`으로 풀고, 스캔라인 길이가 맞지 않으면 `PNG_UNSUPPORTED`다. 필터 0부터 4까지 복원한다. Sub·Up·Average·Paeth 순서로 이전 픽셀과 윗줄을 참조하며, 알 수 없는 필터 번호는 `PNG_UNSUPPORTED`다. 반환은 너비·높이·RGBA 버퍼 묶음이다. 압축에 WebStreams를 쓰므로 Chrome 80 이상, Firefox 113 이상, Safari 16.4 이상이 필요하다.
 
-| 이름 | 시그니처 | 설명 |
-|---|---|---|
-| `encodePng` | `encodePng(rgba, width, height)` | filter0 + 단일 IDAT deflate, 크기 오류 `PNG_UNSUPPORTED` |
-| `decodePng` | `decodePng(bytes)` | filter0–4 지원, 시그니처/`PNG_SIGNATURE`, CRC/`PNG_CRC`, 규격 외/`PNG_UNSUPPORTED` |
+## 4. 검증 2단계 — validate·structural·semantic
 
-`CompressionStream` 필요(Chrome 80+, Firefox 113+, Safari 16.4+).
+### 4.1 validate.js — 진입점과 50개 상한
 
-### validate.js (throw 없음)
+`validateDocument(obj)`와 `validateLayerFile(obj)`는 절대 throw하지 않고 `{ok, errors}`를 반환한다. errors 항목은 코드·경로·메시지 형태이며 최대 50개까지만 수집한다. 문서 검사는 최상위 허용 키 검사부터 시작한다. 허용되지 않은 키가 있으면 `SCHEMA`로 기록한다. 스키마 버전은 2.0.0 고정, 포맷은 문서용 `draw_tool.document`와 레이어용 `draw_tool.layer`를 구분한다. 문서 id는 비어 있지 않은 문자열, 이름은 최대 128자, 활성층 id는 비어 있지 않은 문자열이어야 한다. 레이어 배열은 1개 이상 64개 이하여야 한다. 구조 오류가 50개를 채우면 의미 단계로 넘어가지 않고 바로 반환한다. 의미 단계에서는 층 id 중복을 `DUP_LAYER_ID`로, 활성층이 목록에 없으면 `ACTIVE_LAYER_MISSING`으로 보고한다.
+`validateLayerFile`은 최상위 키 네 가지와 원본 캔버스, 단일 층을 같은 방식으로 검사한다.
 
-| 이름 | 시그니처 | 설명 |
-|---|---|---|
-| `validateDocument` | `validateDocument(obj)` | 문서 전체 검증 → `{ok, errors:[{code,path,message}]}` |
-| `validateLayerFile` | `validateLayerFile(obj)` | 단일 레이어 파일 검증 |
+### 4.2 validate_structural.js — 값 모양 검사
 
-검사: 스키마 키·캔버스(32배수·상한)·청크(cx 0–59, cy 0–33, png는 `iVBORw0KGgo` 시작 base64)·레이어(1–64, id 중복, 활성층 존재)·청크 중복/범위 밖/32×32 디코드 실패. 미지정 키도 `SCHEMA`.
+`checkCanvas`는 타일 64와 유닛 32 고정, 너비 32부터 1920까지와 높이 32부터 1088까지를 32배수 조건으로 검사한다. 배경은 transparent 또는 6자리·8자리 16진 색상만 허용한다. 너비·높이가 모두 유효할 때만 치수 객체를 돌려줘서 이후 의미 검사가 캔버스 밖 청크를 판단할 수 있게 한다.
+`checkChunk`는 cx가 0부터 59까지, cy가 0부터 33까지 정수인지 보고, png 문자열이 `iVBORw0KGgo`로 시작하는 base64인지 정규식으로 검사한다. 하나라도 어긋나면 `SCHEMA`를 남기고 false를 돌려준다.
+`checkRaster`는 청크 픽셀 32 고정과 인코딩 `png_base64` 고정을 검사하고, 청크 배열 상한 2040개를 넘기면 `SCHEMA`로 기록한다. 각 청크 결과를 불리언 배열로 돌려줘서 의미 단계가 구조적으로 통과한 항목만 실제로 디코드하게 한다.
+`checkLayer`는 id 길이 1부터 64까지, 이름 최대 128자, 타입 raster 또는 vector, 가시·잠금 불리언, 불투명도 0부터 1까지, 블렌드 여섯 가지 중 하나를 검사한다. raster층이 shapes를 가지거나 raster가 없으면 `SCHEMA`이며, vector층이 raster를 가지거나 shapes 배열이 없으면 역시 `SCHEMA`다.
 
-### serialize.js
+### 4.3 validate_semantic.js — 실제 디코드 검사
 
-| 이름 | 시그니처 | 설명 |
-|---|---|---|
-| `documentToJson` | `documentToJson(doc, {onProgress})` | 스키마 키 순서·하위층 먼저·`(cy,cx)` 정렬·빈 청크 제외·64개 배치 인코딩 |
-| `layerToJson` | `layerToJson(doc, layerId)` | 단일 레이어 파일 `{format:"draw_tool.layer"}` |
-| `jsonToDocument` | `jsonToDocument(obj, {onProgress})` | 검증→vector층 `UNSUPPORTED_LAYER_TYPE`→청크 디코드·정규화 |
-| `importLayerJson` | `importLayerJson(doc, obj)` | 문서 미변경, 새 id 발급, 캔버스 밖 청크는 `dropped` 계수 |
+`checkChunksSemantic(chunks, structuralOk, dims, base, push)`는 구조 검사를 통과한 청크만 base64 디코드 뒤 PNG 디코드까지 수행한다. 같은 좌표가 두 번 나오면 `CHUNK_DUPLICATE`를, 캔버스 치수를 넘어서면 `CHUNK_OUT_OF_CANVAS`를 기록한다. 디코드 결과가 32 곱하기 32가 아니거나 디코드 자체가 실패하면 `CHUNK_BAD_PNG`를 기록한다. 객체가 아닌 항목은 건너뛰어 수집기 폭주를 막는다. 이 단계가 끝까지 수행되는 이유는 정규식만으로는 깨진 PNG를 걸러낼 수 없기 때문이다.
 
-불러오기 시 투명 픽셀 RGB 정규화, 빈 디코드 청크는 버림. blend가 normal이 아니면 경고 후 normal 강등.
+## 5. serialize.js — 네 가지 변환 함수
 
-### export_png.js
+`documentToJson(doc, {onProgress})`는 전체 문서를 스키마 키 순서대로 만든다. 스키마 버전·포맷·문서 id·이름·캔버스·활성층·층 배열 순서다. 각 층에서는 비어 있는 청크를 제외하고 cy 우선 cx 차선으로 정렬한 뒤, 64개씩 묶어 병렬로 PNG 인코딩한다. 진행 콜백은 누적 완료 수와 전체 청크 수를 받는다. 층 순서는 문서의 아래층부터 위층 순서를 그대로 유지한다.
+`layerToJson(doc, layerId)`는 단일 층을 `draw_tool.layer` 포맷으로 감싼다. 원본 캔버스 정보를 함께 넣어 나중에 크기가 달라졌는지 비교할 수 있게 한다.
+`jsonToDocument(obj, {onProgress})`는 먼저 전체 검증을 수행하고 실패하면 첫 오류 코드로 throw한다. vector층이 하나라도 있으면 `UNSUPPORTED_LAYER_TYPE`으로 중단한다. normal이 아닌 블렌드는 normal로 강등하고 경고 배열에 남긴다. 각 청크는 base64와 PNG를 풀고 투명 픽셀 RGB를 0으로 정규화한 뒤, 완전히 비어 있으면 버린다. 64개 배치마다 진행 콜백을 호출한다. 활성층이 없으면 마지막 층을 활성층으로 삼고, 층 id들을 IdGen에 심어서 이후 발급과 충돌하지 않게 한다. 반환은 문서와 경고 묶음이다.
+`importLayerJson(doc, obj)`는 원본 문서를 바꾸지 않고 새 층 객체를 만든다. 검증 뒤 원본 캔버스 크기가 다르면 경고를 남기고, 블렌드 강등 규칙은 동일하다. vector층은 `UNSUPPORTED_LAYER_TYPE`으로 거절한다. 현재 문서 캔버스를 벗어난 청크는 저장하지 않고 버린 개수를 `dropped`으로 돌려준다. 새 층 id는 문서의 IdGen에서 발급받아 중복을 피한다.
 
-| 이름 | 시그니처 | 설명 |
-|---|---|---|
-| `flattenToRgba` | `flattenToRgba(doc, {includeBackground=true})` | 배경+가시층 bottom-up `over()` 평탄화 |
-| `exportPngBytes` | `exportPngBytes(doc, opts)` | 평탄화 후 `encodePng` |
+## 6. export_png.js — 평탄화와 PNG 내보내기
 
-### file_io.js (Node-safe, DOM 지연 접근)
+`flattenToRgba(doc, {includeBackground=true})`는 배경을 바닥에 깔고 보이는 층을 아래부터 위로 `over()` 합성한다. 배경 포함이 참이면 캔버스 배경색을 파싱하고, transparent이거나 꺼져 있으면 투명 검정으로 시작한다. 잘못된 배경 문자열은 `INVALID_STATE`를 던진다. 보이지 않는 층과 불투명도 0인 층, 저장소가 없는 층은 건너뛴다. 불투명 알파 255에 층 불투명도 1인 픽셀은 합성 함수 없이 바로 덮어써서 속도를 낸다. 그 외에는 core의 `over()`에 목적지·출발지·불투명도를 넘겨 혼합한다. 최종 알파가 0이면 RGB도 0으로 정규화한다.
+`exportPngBytes(doc, opts)`는 평탄화 결과를 그대로 `encodePng`에 넘긴다. 캔버스 전체 크기로 인코딩하므로 호출자는 문서만 넘기면 된다.
 
-| 이름 | 시그니처 | 설명 |
-|---|---|---|
-| `sanitizeFileName` | `sanitizeFileName(name)` | 금지문자→`_`, 앞뒤 공백·점 제거, 최대 80자, 빈값 `untitled` |
-| `saveTextFile` | `saveTextFile(suggestedName, text, mime)` | File System Access 우선, 폴백 다운로드 |
-| `saveBinaryFile` | `saveBinaryFile(suggestedName, bytes, mime)` | 바이너리 저장 |
-| `pickFile` | `pickFile(accept)` | 피커 우선, 폴백 `<input type=file>`, 취소 시 null |
-| `readJsonFile` | `readJsonFile(file)` | 64MiB 초과 `FILE_TOO_LARGE`, 파싱 실패 `SCHEMA` |
+## 7. file_io.js — 다섯 가지 파일 함수와 64MiB 제한
 
-### store_idb.js (Node import 가능, IDB 지연 접근)
+`sanitizeFileName(name)`은 금지 문자와 제어 문자를 밑줄로 바꾸고 앞뒤 공백과 점을 제거한 뒤 최대 80자로 자른다. 결과가 비면 `untitled`을 돌려준다.
+`saveTextFile(suggestedName, text, mime)`과 `saveBinaryFile(suggestedName, bytes, mime)`은 내부적으로 같은 저장 경로를 쓴다. File System Access의 저장 피커가 있으면 그곳에 쓰고, 사용자가 취소하면 false를 돌려준다. 피커가 없으면 Blob을 만들어 앵커 다운로드로 저장한다. 문서 환경 자체가 없으면 `INVALID_STATE`를 던진다.
+`pickFile(accept)`은 열기 피커가 있으면 단일 파일을 받아 File 객체로 돌려주고, 취소하면 null을 돌려준다. 피커가 없으면 숨은 파일 입력 요소를 만들어 같은 동작을 흉내 낸다. 어떤 API도 없으면 `INVALID_STATE`다.
+`readJsonFile(file)`은 크기 필드와 텍스트 읽기 함수가 없으면 `SCHEMA`로 거절한다. 크기가 64MiB를 넘으면 `FILE_TOO_LARGE`로 먼저 차단하고 파일을 읽지 않는다. 이후 텍스트를 JSON으로 파싱하고 실패하면 `SCHEMA`로 던진다.
 
-| 이름 | 시그니처 | 설명 |
-|---|---|---|
-| `chunkRecordKey` | `chunkRecordKey(layerId, cx, cy)` | `"id\|cy\|cx"` 안정 키 |
-| `buildMetaRecord` | `buildMetaRecord(doc)` | 메타 레코드(schema:2, canvas, 층 목록, active, updatedAt) |
-| `buildChunkRecords` | `buildChunkRecords(layer, keys)` | ArrayBuffer 복사본 레코드 목록 |
-| `AutosaveStore` | `constructor(db)` / `static open()` | IDB 없으면 null |
-| — | `attach(session)` / `detach()` | Session 이벤트 구독·해제 + visibility/pagehide 플러시 |
-| — | `peek()` / `flushNow()` / `load()` / `clear()` | 메타 요약·즉시 저장·복원·전체 삭제 |
-| `_INTERNALS` | `{DB_NAME, DB_VERSION, META_KEY, DEBOUNCE_MS, FORCE_MS}` | DB명 `draw_tool_v2`, 디바운스 800ms·강제 5s |
+## 8. 자동저장 — AutosaveStore와 네 위임 모듈
 
-## 핵심 흐름
+### 8.1 store_idb.js — 세션 바인딩과 dirty 추적
 
-- 저장: `documentToJson` → `saveTextFile`. 성공 시 `history.markSaved()` + `history-changed`.
-- 열기: `pickFile` → `readJsonFile`(크기·JSON 검사) → `validateDocument` → `jsonToDocument` → `loadDocument`.
-- 레이어 가져오기: `importLayerJson` → `insertLayer`. 캔버스 크기 다르면 경고, 범위 밖 청크는 버리고 개수 표시.
-- 자동저장: `pixels-changed`→dirty 청크 집합, `layers-changed`/`document-replaced`→메타 dirty. 800ms 디바운스·5s 강제 상한으로 1 트랜잭션 기록. 용량 초과 시 `STORAGE_QUOTA` warn.
+`AutosaveStore`는 세션 이벤트를 구독하는 자동저장 본체다. `static open()`은 IndexedDB가 없으면 null을 돌려주고, 열기 실패도 null로 흡수해서 호출자가 저장소 없이 동작하게 한다. `attach(session)`은 기존 구독을 끊고 현재 층 id 집합을 기록한 뒤 픽셀 변경·층 변경·문서 교체를 구독한다. 가시성 변경과 페이지 숨김에도 즉시 저장을 걸어 탭을 닫기 전 기록을 남긴다. `detach()`는 세션과 문서·전역 리스너를 모두 해제하고 스케줄러를 취소한다.
+픽셀 변경은 층별 dirty 맵에 모은다. 전체 다시 쓰기 표시가 있으면 `all`로, 부분 변경이면 좌표 집합으로 누적한다. 층 구조 변경은 메타 dirty로, 문서 교체는 전체 다시 쓰기로 기록한다. `peek()`은 메타 요약만 읽어 문서 id·이름·갱신 시각을 돌려준다. `flushNow()`는 진행 중인 저장이 있으면 같은 약속을 공유하고, 아니면 내부 저장을 한 번 수행한다. 내부 저장은 메타 레코드를 만들고 단일 트랜잭션으로 쓴 뒤 dirty를 비운다. 용량 초과는 `STORAGE_QUOTA` 경고로, 그 외 실패는 `INVALID_STATE` 경고로 세션에 알린다.
 
-## 주의점
+### 8.2 idb_schema.js — 데이터베이스 뼈대
 
-- 검증 실패 코드는 `SCHEMA` 외 `DUP_LAYER_ID, ACTIVE_LAYER_MISSING, CHUNK_DUPLICATE, CHUNK_OUT_OF_CANVAS, CHUNK_BAD_PNG`를 확인.
-- JSON 64MiB 초과는 읽기 단계에서 `FILE_TOO_LARGE`.
-- `load()`는 메타 부정합 시 `clear()` 후 null 반환(복원 불가 알림은 UI 담당).
-- 모듈 규약: 상대 경로 ESM import만, `export default`·동적 `import()`·`import.meta` 없음 (`contract.md` §5).
+`openDatabase(idb)`는 이름 `draw_tool_v2`와 버전 1로 연다. 업그레이드 시 키 경로가 key인 meta 저장소와 같은 키 경로에 `byLayer` 인덱스를 가진 chunks 저장소를 만든다. `promisify(request)`는 IDB 요청의 성공과 실패를 약속으로 바꾼다.
+
+### 8.3 idb_record_builder.js — 순수 레코드 생성
+
+`chunkRecordKey(layerId, cx, cy)`는 층 id와 cy·cx를 파이프로 이은 안정 키를 만든다. cy를 앞에 두는 이유는 저장소 키 정렬과 직렬화 정렬 관행을 맞추기 위해서다.
+`buildMetaRecord(doc)`는 키 current, 스키마 숫자 2, 문서 id·이름·캔버스·층 요약·활성층·현재 시각을 담은 메타 객체를 만든다.
+`buildChunkRecords(layer, keys)`는 요청 좌표마다 청크 복사본을 꺼내 ArrayBuffer 형태로 담은 레코드 목록을 만든다. 없는 청크는 건너뛴다. 원본 버퍼를 그대로 넣지 않고 복사하는 이유는 저장 중 편집이 기록을 오염시키는 일을 막기 위해서다.
+
+### 8.4 idb_scheduler.js — 800밀리초와 5초 스케줄
+
+`FlushScheduler`는 디바운스와 강제 상한을 함께 둔다. 첫 변경 뒤 800밀리초 타이머를 걸고, 같은 타이머가 살아 있는 동안 추가 변경이 와도 타이머를 늘리지 않는다. 동시에 5초 강제 타이머를 걸어 계속 그리는 중에도 최대 5초마다 한 번은 저장하게 한다. 어느 쪽이 먼저 울리든 상대 타이머를 취소하고 콜백을 한 번만 호출한다. `cancel()`은 두 타이머를 모두 지운다.
+
+### 8.5 idb_loader.js — 메타 부정합과 복원 규칙
+
+`isMetaValid(meta)`는 스키마 숫자 2, 비어 있지 않은 문서 id, 유효한 캔버스 크기, 1개 이상 64개 이하 층 배열, 각 층의 id·이름·가시·잠금·불투명도 형태를 검사한다. 하나라도 어긋나면 false다.
+`load(db)`는 메타와 청크를 읽기 트랜잭션으로 가져온다. 메타가 없으면 null을 돌려준다. 메타가 부정합하면 저장소 전체를 지우고 null을 돌려준다. 복원 불가 알림은 저장소가 아니라 UI가 맡는다. 청크 레코드는 층 id가 메타에 있을 때만 살리고, 좌표가 정수가 아니거나 데이터가 4096바이트 ArrayBuffer가 아니면 버린다. 활성층이 목록에 없으면 마지막 층을 활성층으로 삼는다. 문서 생성자가 실패해도 저장소를 지우고 null을 돌려준다.
+`clear(db)`는 메타와 청크 저장소를 모두 비운다.
+
+## 9. 대표 흐름 두 가지
+
+저장과 열기 흐름은 검증이 가운데에 있다. 저장할 때는 문서 객체를 `documentToJson`으로 JSON화한 뒤 `saveTextFile`로 쓰고, 성공하면 히스토리에 저장 표시를 남긴다. 열 때는 `pickFile`로 고른 파일을 `readJsonFile`이 크기부터 검사하고 JSON으로 푼 뒤, `validateDocument`가 구조와 의미를 검사하고, `jsonToDocument`가 실제 픽셀로 복원한 뒤 세션에 적재한다. 레이어 가져오기는 `importLayerJson`이 새 층과 버린 청크 수, 경고를 돌려주면 호출자가 층 삽입과 안내 문구를 처리한다.
+자동저장 흐름은 이벤트에서 시작한다. 픽셀 변경은 dirty 청크 집합에, 층 변경과 문서 교체는 메타와 전체 다시 쓰기 표시에 쌓인다. 스케줄러가 800밀리초 조용함을 기다리거나 5초 상한에 걸리면 한 트랜잭션으로 메타와 변경 청크를 함께 쓴다. 삭제된 층의 청크는 인덱스로 찾아 지우고, 전체 다시 쓰기 때는 저장소를 비운 뒤 메타와 전 층을 다시 채운다.
+
+## 10. 브라우저와 Node 경계
+
+브라우저 전용 접촉은 file_io와 자동저장, PNG 압축 경로에 모여 있다. file_io는 저장·열기 피커와 문서·URL 객체를 함수 안에서만 꺼내 쓰고, 모듈 최상위에서는 건드리지 않는다. 자동저장은 IndexedDB와 가시성·페이지 이벤트를 생성자와 구독 함수 안에서만 접근한다. PNG 압축은 WebStreams에 의존하므로 Node 테스트에서는 해당 경로를 모의하거나 건너뛰어야 한다. base64와 검증, 레코드 생성, 스케줄러는 양쪽에서 그대로 import할 수 있는 순수 계층이다. 이 분리의 목적은 Node에서 직렬화와 검증 단위 테스트를 브라우저 없이 돌리면서도, 브라우저에서는 같은 코드를 파일과 저장소에 그대로 붙이는 데 있다.
+
+## 11. 파일 구성과 회귀 사항 (2026-10-01 확인)
+
+`src/io/`는 13개 파일이다. 분리 커밋으로 `store_idb.js`가 417줄에서 245줄,
+`validate.js`가 241줄에서 96줄로 줄었다.
+
+| 파일 | 줄 | 비고 |
+|:---|:---:|:---|
+| `store_idb.js` | 245 | 분리 후 코어. `AutosaveStore` + `_INTERNALS` 재export |
+| `serialize.js` | 233 | 단일 책임 |
+| `png.js` | 138 | 단일 책임 |
+| `validate_structural.js` | 116 | 분리됨 |
+| `file_io.js` | 96 | 단일 책임 |
+| `validate.js` | 96 | 분리 후 진입점 |
+| `export_png.js` | 75 | 단일 책임 |
+| `idb_loader.js` | 72 | 분리됨 |
+| `idb_scheduler.js` | 43 | 분리됨 |
+| `base64.js` | 38 | 단일 책임 |
+| `validate_semantic.js` | 38 | 분리됨 |
+| `idb_record_builder.js` | 37 | 분리됨 |
+| `idb_schema.js` | 33 | 분리됨 |
+
+### 알려진 회귀 — `tests/io_basic.test.mjs` 모듈 로드 실패
+
+분리 후 `store_idb.js`는 `buildMetaRecord`·`buildChunkRecords`·`chunkRecordKey`를
+`idb_record_builder.js`에서 **import만** 하고 재노출하지 않는다. 그런데
+`tests/io_basic.test.mjs:16`은 이 세 심볼을 `store_idb.js`에서 가져오려 한다.
+
+```
+SyntaxError: The requested module '../src/io/store_idb.js' does not provide
+an export named 'buildChunkRecords'
+```
+
+테스트 4건 실패 중 1건이 이것이며, 테스트 파일 전체가 로드되지 않아 io 계층 검증이
+현재 **0건 실행**된다. 선택지는 (a) 테스트 import 경로를 `idb_record_builder.js`로
+수정하거나 (b) `store_idb.js`에 파사드 re-export를 추가하는 것. (b)가 공개 API
+호환성을 보존하지만, §5의 계층 규칙상 (a)가 더 순수하다.
+
+## Handoff
+- **Wrote**: `draw_tool_v2/docs/io.md`
+- **Result**: 분리 후 13파일 라인 수 표 + `io_basic.test.mjs` 회귀 1건 기술
+- **Next**: Orchestrator — 테스트 import 경로 수정 또는 re-export 추가 결정

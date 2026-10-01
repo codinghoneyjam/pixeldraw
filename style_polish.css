@@ -1,0 +1,239 @@
+/* Split from style.css lines 397-634; cascade order: base-polish-juicy-picker. */
+/* === UI POLISH (controls polish + optionbar anti-shift + juicy; compositor-only motion) === */
+
+/* --- 1a. Selects: custom dropdown arrow (appearance:none + SVG data-URI) --- */
+#dt-optionbar select,
+.dt-dialog select {
+  appearance: none;
+  -webkit-appearance: none;
+  min-height: 32px;
+  padding: 0 26px 0 8px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%239aa0a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 12px 12px;
+  cursor: pointer;
+  text-overflow: ellipsis;
+}
+#dt-optionbar select:disabled,
+.dt-dialog select:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* --- 1b. Range inputs: round accent thumbs --- */
+#dt-brush-panel input[type="range"],
+#dt-layer-panel input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 32px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+#dt-brush-panel input[type="range"]::-webkit-slider-runnable-track,
+#dt-layer-panel input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+}
+#dt-brush-panel input[type="range"]::-webkit-slider-thumb,
+#dt-layer-panel input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--panel);
+  cursor: pointer;
+}
+#dt-brush-panel input[type="range"]::-moz-range-track,
+#dt-layer-panel input[type="range"]::-moz-range-track {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+}
+#dt-brush-panel input[type="range"]::-moz-range-thumb,
+#dt-layer-panel input[type="range"]::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--panel);
+  cursor: pointer;
+}
+
+/* --- 1c. Number inputs: no spinners, right-aligned --- */
+#dt-optionbar input[type="number"],
+#dt-brush-panel input[type="number"],
+#dt-layer-panel input[type="number"],
+#dt-color-panel input[type="number"],
+.dt-dialog input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+  text-align: right;
+  min-height: 32px;
+  padding: 0 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+#dt-optionbar input[type="number"]::-webkit-outer-spin-button,
+#dt-brush-panel input[type="number"]::-webkit-outer-spin-button,
+#dt-layer-panel input[type="number"]::-webkit-outer-spin-button,
+#dt-color-panel input[type="number"]::-webkit-outer-spin-button,
+.dt-dialog input[type="number"]::-webkit-outer-spin-button,
+#dt-optionbar input[type="number"]::-webkit-inner-spin-button,
+#dt-brush-panel input[type="number"]::-webkit-inner-spin-button,
+#dt-layer-panel input[type="number"]::-webkit-inner-spin-button,
+#dt-color-panel input[type="number"]::-webkit-inner-spin-button,
+.dt-dialog input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+#dt-optionbar input[type="number"] {
+  width: 64px;
+  flex: none;
+}
+#dt-color-panel #dt-color-hex {
+  min-height: 32px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+#dt-layer-list input.dt-rename {
+  min-height: 32px;
+}
+#dt-optionbar input[type="checkbox"] {
+  accent-color: var(--accent);
+}
+
+/* --- 1d. Shape-fill radios as segmented buttons (native input kept focusable) --- */
+#dt-optionbar section[data-for-tools] label:has(input[name="dt-shape-fill"]) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--panel-2);
+  cursor: pointer;
+  transition: background-color 120ms ease-out, border-color 120ms ease-out, color 120ms ease-out;
+}
+#dt-optionbar label:has(#dt-shape-fill-outline) {
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+#dt-optionbar label:has(#dt-shape-fill-fill) {
+  margin-left: -1px;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+#dt-optionbar label:has(input[name="dt-shape-fill"]:checked) {
+  background: var(--accent-strong);
+  border-color: var(--accent);
+  color: #fff;
+}
+#dt-optionbar label:has(input[name="dt-shape-fill"]:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+#dt-optionbar label:has(input[name="dt-shape-fill"]:disabled) {
+  opacity: 0.4;
+  cursor: default;
+}
+#dt-optionbar label:has(input[name="dt-shape-fill"]) input[name="dt-shape-fill"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 0;
+  height: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+/* --- 2. Optionbar: single row, sections never wrap.
+       The old rule reserved two rows (80px) to stop the bar jumping when tool
+       sections changed height. That reserve existed only because each section used
+       to carry a long always-visible `.dt-hint` line. The hints are now tooltips,
+       so the bar is one 32px row again and the reserve is dead weight. --- */
+#dt-optionbar {
+  min-height: 40px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  align-content: center;
+  scrollbar-width: thin;
+}
+#dt-optionbar section[data-for-tools]:not([hidden]) {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+/* --- 3a. Buttons: background fade on hover + press scale (transform/opacity only) --- */
+#dt-app button {
+  transition: background-color 120ms ease-out, border-color 120ms ease-out, transform 120ms ease-out, opacity 120ms ease-out;
+}
+#dt-menubar .dt-menu > button:hover:not(:disabled),
+#dt-toolbar button:hover:not(:disabled):not([aria-pressed="true"]),
+#dt-left-panels button:hover:not(:disabled),
+#dt-right-panels button:hover:not(:disabled),
+#dt-optionbar button:hover:not(:disabled),
+.dt-dialog-buttons button:hover:not(:disabled) {
+  background-color: var(--panel);
+}
+#dt-menubar .dt-menu div[role="menu"] button:hover:not(:disabled) {
+  background-color: var(--accent-strong);
+}
+#dt-app button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+/* --- 3b. Toolbar selection: one-shot 300ms pulse (transform only) --- */
+@keyframes dt-press-pulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+#dt-toolbar button[aria-pressed="true"] {
+  animation: dt-press-pulse 300ms ease-out 1;
+}
+
+/* --- 3c. Toasts: slide + fade in (transform/opacity only) --- */
+@keyframes dt-toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+#dt-toast .dt-toast-item {
+  animation: dt-toast-in 180ms ease-out;
+}
+
+/* --- 3d. Layer list: background fade --- */
+#dt-layer-list li.dt-layer {
+  transition: background-color 150ms ease-out, border-color 150ms ease-out, opacity 150ms ease-out;
+}
+#dt-layer-list li.dt-layer:hover {
+  background-color: var(--panel-2);
+}
+
+/* --- 3e. Keep focus-visible working (offset only; outline color unchanged) --- */
+:focus-visible {
+  outline-offset: 1px;
+}
+
+/* --- Reduced motion: kill juicy motion, keep state changes instant --- */
+@media (prefers-reduced-motion: reduce) {
+  #dt-app button,
+  #dt-toolbar button[aria-pressed="true"],
+  #dt-toast .dt-toast-item,
+  #dt-layer-list li.dt-layer,
+  #dt-optionbar section[data-for-tools] label:has(input[name="dt-shape-fill"]) {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* === END UI POLISH === */

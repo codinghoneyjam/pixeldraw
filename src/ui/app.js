@@ -1,10 +1,9 @@
-// <META - FILE SUMMARY - App assembly: boot order 1-9, actions, view, menubar shell>
+// <META - FILE SUMMARY - App assembly: boot order 1-9, actions wiring>
 import { DEFAULT_DOC } from "../core/constants.js";
 import { DrawToolError } from "../core/errors.js";
 import { EVENTS } from "../core/events.js";
 import { Session } from "../model/session.js";
 import { CanvasRenderer } from "../render/renderer.js";
-import { actualSizeView, clampView, fitView, stepZoom, zoomAt } from "../render/view.js";
 import { ToolManager } from "../tools/tool_manager.js";
 import { InputController } from "../tools/input_controller.js";
 import { PenTool } from "../tools/pen.js";
@@ -12,26 +11,29 @@ import { EyedropperTool } from "../tools/eyedropper.js";
 import { FillTool } from "../tools/fill.js";
 import { HandTool } from "../tools/hand.js";
 import { ShapeTool } from "../tools/shape.js";
-import { documentToJson, importLayerJson, jsonToDocument, layerToJson } from "../io/serialize.js";
-import { exportPngBytes } from "../io/export_png.js";
-import { pickFile, readJsonFile, saveBinaryFile, saveTextFile } from "../io/file_io.js";
 import { AutosaveStore } from "../io/store_idb.js";
 import { mountColor } from "./panel_color.js";
-import { mountBrush, paintPreview } from "./panel_brush.js";
-import { mountLayers, paintThumb } from "./panel_layers.js";
+import { mountBrush } from "./panel_brush.js";
+import { mountLayers } from "./panel_layers.js";
 import { mountCollapsibleSections, mountOptions } from "./panel_options.js";
 import { mountStatus } from "./statusbar.js";
-import { confirmDiscardChanges, showNewDocumentDialog, showProgress, showResizeCanvasDialog, showRestoreDialog } from "./dialogs.js";
+import { showRestoreDialog } from "./dialogs.js";
 import { createShortcuts } from "./shortcuts.js";
 import { STRINGS } from "./strings.js";
 import { iconFor } from "./icons.js";
+import { createViewStore } from "./view_store.js";
+import { createMenubar } from "./menubar.js";
+import { createHistoryButtons } from "./history_buttons.js";
+import { refreshPanelCanvases } from "./panel_refresh.js";
+import { doSave, doOpen, doExportLayer, doImportLayer, doExportPng, doNew } from "./actions/file_actions.js";
+import { requestUndo, requestRedo } from "./actions/edit_actions.js";
+import { zoomIn, zoomOut, fit, actual, gridCycle, canvasResize } from "./actions/view_actions.js";
+import { layerAdd, layerDuplicate, layerRemove, layerMergeDown, layerUp, layerDown } from "./actions/layer_actions.js";
+import { brushStep, colorSwap, colorReset } from "./actions/tool_actions.js";
 
 const SETTINGS_KEY = "dt.settings.v1";
 const RECENT_KEY = "dt.recentColors";
 const PERSIST_KEYS = ["primaryColor", "secondaryColor", "penSize", "gridMode", "snapUnit", "shapeFill", "shapeRadius", "shapeLockAspect", "activeTool"];
-const GRID_CYCLE = ["off", "unit", "tile", "pixel"];
-// Recent colour history cap. Must stay in sync with the recent-colour grid width
-// (DEFAULT_PALETTE.length in core/constants.js) so no swatch ever renders empty.
 const RECENT_MAX = 32;
 
 function loadJson(key) {
@@ -50,76 +52,6 @@ function storeJson(key, value) {
   } catch { /* ignore */ }
 }
 
-// <META - ROLE : View store owned by app with clamp + subscribe | L52-110>
-function createViewStore(host, session) {
-  let view = { zoom: 1, offsetX: 0, offsetY: 0 };
-  const subs = new Set();
-  function viewport() {
-    let w = 800;
-    let h = 600;
-    try {
-      if (host && host.clientWidth > 0) w = host.clientWidth;
-      if (host && host.clientHeight > 0) h = host.clientHeight;
-    } catch { /* ignore */ }
-    return { w, h };
-  }
-  function clamp(v) {
-    const doc = session.doc;
-    if (!doc) return { ...v };
-    const vp = viewport();
-    try {
-      return clampView(v, doc.canvas.widthPx, doc.canvas.heightPx, vp.w, vp.h);
-    } catch {
-      return { ...v };
-    }
-  }
-  function emit() {
-    for (const fn of subs) {
-      try { fn(view); } catch { /* ignore */ }
-    }
-  }
-  return {
-    get() {
-      return { ...view };
-    },
-    set(v) {
-      view = clamp({ ...v });
-      emit();
-    },
-    subscribe(fn) {
-      subs.add(fn);
-      return () => subs.delete(fn);
-    },
-    center() {
-      const vp = viewport();
-      return { x: vp.w / 2, y: vp.h / 2 };
-    },
-    zoomTo(z) {
-      if (!Number.isFinite(z) || z <= 0) return;
-      const c = this.center();
-      this.set(zoomAt(view, c.x, c.y, z));
-    },
-    zoomIn() {
-      this.zoomTo(stepZoom(view.zoom, 1));
-    },
-    zoomOut() {
-      this.zoomTo(stepZoom(view.zoom, -1));
-    },
-    fit() {
-      const doc = session.doc;
-      if (!doc) return;
-      const vp = viewport();
-      this.set(fitView(doc.canvas.widthPx, doc.canvas.heightPx, vp.w, vp.h));
-    },
-    actual() {
-      const doc = session.doc;
-      if (!doc) return;
-      const vp = viewport();
-      this.set(actualSizeView(doc.canvas.widthPx, doc.canvas.heightPx, vp.w, vp.h));
-    },
-  };
-}
-
 function toast(text, level = "info") {
   if (typeof document === "undefined") return;
   const box = document.getElementById("dt-toast");
@@ -131,150 +63,7 @@ function toast(text, level = "info") {
   setTimeout(() => item.remove(), level === "error" ? 8000 : 4000);
 }
 
-const MENU_CLOSE_DELAY_MS = 220;
-
-// <META - ROLE : Menubar shell: hover + click open, delayed leave close, dispose | L136-186>
-function createMenubar(root) {
-  const noop = () => {};
-  if (!root || typeof document === "undefined") return { closeAll: noop, dispose: noop };
-  const disposers = [];
-  const listen = (t, type, fn) => {
-    t.addEventListener(type, fn);
-    disposers.push(() => t.removeEventListener(type, fn));
-  };
-  const wraps = [...root.querySelectorAll(".dt-menu")];
-  let openWrap = null;
-  let closeTimer = null;
-
-  function cancelClose() {
-    if (closeTimer === null) return;
-    clearTimeout(closeTimer);
-    closeTimer = null;
-  }
-  function setOpen(wrap, open) {
-    const panel = wrap ? wrap.querySelector("div[role='menu']") : null;
-    const trigger = wrap ? wrap.querySelector("button[data-menu]") : null;
-    if (panel) panel.hidden = open !== true;
-    if (trigger) trigger.setAttribute("aria-expanded", open === true ? "true" : "false");
-  }
-  function closeAll() {
-    cancelClose();
-    for (const w of wraps) setOpen(w, false);
-    openWrap = null;
-  }
-  function open(wrap) {
-    cancelClose();
-    if (openWrap === wrap) return;
-    closeAll();
-    openWrap = wrap;
-    setOpen(wrap, true);
-  }
-  function scheduleClose() {
-    cancelClose();
-    closeTimer = setTimeout(() => {
-      closeTimer = null;
-      closeAll();
-    }, MENU_CLOSE_DELAY_MS);
-  }
-
-  for (const wrap of wraps) {
-    const trigger = wrap.querySelector("button[data-menu]");
-    listen(wrap, "pointerenter", () => open(wrap));
-    listen(wrap, "pointerleave", scheduleClose);
-    if (trigger) {
-      listen(trigger, "click", () => {
-        if (openWrap === wrap) closeAll();
-        else open(wrap);
-      });
-    }
-  }
-  listen(document, "pointerdown", (e) => {
-    if (!root.contains(e.target)) closeAll();
-  });
-  listen(document, "keydown", (e) => {
-    if (e.key === "Escape") closeAll();
-  });
-  return {
-    closeAll,
-    dispose() {
-      // closeAll() cancels the pending close timer and hides every dropdown, so a
-      // teardown mid-hover cannot leave a stranded open menu or a live timer.
-      closeAll();
-      for (const d of disposers) {
-        try { d(); } catch { /* ignore */ }
-      }
-      disposers.length = 0;
-    },
-  };
-}
-
-// <META - ROLE : Top-bar undo/redo enable state from history caps, inert under a dialog | L188-232>
-function createHistoryButtons(root, session) {
-  const noop = () => {};
-  if (!root || !session || typeof document === "undefined") return noop;
-  const undoBtn = root.querySelector('.dt-menubar-actions button[data-action="edit.undo"]');
-  const redoBtn = root.querySelector('.dt-menubar-actions button[data-action="edit.redo"]');
-  if (!undoBtn && !redoBtn) return noop;
-  const disposers = [];
-  const on = (t, type, fn) => {
-    t.addEventListener(type, fn);
-    disposers.push(() => t.removeEventListener(type, fn));
-  };
-  const app = document.getElementById("dt-app");
-  const dialogRoot = document.getElementById("dt-dialog-root");
-  let observer = null;
-
-  // Mirrors shortcuts.js isBusyUi(): a dialog owns the keyboard, so its shortcuts do too.
-  function isBusy() {
-    if (dialogRoot && dialogRoot.querySelector("[role='dialog']")) return true;
-    return app !== null && app.getAttribute("aria-busy") === "true";
-  }
-  function sync() {
-    const busy = isBusy();
-    let u = false;
-    let r = false;
-    try {
-      u = session.history.canUndo();
-      r = session.history.canRedo();
-    } catch {
-      u = false;
-      r = false;
-    }
-    if (undoBtn) undoBtn.disabled = busy || !u;
-    if (redoBtn) redoBtn.disabled = busy || !r;
-  }
-  on(session, EVENTS.HISTORY_CHANGED, sync);
-  on(session, EVENTS.DOCUMENT_REPLACED, sync);
-  if (typeof MutationObserver === "function") {
-    observer = new MutationObserver(sync);
-    if (dialogRoot) observer.observe(dialogRoot, { childList: true });
-    if (app) observer.observe(app, { attributes: true, attributeFilter: ["aria-busy"] });
-  }
-  sync();
-  return () => {
-    if (observer) observer.disconnect();
-    for (const d of disposers) {
-      try { d(); } catch { /* ignore */ }
-    }
-    disposers.length = 0;
-  };
-}
-
-// <META - ROLE : Repaint canvas-backed panel content after a collapsed section reopens | L234-250>
-function refreshPanelCanvases(session) {
-  const s = session.settings;
-  const preview = document.getElementById("dt-brush-preview");
-  if (preview) paintPreview(preview, s.penSize, s.primaryColor);
-  const list = document.getElementById("dt-layer-list");
-  const doc = session.doc;
-  if (!list || !doc) return;
-  for (const li of list.querySelectorAll("li[data-layer-id]")) {
-    const canvas = li.querySelector("canvas.dt-layer-thumb");
-    if (canvas) paintThumb(canvas, doc.findLayer(li.dataset.layerId));
-  }
-}
-
-// <META - ROLE : Boot sequence per G3 order 1-9 | L112-400>
+// <META - ROLE : Boot sequence per G3 order 1-9 | L60-210>
 async function boot() {
   const app = document.getElementById("dt-app");
   const host = document.getElementById("dt-canvas-host");
@@ -294,39 +83,15 @@ async function boot() {
       if (out && typeof out.catch === "function") {
         out.catch((e) => {
           if (e instanceof DrawToolError) session.notify("error", e.message, e.code);
-          else {
-            console.error(e);
-            session.notify("error", STRINGS.toast.unexpected);
-          }
+          else { console.error(e); session.notify("error", STRINGS.toast.unexpected); }
         });
       }
       return out;
     } catch (e) {
       if (e instanceof DrawToolError) session.notify("error", e.message, e.code);
-      else {
-        console.error(e);
-        session.notify("error", STRINGS.toast.unexpected);
-      }
+      else { console.error(e); session.notify("error", STRINGS.toast.unexpected); }
       return undefined;
     }
-  }
-
-  function requestUndo() {
-    try {
-      const t = toolManager ? toolManager.active : null;
-      if (t && typeof t.hasPending === "function" && t.hasPending()) {
-        t.discardPending();
-        return;
-      }
-    } catch { /* fall through to session.undo */ }
-    session.undo();
-  }
-  function requestRedo() {
-    try {
-      const t = toolManager ? toolManager.active : null;
-      if (t && typeof t.hasPending === "function" && t.hasPending()) return;
-    } catch { /* fall through */ }
-    session.redo();
   }
 
   // 1. settings + recent
@@ -344,11 +109,7 @@ async function boot() {
 
   // 2. autosave peek/restore
   let store = null;
-  try {
-    store = await AutosaveStore.open();
-  } catch {
-    store = null;
-  }
+  try { store = await AutosaveStore.open(); } catch { store = null; }
   let restored = false;
   if (store) {
     let peek = null;
@@ -358,10 +119,7 @@ async function boot() {
       if (choice === "restore") {
         let doc = null;
         try { doc = await store.load(); } catch { doc = null; }
-        if (doc) {
-          session.loadDocument(doc, { markSaved: false });
-          restored = true;
-        }
+        if (doc) { session.loadDocument(doc, { markSaved: false }); restored = true; }
       } else {
         try { await store.clear(); } catch { /* ignore */ }
       }
@@ -383,16 +141,10 @@ async function boot() {
   renderer = new CanvasRenderer({ host, session, getView: () => viewStore.get(), getOverlay: () => toolManager.overlay });
   renderer.attach();
   input = new InputController({
-    host,
-    session,
-    toolManager,
+    host, session, toolManager,
     getView: () => viewStore.get(),
     setView: (v) => viewStore.set(v),
-    getViewportSize: () => {
-      const w = host.clientWidth || 800;
-      const h = host.clientHeight || 600;
-      return { w, h };
-    },
+    getViewportSize: () => ({ w: host.clientWidth || 800, h: host.clientHeight || 600 }),
     onHover: (pos) => { if (statusApi) statusApi.setCursor(pos); },
     requestRender: () => renderer.requestRender(),
   });
@@ -400,164 +152,37 @@ async function boot() {
   viewStore.fit();
   viewStore.subscribe(() => renderer.requestRender());
 
-  // file flows
-  async function doSave() {
-    const doc = session.doc;
-    if (!doc) return;
-    const prog = showProgress("저장 중");
-    try {
-      const obj = await documentToJson(doc, { onProgress: (d, t) => prog.update(t ? d / t : 0) });
-      const ok = await saveTextFile(`${doc.name || "untitled"}.draw.json`, JSON.stringify(obj));
-      if (ok) {
-        session.history.markSaved();
-        session.dispatchEvent(new CustomEvent(EVENTS.HISTORY_CHANGED, {
-          detail: { canUndo: session.history.canUndo(), canRedo: session.history.canRedo(), dirty: session.history.isDirty() },
-        }));
-        toast(STRINGS.toast.saved);
-      }
-    } finally {
-      prog.close();
-    }
-  }
-  async function doOpen() {
-    if (session.history.isDirty()) {
-      const go = await confirmDiscardChanges();
-      if (!go) return;
-    }
-    const file = await pickFile(".json,application/json");
-    if (!file) return;
-    const prog = showProgress("열기");
-    try {
-      const obj = await readJsonFile(file);
-      if (obj && obj.format === "draw_tool.document") {
-        const { document: doc, warnings } = await jsonToDocument(obj, { onProgress: (d, t) => prog.update(t ? d / t : 0) });
-        session.loadDocument(doc);
-        for (const w of warnings) toast(w, "warn");
-        toast(STRINGS.toast.opened);
-      } else if (obj && obj.format === "draw_tool.layer") {
-        session.notify("info", STRINGS.toast.layerFileHint);
-      } else {
-        throw new DrawToolError("SCHEMA", "unknown file format");
-      }
-    } finally {
-      prog.close();
-    }
-  }
-  async function doExportLayer() {
-    const doc = session.doc;
-    if (!doc) return;
-    const prog = showProgress("레이어 내보내기");
-    try {
-      const obj = await layerToJson(doc, doc.activeLayerId);
-      const layer = doc.getLayer(doc.activeLayerId);
-      const ok = await saveTextFile(`${layer.name || "layer"}.drawlayer.json`, JSON.stringify(obj));
-      if (ok) toast(STRINGS.toast.exportedLayer);
-    } finally {
-      prog.close();
-    }
-  }
-  async function doImportLayer() {
-    const file = await pickFile(".json,application/json");
-    if (!file) return;
-    const prog = showProgress("레이어 가져오기");
-    try {
-      const obj = await readJsonFile(file);
-      const { layer, dropped, warnings } = await importLayerJson(session.doc, obj);
-      session.insertLayer(layer);
-      for (const w of warnings) toast(w, "warn");
-      if (dropped > 0) toast(`${STRINGS.toast.droppedChunks}: ${dropped}`, "warn");
-      toast(STRINGS.toast.importedLayer);
-    } finally {
-      prog.close();
-    }
-  }
-  async function doExportPng() {
-    const doc = session.doc;
-    if (!doc) return;
-    const prog = showProgress("PNG 내보내기");
-    try {
-      const bytes = await exportPngBytes(doc, { includeBackground: true });
-      prog.update(0.8);
-      const ok = await saveBinaryFile(`${doc.name || "untitled"}.png`, bytes, "image/png");
-      if (ok) toast(STRINGS.toast.exportedPng);
-    } finally {
-      prog.close();
-    }
-  }
-  async function doNew() {
-    if (session.history.isDirty()) {
-      const go = await confirmDiscardChanges();
-      if (!go) return;
-    }
-    const res = await showNewDocumentDialog();
-    if (!res) return;
-    let id = undefined;
-    try {
-      if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") id = crypto.randomUUID();
-    } catch { /* ignore */ }
-    session.newDocument({ widthPx: res.widthPx, heightPx: res.heightPx, background: res.background, name: res.name, id });
-  }
-
   const actions = {
-    "file.new": () => runAction(doNew),
-    "file.open": () => runAction(doOpen),
-    "file.save": () => runAction(doSave),
-    "file.exportLayer": () => runAction(doExportLayer),
-    "file.importLayer": () => runAction(doImportLayer),
-    "file.exportPng": () => runAction(doExportPng),
-    "edit.undo": () => runAction(requestUndo),
-    "edit.redo": () => runAction(requestRedo),
-    "canvas.resize": () => runAction(async () => {
-      const doc = session.doc;
-      if (!doc) return;
-      const res = await showResizeCanvasDialog({ widthPx: doc.canvas.widthPx, heightPx: doc.canvas.heightPx });
-      if (res) session.resizeCanvas(res.widthPx, res.heightPx);
-    }),
-    "view.zoomIn": () => viewStore.zoomIn(),
-    "view.zoomOut": () => viewStore.zoomOut(),
-    "view.fit": () => viewStore.fit(),
-    "view.actual": () => viewStore.actual(),
-    "view.gridCycle": () => runAction(() => {
-      const cur = session.settings.gridMode;
-      const next = GRID_CYCLE[(GRID_CYCLE.indexOf(cur) + 1) % GRID_CYCLE.length];
-      session.setSetting("gridMode", next);
-    }),
-    "layer.add": () => runAction(() => session.addLayer()),
-    "layer.duplicate": () => runAction(() => session.duplicateLayer(session.doc.activeLayerId)),
-    "layer.remove": () => runAction(() => session.removeLayer(session.doc.activeLayerId)),
-    "layer.mergeDown": () => runAction(() => session.mergeDown(session.doc.activeLayerId)),
-    "layer.up": () => runAction(() => {
-      const d = session.doc;
-      session.moveLayer(d.activeLayerId, d.indexOf(d.activeLayerId) + 1);
-    }),
-    "layer.down": () => runAction(() => {
-      const d = session.doc;
-      session.moveLayer(d.activeLayerId, d.indexOf(d.activeLayerId) - 1);
-    }),
-    "brush.step": (delta) => runAction(() => {
-      const cur = session.settings.penSize;
-      session.setSetting("penSize", Math.max(1, Math.min(64, cur + delta)));
-    }),
-    "color.swap": () => runAction(() => {
-      const s = session.settings;
-      session.setSetting("primaryColor", s.secondaryColor);
-      session.setSetting("secondaryColor", s.primaryColor);
-    }),
-    "color.reset": () => runAction(() => {
-      session.setSetting("primaryColor", "#000000");
-      session.setSetting("secondaryColor", "#ffffff");
-    }),
+    "file.new": () => runAction(() => doNew(session)),
+    "file.open": () => runAction(() => doOpen(session, toast)),
+    "file.save": () => runAction(() => doSave(session, toast)),
+    "file.exportLayer": () => runAction(() => doExportLayer(session, toast)),
+    "file.importLayer": () => runAction(() => doImportLayer(session, toast)),
+    "file.exportPng": () => runAction(() => doExportPng(session, toast)),
+    "edit.undo": () => runAction(() => requestUndo(session, toolManager)),
+    "edit.redo": () => runAction(() => requestRedo(session, toolManager)),
+    "canvas.resize": () => runAction(() => canvasResize(session)),
+    "view.zoomIn": () => zoomIn(viewStore),
+    "view.zoomOut": () => zoomOut(viewStore),
+    "view.fit": () => fit(viewStore),
+    "view.actual": () => actual(viewStore),
+    "view.gridCycle": () => runAction(() => gridCycle(session)),
+    "layer.add": () => runAction(() => layerAdd(session)),
+    "layer.duplicate": () => runAction(() => layerDuplicate(session)),
+    "layer.remove": () => runAction(() => layerRemove(session)),
+    "layer.mergeDown": () => runAction(() => layerMergeDown(session)),
+    "layer.up": () => runAction(() => layerUp(session)),
+    "layer.down": () => runAction(() => layerDown(session)),
+    "brush.step": (delta) => runAction(() => brushStep(session, delta)),
+    "color.swap": () => runAction(() => colorSwap(session)),
+    "color.reset": () => runAction(() => colorReset(session)),
   };
 
   // menubar wiring
   const menubar = document.getElementById("dt-menubar");
   const menuShell = createMenubar(menubar);
   const disposeHistoryButtons = createHistoryButtons(menubar, session);
-  panelDisposers.push(() => {
-    menuShell.dispose();
-    disposeHistoryButtons();
-  });
-  // One delegation covers dropdown items AND the top-bar undo/redo group.
+  panelDisposers.push(() => { menuShell.dispose(); disposeHistoryButtons(); });
   for (const item of menubar.querySelectorAll("button[data-action]")) {
     item.addEventListener("click", () => {
       if (item.disabled) return;
@@ -618,13 +243,8 @@ async function boot() {
   if (store) store.attach(session);
 
   // 6. window events
-  window.addEventListener("resize", () => {
-    renderer.resize();
-    viewStore.set(viewStore.get());
-  });
-  window.addEventListener("beforeunload", (e) => {
-    if (session.history.isDirty()) e.preventDefault();
-  });
+  window.addEventListener("resize", () => { renderer.resize(); viewStore.set(viewStore.get()); });
+  window.addEventListener("beforeunload", (e) => { if (session.history.isDirty()) e.preventDefault(); });
 
   // 7-8. replaced => fit; status notify => toast for warn/error
   session.addEventListener(EVENTS.DOCUMENT_REPLACED, () => viewStore.fit());
@@ -633,7 +253,10 @@ async function boot() {
     if (level === "warn" || level === "error") toast(String(text), level);
   });
 
-  const shortcuts = createShortcuts({ toolManager, session, actions, requestUndo, requestRedo });
+  const shortcuts = createShortcuts({ toolManager, session, actions,
+    requestUndo: () => requestUndo(session, toolManager),
+    requestRedo: () => requestRedo(session, toolManager),
+  });
 
   // 9. debug
   try {
@@ -658,6 +281,4 @@ if (typeof document !== "undefined") {
   boot().catch((e) => console.error(e));
 }
 
-// Shell helpers are exported so the UI contract (menu state machine, undo/redo
-// enable state, canvas refresh on re-expand) is testable without a browser.
 export { boot, createHistoryButtons, createMenubar, refreshPanelCanvases };

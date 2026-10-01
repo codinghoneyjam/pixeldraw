@@ -1,148 +1,174 @@
-# ui — 셸·패널·단축키·다이얼로그
+# ui — 셸·패널·색·다이얼로그·크롬 (src/ui 36파일 = 루트 31 + actions/ 5)
 
-## 역할 요약
+> Session 메서드 호출+구독만. 모델 직접 변조 금지. 전역 싱글턴 직접 접근 없음.
+> 규약: `mount*(root,deps)→()=>{}` dispose 반환. `!root||!document`면 no-op dispose.
+> 리스너는 `disposers[]` 수집 후 일괄 해제. `setHidden/clearChildren` 외 DOM 직접 조작은 mount 내부로 한정.
 
-- `app.js` 부팅 순서(설정→복원→도구/렌더/입력→패널→자동저장→윈도우 이벤트) 조립.
-- UI는 Session 메서드 호출 + Session 이벤트 구독만. 모델 직접 변조 금지, 싱글턴 전역 상태 직접 접근 없음.
-- 모든 한글 문구는 `strings.js` 중앙 관리, 아이콘은 인라인 SVG + 한글 폴백.
+## 1. boot (2종) — 조립+뷰 소유
 
-## 파일별 API
+### app.js (261줄) — `boot()` (export) + `createHistoryButtons/createMenubar/refreshPanelCanvases` 재수출
+- 9단계: 1 설정(`dt.settings.v1`→PERSIST_KEYS 9종)+최근색(`dt.recentColors`,RECENT_MAX=32) 로드
+- 2 AutosaveStore.open→peek→`showRestoreDialog`→restore(loadDocument)/discard(clear), 미복원시 newDocument(DEFAULT_DOC)
+- 3 ToolManager 등록(pen/erase/fill/eyedropper/shape×4/hand)+CanvasRenderer.attach+InputController.attach+`viewStore.fit()`, fit후 `viewStore.subscribe(render)`
+- 4 `mountStatus/mountColor/mountBrush/mountLayers/mountOptions/mountCollapsibleSections`+panelDisposers 수집
+- 5 `store.attach(session)` 6 resize(renderer.resize+view 재clamp)+beforeunload(dirty 가드)
+- 7 DOCUMENT_REPLACED→fit, STATUS_MESSAGE warn/error→toast(4s/8s) 8 `createShortcuts` 9 `?debug`→`window.__drawTool`
+- 액션표: file.new/open/save/exportLayer/importLayer/exportPng, edit.undo/redo, canvas.resize, view.zoomIn/out/fit/actual/gridCycle, layer.add/duplicate/remove/mergeDown/up/down, brush.step/color.swap/reset. menubar `button[data-action]`→actions, toolbar `button[data-tool]`→setSetting(activeTool)+`iconFor` 채움+aria-pressed 동기화.
+- 구독: SETTINGS_CHANGED(activeTool→툴바, 전체→250ms 디바운스 영속), DOCUMENT_REPLACED, STATUS_MESSAGE.
+- 주의: `#dt-app/#dt-canvas-host` 없으면 throw. `runAction`이 DrawToolError→notify, 그외→toast+console.
 
-### app.js
+### view_store.js — `createViewStore(host,session)` → `{get/set/subscribe/center/zoomTo/zoomIn/zoomOut/fit/actual}`
+- `clampView/fitView/stepZoom/zoomAt/actualSizeView`(render/view.js)에 위임. set은 항상 clamp+emit. get은 복사본.
+- viewport는 host.clientWidth/Height, 실패시 800×600. center=viewport/2. zoomTo는 center 기준 zoomAt.
+- 구독: Session 직접 구독 없음. 역으로 app·statusbar가 `subscribe(refresh/render)`로 소비.
+- 주의: doc 없으면 clamp는 복사만, fit/actual은 no-op. NaN·음수 zoom 무시.
 
-| 이름 | 시그니처 | 설명 |
-|---|---|---|
-| `boot` | `boot()` (export) | 9단계 부팅, `document` 없으면 미실행, `?debug` 시 `window.__drawTool` 노출 |
-| viewStore | `get/set/subscribe/center/zoomTo/zoomIn/zoomOut/fit/actual` | app 소유 뷰 상태, 항상 clamp |
+## 2. panel (5종) — 도구·층·옵션 패널
 
-부팅 순서: 1 설정·최근색(localStorage) → 2 자동저장 peek·복원 선택 → 3 도구 등록(펜·지우개·통·스포이트·도형4·손)+렌더러+입력+fit → 4 패널·상태바 → 5 자동저장 attach → 6 resize·beforeunload → 7 문서교체→fit·알림 토스트 → 8 단축키 → 9 디버그. 액션 테이블: file.*·edit.*·canvas.resize·view.*·layer.*·brush.step·color.swap/reset. 메뉴·툴바는 `data-action`·`data-tool` 속성 배선.
+### panel_brush.js — `mountBrush(root,{session})` + `SIZE_PRESETS(16단계 1–64 frozen)/paintPreview/presetColumns/presetRows/stepPenSize`
+- sync(from): num/range/프리셋 aria-pressed/64×64 `paintPreview(brushFootprint 마스크 중앙 1:1)` 동기화. setSize→setSetting, 실패시 notify+resync.
+- `presetColumns(count)`: 4부터 최소약수, 없으면 4. `presetRows=ceil(count/cols)`. CSS `--dt-preset-cols/rows`+`dt-preset-grid`로 4×4.
+- 구독: SETTINGS_CHANGED(penSize→sync, primaryColor→preview만).
+- 주의: 셀 `min-width:0` 필수(32px 잔재시 6/5/5 감김). 휠 입력은 `bindWheelInputs`(Shift=5단위).
 
-### dom.js (Node-safe)
+### panel_layers.js — `mountLayers(root,{session})` + `paintThumb(canvas,layer)`(32×32 최근접)
+- 불투명도 쌍동기+역순(top-first) 리스트박스+썸네일(250ms 스로틀)+추가/복제/삭제/병합/위·아래+더블클릭 개명+드래그 미구현시 버튼 순서.
+- 구독: DOCUMENT_REPLACED/LAYERS_CHANGED/HISTORY_CHANGED→전체 리렌더+썸네일, SETTINGS_CHANGED 무시.
+- 주의: 위로=index+1(뒤가 위). 최하층 병합 비활성. 썸네일은 `refreshPanelCanvases`에서도 재호출.
 
-| 이름 | 시그니처 | 설명 |
-|---|---|---|
-| `el` | `el(tag, attrs, children)` | 생성 또는 스텁 반환 |
-| `qs` / `qsa` | `qs(root, sel)` / `qsa(root, sel)` | 단일·복수 조회 |
-| `on` | `on(target, type, fn, opts)` | 등록 후 해제함수 반환 |
-| `setHidden` / `clearChildren` | `setHidden(node, hidden)` / `clearChildren(node)` | hidden 토글·자식 비움 |
+### panel_options.js — `mountOptions(root,{session,toolManager,view})` (+`mountCollapsibleSections` 재수출)
+- 그리드 셀렉트+줌 셀렉트(ZOOM_LEVELS)+fit/actual+펜크기 라벨+도형(fill 라디오/radius/lock/snap/bbox x/y/w/h+commit/cancel)+`createTooltips` 내장.
+- syncSections: `[data-for-tools]` 표시전환, line은 채움 비활성, rrect만 radius 활성, 보류 있을때만 bbox 활성. 숨김 섹션은 `tips.closeWithin`.
+- 구독: SETTINGS_CHANGED(activeTool·grid·shape계)→sync, shape 보류 이벤트→bbox.
+- 주의: 줌 셀렉트는 view에 위임. 옵션바 `overflow:hidden`이라 툴팁은 body 부착.
 
-### strings.js / icons.js
+### collapsible_sections.js — `mountCollapsibleSections(roots,{onExpand})`
+- `section[data-collapsed]`+`.dt-panel-head` 클릭 토글→`data-collapsed/aria-expanded`+`dt.settings.v1.collapsedPanels`에 병합 영속.
+- 펼침시 `onExpand(id,section)` 1회 호출. app은 여기에 `refreshPanelCanvases`를 건다.
+- 주의: localStorage 파손시 `{}` 폴백. id 없는 섹션은 영속 생략·토글만.
 
-| 이름 | 시그니처 | 설명 |
-|---|---|---|
-| `STRINGS` | frozen(메뉴·액션·도구·힌트·패널·상태·다이얼로그·토스트) | 한글 중앙 카탈로그 |
-| `msg` | `msg(key, fallback)` | 키 조회 |
-| `ICONS` | frozen 15종 | pen/eraser/fill/eyedropper/line/rect/rrect/ellipse/hand/eye/eyeOff/lock/unlock/swap/plus |
-| `iconFor` | `iconFor(id)` | SVG 또는 한글 폴백(펜·지·통·스·선·사·둥·타·손) |
-| `hasIcon` | `hasIcon(id)` | SVG 보유 여부 |
+### panel_refresh.js — `refreshPanelCanvases(session)`
+- 브러시 preview+`li[data-layer-id]`별 `paintThumb` 재도색. 접힘→펼침시 캔버스 백킹스토어 유실 복구용.
+- 주의: doc 없으면 레이어 순회 생략. mount 아님(dispose 없음).
 
-### panel_color.js
+## 3. color (9종) — 파사드+파이프라인+휠+32색
 
-| 이름 | 시그니처 | 설명 |
-|---|---|---|
-| `DEFAULT_PALETTE` | 32색 frozen | 기본 팔레트 |
-| `mountColor` | `mountColor(root, deps)` | 슬롯·컬러픽커·팔레트·최근색(32칸 고정) 마운트, dispose 반환 |
-| `panel_color_wheel.js` | `createColorWheel({container,onChange})` | 색상환+SV 캔버스, HSV 수학, 래스터 캐시. DOM 없으면 `null` |
+### panel_color.js (파사드) — `mountColor(root,{session,palette,getRecent,saveRecent})` + `DEFAULT_PALETTE` 재수출
+- ui 객체: `{session,slot(PRIMARY),lock,wheel,fields,recentCells,recentCount=PALETTE.length,els,canonical/paint/apply/applyColor/pickSwatch/pushRecent/safe}` 조립 후 buildRecentGrid→paintRecent→mountPalette→mountColorFields→mountSlotButtons→mountWheel+mountSessionEvents→paint(force).
+- SSOT: `canonicalHex(ui)` 유일 읽기(활성슬롯→normHex, 실패시 #000000). `applyColor(ui,key,hex,{record})` 유일 쓰기(normHex 무효시 paint후 false, lock+1→setSetting→lock-1→paint→record시 pushRecent). `paint(ui,force)`: lock>0이면 읽기만, 슬롯버튼 배경+aria-pressed→paintColorFields→wheel.setFromRgb→syncActiveSwatches. `pickSwatch(e,hex)`: Shift=반대슬롯, 그외 활성슬롯, record:true. `setSlot` 전환후 강제 paint.
+- dispose: `makeDispose`가 그리드 셀 리스너(offs)+5 mount dispose 일괄 해제.
+- 주의: recentCount는 palette 길이와 동기(기본 32). `deps.palette` 주입시 RECENT_CELLS도 연동.
 
-주/보조 슬롯, Shift+클릭=보조색, 우클릭=보조색, 그리기 Undo 발생 시 주색을 최근색에 push.
-최근색은 `DEFAULT_PALETTE.length`칸을 **항상** 렌더링하고 미사용 칸은 `.dt-swatch.is-empty`(흰/회색 모자이크, `disabled`)로 채운다. 현재 색과 같은 팔레트 칸에는 `data-active="true"`가 붙는다(타깃 마커 표시용).
+### panel_color_fields.js — `normHex(v)/isFocused/makeSwatchButton/resolveColorFields/paintColorFields/mountColorFields` + `CHANNELS=[r,g,b]`
+- `normHex=parseHex→a==255 검증→toHex`, 무효시 null. `paintColorFields(fields,hex,force)`: 포커스 가드(force면 덮어씀) 후 HEX+RGB 반영.
+- `makeSwatchButton({hex,aria,emptyLabel,onPick,onContextMenu},offs)`: `.dt-swatch`, 빈칸은 `.is-empty`+disabled+checkerboard. 리스너 offs 등록.
+- `mountColorFields(ui,fields)`: HEX Enter/commit·RGB Enter/commit+무효시 canonical 복원. dispose=offs 해제.
+- 주의: 프로그램적 쓰기시 lock로 SETTINGS_CHANGED 재진입 무력화. 무효 입력은 정본값 복원.
 
-### panel_brush.js
+### color_events.js — `mountSessionEvents(ui)`
+- SETTINGS_CHANGED(primary/secondary만)→`ui.paint(false)`+lock==0이면 pushRecent. HISTORY_CHANGED→undoLabel이 7종(연필·지우개·페인트통·직선·사각형·둥근사각형·타원)이면 primary pushRecent.
+- 주의: 색 외 key는 무시. dispose는 removeEventListener 2종.
 
-| 이름 | 시그니처 | 설명 |
-|---|---|---|
-| `SIZE_PRESETS` | 16단계 frozen | 1–64 |
-| `paintPreview` | `paintPreview(canvas, size, hex)` | 64×64 1:1 footprint 미리보기 |
-| `mountBrush` | `mountBrush(root, deps)` | 숫자·슬라이더·프리셋·미리보기 동기화 |
-| `presetColumns` / `presetRows` | `presetColumns(count)` | 프리셋 그리드 열/행 수. 4 이상 최소 약수, 없으면 4 |
+### color_palette.js — `mountPalette(ui,palette,offs)/syncActiveSwatches(ui)` + DEFAULT_PALETTE 재수출
+- mount 1회 `replaceChildren`, 좌클릭→pickSwatch, 우클릭→보조슬롯 record. sync는 양 슬롯 색 집합과 `data-color` 비교 후 `data-active` 토글(타깃마커용).
+- 주의: 매번 재생성 금지(클릭 대상 소실 원인). paint 경로에서만 sync 호출.
 
-프리셋 16개는 `dt-preset-grid` 클래스와 `--dt-preset-cols/rows`를 publish해서 **4행 4열**로 나온다. 셀은 `dt-preset`.
+### color_palette_data.js — `DEFAULT_PALETTE` 32색 frozen (PICO-8 16+회색 8+채도 8)
+- 주의: recent 고정칸 수도 이 length에서 파생. 순서 변경시 스냅샷 테스트 갱신.
 
-### panel_layers.js
+### color_recent.js — `buildRecentGrid(ui,offs)/paintRecent(ui)/pushRecent(ui,hex)`
+- build 1회 N셀 생성, 클릭→pickSwatch(disabled 가드). paint는 제자리 재칠, 미사용은 `.is-empty`+disabled+`빈 칸`. push는 dedup+앞삽입+`recentCount` cap→saveRecent→paint.
+- 주의: `replaceChildren` 재생성 금지. 보조슬롯 활성시에도 활성슬롯 기준으로 기록(pickSwatch 경유).
 
-| 이름 | 시그니처 | 설명 |
-|---|---|---|
-| `paintThumb` | `paintThumb(canvas, layer)` | 32×32 최근접 축소 썸네일 |
-| `mountLayers` | `mountLayers(root, deps)` | 불투명도·역순 리스트박스·썸네일·버튼·더블클릭 개명 |
+### color_slots.js — `mountSlotButtons(ui)`
+- fgbg 클릭+keydown→양 슬롯값 교환(applyColor 2회), reset→primary #000000/secondary #ffffff.
+- 주의: swap 순서 고정(보조 먼저 읽고 쓰기). dispose=offs 해제.
 
-표시는 top-first 역순, 썸네일은 250ms 스로틀 갱신. 위로=인덱스+1(뒤가 위). 병합 버튼은 최하층에서 비활성.
+### color_wheel.js — `mountWheel(ui)` (얇은 어댑터)
+- `createColorWheel({container:els.wheelWrap,onChange:활성슬롯 record:false,onCommit:canonical pushRecent})` 연결. dispose=wheel.dispose.
+- 주의: 휠은 paint()가 먹이는 순수 뷰. 드래그 중 onChange는 기록 없이 칠하고, 해제시 1회 기록.
 
-### panel_options.js
+### panel_color_wheel.js — `createColorWheel({container,onChange,onCommit})` + `WHEEL_PX=176/RING_OUT=88/RING_IN=74/RING_MID=81/RING_CLEARANCE=4/SV_PX=floor(2·(74−4)/√2)` + `rgbToHsv/hsvToRgb/angleToHue/hsvToHex`
+- hue링+중앙 SV사각 캔버스 2개 생성(없으면 생성, `resolveCanvas`), 래스터 캐시+포인터 드래그 pickHue/pickSatVal. 반환 `{wheelCanvas,svCanvas,setHueSV,setFromRgb,dispose}`. DOM 없으면 null.
+- 주의: SV 크기는 계산값 고정. 하드코딩시 모서리 잘림. style.css 176/98과 어긋나면 링 이탈. SV는 `border-radius:0` 정사각, 전(s,v) 선택 가능.
 
-| 이름 | 시그니처 | 설명 |
-|---|---|---|
-| `mountOptions` | `mountOptions(root, deps)` | 그리드·줌·도구별 섹션·도형 bbox 마운트 + 툴팁 연결 |
+## 4. dialog (7종) — openModal 셸+재수출 파사드
 
-`data-for-tools` 섹션 표시 전환, line은 채움 라디오 비활성, rrect만 반경 활성, 보류 있을 때만 bbox 입력·확정·취소 활성. 줌 셀렉트는 `ZOOM_LEVELS` 옵션.
+### dialog_core.js — `openModal({title,build(body,bar,close),onAction})→{close,element,extra}` + `addButton(bar,label,onClick,{disabled,id})` + `numberField(body,id,label,value,step)`
+- `#dt-dialog-root`에 overlay+`.dt-dialog[role=dialog][aria-modal]`+h2+body+buttons 생성. Esc→close(null), Tab 포커스트랩, overlay 클릭→close(null), 이전 포커스 복원+settled 1회 보장. 첫 focusable 자동 포커스. root 없으면 `{close:noop,element:null}`.
+- 주의: document keydown을 capture로 등록, close시 해제. 중첩 모달은 호출자 책임(동시 1개 권장).
 
-### tooltip.js
+### dialogs.js (파사드) — `openModal/addButton/numberField`+5 show* 재수출のみ. app·액션은 이 파일만 import.
+### dialog_confirm.js — `confirmDiscardChanges()→Promise<bool>` (DOM 없으면 false)
+- "변경 버리기" 문구+취소(false)/버리기(true). onAction `v===true` 변환.
+### dialog_new_doc.js — `showNewDocumentDialog()→Promise<desc|null>`
+- 타일 단위 w/h(0.5–30/17)+프리셋 4종(2×2/8×8/16×16/30×17)+배경(transparent/흰/검)+이름. 32px 배수 검증, 무효시 에러문+생성 비활성.
+### dialog_resize.js — `showResizeCanvasDialog(current)→Promise<{widthPx,heightPx}|null>`
+- 32–1920×32–1088·32배수·정수 검증. input 이벤트마다 ok버튼+에러문 동기화.
+### dialog_restore.js — `showRestoreDialog(info)→Promise<"restore"|"discard">` (DOM 없으면 "discard")
+- 이름+updatedAt 표시, 버리기/복원 버튼. onAction restore以外 discard 정규화.
+### dialog_progress.js — `showProgress(text)→{update(pct01),close()}`
+- `#dt-app[aria-busy=true]`+`#dt-dialog-root`에 `.dt-progress[role=status]`+바. update는 0–1 clamp→width%. close는 노드 제거+aria-busy 복원. Node-safe no-op.
+- 주의: 열림 중 `createShortcuts/isBusyUi`+`history_buttons/isBusy`가 입력·undo/redo 비활성.
 
-| 이름 | 시그니처 | 설명 |
-|---|---|---|
-| `TIP_AUTO_HIDE_MS` | `2500` | 표시 후 자동 닫힘까지의 유휴 시간 |
-| `createTooltips` | `createTooltips(root)` | `{dispose, close, closeWithin, isOpen}` |
+## 5. chrome (8종) — dom·문구·아이콘·메뉴·히스토리·상태·단축키·툴팁
 
-`.dt-tip-trigger`(`?`, 설명은 `data-tip`)에 hover/focus 또는 클릭하면 `.dt-tooltip`이 `document.body`에 만들어져 표시된다. `mouseleave`·`focusout`·`Escape`·바깥 클릭·유휴 타임아웃으로 닫히고 트리거의 `aria-expanded`가 갱신된다. 동시 표시 1개. 옵션바가 `overflow:hidden`이라 body 부착이 필수다. `root`가 delegation 기준이라 섹션이 `hidden` 되면 `closeWithin(sec)`로 함께 닫는다.
+### dom.js — `el(tag,attrs,children)/qs(root,sel)/qsa(root,sel)/on(target,type,fn,opts)/setHidden/clearChildren` (Node-safe)
+- el은 text/html/on*·boolean 속성 분기, 미지원시 스텁 `{tag,attrs,children}`. on은 해제함수 반환. setHidden은 toggleAttribute(hidden).
+### strings.js — `STRINGS` frozen(메뉴·액션·도구·단축키·힌트·패널·상태·다이얼로그·토스트)+`msg(key,fallback)` (키 미보유시 fallback)
+- 주의: 한글 문구는 반드시 여기 경유. 하드코딩 금지.
+### icons.js — `ICONS` 15종 frozen(pen/eraser/fill/eyedropper/line/rect/rrect/ellipse/hand/eye/eyeOff/lock/unlock/swap/plus)+`iconFor(id)/hasIcon(id)`
+- iconFor는 SVG 문자열, 미보유시 한글 폴백(펜·지·통·스·선·사·둥·타·손), 그외 `?`.
+### menubar.js — `createMenubar(root)→{closeAll,dispose}` (MENU_CLOSE_DELAY_MS=220)
+- `.dt-menu` hover-open+click 토글+leave 220ms 예약닫힘+바깥 pointerdown 닫힘. trigger `aria-expanded`+패널 hidden 동기화.
+### history_buttons.js — `createHistoryButtons(root,session)→dispose`
+- `.dt-menubar-actions button[data-action=edit.undo/redo]` disabled를 `canUndo/canRedo`+busy(dialog 존재·aria-busy)로 동기화. 구독: HISTORY_CHANGED/DOCUMENT_REPLACED+dialogRoot·app MutationObserver.
+### statusbar.js — `mountStatus(root,{session,view})→dispose{setCursor,refresh}` + `formatGridCoords/formatPosition/OUTSIDE_POS`
+- `formatGridCoords`: floor 1회→px문구+셀(32px)·타일(64px) 동시 파생. `formatPosition(null/NaN)`→`- , -` 양필드. 마운트시 setCursor(null)+refresh 선채움.
+- refresh: 줌%+캔버스(`W×H px(T×T 타일)`)+도구명(STRINGS.tools)+dirty `●`. message는 info 4s/warn 8s/error 상주.
+- 구독: STATUS_MESSAGE→show, DOCUMENT_REPLACED/HISTORY_CHANGED/LAYERS_CHANGED→refresh, SETTINGS_CHANGED(activeTool만), view.subscribe(refresh). onHover(pos)→setCursor는 input 경유.
+### shortcuts.js — `resolveShortcut(desc)→{kind}|null` + `isEditableTarget(target)` + `createShortcuts({toolManager,session,actions,requestUndo,requestRedo,isBusy})→{handleKeyDown,dispose}`
+- 매핑: Ctrl+N/O/S/E, Ctrl+Shift+N(layer.add)·J·M(merge)·]/[(up/down), Ctrl+'/그리드, Ctrl+Z/Y·Shift+Z, B/E/G/I/L/R/U/O/H, X(swap)D(reset), [/](Shift 5단위), +/-/0/1. Alt 무조건 null. Space false(핸드 스크롤에 양보).
+- 순서: 입력요소 가드(Esc-blur만 허용)→busy(다이얼로그·aria-busy)→toolManager.keyDown 우선소비→resolve→preventDefault후 실행(undo/redo→requestUndo 우선, tool→setSetting, penSize→brush.step 우선, action→actions[]).
+- 주의: window keydown에 1회 바인딩, dispose 해제. `?debug`와 무관.
+### tooltip.js — `createTooltips(root)→{dispose,close,closeWithin,isOpen}` + `TIP_AUTO_HIDE_MS=2500`
+- `.dt-tip-trigger(data-tip)` hover/focus/클릭(pin)→`document.body`에 `.dt-tooltip` 1개 표시, left/top만 인라인, clampBox로 뷰포트 고정. mouseleave/focusout/Esc/바깥클릭/유휴 2500ms로 닫힘+`aria-expanded` 갱신.
+- 주의: 옵션바 `overflow:hidden`이라 body 부착 필수. `hidden` 섹션은 `closeWithin(sec)`로 함께 닫기. 텍스트 400자 cap.
 
-### statusbar.js
+## 6. actions/ (5종) — 액션 핸들러
 
-| 이름 | 시그니처 | 설명 |
-|---|---|---|
-| `mountStatus` | `mountStatus(root, deps)` | dispose(속성 `setCursor`·`refresh` 포함) 반환 |
+`app.js`의 `runAction`이 `data-action` 문자열로 호출하는 핸들러 묶음. 전부 Session
+메서드 호출만 하며 모델을 직접 변조하지 않는다. `app.js`는 이 파일들만 import 한다.
 
-표시: 메시지(정보 4s·경고 8s·에러 상주)·커서 px·셀(32px)·타일(64px) 정수 좌표·줌%·캔버스 크기·도구명·dirty `●`.
+### file_actions.js (110줄) — 파일 I/O 6종
+- `doSave(session, toast)` / `doOpen(session, toast)` / `doExportLayer(session, toast)` / `doImportLayer(session, toast)` / `doExportPng(session, toast)` — 모두 `async`, `io`(`serialize`·`file_io`·`export_png`)와 `core`만 참조한다.
+- `doNew(session)` — `async`. 변경 버리기 확인 후 `newDocument(DEFAULT_DOC)`로 교체한다.
 
-위치 표시는 `formatGridCoords(x,y)`가 **정수 픽셀을 한 번만 floor**한 뒤 32px 셀과 64px 타일 인덱스를 같은 정수에서 파생시킨다(`셀 3, 2 (32px) · 타일 1, 1 (64px)`). 소수점은 절대 나오지 않는다. 두 필드는 `formatPosition()` 한 번의 결과에서 동시에 채워지므로 서로 어긋날 수 없다. 캔버스 밖에서는 `formatPosition(null)`이 두 필드 모두에 `- , -`를 넣고, 그 외 영속 정보(줌·크기·도구·dirty)는 그대로 유지된다.
+### edit_actions.js (20줄) — 실행 취소/다시 실행 2종
+- `requestUndo(session, toolManager)` / `requestRedo(session, toolManager)` — 편집 중(`isEditing`)이면 무시한다.
 
-### dialogs.js
+### view_actions.js (20줄) — 보기 6종
+- `zoomIn(viewStore)` / `zoomOut(viewStore)` / `fit(viewStore)` / `actual(viewStore)` — `viewStore`에만 위임하며 Session을 받지 않는다.
+- `gridCycle(session)` — `gridMode`을 `off→unit→tile→pixel` 순환한다.
+- `canvasResize(session)` — `async`. `showResizeCanvasDialog` 결과로 `session.resizeCanvas(w,h)`를 호출한다.
 
-| 이름 | 시그니처 | 설명 |
-|---|---|---|
-| `showNewDocumentDialog` | `showNewDocumentDialog()` | 타일 단위 입력+프리셋, 32px 배수 검증, 취소 null |
-| `confirmDiscardChanges` | `confirmDiscardChanges()` | 변경 버리기 확인 bool |
-| `showRestoreDialog` | `showRestoreDialog(info)` | "restore"/"discard", DOM 없으면 "discard" |
-| `showResizeCanvasDialog` | `showResizeCanvasDialog(current)` | 32–1920×32–1088·32배수 검증 |
-| `showProgress` | `showProgress(text)` | `{update(pct), close()}`, aria-busy 관리 |
+### layer_actions.js (20줄) — 레이어 6종
+- `layerAdd(session)` / `layerDuplicate(session)` / `layerRemove(session)` / `layerMergeDown(session)` / `layerUp(session)` / `layerDown(session)` — `session`만 받아 `model/layer_operations`에 대응하는 Session 메서드를 호출한다.
 
-공통: 포커스 트랩·Esc 취소·오버레이 클릭 취소·이전 포커스 복원.
+### tool_actions.js (15줄) — 도구·색 3종
+- `brushStep(session, delta)` / `colorSwap(session)` / `colorReset(session)` — `setSetting` 경유만 한다.
 
-### shortcuts.js
+## 조립·호출 순서 (파일 없이 재현)
+1 index.html id 계약: `#dt-app/#dt-menubar/#dt-optionbar/#dt-toolbar/#dt-left-panels/#dt-right-panels/#dt-canvas-host/#dt-statusbar/#dt-dialog-root/#dt-toast`+패널 내부 id. 2 app.boot 9단계→viewStore→tools/render/input→status+color/brush/layers/options/collapsible→autosave→window→toast→shortcuts→debug. 3 색 입력 8경로(네이티브·HEX·RGB·휠·팔레트·최근색·슬롯·우클릭)→applyColor→paint 전파→SETTINGS_CHANGED 영속(250ms)+최근색. 4 문서교체→view.fit+레이어·상태 refresh. 5 다이얼로그 중 입력·단축키·히스토리버튼 잠금.
 
-| 이름 | 시그니처 | 설명 |
-|---|---|---|
-| `resolveShortcut` | `resolveShortcut(desc)` | 순수 키→의도 매핑(테스트 가능) |
-| `isEditableTarget` | `isEditableTarget(target)` | 입력 요소 가드 |
-| `createShortcuts` | `createShortcuts(deps)` | window keydown 핸들러 `{handleKeyDown, dispose}` |
+## 주의점 (횡단)
+- ESM 상대경로만. `export default·동적import·import.meta` 금지. UI→model 직접 쓰기 금지(Session 경유).
+- 숫자 필드 `.dt-color-fields` 4열(R/G/B+hex span2행), 라벨 `[data-ch]`. 컬러픽커 `.dt-picker→.dt-wheel-wrap→.dt-color-fields→팔레트→최근색`.
+- 선택 타깃마커=`::before`+clip-path 귀퉁이 4개+`--dt-arm-l/d` 11px 고정. 컨테이너 `--radius-box`+`overflow:hidden`, 스와치 `--radius-pct`.
+- 픽셀폰트 금지. 썸네일·프리뷰는 `pixelated`.
 
-단축키: Ctrl+N/O/S/E, Ctrl+Shift+N(층 추가)·J(복제)·M(병합)·](위)·[(아래), Ctrl+'/그리드, Ctrl+Z/Y(+Shift+Z), B/E/G/I/L/R/U/O/H 도구, X 색교환, D 기본색, [/] 굵기(Shift 5단위), +/-/0/1 줌·맞춤·100%. Alt 조합은 무시, 입력 요소·다이얼로그 중에는 비활성, 도구 `keyDown`이 먼저 소비.
+## Handoff
 
-## 핵심 흐름
-
-- 저장: 진행 표시→`documentToJson`→`saveTextFile`→`markSaved`→토스트.
-- 열기: dirty면 확인→`pickFile`→`readJsonFile`→문서/레이어 분기→`loadDocument`.
-- 설정 영속: 변경 후 250ms 디바운스 localStorage 기록(`dt.settings.v1`, 최근색 `dt.recentColors`).
-
-## 주의점
-
-- `index.html` id 계약: `#dt-app #dt-menubar #dt-optionbar #dt-toolbar #dt-left-panels #dt-right-panels #dt-canvas-host #dt-statusbar #dt-dialog-root #dt-toast` + 각 패널 내부 id. JS는 이 id에만 의존.
-- style.css 토큰: `--bg --panel --panel-2 --border --text --text-dim --accent --accent-strong --danger --warn --canvas-bg --radius --gap`, 폰트·`--toolbar-w:44px --panel-w:240px --right-w:260px`. 썸네일·브러시 미리보기는 `pixelated`.
-- **픽셀 폰트는 쓰지 않는다.** 가독성이 크게 떨어져 원본 `--font-ui`/`--font-mono`로 되돌렸다(Press Start 2P 인라인 삭제 완료).
-- **모서리 둥글기는 토큰 2종**으로 나눈다. `--radius-box`(px, 큰 컨테이너)와 `--radius-pct`(% , 스와치·버튼·마커). %는 요소 박스 기준이라 크기가 달라도 비율이 유지되며 5%/10% 단위로 조정한다. 컨테이너에 %를 쓰면 반지름이 부풀어 오므로 쓰지 않는다.
-- 컨테이너 박스(패널 섹션·옵션바 그룹·다이얼로그·토스트·진행창)는 `--radius-box` 얇은 곡선 + **`overflow: hidden`**. `overflow: hidden`은 필수다 — 없으면 테두리만 둥글고 내부 배경·각진 자식(팔레트 그리드·버튼 행)이 모서리를 덮어 "둥근 테두리 + 직각 내부"로 보인다.
-- 옵션바는 1행(최소 40px)이다. 과거의 2행(80px) 예약은 항상 표시되던 `.dt-hint` 줄 때문에 있던 것으로, 힌트가 툴팁으로 바뀌면서 제거됐다.
-- 설명 문구는 `.dt-hint` 상시 표시가 아니라 `.dt-tip-trigger`(`?` 버튼, `data-tip`에 텍스트)에서 툴팁으로 나온다. `tooltip.js`가 `document.body`에 `.dt-tooltip`을 붙인다(옵션바가 `overflow:hidden`이라 내부에 두면 잘린다). hover/focus 또는 클릭 시 표시, `mouseleave`·`Escape`·바깥 클릭으로 닫히고 `TIP_AUTO_HIDE_MS`(2500ms) 후 자동 닫힘. 섹션이 `hidden` 되면 `closeWithin`으로 함께 닫힌다.
-- 선택 표시(타깃 마커): 활성 도구·활성 굵기 프리셋·활성 크기 프리셋·활성 색 슬롯·현재 색과 일치하는 팔레트 칸(`.dt-swatch[data-active="true"]`)·활성 레이어 행에 **둥근 직사각형의 네 귀퉁이만** 그린다. 하나의 `::before`에 전체 라운드 아웃라인을 그린 뒤 `clip-path` 폴리곤으로 각 변 중앙을 잘라내면 모서리 호만 남는다. 검정 테두리는 `box-shadow` spread로 빨간 선 **아래**에 깔린다(빨간 위에서도 보이게).
-  - 팔 길이는 **고정**(`--dt-arm-l/d`, 11px)이어야 한다. 간격을 고정으로 두면 팔이 요소 크기에 따라 늘어나 넓은 행에서는 거의 이어져 그냥 빨간 테두리로 보인다.
-- 컬러픽커 구조: `.dt-picker`(헤드 → `.dt-wheel-wrap` → `.dt-color-fields`) → 팔레트 → 최근 색. 색상환 176px 안에 SV 98px를 중앙 배치하며, SV 크기는 `panel_color_wheel.js`가 `RING_IN`과 클리어런스로 **계산**한다(`floor(2·(RING_IN−RING_CLEARANCE)/√2)`). 하드코딩하면 모서리가 잘려 일부 색이 선택 불가해진다. SV는 `border-radius: 0` 정사각형이고 모든 `(s,v)`(모서리 포함)가 선택 가능해야 한다.
-
-레이아웃 소유권은 `style.css` 하나다. `panel_color_wheel.js`는 더 이상 인라인 레이아웃을 쓰지 않으므로 `WHEEL_PX`/`SV_PX`와 스타일시트의 176/98이 어긋나면 SV가 링 밖으로 나가거나 잘린다.
-
-숫자 필드는 `.dt-color-fields`(4열 그리드)에 R/G/B가 1·2·3열을, `.dt-color-field--hex`가 4열의 2행을 `span`한다(= 요청의 2행 4열). 라벨은 `[data-ch]`로 구분해 R 빨강 / G 초록 / B 파랑.
-
-**색 SSOT**: `canonicalHex()`가 유일한 읽기 경로, `applyColor()`가 유일한 쓰기 경로다. 네이티브 입력·HEX·R/G/B 각·휠·팔레트 클릭·최근색 클릭·우클릭이 전부 `applyColor`로 수렴하고, `paint()`가 `canonicalHex()`를 한 번 읽어 모든 컨트롤에 전파한다. 프로그램적 쓰기에 락을 걸어 `SETTINGS_CHANGED` 재진입을 무력화하므로 피드백 루프가 없고, 잘못된 입력은 필드를 정본값으로 되돌린다(포커스 중이어도).
-
-**보조색에서 최근색이 죽던 원인**: `pickRecent`가 활성 슬롯을 무시하고 **항상 `primaryColor`에** 기록했다. 보조색이 활성인 상태에서는 모든 최근색 클릭이 주색을 바꿔 필드가 얼어붙었고, 게다가 `renderRecent`가 매번 `replaceChildren`로 32개 버튼을 재생성해 클릭 대상이 사라졌다. 이제 `pickSwatch`는 활성 슬롯을 보고(Shift는 반대 슬롯), 그리드는 한 번만 만들고 제자리에서 다시 칠하며, 색을 고르는 행위 자체를 최근색에 기록한다.
-- 최근 색은 `DEFAULT_PALETTE.length`(32)칸 고정 렌더링이고, 미사용 칸은 `.dt-swatch.is-empty` 흰/회색 모자이크 + `disabled`. 저장은 `app.js`의 `RECENT_MAX = 32` 상한(값은 최근색 그리드 너비와 동기화해야 한다).
-- 굵기 프리셋은 `#dt-size-presets.dt-preset-grid`가 4×4 그리드다(`--dt-preset-cols/rows`를 JS가 publish). 셀 `min-width: 0`이 필수 — 기존 `min-width: 32px`가 남으면 다시 6/5/5로 감긴다.
-- 다이얼로그 열림 중에는 단축키·입력이 비활성(`aria-busy`·role=dialog 검사).
-- 모듈 규약: 상대 경로 ESM import만, `export default`·동적 `import()`·`import.meta` 없음 (`contract.md` §5).
+- Wrote: `draw_tool_v2/docs/ui.md`
+- Result: `ui/` 36파일 반영(`actions/` 5개 §6 신설), 파일 수 31→36 정정, app.js 라인 수 기입
+- Next: Orchestrator — 250줄 초과 4파일(`panel_layers` 264·`panel_color_wheel` 250·`pen` 261·`input_controller` 432) 2차 분리 판단

@@ -2,16 +2,11 @@
 // Contract: docs/render.md (renderer.js). view.js/composite.js stay DOM-free.
 // Grid lives in grid.js; background parsing reuses core/pixel.js.
 
-import { visibleChunkRange } from "./view.js";
-import { compositeChunk } from "./composite.js";
-import { gridLines, paintGrid } from "./grid.js";
-import { paintBackground } from "./background.js";
-import { CHUNK_PX, chunkKey, chunkCoords } from "../core/constants.js";
+import { CHUNK_PX, chunkKey } from "../core/constants.js";
 import { EVENTS } from "../core/events.js";
 import { DrawToolError } from "../core/errors.js";
-
-const FRAME_BUDGET_MS = 6;
-const BORDER_STYLE = "rgba(0,0,0,0.6)";
+import { ensureComp, paintDirty } from "./renderer_composite.js";
+import { drawDisplay } from "./renderer_display.js";
 
 const SUBS = [
   [EVENTS.DOCUMENT_REPLACED, "_onDocReplaced"],
@@ -19,11 +14,6 @@ const SUBS = [
   [EVENTS.LAYERS_CHANGED, "_onLayers"],
   [EVENTS.SETTINGS_CHANGED, "_onSettings"],
 ];
-
-function nowMs() {
-  if (typeof performance !== "undefined" && typeof performance.now === "function") return performance.now();
-  return Date.now();
-}
 
 export class CanvasRenderer {
   constructor({ host, session, getView, getOverlay } = {}) {
@@ -140,8 +130,17 @@ export class CanvasRenderer {
     this._cssH = h;
     this._dpr = typeof window !== "undefined" && window.devicePixelRatio ? window.devicePixelRatio : 1;
     if (this._display) {
-      this._display.width = Math.max(1, Math.round(w * this._dpr));
-      this._display.height = Math.max(1, Math.round(h * this._dpr));
+      const newW = Math.max(1, Math.round(w * this._dpr));
+      const newH = Math.max(1, Math.round(h * this._dpr));
+      // Canvas width/height assignment clears the bitmap even when the value is
+      // identical, so guard it — this prevents a ResizeObserver-triggered resize
+      // (caused by option-bar section visibility changes on tool switch) from
+      // blanking the canvas for one frame and producing a flicker.
+      if (this._display.width !== newW || this._display.height !== newH) {
+        this._display.width = newW;
+        this._display.height = newH;
+        this.invalidateAll();
+      }
       this._display.style.width = `${w}px`;
       this._display.style.height = `${h}px`;
     }
@@ -199,38 +198,9 @@ export class CanvasRenderer {
 
   _setDocument(doc) {
     this._doc = doc || null;
-    this._ensureComp();
+    ensureComp(this);
     this.invalidateAll();
     this.requestRender();
-  }
-
-  _ensureComp() {
-    const doc = this._doc;
-    if (!doc) return;
-    const w = doc.canvas.widthPx;
-    const h = doc.canvas.heightPx;
-    if (this._comp && this._compW === w && this._compH === h) return;
-    let c = null;
-    let ctx = null;
-    if (typeof OffscreenCanvas !== "undefined") {
-      c = new OffscreenCanvas(w, h);
-      ctx = c.getContext("2d");
-    }
-    if (!ctx && typeof document !== "undefined") {
-      c = document.createElement("canvas");
-      c.width = w;
-      c.height = h;
-      ctx = c.getContext("2d");
-    }
-    if (!ctx) return;
-    c.width = w;
-    c.height = h;
-    this._comp = c;
-    this._cctx = ctx;
-    this._compW = w;
-    this._compH = h;
-    this._img = ctx.createImageData(CHUNK_PX, CHUNK_PX);
-    this._dirtyAll = true;
   }
 
   _update() {
@@ -238,7 +208,7 @@ export class CanvasRenderer {
     const doc = this._doc;
     const w = doc.canvas.widthPx;
     const h = doc.canvas.heightPx;
-    if (this._compW !== w || this._compH !== h) this._ensureComp();
+    if (this._compW !== w || this._compH !== h) ensureComp(this);
     const view = this._getView();
     if (this._dirtyAll) {
       this._dirty.clear();
@@ -247,81 +217,8 @@ export class CanvasRenderer {
         for (let cx = 0; cx < w / CHUNK_PX; cx++) this._dirty.add(chunkKey(cx, cy));
       }
     }
-    if (this._dirty.size > 0 && this._cctx && this._img) this._paintDirty(doc, view, w, h);
-    this._drawDisplay(doc, view, w, h);
+    if (this._dirty.size > 0 && this._cctx && this._img) paintDirty(this, doc, view, w, h);
+    drawDisplay(this, doc, view, w, h);
     if (this._dirty.size > 0 || this._dirtyAll) this.requestRender();
-  }
-
-  _paintDirty(doc, view, w, h) {
-    const vis = visibleChunkRange(view, w, h, this._cssW, this._cssH);
-    const inVis = (cx, cy) => vis !== null
-      && cx >= vis.cx0 && cx <= vis.cx1 && cy >= vis.cy0 && cy <= vis.cy1;
-    const paint = (key) => {
-      const { cx, cy } = chunkCoords(key);
-      compositeChunk(doc, cx, cy, this._img.data);
-      this._cctx.putImageData(this._img, cx * CHUNK_PX, cy * CHUNK_PX);
-      this._dirty.delete(key);
-    };
-    const keys = [...this._dirty];
-    for (const key of keys) {
-      const { cx, cy } = chunkCoords(key);
-      if (inVis(cx, cy)) paint(key);
-    }
-    const t0 = nowMs();
-    for (const key of keys) {
-      if (!this._dirty.has(key)) continue;
-      if (nowMs() - t0 > FRAME_BUDGET_MS) break;
-      paint(key);
-    }
-  }
-
-  _drawDisplay(doc, view, w, h) {
-    const ctx = this._dctx;
-    const dpr = this._dpr || 1;
-    const devW = Math.max(1, Math.round(this._cssW * dpr));
-    const devH = Math.max(1, Math.round(this._cssH * dpr));
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.globalCompositeOperation = "source-over";
-    ctx.clearRect(0, 0, devW, devH);
-    const dx = Math.round(view.offsetX * dpr);
-    const dy = Math.round(view.offsetY * dpr);
-    const dw = Math.round(w * view.zoom * dpr);
-    const dh = Math.round(h * view.zoom * dpr);
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(dx, dy, dw, dh);
-    ctx.clip();
-    paintBackground(ctx, doc.canvas.background, dx, dy, dw, dh, dpr, { vw: devW, vh: devH });
-    ctx.imageSmoothingEnabled = false;
-    if (this._comp) this._blitVisible(ctx, view, w, h, dpr);
-    ctx.restore();
-    paintGrid(ctx, gridLines(view, w, h, this._cssW, this._cssH, this._gridMode()),
-      view, dx, dy, dw, dh, devW, devH, dpr);
-    if (dw > 0 && dh > 0) {
-      ctx.fillStyle = BORDER_STYLE;
-      ctx.fillRect(dx - 1, dy - 1, dw + 2, 1);
-      ctx.fillRect(dx - 1, dy + dh, dw + 2, 1);
-      ctx.fillRect(dx - 1, dy, 1, dh);
-      ctx.fillRect(dx + dw, dy, 1, dh);
-    }
-    const overlay = this._getOverlay();
-    if (overlay) overlay(ctx, { view, dpr, pixelToDevice: (x, y) => this.pixelToDevice(x, y) });
-  }
-
-  _blitVisible(ctx, view, w, h, dpr) {
-    const x0 = Math.max(0, Math.floor((0 - view.offsetX) / view.zoom));
-    const y0 = Math.max(0, Math.floor((0 - view.offsetY) / view.zoom));
-    const sw = Math.min(w, Math.ceil((this._cssW - view.offsetX) / view.zoom)) - x0;
-    const sh = Math.min(h, Math.ceil((this._cssH - view.offsetY) / view.zoom)) - y0;
-    if (sw <= 0 || sh <= 0) return;
-    const ddw = Math.round(sw * view.zoom * dpr);
-    const ddh = Math.round(sh * view.zoom * dpr);
-    if (ddw <= 0 || ddh <= 0) return;
-    ctx.drawImage(
-      this._comp, x0, y0, sw, sh,
-      Math.round((view.offsetX + x0 * view.zoom) * dpr),
-      Math.round((view.offsetY + y0 * view.zoom) * dpr),
-      ddw, ddh,
-    );
   }
 }

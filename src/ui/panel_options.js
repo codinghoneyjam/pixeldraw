@@ -1,98 +1,13 @@
-// <META - FILE SUMMARY - Option bar: grid/zoom + per-tool sections + shape bbox + collapsibles>
+// <META - FILE SUMMARY - Option bar: grid/zoom + per-tool sections + shape bbox>
 import { ZOOM_LEVELS } from "../core/constants.js";
 import { EVENTS } from "../core/events.js";
 import { DrawToolError } from "../core/errors.js";
 import { createTooltips } from "./tooltip.js";
+export { mountCollapsibleSections } from "./collapsible_sections.js";
 
 const SHAPE_TOOLS = ["line", "rect", "rrect", "ellipse"];
 
-// Collapsed panel state reuses the existing settings key/JSON convention
-// (`dt.settings.v1`) rather than introducing a parallel storage system, so a
-// schema change to either travels in the same place.
-const COLLAPSE_STORE_KEY = "dt.settings.v1";
-const COLLAPSE_FIELD = "collapsedPanels";
-
-function readJson(key) {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-
-function writeJson(key, value) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch { /* ignore */ }
-}
-
-// <META - ROLE : Load the collapsed-section id map, tolerate a missing/corrupt store | L28-36>
-function loadCollapsed() {
-  const saved = readJson(COLLAPSE_STORE_KEY);
-  const field = saved && typeof saved === "object" ? saved[COLLAPSE_FIELD] : null;
-  return field && typeof field === "object" && !Array.isArray(field) ? { ...field } : {};
-}
-
-// <META - ROLE : Merge one id into the collapsed map, keeping every other setting | L38-45>
-function persistCollapsed(id, collapsed) {
-  const saved = readJson(COLLAPSE_STORE_KEY);
-  const base = saved && typeof saved === "object" && !Array.isArray(saved) ? saved : {};
-  const next = { ...base, [COLLAPSE_FIELD]: { ...loadCollapsed(), [id]: collapsed } };
-  writeJson(COLLAPSE_STORE_KEY, next);
-}
-
-// <META - ROLE : Apply collapsed state to a section, syncing data attr + aria | L47-54>
-function applyCollapsed(section, head, collapsed) {
-  section.dataset.collapsed = collapsed ? "true" : "false";
-  head.setAttribute("aria-expanded", collapsed ? "false" : "true");
-}
-
-// <META - ROLE : Wire collapsible panel sections, persist state, return dispose | L56-105>
-// Only sections that already carry a `.dt-panel-head` button participate; the
-// colour panel is untouched (its h2/h3 are a separate agent's contract). Hiding is
-// pure CSS (`display:none` on `.dt-panel-body`), so nothing unmounts: every panel
-// keeps its nodes and listeners, and `onExpand` lets the caller repaint canvases
-// that were painted while hidden.
-export function mountCollapsibleSections(roots, deps = {}) {
-  if (typeof document === "undefined") return () => {};
-  const { onExpand = null } = deps;
-  const list = Array.isArray(roots) ? roots : [roots];
-  const disposers = [];
-  const stored = loadCollapsed();
-
-  for (const root of list) {
-    if (!root || typeof root.querySelectorAll !== "function") continue;
-    for (const section of root.querySelectorAll("section[data-collapsed]")) {
-      const head = section.querySelector(".dt-panel-head");
-      const body = section.querySelector(".dt-panel-body");
-      if (!head || !body) continue;
-      const id = section.id || "";
-      const onClick = () => {
-        const collapsed = section.dataset.collapsed !== "true";
-        applyCollapsed(section, head, collapsed);
-        if (id) persistCollapsed(id, collapsed);
-        if (!collapsed && typeof onExpand === "function") {
-          try {
-            onExpand(id, section);
-          } catch { /* ignore */ }
-        }
-      };
-      head.addEventListener("click", onClick);
-      disposers.push(() => head.removeEventListener("click", onClick));
-      applyCollapsed(section, head, stored[id] === true);
-    }
-  }
-  return () => {
-    for (const d of disposers) {
-      try { d(); } catch { /* ignore */ }
-    }
-    disposers.length = 0;
-  };
-}
-
-// <META - ROLE : Mount option bar, return dispose | L9-260>
+// <META - ROLE : Mount option bar, return dispose | L9-230>
 export function mountOptions(root, deps = {}) {
   if (!root || typeof document === "undefined") return () => {};
   const { session, toolManager = null, view = null } = deps;
@@ -129,20 +44,12 @@ export function mountOptions(root, deps = {}) {
     }
   }
   function activeTool() {
-    try {
-      return session.settings.activeTool;
-    } catch {
-      return "pen";
-    }
+    try { return session.settings.activeTool; } catch { return "pen"; }
   }
   function shapeTool() {
     const id = activeTool();
     if (!SHAPE_TOOLS.includes(id)) return null;
-    try {
-      return toolManager ? toolManager.get(id) : null;
-    } catch {
-      return null;
-    }
+    try { return toolManager ? toolManager.get(id) : null; } catch { return null; }
   }
   function syncSections() {
     const id = activeTool();
@@ -263,7 +170,9 @@ export function mountOptions(root, deps = {}) {
     listen(session, EVENTS.SETTINGS_CHANGED, (e) => {
       const k = e.detail?.key;
       if (k === "activeTool") { syncSections(); syncSettings(); }
-      else if (k === "penSize" || k === "shapeFill" || k === "shapeRadius" || k === "shapeLockAspect" || k === "snapUnit" || k === "gridMode") syncSettings();
+      else if (["penSize", "shapeFill", "shapeRadius", "shapeLockAspect", "snapUnit", "gridMode"].includes(k)) {
+        syncSettings();
+      }
     });
     listen(session, EVENTS.TOOL_STATE, (e) => {
       const current = shapeTool();

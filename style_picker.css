@@ -1,0 +1,91 @@
+/* Split from style.css lines 973-1062; cascade order: base-polish-juicy-picker. */
+/* === COLOR PICKER ===
+   Layout mirrors the reference: head (slots + native input) -> hue wheel with the
+   SV square centred INSIDE the ring -> stacked R/G/B -> hex. panel_color.js supplies
+   the canvas pixel sizes and the centring transform inline; everything structural
+   lives here. The old `.dt-wheel-row` side-by-side layout is gone: 140px + 112px
+   could not fit the 240px panel and was the source of the RGB overflow. */
+.dt-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+}
+.dt-picker-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* The two 48px slots + swap/reset + the native input need ~240px but the panel
+     inner width is ~203px, so the input must be allowed to wrap to its own line
+     rather than being clipped. */
+  flex-wrap: wrap;
+}
+.dt-picker-head .dt-slots { flex: none; }
+#dt-color-panel input[type="color"] {
+  flex: none;
+  width: 40px;
+  height: 26px;
+  min-height: 26px;
+  padding: 0;
+  border-radius: var(--radius-pct);
+  cursor: pointer;
+}
+/* The wheel wrap is the positioning context: the SV square is centred INSIDE the hue
+   ring. panel_color_wheel.js used to write these as inline styles; it no longer does,
+   so this stylesheet is the single owner of the picker's layout. `WHEEL_PX`/`SV_PX`
+   in that module must stay in sync with the numbers here. */
+.dt-wheel-wrap {
+  position: relative;
+  width: 176px;
+  height: 176px;
+  align-self: center;
+  margin: 2px 0;
+}
+/* The picker is a precise pointing instrument, not a drawing surface: the user asked
+   for the plain default arrow here, not `crosshair`. */
+#dt-hue-wheel,
+#dt-sv-square {
+  cursor: default;
+}
+#dt-hue-wheel {
+  display: block;
+  width: 176px;
+  height: 176px;
+  touch-action: none;
+  border-radius: 50%;
+}
+#dt-sv-square {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  display: block;
+  width: 98px;
+  height: 98px;
+  touch-action: none;
+  border: 1px solid var(--border);
+  /* Square corners: the rounded clipping made some colours unreachable.
+     `box-sizing: border-box` is set explicitly — this sheet has no global
+     border-box reset, so without it the 1px border would push the 98px box out of
+     the ring's inner hole and eat the clearance panel_color_wheel.js computed. */
+  box-sizing: border-box;
+  border-radius: 0;
+}
+
+/* Swatches: percentage corners so they stay in proportion, and the moiré
+   placeholder cell for unused recent-colour slots. */
+#dt-palette, #dt-recent {
+  border-radius: var(--radius-pct);
+}
+.dt-swatch {
+  border-radius: var(--radius-pct);
+}
+.dt-swatch.is-empty {
+  cursor: default;
+  background: repeating-conic-gradient(
+    #ffffff 0% 25%, #dcdcdc 0% 50%
+  ) 0 0 / 8px 8px;
+  opacity: 0.5;
+}
+/* === END COLOR PICKER === */

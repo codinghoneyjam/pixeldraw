@@ -30,19 +30,45 @@ python schema/schema_selfcheck.py  # schema + semantic + flatten parity
 ```text
 index.html  style.css  package.json  run.py
 src/
-  core/    constants.js errors.js events.js pixel.js blend.js chunkstore.js brush.js shape_raster.js
+  core/    constants.js errors.js events.js pixel.js blend.js chunkstore.js brush.js
+           raster/ shape_raster.js raster_brush.js raster_masks.js raster_snap.js
   model/   layer.js document.js commands.js history.js session.js
-  io/      base64.js png.js validate.js serialize.js export_png.js file_io.js store_idb.js
-  render/  view.js composite.js renderer.js (+ background.js grid.js)
-  tools/   tool_base.js tool_manager.js input_controller.js pen.js eyedropper.js fill.js shape.js
-  ui/      app.js dom.js strings.js icons.js panel_*.js statusbar.js dialogs.js shortcuts.js
+           settings_validator.js layer_operations.js edit_session.js
+  io/      base64.js png.js validate_structural.js validate_semantic.js serialize.js
+           export_png.js file_io.js store_idb.js
+           idb_schema.js idb_record_builder.js idb_scheduler.js idb_loader.js
+  render/  view.js composite.js renderer.js renderer_composite.js renderer_display.js
+           background.js grid.js
+  tools/   tool_base.js tool_manager.js input_controller.js pen.js eyedropper.js fill.js
+           hand.js shape.js shape_geom.js shape_overlay.js
+  ui/      app.js dom.js strings.js icons.js panel_*.js color_*.js dialog_*.js
+           collapsible_sections.js panel_refresh.js view_store.js menubar.js
+           history_buttons.js statusbar.js shortcuts.js tooltip.js
+           actions/ file_actions.js edit_actions.js view_actions.js layer_actions.js
+                    tool_actions.js
 tests/     *.test.mjs  helpers/  fixtures/   (fixtures are normative)
 schema/    layer_schema.v2.json document_schema.v2.json
 tools/     parity_check.mjs png_cases_check.mjs view_check.mjs png_unique_colors.mjs + gen_*.py
 reference/ raster_ref.mjs png_ref.mjs view_ref.mjs (non-normative)
 ```
 
+`src/`는 계층당 7~36개 파일, 총 85개 `.js`다. 상세 구성과 라인 수는 각 계층 문서
+(`docs/core.md`·`model.md`·`io.md`·`render.md`·`tools.md`·`ui.md`)를 따른다.
+
 Headless integration: `tests/e2e_session.test.mjs` drives `Session` via
 `ToolManager` + fake `ToolEvent` (H3 1-9: diagonal scenario, hash-verified
 undo/redo, serialize determinism, dirty flag, layer export-import, 4x3 shape
 undo, no-AA PNG check, locked/hidden reject, small-budget history eviction).
+
+## Known issues (2026-10-01)
+
+- `npm test` fails on Node 24: `node --test tests/` is not accepted as a directory
+  argument. Run `node --test "tests/*.test.mjs"` instead.
+- Under that command, **148/152 pass, 4 fail**:
+  - `tests/io_basic.test.mjs` fails to load — it imports `buildMetaRecord` /
+    `buildChunkRecords` / `chunkRecordKey` from `store_idb.js`, which no longer
+    re-exports them after the `idb_record_builder.js` split.
+  - 3 cursor assertions in `tests/tools_basic.test.mjs` expect `"crosshair"`, but
+    the tools now return SVG `url(...)` cursors. The docs describe SVG cursors as
+    normative, so the test expectations are stale.
+- `npm run parity` (115 golden checks) passes — the raster math itself is safe.

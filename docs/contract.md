@@ -71,7 +71,7 @@
 
 | 경로 | 예외 |
 |---|---|
-| `src/core/**` | 없음 (전부 DOM-free) |
+| `src/core/**` (incl. `src/core/raster/**`) | 없음 (전부 DOM-free) |
 | `src/model/**` | 없음 (전부 DOM-free) |
 | `src/io/**` | `file_io.js`, `store_idb.js` 만 브라우저 API 접촉(지연 접근) |
 | `src/render/view.js`, `src/render/composite.js` | 없음 |
@@ -96,3 +96,8 @@ core → shape_raster → shape 도구 ─┘
 ```
 
 `core`는 어떤 모듈에도 의존하지 않는다. `ui`는 최상위 소비자로서 하위 모듈을 호출만 한다.
+
+`shape_raster`는 `src/core/raster/` 서브패키지다. 진입점 `shape_raster.js`(`applyShape`만
+export)와 순수 하위 모듈 `raster_brush.js`·`raster_masks.js`·`raster_snap.js`로 구성되며,
+4개 모두 DOM-free이고 `src/core/**` 예외 없음 규칙(§4)을 그대로 따른다. 소비자는
+`shape.js`(적용)와 `shape_overlay.js`(프리뷰), `shape_geom.js`(`raster_snap.js`)다.

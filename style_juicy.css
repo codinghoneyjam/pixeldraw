@@ -1,0 +1,337 @@
+/* Split from style.css lines 636-971; cascade order: base-polish-juicy-picker. */
+/* === JUICY PIXEL PASS (containers + pixel numerals + selection brackets) === */
+
+/* --- J0. Cursor baseline: shell stays default, only the canvas host owns a tool cursor.
+       Inline styles from InputController._applyCursor override this while inside. --- */
+#dt-app { cursor: default; }
+#dt-canvas-host { cursor: crosshair; }
+
+/* --- J1. Thin rounded container boxes.
+       `overflow: hidden` is load-bearing: without it the border is rounded but the
+       panel background and any square child (palette grid, button row) paint over
+       the corner arcs, so the box reads as "rounded border on a square interior".
+       Clipping to border-radius makes the interior follow the outline. --- */
+#dt-left-panels > section,
+#dt-right-panels > section,
+#dt-optionbar section[data-for-tools]:not([hidden]),
+.dt-dialog,
+.dt-toast-item,
+.dt-progress {
+  border: 1px solid var(--box-line);
+  border-radius: var(--radius-box);
+  background: var(--panel-2);
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 var(--box-inner-hi),
+    0 1px 0 var(--box-outer);
+}
+
+#dt-left-panels > section,
+#dt-right-panels > section {
+  padding: 10px;
+}
+#dt-optionbar section[data-for-tools]:not([hidden]) {
+  padding: 3px 10px;
+  border-radius: var(--radius-box);
+}
+
+/* Panel titles: dim label with a hairline rule filling the remaining width. */
+#dt-left-panels h2,
+#dt-right-panels h2,
+#dt-color-panel h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+}
+#dt-left-panels h2 { margin-bottom: 8px; }
+#dt-color-panel h3 { margin-top: 12px; margin-bottom: 6px; }
+#dt-left-panels h2::after,
+#dt-right-panels h2::after,
+#dt-color-panel h3::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--box-line);
+}
+
+/* --- J2. Recessed wells: numeric/hex/select containers read as carved-in --- */
+#dt-optionbar input[type="number"],
+#dt-brush-panel input[type="number"],
+#dt-layer-panel input[type="number"],
+#dt-color-panel input[type="number"],
+#dt-color-panel #dt-color-hex,
+#dt-layer-list input.dt-rename,
+.dt-dialog input[type="number"],
+.dt-dialog input[type="text"],
+.dt-dialog select {
+  border-radius: var(--radius-box);
+  box-shadow:
+    inset 0 2px 0 rgba(0, 0, 0, 0.32),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* --- J3. Numeric fields stay on the UI/mono faces (readability over theme).
+       `box-sizing: border-box` is REQUIRED here, not a nicety: without it a 47.5px
+       cell produced a 61px input (47.5 content + 12 padding + 2 border) that spilled
+       3px past the panel edge and pushed the HEX value out of view. This sheet has
+       no global border-box reset.
+       Columns are weighted so the three 0-255 channels get only what a 3-digit number
+       needs and the HEX field (7 glyphs) gets the rest. --- */
+.dt-color-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 0.72fr)) minmax(0, 1.84fr);
+  grid-template-rows: auto auto;
+  gap: 4px;
+  align-items: center;
+  margin-top: 6px;
+}
+.dt-color-field {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  /* The grid is declared 2 rows x 4 columns and EVERY field spans both rows, so the
+     four render as one aligned strip (R G B | HEX) instead of R/G/B sitting in row 1
+     with a dead row 2 underneath. This is the "2행 4열" intent from the request. */
+  grid-row: 1 / span 2;
+}
+.dt-color-field--hex {
+  grid-column: 4;
+  align-self: stretch;
+}
+.dt-color-field > label {
+  flex: none;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-dim);
+}
+/* Channel letters are colour-coded so R/G/B are identifiable at a glance. */
+.dt-color-field[data-ch="r"] > label { color: #ff5c5c; }
+.dt-color-field[data-ch="g"] > label { color: #3ddc5c; }
+.dt-color-field[data-ch="b"] > label { color: #5c9bff; }
+.dt-color-field input {
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+  min-height: 24px;
+  padding: 0 4px;
+  font-size: 11px;
+  text-align: right;
+}
+.dt-color-field--hex input { text-align: left; }
+#dt-color-panel #dt-color-hex { width: 100%; }
+
+/* --- J4. Selection target marker.
+       Shape: only the four CORNERS of a rounded rectangle are drawn, giving the
+       "target acquired" read the user asked for. The black rim sits UNDER the red
+       stroke (box-shadow spread), so the marker stays legible on top of red artwork.
+
+       How "corners only" works: the pseudo paints a FULL rounded outline, then both
+       the border and its shadow are cut by one `clip-path` polygon that notches out
+       the middle of each side. Corner arcs survive; the straight edges do not.
+       `inset` is negative by rim+1 so the black rim is never clipped by the box.
+
+       One `:is()` list covers every selectable surface: active tool icon, active
+       brush preset, active size preset, active colour slot, the palette swatch
+       matching the current colour, and the active layer row. --- */
+/* NOTE: the FG/BG swatches are deliberately NOT marker targets. Clicking them swaps,
+   so there is no "selected slot" state to mark — and this rule's `position: relative`
+   would otherwise override `.dt-fgbg #dt-color-* { position: absolute }`, collapsing
+   the two overlapping cards onto the same spot. */
+:is(
+  li.dt-layer[aria-selected="true"],
+  #dt-toolbar button[aria-pressed="true"],
+  #dt-size-presets button[aria-pressed="true"],
+  .dt-swatch[data-active="true"]
+) {
+  position: relative;
+}
+:is(
+  li.dt-layer[aria-selected="true"],
+  #dt-toolbar button[aria-pressed="true"],
+  #dt-size-presets button[aria-pressed="true"],
+  .dt-swatch[data-active="true"]
+)::before {
+  content: "";
+  position: absolute;
+  inset: calc(-1 * (var(--dt-target-rim) + 1px));
+  border: var(--dt-target-t) solid var(--sel-red);
+  border-radius: var(--radius-pct);
+  box-shadow: 0 0 0 var(--dt-target-rim) var(--sel-black);
+  /* Cut away everything between the corner arms. The arms are a FIXED length from
+     each corner (--dt-arm-l/d), not a fixed gap: a fixed gap makes the arms grow
+     with the element, so on a wide row they nearly meet and the marker degrades
+     into a plain full red border. */
+  clip-path: polygon(
+    0 0,
+    var(--dt-arm-l) 0,
+    var(--dt-arm-l) var(--dt-arm-d),
+    calc(100% - var(--dt-arm-l)) var(--dt-arm-d),
+    calc(100% - var(--dt-arm-l)) 0,
+    100% 0,
+    100% var(--dt-arm-d),
+    calc(100% - var(--dt-arm-l)) var(--dt-arm-d),
+    calc(100% - var(--dt-arm-l)) calc(100% - var(--dt-arm-d)),
+    100% calc(100% - var(--dt-arm-d)),
+    100% 100%,
+    calc(100% - var(--dt-arm-l)) 100%,
+    calc(100% - var(--dt-arm-l)) calc(100% - var(--dt-arm-d)),
+    var(--dt-arm-l) calc(100% - var(--dt-arm-d)),
+    var(--dt-arm-l) 100%,
+    0 100%,
+    0 calc(100% - var(--dt-arm-d)),
+    var(--dt-arm-l) calc(100% - var(--dt-arm-d)),
+    var(--dt-arm-l) var(--dt-arm-d),
+    0 var(--dt-arm-d)
+  );
+  pointer-events: none;
+  z-index: 3;
+}
+/* Active layer row: faint red wash + the corner marker. The border stays neutral on
+   purpose — a full red outline would read as the very "red rectangle" emphasis the
+   corner marker exists to replace. */
+li.dt-layer[aria-selected="true"] {
+  background-color: rgba(255, 59, 48, 0.10);
+  border-color: var(--box-line-hi);
+}
+
+/* --- J5. Brush size presets: strict 4x4 grid.
+       The old flex-wrap row produced a 6/5/5 shape. panel_brush.js emits the 16
+       buttons flat and publishes --dt-preset-cols/--dt-preset-rows; the old
+       `min-width: 32px` is overridden to 0 or it would force the wrap back. --- */
+#dt-size-presets.dt-preset-grid,
+.dt-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--dt-preset-cols, 4), 1fr);
+  grid-template-rows: repeat(var(--dt-preset-rows, 4), 1fr);
+  gap: 3px;
+}
+#dt-size-presets.dt-preset-grid button,
+.dt-preset-grid .dt-preset {
+  min-width: 0;
+  min-height: 30px;
+  border-radius: var(--radius-pct);
+}
+
+/* --- J6. Tooltips. `.dt-tip-trigger` replaces the old always-visible `.dt-hint`
+       text; the floating `.dt-tooltip` node is appended to document.body by
+       tooltip.js (the option bar is overflow-hidden, so it must not live inside).
+       JS sets only left/top inline; everything else belongs here. --- */
+.dt-tip-trigger {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  min-height: 20px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 11px;
+  line-height: 1;
+  color: var(--text-dim);
+  cursor: help;
+}
+.dt-tip-trigger:hover,
+.dt-tip-trigger:focus-visible,
+.dt-tip-trigger[aria-expanded="true"] {
+  color: var(--text);
+  border-color: var(--accent);
+}
+.dt-tooltip {
+  position: fixed;
+  z-index: 120;
+  max-width: 260px;
+  padding: 6px 10px;
+  border: 1px solid var(--box-line-hi);
+  border-radius: var(--radius-box);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: normal;
+  pointer-events: none;
+}
+.dt-tooltip[hidden] { display: none; }
+/* --- J7. Collapsible panel sections.
+       A panel section carries `data-collapsed="true"|"false"`. The header is a
+       real <button> so it is keyboard reachable and keeps focus-visible; the body is
+       a plain wrapper we simply hide, so nothing inside needs to know about this. --- */
+.dt-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 0;
+  min-height: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-align: left;
+  cursor: pointer;
+}
+.dt-panel-head::before {
+  content: "";
+  flex: none;
+  width: 0;
+  height: 0;
+  border: 4px solid transparent;
+  border-top-color: currentColor;
+  transform: translateY(2px);
+  transition: transform 140ms ease-out;
+}
+.dt-panel-head::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--box-line);
+}
+.dt-panel-head:hover { color: var(--text); background: transparent; }
+.dt-panel-head:focus-visible { outline-offset: 2px; }
+[data-collapsed="true"] .dt-panel-head { margin-bottom: 0; }
+[data-collapsed="true"] .dt-panel-head::before { transform: rotate(-90deg) translateX(-2px); }
+[data-collapsed="true"] .dt-panel-body { display: none; }
+
+/* --- J8. Menubar action row (undo / redo).
+       These are primary actions, so they get first-class buttons in the top bar
+       rather than being buried in the 편집 dropdown. --- */
+#dt-menubar { justify-content: space-between; }
+.dt-menubar-actions {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.dt-menubar-actions button {
+  min-height: 26px;
+  min-width: 0;
+  padding: 0 10px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.dt-menubar-actions button[data-action="edit.undo"]::before { content: "\21B6 "; }
+.dt-menubar-actions button[data-action="edit.redo"]::before { content: "\21B7 "; }
+
+/* --- J9. Brush row: size slider and its 1:1 preview side by side. --- */
+.dt-brush-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.dt-brush-row > * { min-width: 0; }
+.dt-brush-row #dt-pen-size-range { flex: 1 1 auto; }
+.dt-brush-row #dt-brush-preview {
+  flex: none;
+  width: 56px;
+  height: 56px;
+}
+/* === END JUICY PIXEL PASS === */

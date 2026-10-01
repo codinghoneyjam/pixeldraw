@@ -4,6 +4,43 @@
 > **기준일**: 2026-10-01  
 > **분석 대상**: `draw_tool_v2/src/` 디렉토리 내 모든 `.js` 파일
 
+> ## ⚠️ 이 문서는 이미过时된 스냅샷이다 (2026-10-01 확인)
+>
+> **아래 모든 라인 수·책임 영역·분리 제안은 작성 시점의 상태이며 현재 유효하지 않다.**
+>
+> 1. **11개 파일 중 6개 슬라이스가 이미 분리되어 커밋되었다** (`62f6d0ae` core,
+>    `e6762800` io, `ae61cd28` ui·model·render). 아래 §2의 라인 수는 모두 분리 전 값이다.
+>    모든 `L52-121` 형태의 라인 citation이 무효이므로 검증에 인용할 수 없다.
+> 2. **§5의 "총 63개"는 현재 85개**로 늘었다. 분리 자체가 파일 수를 늘렸다.
+> 3. **§4의 "양호 판정"은 추정치(`~240`, `~220`)에 근거하며 실제와 어긋난다.**
+>    `model/commands.js`는 "~240"이지만 실제 287줄, `tools/pen.js`는 "~220"이지만
+>    실제 261줄이다. 두 파일 모두 250줄 권장선을 넘으므로 "양호" 분류가 틀렸다.
+> 4. **측정 방법이 저장소 규칙과 다르다.** 기준이 "10KB 또는 300라인"이나
+>    `AGENTS.md`의 SLOC 정의는 주석·빈 줄을 제외한 실행 라인 수다. 경계 판정이 재현되지 않는다.
+> 5. **함수 50줄 제한은 측정하지 않았다.** 파일 라인만 세므로 함수 단위 위반이 통과한다.
+> 6. **분석 범위가 `src/*.js`에 한정**되었다. CSS 5개 합산 60KB(`style.css` 단독 30KB)가
+>    가장 큰 에셋인데 분석 대상이 아니다. `index.html` 12KB·`run.py`·`schema/*.json`·
+>    `tools/gen_*.py`도 미분석이다.
+>
+> **현재 상태의 계층별 파일 구성과 라인 수는 `docs/core.md`·`model.md`·`io.md`·
+> `render.md`·`tools.md`·`ui.md`를 참조할 것.**
+
+### 분리 이후 남은 후보 (2026-10-01 재측정, 원시 라인 수)
+
+| 순위 | 파일 | 계층 | 라인 | 상태 |
+|:---:|:---|:---:|:---:|:---|
+| 1 | `src/tools/input_controller.js` | tools | 432 | 미분리. 최우선 |
+| 2 | `src/tools/shape.js` | tools | 333 | 미분리 |
+| 3 | `src/model/commands.js` | model | 287 | 본 보고서가 "양호"로 오판 |
+| 4 | `src/ui/panel_layers.js` | ui | 264 | 본 보고서가 "~250 양호"로 오판 |
+| 5 | `src/tools/pen.js` | tools | 261 | 본 보고서가 "~220 양호"로 오판 |
+| 6 | `src/ui/panel_color_wheel.js` | ui | 250 | 경계선 |
+| 7 | `src/io/serialize.js` | io | 233 | 범위 내 |
+
+`input_controller.js`(432줄)와 `shape.js`(333줄)만 미분리 상태이며, 계획에 있는
+`wheel_accumulator.js`·`tool_event_builder.js`·`cursor_state.js`·`shape_state.js`·
+`shape_pointer.js`·`shape_keyboard.js`는 **구현되지 않았다**.
+
 ---
 
 ## 1. 파일 크기 순위 (상위 15개)
@@ -324,15 +361,40 @@ src/core/
 
 ---
 
-## 5. 결론
+## 5. 결론 (작성 시점 — 위 경고 참조)
 
-- **총 소스 파일**: 63개
+- **총 소스 파일**: 63개 (작성 시점. 현재 85개)
 - **분리 필요 파일**: 11개 (17.5%)
-- **양호 파일**: 52개 (82.5%)
-- **가장 시급한 분리 대상**: `src/ui/app.js` (23KB, 663라인, 7개 책임 영역)
+- **양호 파일**: 52개 (82.5%) — §4에 14개만 열거되어 나머지 38개는 근거 없음
+- **가장 시급한 분리 대상**: `src/ui/app.js` (23KB, 663라인, 7개 책임 영역) — **분리 완료**
 
 ### 권장 사항
-1. **P0 파일부터 분리 시작** — `app.js`와 `store_idb.js`가 가장 큰 기술 부채
-2. **테스트 커버리지 확인 후 분리** — 리팩토링 전 테스트가 충분한지 확인
-3. **점진적 분리** — 한 번에 하나의 파일만 분리하여 회귀 위험 최소화
-4. **M2 워크플로우 적용** — 3개 이상의 파일 변경이 필요하므로 Planner → Scout → Implementer 파이프라인 사용 권장
+1. ~~**P0 파일부터 분리 시작**~~ — 완료 (`app.js` 663→261줄, `store_idb.js` 417→245줄)
+2. **테스트 커버리지 확인 후 분리** — 확인 완료. `tests/` 152건 존재. **단 현재 4건 실패 중**
+3. **점진적 분리** — 원칙적으로 준수됨. **단 검증 게이트 없이 6개 슬라이스가 착지되어 회귀 4건 발생**
+4. ~~**M2 워크플로우 적용**~~ — 실제 작업은 M3 규모(6계층·DAG 경계 변경)였으므로 M3가 맞았음
+
+### 실제로 남은 개선 과제 (2026-10-01)
+
+| # | 과제 | 근거 |
+|:---:|:---|:---|
+| 1 | `input_controller.js` 432줄 분리 | 최우선. 6개 하위 계획이 미구현 |
+| 2 | `shape.js` 333줄 분리 | 2순위 |
+| 3 | `core/raster/raster_brush.js` 제거 | 죽은 중복 모듈. `core/brush.js`와 심볼 중복 (`docs/core.md` §13) |
+| 4 | `rnd` 단일화 | `core/blend.js`와 `core/raster/raster_snap.js`에 중복 정의 |
+| 5 | 테스트 4건 실패 해소 | `docs/io.md` §11, `docs/tools.md` §11-1 |
+| 6 | 250줄 초과 파일 2차 분리 | `commands.js` 287·`panel_layers.js` 264·`pen.js` 261 |
+| 7 | CSS 60KB 분석 | 본 보고서가 아예 다루지 않은 영역 |
+
+### 검증 명령 (이 문서가 존재하는 동안 반드시 실행)
+
+```bash
+node --test "tests/*.test.mjs"   # 152건 (npm test는 Node 24에서 실패)
+node tools/parity_check.mjs      # 115 골든 검사
+node tools/png_cases_check.mjs
+node tools/view_check.mjs
+python schema/schema_selfcheck.py
+```
+
+`python -m tools quality audit` 등 저장소 루트 GDScript 게이트는 이 JS 프로젝트에
+적용되지 않는다.
