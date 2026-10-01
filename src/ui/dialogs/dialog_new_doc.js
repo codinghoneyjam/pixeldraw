@@ -1,5 +1,5 @@
 // <META - FILE SUMMARY - New-document dialog with tile-step inputs>
-import { openModal, addButton, numberField } from "./dialogs/dialog_core.js";
+import { openModal, addButton, numberField } from "./dialog_core.js";
 
 const TILE_MIN = 0.5;
 const TILE_MAX_W = 30;
