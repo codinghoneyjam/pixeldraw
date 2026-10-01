@@ -1,5 +1,5 @@
 // <META - FILE SUMMARY - View store: zoom/offset state with clamp + subscribe>
-import { actualSizeView, clampView, fitView, stepZoom, zoomAt } from "../render/view.js";
+import { actualSizeView, clampView, fitView, stepZoom, zoomAt } from "../../render/view.js";
 
 // <META - ROLE : View store owned by app with clamp + subscribe | L1-60>
 export function createViewStore(host, session) {
