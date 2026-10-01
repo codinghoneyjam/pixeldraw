@@ -1,5 +1,5 @@
 # <META - FILE SUMMARY - Project module implementation>
-"""ORACLE for the pixel algorithms in the spec. Writes fixtures/raster_golden.json.
+"""ORACLE for the pixel algorithms in the spec. Writes tests/fixtures/raster_golden.json.
 All shape/brush tests are integer-only (no epsilon). JS must match these masks bit-for-bit.
 Rounding rule everywhere: rnd(x) = floor(x + 0.5)  (== JS Math.round)."""
 import hashlib, json, math
@@ -208,7 +208,7 @@ def main():
         ("brush 64", brush_mask(64)), ("brush 33", brush_mask(33)), ("ellipse 128x64", ellipse_mask(128, 64)),
         ("rrect 200x120 r30", rrect_mask(200, 120, 30)), ("outline ellipse 128x64 n8", outline_ring("ellipse",128,64,0,8)[0]),
         ("outline rrect 200x120 r30 n6", outline_ring("rrect",200,120,30,6)[0])]]
-    (ROOT / "fixtures" / "raster_golden.json").write_text(json.dumps(G, indent=1) + "\n", encoding="utf-8")
+    (ROOT / "tests" / "fixtures" / "raster_golden.json").write_text(json.dumps(G, indent=1) + "\n", encoding="utf-8")
 
     # <META - ROLE : Execute sym | L0-0>
     def sym(m): return m == m[::-1] and m == [r[::-1] for r in m]

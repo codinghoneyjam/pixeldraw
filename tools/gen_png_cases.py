@@ -1,5 +1,5 @@
 # <META - FILE SUMMARY - Project module implementation>
-"""Writes fixtures/png_cases.json: PNGs with every filter type (0-4), bad CRC, unsupported color types.
+"""Writes tests/fixtures/png_cases.json: PNGs with every filter type (0-4), bad CRC, unsupported color types.
 Each valid case: expected RGBA (hex string). PIL is used to cross-verify the hand-built filtered PNGs."""
 import base64, io, json, struct, zlib
 from pathlib import Path
@@ -53,5 +53,5 @@ cases = {"cases": [
   {"name": "rgb_8bit_unsupported", "png": b64(rgb.getvalue()), "expect_error": "PNG_UNSUPPORTED"},
   {"name": "not_a_png", "png": b64(b"hello world, not a png"), "expect_error": "PNG_SIGNATURE"},
 ]}
-(ROOT / "fixtures" / "png_cases.json").write_text(json.dumps(cases, indent=1) + "\n")
+(ROOT / "tests" / "fixtures" / "png_cases.json").write_text(json.dumps(cases, indent=1) + "\n")
 print("wrote", len(cases["cases"]), "png cases")

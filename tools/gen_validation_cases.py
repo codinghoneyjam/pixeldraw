@@ -1,5 +1,5 @@
 # <META - FILE SUMMARY - Project module implementation>
-"""Writes fixtures/validation_cases.json: documents + expected verdicts for the JS validator/importer.
+"""Writes tests/fixtures/validation_cases.json: documents + expected verdicts for the JS validator/importer.
 Oracle = schema/schema_selfcheck.py (JSON Schema + semantic rules). Run from anywhere."""
 import copy, json, sys
 from pathlib import Path
@@ -55,7 +55,7 @@ sem = {
 for k, (code, fn) in sem.items():
     add(k, m(fn, raster_only), False, code)
 
-out = ROOT / "fixtures" / "validation_cases.json"
+out = ROOT / "tests" / "fixtures" / "validation_cases.json"
 out.write_text(json.dumps({"cases": cases}, indent=1) + "\n", encoding="utf-8")
-(ROOT / "fixtures" / "sample_raster_only.json").write_text(json.dumps(raster_only, indent=1) + "\n", encoding="utf-8")
+(ROOT / "tests" / "fixtures" / "sample_raster_only.json").write_text(json.dumps(raster_only, indent=1) + "\n", encoding="utf-8")
 print("wrote", len(cases), "validation cases")
