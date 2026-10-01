@@ -3,6 +3,12 @@
 import { EVENTS } from "../core/events.js";
 import { clampView, panBy, pixelAt, screenToCanvas, stepZoom, zoomAt } from "../render/view.js";
 
+/**
+ * Input-domain wheel accumulator (TL-DRAW-04 Slice D split).
+ * Pure input side of the input/shape boundary: no `core/raster`
+ * import, no cursor fns. Shape rasterization lives in
+ * `core/raster/shape_raster.js` (TL-DRAW-03 owns it).
+ */
 export class WheelAccumulator {
   constructor() {
     this._residue = 0;
@@ -14,6 +20,13 @@ export class WheelAccumulator {
     this._dir = 0;
   }
 
+  /**
+   * Accumulate a vertical wheel delta into -step units (pure input math).
+   * @param {number} deltaY - Vertical wheel delta in event units.
+   * @param {number} [deltaMode=0] - DOM deltaMode (0 px, 1 line x16, 2 page x pageHeight).
+   * @param {number} [pageHeight=0] - Viewport height px for deltaMode 2.
+   * @returns {number} Negative step count, or 0 when below threshold.
+   */
   feed(deltaY, deltaMode = 0, pageHeight = 0) {
     let px = Number(deltaY);
     if (!Number.isFinite(px) || px === 0) return 0;
@@ -36,6 +49,15 @@ export class WheelAccumulator {
   }
 }
 
+/**
+ * Pixel-path pointer event builder (pan/zoom-scoped contract, frozen).
+ * Input side of the input/shape boundary: cursor fns stay here,
+ * never dragged into `core/model` or `core/raster`.
+ * @param {object} domEv - DOM pointer event (clientX/clientY path only).
+ * @param {object} view - Current view (screenToCanvas/pixelAt mapping).
+ * @param {object} hostRect - Host bounding rect ({left, top}).
+ * @returns {object} ToolEvent with pixel/float/screen coords.
+ */
 function buildToolEvent(domEv, view, hostRect) {
   const sx = domEv.clientX - hostRect.left;
   const sy = domEv.clientY - hostRect.top;
@@ -329,6 +351,11 @@ export class InputController {
         const rect = this._hostRect();
         const sx = e.clientX - rect.left;
         const sy = e.clientY - rect.top;
+        // <META - ROLE : Q2 confirmed gap: deltaX never read; trackpad horizontal scroll ignored, Shift+wheel maps -deltaY to x-pan; additive deltaX branch only, never silent rewrite | L332-340>
+        // NOTE (TL-DRAW-04 Q2): `deltaX` is intentionally unread here — trackpad
+        // horizontal scroll is ignored/misrouted via the Shift+wheel `-deltaY`
+        // mapping below. Any future `deltaX` support MUST land as an
+        // explicitly-flagged additive branch, not a silent rewrite of `panBy`.
         if (e.shiftKey === true) {
           const doc = this.session.doc;
           const vp = this.getViewportSize();
