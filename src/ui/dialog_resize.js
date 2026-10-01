@@ -1,5 +1,5 @@
 // <META - FILE SUMMARY - Canvas resize dialog>
-import { openModal, addButton, numberField } from "./dialog_core.js";
+import { openModal, addButton, numberField } from "./dialogs/dialog_core.js";
 
 // <META - ROLE : Canvas resize dialog | L1-32>
 export function showResizeCanvasDialog(current = { widthPx: 512, heightPx: 512 }) {
