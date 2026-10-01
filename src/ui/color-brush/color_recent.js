@@ -1,6 +1,6 @@
 // <META - FILE SUMMARY - Recent color grid: build, paint, push>
-import { makeSwatchButton } from "./color-brush/panel_color_fields.js";
-import { normHex } from "./color-brush/panel_color_fields.js";
+import { makeSwatchButton } from "./panel_color_fields.js";
+import { normHex } from "./panel_color_fields.js";
 
 const EMPTY_LABEL = "빈 칸";
 
