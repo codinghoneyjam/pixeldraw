@@ -66,10 +66,19 @@ python schema/schema_selfcheck.py
 ### 알려진 상태 (2026-10-01)
 
 - `npm test`의 `node --test tests/`는 Node 24에서 디렉터리 인자를 받지 않아 실패한다.
-  대신 `node --test "tests/*.test.mjs"`를 직접 실행해야 한다.
-- 그 명령 기준 **152건 중 148건 통과, 4건 실패**다. 실패 내역은
-  `docs/tools.md` §11-1(커서 기대값 3건)과 `docs/io.md` §11(import 경로 1건)에 기술되어 있다.
-- `npm run parity`(115 골든 검사)는 통과한다. 래스터 수학 자체는 안전하다.
+  `package.json`의 스크립트 수정이 남아 있다. 현재는 `node --test "tests/*.test.mjs"`를
+  직접 실행할 것.
+- 그 명령 기준 **186건 전부 통과**한다(수정 이전 152건 중 148건 통과·4건 실패).
+- 나머지 4개 게이트도 모두 통과한다: parity 115건·png_cases 5/5·view OK·schema selfcheck OK.
+
+### 수정 이력
+
+- `tests/io_basic.test.mjs:16` — `buildMetaRecord`/`buildChunkRecords`/`chunkRecordKey`
+  import 경로를 `idb_record_builder.js`로 변경. 분리 후 `store_idb.js`가 이 심볼을
+  재노출하지 않아 모듈 로드가 실패하고 io 계층 검증이 0건 실행되던 상태였다.
+- `tests/tools_basic.test.mjs` — 커서 기대값 3건을 `"crosshair"` 하드코딩에서
+  `cursorFallback()` 헬퍼로 교체. SVG `url(...)` 형태와 폴백 키워드만 검증하므로
+  커서 시각을 바꿔도 깨지지 않는다. `fill`의 폴백은 `copy`다(기존 기대값과 다름).
 
 ## 전역 주의점
 

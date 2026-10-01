@@ -13,7 +13,7 @@ import { validateDocument } from "../src/io/validate.js";
 import { documentToJson, jsonToDocument, importLayerJson } from "../src/io/serialize.js";
 import { flattenToRgba, exportPngBytes } from "../src/io/export_png.js";
 import { sanitizeFileName } from "../src/io/file_io.js";
-import { buildMetaRecord, buildChunkRecords, chunkRecordKey } from "../src/io/store_idb.js";
+import { buildMetaRecord, buildChunkRecords, chunkRecordKey } from "../src/io/idb_record_builder.js";
 import { compositeChunk, samplePixel } from "../src/render/composite.js";
 
 const pngCases = JSON.parse(readFileSync(new URL("./fixtures/png_cases.json", import.meta.url)));

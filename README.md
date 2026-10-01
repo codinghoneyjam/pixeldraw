@@ -63,12 +63,24 @@ undo, no-AA PNG check, locked/hidden reject, small-budget history eviction).
 ## Known issues (2026-10-01)
 
 - `npm test` fails on Node 24: `node --test tests/` is not accepted as a directory
-  argument. Run `node --test "tests/*.test.mjs"` instead.
-- Under that command, **148/152 pass, 4 fail**:
-  - `tests/io_basic.test.mjs` fails to load — it imports `buildMetaRecord` /
-    `buildChunkRecords` / `chunkRecordKey` from `store_idb.js`, which no longer
-    re-exports them after the `idb_record_builder.js` split.
-  - 3 cursor assertions in `tests/tools_basic.test.mjs` expect `"crosshair"`, but
-    the tools now return SVG `url(...)` cursors. The docs describe SVG cursors as
-    normative, so the test expectations are stale.
-- `npm run parity` (115 golden checks) passes — the raster math itself is safe.
+  argument. The `package.json` script is still unfixed. Run
+  `node --test "tests/*.test.mjs"` instead.
+- Open code issues (test suite itself is green):
+  - `src/core/raster/raster_brush.js` is dead code. It duplicates `brushFootprint`
+    and `forEachBresenham` from `src/core/brush.js`, and nothing imports it.
+    Left over from the `raster/` split (commit `62f6d0ae`).
+  - `rnd` is defined twice: `src/core/blend.js` and `src/core/raster/raster_snap.js`.
+  - `src/core/raster/*` throws `RangeError`, but `docs/contract.md` section 2-7
+    allows `DrawToolError` only.
+
+## Verification status (2026-10-01)
+
+All five gates pass:
+
+| Gate | Result |
+|:---|:---|
+| `node --test "tests/*.test.mjs"` | 186/186 |
+| `node tools/parity_check.mjs` | 115 golden checks |
+| `node tools/png_cases_check.mjs` | 5/5 |
+| `node tools/view_check.mjs` | OK |
+| `python schema/schema_selfcheck.py` | OK |

@@ -107,10 +107,12 @@
 
 - `input_controller.js`에 `WheelAccumulator`·`buildToolEvent`·커서 상태 머신이 인라인 상태다.
 - `shape_overlay.js`(93줄)는 존재하며 `computePaintLayers`가 `core/raster/raster_masks.js`를 import 한다.
-- **커서 문자열이 테스트와 불일치한다.** `pen.js`·`eyedropper.js`·`fill.js`의 `get cursor()`는
-  `"crosshair"`가 아니라 SVG `url(...)` 값을 반환한다. `tests/tools_basic.test.mjs`의 기대값은
-  `"crosshair"`이므로 3건이 실패한다. 문서(`ui.md` §1, `tools.md` §5)는 SVG 커서를 규범으로
-  서술하므로 **테스트 기대값이 낡은 것**이다.
+- **커서 기대값은 해소되었다(2026-10-01).** `pen.js`·`eyedropper.js`·`fill.js`의
+  `get cursor()`는 SVG `url("data:image/svg+xml,...") <hx> <hy>, <fallback>` 형태다.
+  `tests/tools_basic.test.mjs`가 `"crosshair"`를 하드코딩해 3건이 실패했으나, 문서
+  (`ui.md` §1, `tools.md` §5)가 SVG 커서를 규범으로 서술하므로 **테스트가 낡은 것**이었다.
+  `cursorFallback()` 헬퍼를 추가해 SVG URL 형태와 폴백 키워드만 검증하도록 바꿨다
+  (`pen`·`eyedropper` → `crosshair`, `fill` → `copy`). 커서 시각을 바꿔도 깨지지 않는다.
 - `shape_geom.js`는 `core/raster/raster_snap.js`를, `shape.js`는 `core/raster/shape_raster.js`를 import 한다.
 
 ## 12. 대표 플로우 (포인터→도구→커밋)

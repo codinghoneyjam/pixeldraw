@@ -24,6 +24,10 @@
 >
 > **현재 상태의 계층별 파일 구성과 라인 수는 `docs/core.md`·`model.md`·`io.md`·
 > `render.md`·`tools.md`·`ui.md`를 참조할 것.**
+>
+> 테스트 4건 실패는 커밋 `c1bad8c5` 이후 해소되어 **186/186 통과**하고, 게이트 5종
+> (테스트·parity 115·png 5/5·view·schema) 전부 통과한다. 잔여 과제는 아래
+> "실제로 남은 개선 과제" 참조.
 
 ### 분리 이후 남은 후보 (2026-10-01 재측정, 원시 라인 수)
 
@@ -382,9 +386,10 @@ src/core/
 | 2 | `shape.js` 333줄 분리 | 2순위 |
 | 3 | `core/raster/raster_brush.js` 제거 | 죽은 중복 모듈. `core/brush.js`와 심볼 중복 (`docs/core.md` §13) |
 | 4 | `rnd` 단일화 | `core/blend.js`와 `core/raster/raster_snap.js`에 중복 정의 |
-| 5 | 테스트 4건 실패 해소 | `docs/io.md` §11, `docs/tools.md` §11-1 |
+| 5 | ~~테스트 4건 실패 해소~~ | ✅ **해소.** 186/186 통과. `docs/io.md` §11, `docs/tools.md` §11-1 |
 | 6 | 250줄 초과 파일 2차 분리 | `commands.js` 287·`panel_layers.js` 264·`pen.js` 261 |
 | 7 | CSS 60KB 분석 | 본 보고서가 아예 다루지 않은 영역 |
+| 8 | `package.json`의 `test` 스크립트 수정 | `node --test tests/`가 Node 24에서 실패. `node --test "tests/*.test.mjs"`로 변경 필요 |
 
 ### 검증 명령 (이 문서가 존재하는 동안 반드시 실행)
 

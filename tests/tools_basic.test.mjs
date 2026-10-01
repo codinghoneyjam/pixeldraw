@@ -13,6 +13,15 @@ import { HandTool } from "../src/tools/hand.js";
 import { WheelAccumulator } from "../src/tools/input_controller.js";
 import { toolEvent } from "./helpers/tool_event.js";
 
+// Cursors are inline SVG data URLs with a CSS keyword fallback
+// (`url("data:image/svg+xml,...") <hx> <hy>, <fallback>`). Docs treat SVG cursors
+// as normative, so assert the fallback keyword and URL shape rather than the
+// exact payload, which would break on any visual tweak.
+const cursorFallback = (cursor) => {
+  assert.match(cursor, /^url\("data:image\/svg\+xml,/, "cursor must be an SVG data URL");
+  return cursor.slice(cursor.lastIndexOf(",") + 1).trim();
+};
+
 const G = JSON.parse(readFileSync(new URL("./fixtures/raster_golden.json", import.meta.url)));
 
 function makeSession(w = 64, h = 64) {
@@ -214,7 +223,7 @@ describe("eyedropper", () => {
   it("drag updates + cursor + overlay", () => {
     const { session } = twoLayer();
     const eye = new EyedropperTool(envFor(session));
-    assert.equal(eye.cursor, "crosshair");
+    assert.equal(cursorFallback(eye.cursor), "crosshair");
     eye.pointerDown(toolEvent({ x: 5, y: 5 }));
     eye.pointerMove(toolEvent({ x: 0, y: 0 }));
     const calls = [];
@@ -238,7 +247,7 @@ describe("fill", () => {
     const session = makeSession(32, 32);
     session.setSetting("primaryColor", "#00ff00");
     const fill = new FillTool(envFor(session));
-    assert.equal(fill.cursor, "crosshair");
+    assert.equal(cursorFallback(fill.cursor), "copy");
     fill.pointerDown(toolEvent({ x: 5, y: 5 }));
     const store = session.doc.getLayer(session.doc.activeLayerId).store;
     assert.equal(store.getPixel(0, 0), packRGBA(0, 255, 0, 255));
@@ -352,7 +361,7 @@ describe("misc tool contracts", () => {
     assert.equal(session.history.canUndo(), false);
     const pen = new PenTool(envFor(session), { mode: "draw" });
     assert.equal(pen.keyDown({ key: "x" }), false);
-    assert.equal(pen.cursor, "crosshair");
+    assert.equal(cursorFallback(pen.cursor), "crosshair");
     pen.pointerDown(toolEvent({ x: 2, y: 2, alt: true }));
     assert.equal(session.settings.primaryColor, "#0a141e");
     assert.equal(session.history.canUndo(), false);

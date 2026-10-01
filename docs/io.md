@@ -109,23 +109,23 @@ io 모듈은 문서의 바깥 경계를 담당한다. 메모리 안의 Document�
 | `idb_record_builder.js` | 37 | 분리됨 |
 | `idb_schema.js` | 33 | 분리됨 |
 
-### 알려진 회귀 — `tests/io_basic.test.mjs` 모듈 로드 실패
+### 해결된 회귀反倒 regress — 해소됨 (2026-10-01)
 
 분리 후 `store_idb.js`는 `buildMetaRecord`·`buildChunkRecords`·`chunkRecordKey`를
-`idb_record_builder.js`에서 **import만** 하고 재노출하지 않는다. 그런데
-`tests/io_basic.test.mjs:16`은 이 세 심볼을 `store_idb.js`에서 가져오려 한다.
+`idb_record_builder.js`에서 **import만** 하고 재노출하지 않는다. `tests/io_basic.test.mjs:16`이
+구 경로에서 이 세 심볼을 가져오려 하여 아래 오류로 모듈 로드 자체가 실패했다.
 
 ```
 SyntaxError: The requested module '../src/io/store_idb.js' does not provide
 an export named 'buildChunkRecords'
 ```
 
-테스트 4건 실패 중 1건이 이것이며, 테스트 파일 전체가 로드되지 않아 io 계층 검증이
-현재 **0건 실행**된다. 선택지는 (a) 테스트 import 경로를 `idb_record_builder.js`로
-수정하거나 (b) `store_idb.js`에 파사드 re-export를 추가하는 것. (b)가 공개 API
-호환성을 보존하지만, §5의 계층 규칙상 (a)가 더 순수하다.
+테스트 파일 전체가 로드되지 않아 io 계층 검증 35건이 **0건 실행**되던 상태였다.
+**해소**: 테스트 import 경로를 `../src/io/idb_record_builder.js`로 변경했다.
+파사드 re-export를 `store_idb.js`에 추가하는 대안도 있었으나, §5의 계층 규칙상
+테스트 경로 수정이 더 순수하므로 이를 택했다. 현재 io 계층 35/35 통과.
 
 ## Handoff
 - **Wrote**: `draw_tool_v2/docs/io.md`
-- **Result**: 분리 후 13파일 라인 수 표 + `io_basic.test.mjs` 회귀 1건 기술
-- **Next**: Orchestrator — 테스트 import 경로 수정 또는 re-export 추가 결정
+- **Result**: 분리 후 13파일 라인 수 표 + `io_basic.test.mjs` 회귀 해소 기록
+- **Next**: 없음. io 계층 검증 35/35 통과
