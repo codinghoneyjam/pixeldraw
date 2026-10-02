@@ -401,5 +401,5 @@ node tools/view_check.mjs
 python schema/schema_selfcheck.py
 ```
 
-`python -m tools quality audit` 등 저장소 루트 GDScript 게이트는 이 JS 프로젝트에
+`python -m dev.tools quality audit` 등 저장소 루트 GDScript 게이트는 이 JS 프로젝트에
 적용되지 않는다.
