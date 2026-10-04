@@ -16,6 +16,9 @@ for (const c of G.rrect) eq(rows(R.rrectMask(c.w, c.h, c.r)), c.rows, `rrect ${c
 for (const c of G.outline) eq(rows(R.outlineRing(c.kind, c.w, c.h, c.r, c.n)), c.rows, `outline ${c.kind} ${c.w}x${c.h}`);
 for (const c of G.bresenham) eq(R.bresenham(...c.p0, ...c.p1), c.points, `bresenham ${c.p0}->${c.p1}`);
 for (const c of G.stroke) eq(rows(R.strokeMask(c.points, c.n, c.W, c.H)), c.rows, `stroke n=${c.n}`);
+// PIL d.line ground truth. The production primitive is polygon.js's
+// wideLineQuadEdges + polygonGeneric, already verified by polygon_outline.
+for (const c of G.wide_line) eq(rows(R.wideLineMask(c.p0, c.p1, c.width, c.W, c.H)), c.rows, `wide_line ${c.name}`);
 for (const c of G.polygon) eq(rows(R.polygonMask(c.pts, c.w, c.h)), c.rows, `polygon ${c.name}`);
 for (const c of G.polygon_outline) eq(rows(R.polygonOutlineMask(c.pts, c.w, c.width)), c.rows, `polygon_outline ${c.name} w=${c.width}`);
 for (const c of G.fillet) eq(rows(R.polygonMask(R.filletPolygon(c.pts, c.radius), c.w, c.h)), c.rows, `fillet ${c.name}`);

@@ -1,5 +1,6 @@
 // <META - FILE SUMMARY - Shape overlay paint layers and canvas rendering>
-import { ellipseMask, lineMask, outlineRing, rrectMask } from "../core/raster/raster_masks.js";
+import { ellipseMask, outlineRing, rrectMask } from "../core/raster/raster_masks.js";
+import { lineMask } from "../core/raster/segment.js";
 import { DrawToolError } from "../core/errors.js";
 import { packRGBA, parseHex } from "../core/pixel.js";
 

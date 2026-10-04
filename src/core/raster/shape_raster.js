@@ -3,7 +3,8 @@
 // Pure module: no DOM, no Session, ESM, Node-importable.
 // Delegates to raster_brush, raster_masks, raster_snap submodules.
 
-import { assertMaskSize, ellipseMask, lineMask, outlineRing, rrectMask } from "./raster_masks.js";
+import { assertMaskSize, ellipseMask, outlineRing, rrectMask } from "./raster_masks.js";
+import { lineMask } from "./segment.js";
 import { assertBrushSize } from "./raster_brush.js";
 import { polygonBBox, polygonInsetRing, polygonMask, polygonOutlineMask } from "./polygon.js";
 // Guards are single-sourced: assertMaskSize lives in raster_masks.js,

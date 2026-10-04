@@ -3,7 +3,8 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { ellipseMask, rrectMask, outlineRing, lineMask } from "../src/core/raster/raster_masks.js";
+import { ellipseMask, rrectMask, outlineRing } from "../src/core/raster/raster_masks.js";
+import { lineMask } from "../src/core/raster/segment.js";
 import { angleSnap, dragBBox, resizeBBox, unitSnap } from "../src/core/raster/raster_snap.js";
 import { applyShape } from "../src/core/raster/shape_raster.js";
 
@@ -107,26 +108,30 @@ describe("shape_raster golden vectors", () => {
     }
   });
 
-  it("lineMask reproduces golden stroke canvases when clipped", () => {
-    for (const c of G.stroke) {
+  // Checked against G.wide_line (raw PIL d.line), NOT G.stroke: the stroke
+  // group is the spec for the editor's round pen (core/brush.js), while
+  // lineMask rasterises PIL's rotated-quad wide line. The two must not share a
+  // fixture group -- see task memo T-7b.
+  it("lineMask reproduces PIL wide_line goldens when clipped", () => {
+    for (const c of G.wide_line) {
       const W = c.W;
       const H = c.H;
       const canvas = Array.from({ length: H }, () => new Array(W).fill("."));
-      const segs = c.points.length === 1 ? [[c.points[0], c.points[0]]] : c.points.slice(1).map((p, i) => [c.points[i], p]);
-      for (const [a, b] of segs) {
-        const m = lineMask(a, b, c.n);
-        for (let y = 0; y < m.h; y++) {
-          for (let x = 0; x < m.w; x++) {
-            if (m.data[y * m.w + x] !== 1) continue;
-            const cx = m.x + x;
-            const cy = m.y + y;
-            if (cx >= 0 && cy >= 0 && cx < W && cy < H) canvas[cy][cx] = "#";
-          }
+      const m = lineMask(c.p0, c.p1, c.width);
+      for (let y = 0; y < m.h; y++) {
+        for (let x = 0; x < m.w; x++) {
+          if (m.data[y * m.w + x] !== 1) continue;
+          const cx = m.x + x;
+          const cy = m.y + y;
+          if (cx >= 0 && cy >= 0 && cx < W && cy < H) canvas[cy][cx] = "#";
         }
       }
-      assert.deepEqual(canvas.map((r) => r.join("")), c.rows, `stroke n=${c.n} ${JSON.stringify(c.points)}`);
+      assert.deepEqual(canvas.map((r) => r.join("")), c.rows, `wide_line ${c.name}`);
     }
   });
+  // The editor's round pen is verified separately against G.stroke by
+  // tests/core_basic.test.mjs (strokePoint/strokeSegment from core/brush.js),
+  // so it is not duplicated here.
 });
 
 describe("shape_raster invariants", () => {

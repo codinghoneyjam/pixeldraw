@@ -272,6 +272,19 @@ function wideQuadEdges(x0, y0, x1, y1, width) {
 
 const toGrid = (data, w, h) => Array.from({ length: h }, (_, y) => Array.from({ length: w }, (_, x) => data[y * w + x] === 1));
 
+export function wideLineMask(p0, p1, width, W, H) {
+  // width 1 is PIL's Bresenham path, not a quad.
+  if (width <= 1) {
+    const data = new Uint8Array(W * H);
+    const path = bresenham(p0[0], p0[1], p1[0], p1[1]);
+    for (const [x, y] of path) if (x >= 0 && x < W && y >= 0 && y < H) data[y * W + x] = 1;
+    return toGrid(data, W, H);
+  }
+  const data = new Uint8Array(W * H);
+  polyGeneric(data, W, H, wideQuadEdges(p0[0], p0[1], p1[0], p1[1], width));
+  return toGrid(data, W, H);
+}
+
 export function polygonMask(pts, w, h) {
   const data = new Uint8Array(w * h);
   polyGeneric(data, w, h, buildEdges(pts.map((p) => [p[0], p[1]])));

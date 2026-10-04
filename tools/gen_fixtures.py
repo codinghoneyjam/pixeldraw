@@ -122,6 +122,22 @@ def chord_outline_mask(box, start, end, width, w, h):
     d.chord([tuple(box[0]), tuple(box[1])], start=start, end=end, outline=1, width=width)
     return [[im.getpixel((x, y)) != 0 for x in range(w)] for y in range(h)]
 
+# <META - ROLE : Execute PIL wide-segment mask (d.line ground truth) | L128-134>
+def wide_line_mask(p0, p1, width, W, H):
+    """PIL ground truth for a single-segment stroke at any width.
+
+    PIL's ImagingDrawWideLine widens a segment into a quad and fills it with
+    the polygon scanline engine; src/core/raster/polygon.js already ports both
+    halves (wideLineQuadEdges + polygonGeneric), which the polygon_outline
+    goldens verify. Reproduced here by calling PIL directly rather than porting
+    anything -- the width-1 case degenerates to the Bresenham path in PIL, and
+    the quad is not valid for it.
+    """
+    im = Image.new("L", (W, H), 0)
+    d = ImageDraw.Draw(im)
+    d.line([tuple(p0), tuple(p1)], fill=1, width=width)
+    return [[im.getpixel((x, y)) != 0 for x in range(W)] for y in range(H)]
+
 # <META - ROLE : Execute outline ring | L47-56>
 def outline_ring(kind, w, h, r, n):
     outer = ellipse_mask(w, h) if kind == "ellipse" else rrect_mask(w, h, r)
@@ -352,6 +368,26 @@ def main():
         {"name": "outline_left_half", "box": CHORD_BOX, "start": 90, "end": 270, "width": 2, "w": 16, "h": 10,
          "rows": rows(chord_outline_mask(CHORD_BOX, 90, 270, 2, 16, 10))},
     ]
+    # PIL d.line(width>=2) ground truth for a SINGLE segment. Separate from the
+    # "stroke" group above, which is the editor's round-pen spec. The square
+    # stamp + cap-trim model used by that group reproduces PIL on only 1/15
+    # geometries; the rotated-quad model used here is exact on all of them, so
+    # the two concerns must not share a fixture group.
+    G["wide_line"] = []
+    for nm, p0, p1 in [
+        ("vertical_up", (32, 50), (32, 10)),
+        ("vertical_down", (32, 10), (32, 50)),
+        ("horizontal_right", (10, 32), (50, 32)),
+        ("horizontal_left", (50, 32), (10, 32)),
+        ("diagonal_45", (12, 12), (44, 44)),
+        ("diagonal_anti45", (12, 44), (44, 12)),
+        ("shallow_slope", (8, 28), (52, 36)),
+        ("steep_slope", (28, 8), (36, 52)),
+        ("short_segment", (30, 30), (34, 33)),
+    ]:
+        for wd in (1, 2, 3, 4, 5, 6):
+            G["wide_line"].append({"name": f"{nm}_w{wd}", "p0": list(p0), "p1": list(p1), "width": wd,
+                                   "W": 64, "H": 64, "rows": rows(wide_line_mask(p0, p1, wd, 64, 64))})
     G["hashes"] = [{"what": w, "sha256": sha(m)} for w, m in [
         ("brush 64", brush_mask(64)), ("brush 33", brush_mask(33)), ("ellipse 128x64", ellipse_mask(128, 64)),
         ("rrect 200x120 r30", rrect_mask(200, 120, 30)), ("outline ellipse 128x64 n8", outline_ring("ellipse",128,64,0,8)[0]),

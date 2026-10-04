@@ -1,10 +1,11 @@
-// <META - FILE SUMMARY - Shape mask generators: ellipse, rrect, outline ring, line>
+// <META - FILE SUMMARY - ellipse / rounded-rect masks and the shared size guard>
 //
 // Pure module: no DOM, no Session, ESM, Node-importable.
 // Mask = { w, h, data: Uint8Array } row-major, 1 = painted.
 // Points accept [x, y] arrays or { x, y } objects.
-
-import { assertBrushSize, brushFootprint, forEachBresenham } from "./raster_brush.js";
+//
+// No line mask here: a PIL-exact segment stroke needs the polygon scanline
+// engine, so it lives in segment.js next to polygonOutlineMask.
 
 /**
  * Canonical mask-size guard. Every mask entry asserts at entry (Slice D boundary).
@@ -95,50 +96,4 @@ export function outlineRing(kind, w, h, r = 0, n = 1) {
     }
   }
   return { w, h, data };
-}
-
-// <META - ROLE : line mask as brush-stamp union with minimal bbox | L101-139>
-/**
- * Line mask as brush-stamp union. Brush guard lives in raster_brush.js.
- * @param {[number, number]|{x:number,y:number}} p0 start point
- * @param {[number, number]|{x:number,y:number}} p1 end point
- * @param {number} n brush size
- * @returns {{x:number,y:number,w:number,h:number,data:Uint8Array}} line mask
- */
-export function lineMask(p0, p1, n) {
-  assertBrushSize(n);
-  const [x0, y0] = toXY(p0);
-  const [x1, y1] = toXY(p1);
-  const { offset, mask: bm } = brushFootprint(n);
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  const visit = (px, py) => {
-    for (let by = 0; by < n; by++) {
-      for (let bx = 0; bx < n; bx++) {
-        if (bm[by * n + bx] === 0) continue;
-        const x = px - offset + bx;
-        const y = py - offset + by;
-        if (x < minX) minX = x;
-        if (y < minY) minY = y;
-        if (x > maxX) maxX = x;
-        if (y > maxY) maxY = y;
-      }
-    }
-  };
-  forEachBresenham(x0, y0, x1, y1, visit);
-  const w = maxX - minX + 1;
-  const h = maxY - minY + 1;
-  const data = new Uint8Array(w * h);
-  const paint = (px, py) => {
-    for (let by = 0; by < n; by++) {
-      for (let bx = 0; bx < n; bx++) {
-        if (bm[by * n + bx] === 0) continue;
-        data[(py - offset + by - minY) * w + (px - offset + bx - minX)] = 1;
-      }
-    }
-  };
-  forEachBresenham(x0, y0, x1, y1, paint);
-  return { x: minX, y: minY, w, h, data };
 }

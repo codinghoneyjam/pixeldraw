@@ -141,13 +141,19 @@ Session 메서드 호출과 이벤트 구독만 하고 모델을 직접 변조�
 - `forEachBresenham(x0, y0, x1, y1, cb)` — 정수 격자를 한 칸씩 열거하며 끝점 도달 시 종료한다.
 - **주의**: 동일 이름의 `brushFootprint`·`forEachBresenham`이 `core/brush.js`에도 존재한다. 현 트리에서 `raster_brush.js`를 import 하는模块은 없다(§13 참조).
 
-### 10.3 raster_masks.js — 마스크 4종
+### 10.3 raster_masks.js — 마스크 3종
 
 - `ellipseMask(w, h)` — 타원 내부 마스크.
 - `rrectMask(w, h, r)` — 모서리 반경 `r`인 사각 마스크.
 - `outlineRing(kind, w, h, r = 0, n = 1)` — `kind`는 `"ellipse"`/`"rrect"`, 두께 `n`의 외곽 링.
-- `lineMask(p0, p1, n)` — 두 점을 잇는 두께 `n`의 선 마스크.
 - 반환 형태는 `{ x, y, w, h, data }`이며 `data`는 행 우선 `Uint8Array`(값 0/1). 소비자는 `applyShape`(진입점)와 `shape_overlay.js`(프리뷰)다.
+
+### 10.3b segment.js — 선 마스크 1종
+
+- `lineMask(p0, p1, n)` — 두 점을 잇는 두께 `n`의 선 마스크. 최소 bbox `{ x, y, w, h, data }`.
+- 두 규칙으로 갈린다. `n == 1`은 Bresenham 경로(`line8`)이고, `n >= 2`는 PIL `ImagingDrawWideLine`이 선분을 **회전 사각형**으로 넓혀 다각형 스캔라인 엔진으로 채운 결과다. 후자는 `polygonOutlineMask`(폐곡선 외곽선)과 같은 `wideLineQuadEdges` + `polygonGeneric` 쌍을 재사용한다.
+- n×n 정사각형을 Bresenham 경로에 찍고 끝캡을 투영으로 잘라내는 모델은 흔한 오해다. Pillow 12.1.0 기준 9 지오메트리 × 폭 2..7(54건) 중 정확히 1건만 맞는다.
+- 주의: 에디터의 **라운드 펜**은 여기 있지 않다. `core/brush.js`의 `strokePoint`/`strokeSegment` + `brushFootprint`가 담당하며, 정황은 `tests/fixtures/raster_golden.json`의 `stroke` 그룹(펜 명세)과 `wide_line` 그룹(PIL `d.line` 원본)이 **분리**되어 있다. 섞으면 안 된다.
 
 ### 10.4 raster_snap.js — 스냅 기하
 

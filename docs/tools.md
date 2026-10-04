@@ -106,7 +106,7 @@
 `shape_keyboard.js`는 **계획만 있고 미구현** 상태다.
 
 - `input_controller.js`에 `WheelAccumulator`·`buildToolEvent`·커서 상태 머신이 인라인 상태다.
-- `shape_overlay.js`(93줄)는 존재하며 `computePaintLayers`가 `core/raster/raster_masks.js`를 import 한다.
+- `shape_overlay.js`는 존재하며 `computePaintLayers`가 `core/raster/raster_masks.js`와 `core/raster/segment.js`를 import 한다.
 - **커서 기대값은 해소되었다(2026-10-01).** `pen.js`·`eyedropper.js`·`fill.js`의
   `get cursor()`는 SVG `url("data:image/svg+xml,...") <hx> <hy>, <fallback>` 형태다.
   `tests/tools_basic.test.mjs`가 `"crosshair"`를 하드코딩해 3건이 실패했으나, 문서
