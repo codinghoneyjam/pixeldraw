@@ -1,4 +1,4 @@
-import { CHUNK_LEN, CHUNK_PX, chunkKey, isValidCanvasSize } from "./constants.js";
+import { CHUNK_LEN, CHUNK_PX, chunkKey, chunkCoords, isValidCanvasSize } from "./constants.js";
 import { DrawToolError } from "./errors.js";
 
 export function isAllZero(data) {
@@ -92,7 +92,8 @@ export class ChunkStore {
   forEachChunk(fn) {
     const keys = [...this._map.keys()].sort((a, b) => a - b);
     for (const key of keys) {
-      fn(key % 64, Math.floor(key / 64), this._map.get(key));
+      const { cx, cy } = chunkCoords(key);
+      fn(cx, cy, this._map.get(key));
     }
   }
 
@@ -128,8 +129,7 @@ export class ChunkStore {
     const ny = newH / CHUNK_PX;
     const keys = [...this._map.keys()].sort((a, b) => a - b);
     for (const key of keys) {
-      const cx = key % 64;
-      const cy = Math.floor(key / 64);
+      const { cx, cy } = chunkCoords(key);
       if (cx >= nx || cy >= ny) {
         removed.push({ cx, cy, data: this._map.get(key).slice() });
         this._map.delete(key);
@@ -194,8 +194,7 @@ export class PixelWriter {
     const chunks = [];
     const keys = [...this._before.keys()].sort((a, b) => a - b);
     for (const key of keys) {
-      const cx = key % 64;
-      const cy = Math.floor(key / 64);
+      const { cx, cy } = chunkCoords(key);
       const before = this._before.get(key);
       let after = this.store.copyChunk(cx, cy);
       if (after !== null && isAllZero(after)) {
@@ -215,7 +214,8 @@ export class PixelWriter {
     }
     this._done = true;
     for (const [key, before] of this._before) {
-      this.store.putChunk(key % 64, Math.floor(key / 64), before);
+      const { cx, cy } = chunkCoords(key);
+      this.store.putChunk(cx, cy, before);
     }
     return this.takeDirty();
   }

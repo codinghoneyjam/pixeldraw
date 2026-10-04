@@ -1,5 +1,5 @@
 # <META - FILE SUMMARY - Project module implementation>
-"""Draw-tool schema v2 self-check (limits: 1920x1088): positive/negative validation, semantic rules,
+"""Draw-tool schema v2 self-check (limits: 2048x1088): positive/negative validation, semantic rules,
 v1->v2 migration, flatten parity, and a synthetic size benchmark.
 
 Run: python schema_selfcheck.py            (contract checks, writes sample_document.json)
@@ -156,7 +156,7 @@ def run_checks() -> int:
 
     cases = {
         "width not multiple of 32": lambda d: d["canvas"].__setitem__("width_px", 100),
-        "width above 1920": lambda d: d["canvas"].__setitem__("width_px", 1952),
+        "width above 2048": lambda d: d["canvas"].__setitem__("width_px", 2080),
         "height above 1088": lambda d: d["canvas"].__setitem__("height_px", 1120),
         "tile_px changed": lambda d: d["canvas"].__setitem__("tile_px", 32),
         "unknown blend": lambda d: d["layers"][0].__setitem__("blend", "dissolve"),
@@ -165,7 +165,7 @@ def run_checks() -> int:
         "vector layer missing shapes": lambda d: d["layers"][2].pop("shapes"),
         "bezier with 2 points": lambda d: d["layers"][2]["shapes"][1].__setitem__("points", [[0, 0], [1, 1]]),
         "chunk not a PNG": lambda d: d["layers"][0]["raster"]["chunks"][0].__setitem__("png", "AAAA"),
-        "cx above 59": lambda d: d["layers"][0]["raster"]["chunks"][0].__setitem__("cx", 60),
+        "cx above 63": lambda d: d["layers"][0]["raster"]["chunks"][0].__setitem__("cx", 64),
         "cy above 33": lambda d: d["layers"][0]["raster"]["chunks"][0].__setitem__("cy", 34),
         "extra property": lambda d: d.__setitem__("order", 1),
         "empty layers": lambda d: d.__setitem__("layers", []),

@@ -1,0 +1,31 @@
+{
+ "name": "title_logo_text_d",
+ "canvas": [
+  160,
+  224
+ ],
+ "crop": [
+  138,
+  200
+ ],
+ "layers": [
+  {
+   "id": "text",
+   "commands": [
+    {
+     "cmd": "text",
+     "text": "d",
+     "xy": [
+      24,
+      -15
+     ],
+     "font": "monogram-240",
+     "fill": "#FFFFFF",
+     "stroke": "#000000",
+     "stroke_width": 9,
+     "stroke_mode": "disk"
+    }
+   ]
+  }
+ ]
+}

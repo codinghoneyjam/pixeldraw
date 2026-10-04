@@ -21,6 +21,8 @@ import {
   ZOOM_LEVELS,
   SCHEMA_VERSION,
   isValidCanvasSize,
+  chunkKey,
+  chunkCoords,
 } from "../src/core/constants.js";
 import { packRGBA, unpackRGBA, parseHex, toHex, TRANSPARENT } from "../src/core/pixel.js";
 import { over } from "../src/core/blend.js";
@@ -38,9 +40,9 @@ describe("constants", () => {
     assert.equal(CHUNK_PX, 32);
     assert.equal(CHUNK_LEN, 4096);
     assert.equal(MIN_SIZE_PX, 32);
-    assert.equal(MAX_W_PX, 1920);
+    assert.equal(MAX_W_PX, 2048);
     assert.equal(MAX_H_PX, 1088);
-    assert.equal(MAX_CHUNKS_X, 60);
+    assert.equal(MAX_CHUNKS_X, 64);
     assert.equal(MAX_CHUNKS_Y, 34);
     assert.equal(PEN_MIN, 1);
     assert.equal(PEN_MAX, 64);
@@ -54,11 +56,23 @@ describe("constants", () => {
   it("isValidCanvasSize", () => {
     assert.equal(isValidCanvasSize(31, 32), false);
     assert.equal(isValidCanvasSize(33, 32), false);
-    assert.equal(isValidCanvasSize(1952, 32), false);
+    assert.equal(isValidCanvasSize(2080, 32), false);
     assert.equal(isValidCanvasSize(32, 1120), false);
     assert.equal(isValidCanvasSize(32, 32), true);
     assert.equal(isValidCanvasSize(1920, 1088), true);
     assert.equal(isValidCanvasSize(512, 512), true);
+  });
+  it("isValidCanvasSize 2048 boundary", () => {
+    assert.equal(isValidCanvasSize(2048, 128), true);
+    assert.equal(isValidCanvasSize(2048 + 32, 128), false);
+  });
+});
+
+describe("chunkKey/chunkCoords", () => {
+  it("boundary values with MAX_CHUNKS_X = 64 stride", () => {
+    assert.equal(chunkKey(63, 0), 63);
+    assert.deepEqual(chunkCoords(64), { cx: 0, cy: 1 });
+    assert.deepEqual(chunkCoords(chunkKey(63, 33)), { cx: 63, cy: 33 });
   });
 });
 

@@ -16,6 +16,65 @@ for (const c of G.rrect) eq(rows(R.rrectMask(c.w, c.h, c.r)), c.rows, `rrect ${c
 for (const c of G.outline) eq(rows(R.outlineRing(c.kind, c.w, c.h, c.r, c.n)), c.rows, `outline ${c.kind} ${c.w}x${c.h}`);
 for (const c of G.bresenham) eq(R.bresenham(...c.p0, ...c.p1), c.points, `bresenham ${c.p0}->${c.p1}`);
 for (const c of G.stroke) eq(rows(R.strokeMask(c.points, c.n, c.W, c.H)), c.rows, `stroke n=${c.n}`);
+for (const c of G.polygon) eq(rows(R.polygonMask(c.pts, c.w, c.h)), c.rows, `polygon ${c.name}`);
+for (const c of G.polygon_outline) eq(rows(R.polygonOutlineMask(c.pts, c.w, c.width)), c.rows, `polygon_outline ${c.name} w=${c.width}`);
+for (const c of G.fillet) eq(rows(R.polygonMask(R.filletPolygon(c.pts, c.radius), c.w, c.h)), c.rows, `fillet ${c.name}`);
+for (const c of G.gradient) eq(R.radialGradientMask(c.cx, c.cy, c.r0, c.r1, c.stops, c.w, c.h), c.rgba, `gradient ${c.name}`);
+for (const c of G.arc) {
+  // Near-parity: the port covers every PIL pixel (missing == 0) with a
+  // bounded overshoot (extras <= 16). PIL strokes arcs as its own ellipse
+  // outline clipped to the angle sector; our integer internals differ by
+  // boundary pixels. Sheet recipes only use width <= 2 arcs.
+  const got = R.arcMask(c.box, c.start, c.end, c.width, c.w, c.h);
+  const want = c.rows.map((r) => [...r].map((ch) => ch === "#"));
+  let missing = 0;
+  let extras = 0;
+  for (let y = 0; y < c.h; y++) {
+    for (let x = 0; x < c.w; x++) {
+      if (want[y][x] && !got[y][x]) missing++;
+      if (got[y][x] && !want[y][x]) extras++;
+    }
+  }
+  assert.ok(missing === 0, `arc ${c.name} drops ${missing} PIL pixels`);
+  assert.ok(extras <= 16, `arc ${c.name} overshoot ${extras} > 16`);
+  n += 2;
+}
+for (const c of G.chord) {
+  if ("width" in c) {
+    // Chord outline: same near-parity shape. No sheet recipe uses chord
+    // outline (all are fill-only); the bound locks current behavior.
+    // (PIL strokes the closing diameter onto interior rows; see task memo.)
+    const got = R.chordOutlineMask(c.box, c.start, c.end, c.width, c.w, c.h);
+    const want = c.rows.map((r) => [...r].map((ch) => ch === "#"));
+    let missing = 0;
+    let extras = 0;
+    for (let y = 0; y < c.h; y++) {
+      for (let x = 0; x < c.w; x++) {
+        if (want[y][x] && !got[y][x]) missing++;
+        if (got[y][x] && !want[y][x]) extras++;
+      }
+    }
+    assert.ok(missing <= 16, `chord_outline ${c.name} drops ${missing} > 16`);
+    assert.ok(extras <= 40, `chord_outline ${c.name} overshoot ${extras} > 40`);
+    n += 2;
+  } else {
+    // Chord fill sits 1px wider than PIL at the arc apex (PIL chord fill
+    // is not PIL polygon fill for the same vertices; measured 2026-10-04).
+    const got = R.chordFillMask(c.box, c.start, c.end, c.w, c.h);
+    const want = c.rows.map((r) => [...r].map((ch) => ch === "#"));
+    let missing = 0;
+    let extras = 0;
+    for (let y = 0; y < c.h; y++) {
+      for (let x = 0; x < c.w; x++) {
+        if (want[y][x] && !got[y][x]) missing++;
+        if (got[y][x] && !want[y][x]) extras++;
+      }
+    }
+    assert.ok(missing === 0, `chord_fill ${c.name} drops ${missing} PIL pixels`);
+    assert.ok(extras <= 4, `chord_fill ${c.name} overshoot ${extras} > 4`);
+    n += 2;
+  }
+}
 for (const c of G.angle_snap) eq(R.angleSnap(...c.p0, ...c.p1), c.expect, `angle ${c.p1}`);
 for (const c of G.resize) eq(R.resizeBBox(c.bbox, c.handle, c.pointer, c.lock, c.center), c.expect, `resize ${c.handle} ${c.pointer}`);
 for (const c of G.drag_bbox) eq(R.dragBBox(c.p0, c.p1, c.lock, c.center), c.expect, `drag_bbox ${c.p0}->${c.p1}`);

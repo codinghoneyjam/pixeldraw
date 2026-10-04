@@ -25,7 +25,7 @@
       "properties": {
         "tile_px": { "const": 64 },
         "unit_px": { "const": 32 },
-        "width_px": { "type": "integer", "minimum": 32, "maximum": 1920, "multipleOf": 32 },
+        "width_px": { "type": "integer", "minimum": 32, "maximum": 2048, "multipleOf": 32 },
         "height_px": { "type": "integer", "minimum": 32, "maximum": 1088, "multipleOf": 32 },
         "background": {
           "type": "string",
@@ -39,7 +39,7 @@
       "required": ["cx", "cy", "png"],
       "additionalProperties": false,
       "properties": {
-        "cx": { "type": "integer", "minimum": 0, "maximum": 59, "description": "Chunk column; pixel x = cx * 32." },
+        "cx": { "type": "integer", "minimum": 0, "maximum": 63, "description": "Chunk column; pixel x = cx * 32." },
         "cy": { "type": "integer", "minimum": 0, "maximum": 33, "description": "Chunk row; pixel y = cy * 32." },
         "png": {
           "type": "string",

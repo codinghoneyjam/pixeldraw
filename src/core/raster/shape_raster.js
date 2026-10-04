@@ -5,6 +5,7 @@
 
 import { assertMaskSize, ellipseMask, lineMask, outlineRing, rrectMask } from "./raster_masks.js";
 import { assertBrushSize } from "./raster_brush.js";
+import { polygonBBox, polygonInsetRing, polygonMask, polygonOutlineMask } from "./polygon.js";
 // Guards are single-sourced: assertMaskSize lives in raster_masks.js,
 // assertBrushSize lives in raster_brush.js (Slice D separation boundary).
 
@@ -49,6 +50,31 @@ export function applyShape(writer, spec, primaryPacked, secondaryPacked) {
       }
     }
     return count;
+  }
+  if (kind === "polygon") {
+    const bb = polygonBBox(spec.points);
+    assertMaskSize(bb.w, bb.h);
+    const local = spec.points.map((p) => (Array.isArray(p) ? [p[0] - bb.x, p[1] - bb.y] : [p.x - bb.x, p.y - bb.y]));
+    const pmode = spec.fillMode ?? "outline";
+    const pfill = polygonMask(local, bb.w, bb.h);
+    if (pmode === "fill") return writeMask(writer, pfill, bb.x, bb.y, primaryPacked);
+    // PIL polygon-outline rule (measured on PIL: square probe w1..w4):
+    // width 1 strokes centered like d.line; width >= 2 paints a full-width
+    // ring inset strictly inside the fill boundary.
+    if (sw >= 2) {
+      const pring = polygonInsetRing(pfill, sw);
+      if (pmode === "both") {
+        writeMask(writer, pfill, bb.x, bb.y, secondaryPacked);
+        return writeMask(writer, pring, bb.x, bb.y, primaryPacked);
+      }
+      return writeMask(writer, pring, bb.x, bb.y, primaryPacked);
+    }
+    const pring = polygonOutlineMask(local, Math.max(bb.w, bb.h), sw);
+    if (pmode === "both") {
+      writeMask(writer, pfill, bb.x, bb.y, secondaryPacked);
+      return writeMask(writer, pring, bb.x, bb.y, primaryPacked);
+    }
+    return writeMask(writer, pring, bb.x, bb.y, primaryPacked);
   }
   const [bx, by, bw, bh] = toBBox(spec.bbox);
   assertMaskSize(bw, bh);

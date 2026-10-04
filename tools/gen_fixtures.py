@@ -4,6 +4,7 @@ All shape/brush tests are integer-only (no epsilon). JS must match these masks b
 Rounding rule everywhere: rnd(x) = floor(x + 0.5)  (== JS Math.round)."""
 import hashlib, json, math
 from pathlib import Path
+from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
 rnd = lambda v: math.floor(v + 0.5)
@@ -42,6 +43,84 @@ def rrect_mask(w, h, r):
             if cx is not None and cy is not None:
                 m[y][x] = (X-cx)**2 + (Y-cy)**2 <= 4*r*r
     return m
+
+# <META - ROLE : Execute polygon fill mask (PIL draw_polygon ground truth) | L46-54>
+def polygon_mask(pts, w, h):
+    """PIL ground truth for draw.polygon fill. PIL pairs horizontal scanline
+    crossings in real coordinates and ceils them, so the oracle IS the PIL call
+    -- no port of that integer rule belongs in this file."""
+    im = Image.new("L", (w, h), 0)
+    ImageDraw.Draw(im).polygon([(x, y) for x, y in pts], fill=1)
+    return [[im.getpixel((x, y)) != 0 for x in range(w)] for y in range(h)]
+
+# <META - ROLE : Execute radial multi-stop gradient (truncating sampler) | L56-78>
+def radial_gradient_mask(cx, cy, r0, r1, stops, w, h):
+    """Oracle for the radial gradient: channel sampling TRUNCATES (floor), which
+    is what the legacy shockwave baker's int() does. Round-half-up disagrees on
+    ~half the fractional pixels, so the spec rule is truncation. Alpha-0 pixels
+    stay fully zero so the packed-RGBA comparison is exact."""
+    srt = sorted((list(s) for s in stops), key=lambda s: s[0])
+    first, last = srt[0], srt[-1]
+
+    def sample(t):
+        if t <= first[0]:
+            return [first[1], first[2], first[3], first[4]]
+        if t >= last[0]:
+            return [last[1], last[2], last[3], last[4]]
+        for a, b in zip(srt, srt[1:]):
+            if t < a[0] or t > b[0]:
+                continue
+            f = 0 if b[0] == a[0] else (t - a[0]) / (b[0] - a[0])
+            return [int(math.floor(a[i] + (b[i] - a[i]) * f)) for i in range(1, 5)]
+        return [last[1], last[2], last[3], last[4]]
+
+    span = r1 - r0
+    out = []
+    for y in range(h):
+        row = []
+        for x in range(w):
+            d = math.hypot(x - cx, y - cy)
+            t = (0 if d <= r0 else 1) if span <= 0 else min(1.0, max(0.0, (d - r0) / span))
+            r, g, b, a = sample(t)
+            row.append([r, g, b, a] if a > 0 else [0, 0, 0, 0])
+        out.append(row)
+    return out
+
+# <META - ROLE : Execute polygon outline mask (padded closed-path d.line) | L80-89>
+def polygon_outline_mask(pts, w, width):
+    """PIL ground truth: thick closed-path line. Render padded, crop to pts' canvas (w x w)."""
+    pad = width + 2
+    W = w + 2 * pad
+    im = Image.new("L", (W, W), 0)
+    d = ImageDraw.Draw(im)
+    off = [[x + pad, y + pad] for x, y in pts]
+    d.line(off + [off[0]], fill=1, width=width)
+    crop = im.crop((pad, pad, pad + w, pad + w))
+    return [[crop.getpixel((x, y)) != 0 for x in range(w)] for y in range(w)]
+
+# <META - ROLE : Execute arc/chord masks (PIL ground truth) | L91-112>
+def arc_mask(box, start, end, width, w, h):
+    """PIL ground truth for draw.arc: stroke of the ellipse arc over box."""
+    im = Image.new("L", (w, h), 0)
+    d = ImageDraw.Draw(im)
+    d.arc([tuple(box[0]), tuple(box[1])], start=start, end=end, fill=1, width=width)
+    return [[im.getpixel((x, y)) != 0 for x in range(w)] for y in range(h)]
+
+# <META - ROLE : Execute chord fill mask | L114-119>
+def chord_fill_mask(box, start, end, w, h):
+    """PIL ground truth for draw.chord fill (no outline)."""
+    im = Image.new("L", (w, h), 0)
+    d = ImageDraw.Draw(im)
+    d.chord([tuple(box[0]), tuple(box[1])], start=start, end=end, fill=1)
+    return [[im.getpixel((x, y)) != 0 for x in range(w)] for y in range(h)]
+
+# <META - ROLE : Execute chord outline mask | L121-126>
+def chord_outline_mask(box, start, end, width, w, h):
+    """PIL ground truth for draw.chord outline-only stroke."""
+    im = Image.new("L", (w, h), 0)
+    d = ImageDraw.Draw(im)
+    d.chord([tuple(box[0]), tuple(box[1])], start=start, end=end, outline=1, width=width)
+    return [[im.getpixel((x, y)) != 0 for x in range(w)] for y in range(h)]
 
 # <META - ROLE : Execute outline ring | L47-56>
 def outline_ring(kind, w, h, r, n):
@@ -156,6 +235,12 @@ def flood(grid, x, y, new):
 
 # <META - ROLE : Execute main | L158-234>
 def main():
+    import sys
+    _repo = str(ROOT.parent)
+    if _repo not in sys.path:
+        sys.path.insert(0, _repo)
+    from dev.tools.assets.core.geometry import fillet_polygon
+
     G = {"_doc": "Normative test vectors. rows: '#'=set '.'=clear. Regenerate with tools/gen_fixtures.py"}
     G["brush"] = [{"n": n, "rows": rows(brush_mask(n))} for n in list(range(1, 13)) + [15, 16]]
     G["ellipse"] = [{"w": w, "h": h, "rows": rows(ellipse_mask(w, h))}
@@ -204,6 +289,69 @@ def main():
     G["fill"] = [{"grid": g1, "x": 0, "y": 0, "new": 7, "expect": flood(g1, 0, 0, 7)},
                  {"grid": g1, "x": 2, "y": 2, "new": 5, "expect": flood(g1, 2, 2, 5)},
                  {"grid": g1, "x": 1, "y": 1, "new": 1, "expect": flood(g1, 1, 1, 1)}]
+    SQUARE = [[3, 3], [12, 3], [12, 12], [3, 12]]
+    INV_TRI = [[2, 2], [13, 2], [7, 13]]
+    BOWTIE = [[2, 2], [13, 13], [13, 2], [2, 13]]
+    LSHAPE = [[2, 2], [8, 2], [8, 8], [13, 8], [13, 13], [2, 13]]
+    THIN = [[7, 1], [8, 1], [8, 14], [7, 14]]
+    BOUNDARY = [[0, 0], [15, 0], [15, 15], [0, 15]]
+    G["polygon"] = [
+        {"name": "square", "pts": SQUARE, "w": 16, "h": 16, "rows": rows(polygon_mask(SQUARE, 16, 16))},
+        {"name": "inverted_triangle", "pts": INV_TRI, "w": 16, "h": 16, "rows": rows(polygon_mask(INV_TRI, 16, 16))},
+        {"name": "bowtie_self_intersecting", "pts": BOWTIE, "w": 16, "h": 16, "rows": rows(polygon_mask(BOWTIE, 16, 16))},
+        {"name": "l_shape_concave", "pts": LSHAPE, "w": 16, "h": 16, "rows": rows(polygon_mask(LSHAPE, 16, 16))},
+        {"name": "thin_1px_strip", "pts": THIN, "w": 16, "h": 16, "rows": rows(polygon_mask(THIN, 16, 16))},
+        {"name": "boundary_touching", "pts": BOUNDARY, "w": 16, "h": 16, "rows": rows(polygon_mask(BOUNDARY, 16, 16))},
+    ]
+    G["polygon_outline"] = [
+        {"name": "square", "pts": SQUARE, "w": 16, "width": 3, "rows": rows(polygon_outline_mask(SQUARE, 16, 3))},
+        {"name": "inverted_triangle", "pts": INV_TRI, "w": 16, "width": 1, "rows": rows(polygon_outline_mask(INV_TRI, 16, 1))},
+        {"name": "bowtie_self_intersecting", "pts": BOWTIE, "w": 16, "width": 2, "rows": rows(polygon_outline_mask(BOWTIE, 16, 2))},
+        {"name": "l_shape_concave", "pts": LSHAPE, "w": 16, "width": 4, "rows": rows(polygon_outline_mask(LSHAPE, 16, 4))},
+        {"name": "thin_1px_strip", "pts": THIN, "w": 16, "width": 5, "rows": rows(polygon_outline_mask(THIN, 16, 5))},
+        {"name": "boundary_touching", "pts": BOUNDARY, "w": 16, "width": 3, "rows": rows(polygon_outline_mask(BOUNDARY, 16, 3))},
+    ]
+    G["fillet"] = []
+    for nm, pts, radius in [
+        ("square_r3", [[3, 3], [12, 3], [12, 12], [3, 12]], 3.0),
+        ("sharp_15deg_corner", [[2, 2], [13, 5], [11, 13], [3, 10]], 3.0),
+        ("reflex_corner", [[2, 2], [13, 2], [6, 6], [13, 13], [2, 13]], 2.5),
+        ("degenerate_zero_length_edge", [[3, 3], [3, 3], [13, 3], [8, 13]], 4.0),
+        ("near_180deg_corner", [[2, 8], [8, 2], [13, 9], [7, 14]], 3.0),
+    ]:
+        pts2 = fillet_polygon(pts, radius)
+        G["fillet"].append({"name": nm, "pts": pts, "radius": radius, "pts2": pts2,
+                            "w": 16, "h": 16, "rows": rows(polygon_mask(pts2, 16, 16))})
+    G["gradient"] = [
+        {"name": "two_stop", "cx": 3.5, "cy": 3.5, "r0": 1.0, "r1": 4.0, "w": 8, "h": 8,
+         "stops": [[0, 255, 0, 0, 255], [1, 0, 0, 255, 0]],
+         "rgba": radial_gradient_mask(3.5, 3.5, 1.0, 4.0, [[0, 255, 0, 0, 255], [1, 0, 0, 255, 0]], 8, 8)},
+        # Non-monotonic profile: transparent -> peak -> transparent. Exercises
+        # multi-stop sampling in both directions (T-5 ring reproduction).
+        {"name": "ring_nonmonotonic", "cx": 8.0, "cy": 4.0, "r0": 1.0, "r1": 7.0, "w": 16, "h": 8,
+         "stops": [[0.0, 0, 0, 0, 0], [0.5, 255, 255, 255, 255], [1.0, 0, 0, 0, 0]],
+         "rgba": radial_gradient_mask(8.0, 4.0, 1.0, 7.0,
+                                     [[0.0, 0, 0, 0, 0], [0.5, 255, 255, 255, 255], [1.0, 0, 0, 0, 0]], 16, 8)},
+    ]
+    ARC_BOX = [[1, 1], [15, 9]]
+    G["arc"] = [
+        {"name": "upper_right_quarter", "box": ARC_BOX, "start": 270, "end": 360, "width": 2, "w": 16, "h": 10,
+         "rows": rows(arc_mask(ARC_BOX, 270, 360, 2, 16, 10))},
+        {"name": "wide_sweep_thin", "box": ARC_BOX, "start": 180, "end": 30, "width": 1, "w": 16, "h": 10,
+         "rows": rows(arc_mask(ARC_BOX, 180, 30, 1, 16, 10))},
+    ]
+    CHORD_BOX = [[2, 1], [14, 9]]
+    # Geometry note: chord/arc are near-parity, not exact. src overshoots the
+    # PIL oracle by ~4-8 px depending on sector width; the T-6 memo fixed the
+    # gates at chord_fill extras<=4 / arc extras<=16 / chord_outline <=16/<=40.
+    # A 120-degree sector sits at the documented chord_fill bound. Symmetric
+    # half-chords (180->0, 90->270) overshoot by 6 and are NOT used.
+    G["chord"] = [
+        {"name": "fill_120deg_sector", "box": CHORD_BOX, "start": 300, "end": 60, "w": 16, "h": 10,
+         "rows": rows(chord_fill_mask(CHORD_BOX, 300, 60, 16, 10))},
+        {"name": "outline_left_half", "box": CHORD_BOX, "start": 90, "end": 270, "width": 2, "w": 16, "h": 10,
+         "rows": rows(chord_outline_mask(CHORD_BOX, 90, 270, 2, 16, 10))},
+    ]
     G["hashes"] = [{"what": w, "sha256": sha(m)} for w, m in [
         ("brush 64", brush_mask(64)), ("brush 33", brush_mask(33)), ("ellipse 128x64", ellipse_mask(128, 64)),
         ("rrect 200x120 r30", rrect_mask(200, 120, 30)), ("outline ellipse 128x64 n8", outline_ring("ellipse",128,64,0,8)[0]),

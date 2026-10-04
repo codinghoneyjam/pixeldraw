@@ -5,9 +5,9 @@ export const UNIT_PX = 32;
 export const CHUNK_PX = 32;
 export const CHUNK_LEN = 32 * 32 * 4;
 export const MIN_SIZE_PX = 32;
-export const MAX_W_PX = 1920;
+export const MAX_W_PX = 2048;
 export const MAX_H_PX = 1088;
-export const MAX_CHUNKS_X = 60;
+export const MAX_CHUNKS_X = 64;
 export const MAX_CHUNKS_Y = 34;
 export const PEN_MIN = 1;
 export const PEN_MAX = 64;
@@ -20,11 +20,11 @@ export const DEFAULT_DOC = Object.freeze({ widthPx: 512, heightPx: 512, backgrou
 export const SCHEMA_VERSION = "2.0.0";
 
 export function chunkKey(cx, cy) {
-  return cy * 64 + cx;
+  return cy * MAX_CHUNKS_X + cx;
 }
 
 export function chunkCoords(key) {
-  return { cx: key % 64, cy: Math.floor(key / 64) };
+  return { cx: key % MAX_CHUNKS_X, cy: Math.floor(key / MAX_CHUNKS_X) };
 }
 
 export function isValidCanvasSize(w, h) {
