@@ -1,6 +1,7 @@
 // <META - FILE SUMMARY - Structural validation for canvas, chunk, raster, layer>
 
-const CANVAS_KEYS = ["tile_px", "unit_px", "width_px", "height_px", "background"];
+const CANVAS_KEYS = ["tile_px", "unit_px", "width_px", "height_px", "background", "viewport"];
+const VIEWPORT_KEYS = ["x", "y", "w", "h"];
 const LAYER_KEYS = ["layer_id", "name", "type", "visible", "locked", "opacity", "blend", "raster", "shapes"];
 const RASTER_KEYS = ["chunk_px", "encoding", "chunks"];
 const CHUNK_KEYS = ["cx", "cy", "png"];
@@ -40,7 +41,29 @@ export function checkCanvas(c, base, push) {
   if (c.background !== undefined && (typeof c.background !== "string" || !BG_RE.test(c.background))) {
     push("SCHEMA", `${base}/background`, "background must be transparent or #rrggbb[#aa]");
   }
-  return w !== null && h !== null ? { widthPx: w, heightPx: h } : null;
+  // Viewport is optional. When present it must be an integer rect fully inside
+  // the canvas; its size is deliberately NOT required to be a multiple of 32,
+  // since expressing a non-aligned export size is the whole point.
+  let viewport = null;
+  if (c.viewport !== undefined && c.viewport !== null) {
+    const vp = c.viewport;
+    if (!isObj(vp)) {
+      push("SCHEMA", `${base}/viewport`, "viewport must be an object");
+    } else {
+      checkNoExtra(vp, VIEWPORT_KEYS, `${base}/viewport`, push);
+      const bad = ["x", "y", "w", "h"].some((k) => !Number.isInteger(vp[k]));
+      if (bad) {
+        push("SCHEMA", `${base}/viewport`, "viewport x/y/w/h must all be integers");
+      } else if (vp.w < 1 || vp.h < 1) {
+        push("SCHEMA", `${base}/viewport`, "viewport w/h must be positive");
+      } else if (w !== null && h !== null && (vp.x < 0 || vp.y < 0 || vp.x + vp.w > w || vp.y + vp.h > h)) {
+        push("SCHEMA", `${base}/viewport`, `viewport ${vp.x},${vp.y} ${vp.w}x${vp.h} exceeds canvas ${w}x${h}`);
+      } else {
+        viewport = { x: vp.x, y: vp.y, w: vp.w, h: vp.h };
+      }
+    }
+  }
+  return w !== null && h !== null ? { widthPx: w, heightPx: h, viewport } : null;
 }
 
 // <META - ROLE : Validate one chunk entry | L73-97>

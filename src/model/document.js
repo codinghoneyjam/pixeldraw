@@ -1,5 +1,5 @@
 import { isValidCanvasSize, MAX_LAYERS } from "../core/constants.js";
-import { DrawToolError } from "../core/errors.js";
+import { DrawToolError, ERROR_CODES } from "../core/errors.js";
 import { parseHex } from "../core/pixel.js";
 import { Layer, validateLayerName } from "./layer.js";
 
@@ -36,12 +36,47 @@ export function validateBackground(v) {
   }
 }
 
+// <META - ROLE : Validate a logical viewport against its canvas | L39-57>
+/**
+ * Validate an optional logical viewport. The stored canvas must stay a 32
+ * multiple so ChunkStore / chunkKey / PixelWriter keep their alignment
+ * invariant; a viewport is how an arbitrary export size is expressed without
+ * disturbing that. Absent or undefined means "export the whole canvas".
+ * @param {*} v viewport or null/undefined
+ * @param {number} canvasW canvas width in px
+ * @param {number} canvasH canvas height in px
+ * @returns {{x:number,y:number,w:number,h:number}|null} normalized viewport
+ */
+export function validateViewport(v, canvasW, canvasH) {
+  if (v === null || v === undefined) return null;
+  if (typeof v !== "object" || Array.isArray(v)) {
+    throw new DrawToolError(ERROR_CODES.VIEWPORT_INVALID, "viewport must be an object");
+  }
+  const { x, y, w, h } = v;
+  for (const [k, n] of [["x", x], ["y", y], ["w", w], ["h", h]]) {
+    if (!Number.isInteger(n)) {
+      throw new DrawToolError(ERROR_CODES.VIEWPORT_INVALID, `viewport ${k} must be an integer`);
+    }
+  }
+  if (w < 1 || h < 1) {
+    throw new DrawToolError(ERROR_CODES.VIEWPORT_INVALID, `viewport size must be positive, got ${w}x${h}`);
+  }
+  if (x < 0 || y < 0 || x + w > canvasW || y + h > canvasH) {
+    throw new DrawToolError(
+      ERROR_CODES.VIEWPORT_OUT_OF_RANGE,
+      `viewport ${x},${y} ${w}x${h} exceeds canvas ${canvasW}x${canvasH}`,
+    );
+  }
+  return { x, y, w, h };
+}
+
 export class Document {
   constructor({ id, name, canvas, layers, activeLayerId, ids }) {
     if (!isValidCanvasSize(canvas.widthPx, canvas.heightPx)) {
       throw new DrawToolError("CANVAS_SIZE_INVALID", "invalid canvas size");
     }
     validateBackground(canvas.background);
+    const viewport = validateViewport(canvas.viewport, canvas.widthPx, canvas.heightPx);
     if (!Array.isArray(layers) || layers.length < 1 || layers.length > MAX_LAYERS) {
       throw new DrawToolError("LAYER_LIMIT", "document must hold 1-64 layers");
     }
@@ -63,7 +98,12 @@ export class Document {
     }
     this.id = id;
     this.name = name;
-    this.canvas = { widthPx: canvas.widthPx, heightPx: canvas.heightPx, background: canvas.background };
+    this.canvas = {
+      widthPx: canvas.widthPx,
+      heightPx: canvas.heightPx,
+      background: canvas.background,
+      viewport: viewport === null ? null : { ...viewport },
+    };
     this.layers = layers.slice();
     this.activeLayerId = activeLayerId;
     this.ids = ids;
@@ -161,17 +201,32 @@ export class Document {
     this.canvas.background = v;
   }
 
+  // <META - ROLE : Set or clear the logical export viewport | L196-204>
+  /**
+   * Set the logical export viewport, or clear it with null/undefined to export
+   * the whole canvas. Re-validated against the current canvas size, so a resize
+   * that leaves the viewport out of range must clear or move it first.
+   * @param {*} v viewport object, or null/undefined to clear
+   * @returns {{x:number,y:number,w:number,h:number}|null} the stored viewport
+   */
+  _setViewport(v) {
+    const vp = validateViewport(v, this.canvas.widthPx, this.canvas.heightPx);
+    this.canvas.viewport = vp === null ? null : { ...vp };
+    return this.canvas.viewport;
+  }
+
   _rename(name) {
     validateLayerName(name);
     this.name = name;
   }
 }
 
-export function newDocument({ widthPx = 512, heightPx = 512, background = "transparent", name = "Untitled", id } = {}) {
+export function newDocument({ widthPx = 512, heightPx = 512, background = "transparent", viewport = null, name = "Untitled", id } = {}) {
   if (!isValidCanvasSize(widthPx, heightPx)) {
     throw new DrawToolError("CANVAS_SIZE_INVALID", `invalid canvas size ${widthPx}x${heightPx}`);
   }
   validateBackground(background);
+  validateViewport(viewport, widthPx, heightPx);
   docCounter += 1;
   const ids = new IdGen();
   const firstId = ids.next();
@@ -179,7 +234,7 @@ export function newDocument({ widthPx = 512, heightPx = 512, background = "trans
   return new Document({
     id: id ?? `doc-${String(docCounter).padStart(4, "0")}`,
     name,
-    canvas: { widthPx, heightPx, background },
+    canvas: { widthPx, heightPx, background, viewport },
     layers: [layer],
     activeLayerId: firstId,
     ids,

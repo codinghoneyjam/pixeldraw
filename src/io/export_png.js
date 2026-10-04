@@ -72,7 +72,37 @@ export function flattenToRgba(doc, { includeBackground = true } = {}) {
 }
 
 // <META - ROLE : Export flattened document as PNG bytes | L70-74>
+/**
+ * Export flattened document as PNG bytes.
+ *
+ * By default this encodes the full canvas. When the document carries a logical
+ * viewport (`canvas.viewport`), pass `{ cropToViewport: true }` to encode just
+ * that region at the viewport's size instead. The viewport never changes the
+ * stored canvas, so ChunkStore alignment is untouched either way.
+ * @param {object} doc document to export
+ * @param {{includeBackground?:boolean, cropToViewport?:boolean}} opts export options
+ * @returns {Promise<Uint8Array>} PNG bytes
+ */
 export async function exportPngBytes(doc, opts = {}) {
   const rgba = flattenToRgba(doc, opts);
-  return encodePng(rgba, doc.canvas.widthPx, doc.canvas.heightPx);
+  const vp = opts.cropToViewport === true ? doc.canvas.viewport : null;
+  if (!vp) return encodePng(rgba, doc.canvas.widthPx, doc.canvas.heightPx);
+  // Composite stays full-canvas (viewport-aware flattening is the caller's
+  // business); crop here so a viewport pixel maps 1:1 onto output pixel.
+  const cw = vp.w;
+  const ch = vp.h;
+  const cropped = new Uint8ClampedArray(cw * ch * 4);
+  for (let y = 0; y < ch; y++) {
+    const srcRow = (vp.y + y) * doc.canvas.widthPx;
+    const dstRow = y * cw;
+    for (let x = 0; x < cw; x++) {
+      const s = (srcRow + vp.x + x) * 4;
+      const d = (dstRow + x) * 4;
+      cropped[d] = rgba[s];
+      cropped[d + 1] = rgba[s + 1];
+      cropped[d + 2] = rgba[s + 2];
+      cropped[d + 3] = rgba[s + 3];
+    }
+  }
+  return encodePng(cropped, cw, ch);
 }

@@ -31,7 +31,20 @@
           "type": "string",
           "pattern": "^(transparent|#([0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$",
           "default": "transparent"
-        }
+        },
+        "viewport": { "$ref": "#/$defs/viewport" }
+      }
+    },
+    "viewport": {
+      "type": "object",
+      "description": "Optional logical export region, in canvas pixels. Lets an arbitrary (non 32-multiple) output size be expressed while the stored canvas stays a whole number of 32px chunks, so ChunkStore/chunkKey/PixelWriter alignment is untouched. Absent means export the whole canvas.",
+      "required": ["x", "y", "w", "h"],
+      "additionalProperties": false,
+      "properties": {
+        "x": { "type": "integer", "minimum": 0 },
+        "y": { "type": "integer", "minimum": 0 },
+        "w": { "type": "integer", "minimum": 1 },
+        "h": { "type": "integer", "minimum": 1 }
       }
     },
     "chunk": {

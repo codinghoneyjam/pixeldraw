@@ -108,6 +108,16 @@ export async function documentToJson(doc, { onProgress } = {}) {
     height_px: doc.canvas.heightPx,
     background: doc.canvas.background,
   };
+  // Viewport is optional; omit the key entirely when unset so a document with
+  // no viewport serializes exactly as it did before viewport support existed.
+  if (doc.canvas.viewport) {
+    obj.canvas.viewport = {
+      x: doc.canvas.viewport.x,
+      y: doc.canvas.viewport.y,
+      w: doc.canvas.viewport.w,
+      h: doc.canvas.viewport.h,
+    };
+  }
   obj.active_layer_id = doc.activeLayerId;
   obj.layers = layers;
   return obj;
@@ -196,7 +206,7 @@ export async function jsonToDocument(obj, { onProgress } = {}) {
   const document = new Document({
     id: obj.document_id,
     name: obj.name ?? "Untitled",
-    canvas: { widthPx, heightPx, background },
+    canvas: { widthPx, heightPx, background, viewport: obj.canvas.viewport ?? null },
     layers,
     activeLayerId: active,
     ids,
