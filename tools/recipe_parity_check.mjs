@@ -28,6 +28,10 @@ const CASES = [
   { id: "spear_mask", recipe: "assetdb/entity/weapon/weapon_spear.json", layer: "mask", legacy: "assetdb/entity/weapon/spear_mask.png" },
   { id: "portal_keycap_unpressed", recipe: "assetdb/world/object/portal_keycap_master.json", layer: "keycap_unpressed", legacy: "assetdb/world/img/portal/portal_keycap_unpressed.png" },
   { id: "portal_keycap_pressed", recipe: "assetdb/world/object/portal_keycap_master.json", layer: "keycap_pressed", legacy: "assetdb/world/img/portal/portal_keycap_pressed.png" },
+  // Non 32-multiple asset (280x560). The recipe declares export.canvas 288x576
+  // plus a viewport so the stored document stays chunk-aligned; the transpiler
+  // emits the cropped 280x560 PNG.
+  { id: "title_diorama_sword_body", recipe: "assetdb/ui/data/title_diorama_sword_body.json", layer: "body", legacy: "assetdb/ui/title/title_diorama_sword_body.png" },
 ];
 
 // <META - ROLE : Compare two decoded RGBA buffers pixel-by-pixel and measure divergence | L46-78>

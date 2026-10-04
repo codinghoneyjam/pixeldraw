@@ -17,8 +17,13 @@ const REPO_ROOT = path.resolve(__dirname, "..", "..");
 const GLYPHS = loadGlyphSet(path.join(__dirname, "..", "tools", "recipe", "text_glyphs.json"));
 
 describe("text glyph integrity", () => {
-  it("bakes the planned 7 glyphs with integer advances", () => {
-    assert.deepEqual(Object.keys(GLYPHS["monogram-240"].glyphs).sort(), ["d", "o", "r", "u", "w", "y"]);
+  it("bakes the planned glyphs with integer advances", () => {
+    // monogram-240 carries the six logo letters plus the three sword-blade
+    // engraving glyphs ([ l ]) added for title_diorama_sword_body.
+    assert.deepEqual(
+      Object.keys(GLYPHS["monogram-240"].glyphs).sort(),
+      ["[", "]", "d", "l", "o", "r", "u", "w", "y"],
+    );
     assert.deepEqual(Object.keys(GLYPHS["default-42"].glyphs), ["A"]);
     for (const [name, font] of Object.entries(GLYPHS)) {
       for (const [ch, g] of Object.entries(font.glyphs)) {
@@ -76,6 +81,8 @@ describe("title logo text reproduction", () => {
 
 describe("hud icons atlas text cell", () => {
   it("diamond_gem body transpiles to >= 0.99 of the legacy cell", async () => {
+    // 16384/16384 after the T-7b line fix: the three width-2 line commands in
+    // diamond_gem body now reproduce PIL exactly.
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "diamond-"));
     const png = path.join(tmp, "diamond.png");
     await transpileAndRender({

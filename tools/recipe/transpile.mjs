@@ -41,9 +41,16 @@ export async function transpileAndRender({
 
   let palette = Object.assign({}, recipe.palette ?? {}, recipe.dynamic_colors ?? {}, paletteOverrides);
 
+  // export.canvas overrides the stored document size (it must stay a 32
+  // multiple for chunk alignment); export.viewport is the logical output crop
+  // for a non-aligned asset size. Commands keep their own coordinates.
+  const ex = recipe.export ?? {};
+  const docW = ex.canvas?.width ?? width;
+  const docH = ex.canvas?.height ?? height;
+
   // Initialize draw_tool_v2 Session
   const session = new Session();
-  session.newDocument({ widthPx: width, heightPx: height });
+  session.newDocument({ widthPx: docW, heightPx: docH, viewport: ex.viewport ?? null });
   const doc = session.doc;
   const activeLayer = doc.getLayer(doc.activeLayerId);
   const writer = new PixelWriter(activeLayer.store, activeLayer.id);
@@ -256,10 +263,12 @@ export async function transpileAndRender({
         const tFill = resolveColor(cmd.fill ?? cmd.color ?? "#FFFFFF", palette);
         const tStroke = resolveColor(cmd.stroke_fill ?? cmd.stroke ?? tFill, palette);
         const tSw = cmd.stroke_width ?? cmd.strokeWidth ?? cmd.width ?? 0;
-        const tm = textMask({ text: txt, glyphs, x: penX, y: penY, fill: tFill, stroke: tStroke, strokeWidth: tSw, strokeMode: cmd.stroke_mode, w: width, h: height });
-        for (let ty = 0; ty < height; ty++) {
-          for (let tx = 0; tx < width; tx++) {
-            const packed = tm.data[ty * width + tx];
+        // Mask spans the STORED document, not the viewport crop: the painter
+        // loop below iterates the same extent.
+        const tm = textMask({ text: txt, glyphs, x: penX, y: penY, fill: tFill, stroke: tStroke, strokeWidth: tSw, strokeMode: cmd.stroke_mode, w: docW, h: docH });
+        for (let ty = 0; ty < docH; ty++) {
+          for (let tx = 0; tx < docW; tx++) {
+            const packed = tm.data[ty * docW + tx];
             if (packed !== 0) writer.set(tx, ty, packed);
           }
         }
@@ -276,10 +285,12 @@ export async function transpileAndRender({
   fs.writeFileSync(outputDocPath, JSON.stringify(docJson, null, 2), "utf-8");
   console.log(`[Transpiler] Exported Document JSON -> ${outputDocPath}`);
 
-  // 2. Export PNG
-  const pngBytes = await exportPngBytes(doc);
+  // 2. Export PNG. A recipe that declares a viewport gets the cropped size, so
+  // the emitted PNG matches the legacy asset byte-for-byte in dimensions.
+  const cropToViewport = Boolean(ex.viewport);
+  const pngBytes = await exportPngBytes(doc, { cropToViewport });
   fs.writeFileSync(outputPngPath, Buffer.from(pngBytes));
-  console.log(`[Transpiler] Exported PNG -> ${outputPngPath}`);
+  console.log(`[Transpiler] Exported PNG -> ${outputPngPath}${cropToViewport ? " (viewport cropped)" : ""}`);
 
   return { docJson, pngBytes };
 }
