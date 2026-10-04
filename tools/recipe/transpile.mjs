@@ -22,7 +22,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Committed bitmap glyphs (no runtime font parsing). Loaded once.
 const GLYPH_SETS = loadGlyphSet(path.join(__dirname, "text_glyphs.json"));
 
-// <META - ROLE : Transpile recipe JSON into a rendered Document + PNG | L18-225>
+// <META - ROLE : Transpile recipe JSON into a rendered Document + PNG | L26-307>
 export async function transpileAndRender({
   recipePath,
   layerKey = null,
@@ -48,9 +48,17 @@ export async function transpileAndRender({
   const docW = ex.canvas?.width ?? width;
   const docH = ex.canvas?.height ?? height;
 
+  // Legacy bakers often drew on a padded canvas then trimmed the transparent
+  // margin, recording the trimmed size as `crop: [w, h]` (title_logo_text_*).
+  // The trim is anchored top-left, which for those assets is exact. Model it as
+  // a viewport so the same crop path serves both spellings.
+  const vp = ex.viewport ?? (recipe.crop
+    ? { x: 0, y: 0, w: recipe.crop[0], h: recipe.crop[1] }
+    : null);
+
   // Initialize draw_tool_v2 Session
   const session = new Session();
-  session.newDocument({ widthPx: docW, heightPx: docH, viewport: ex.viewport ?? null });
+  session.newDocument({ widthPx: docW, heightPx: docH, viewport: vp });
   const doc = session.doc;
   const activeLayer = doc.getLayer(doc.activeLayerId);
   const writer = new PixelWriter(activeLayer.store, activeLayer.id);
@@ -214,18 +222,18 @@ export async function transpileAndRender({
         if (type === "arc") {
           const aCol = fillCol || outlineCol;
           const sw = cmd.width ?? 2;
-          paintArcMask(arcMask(acx, acy, arx, ary, aStart, aEnd, sw, width, height), aCol);
+          paintArcMask(arcMask(acx, acy, arx, ary, aStart, aEnd, sw, docW, docH), aCol);
         } else {
           const hasFill = fillCol !== 0;
           const hasOutline = outlineCol !== 0;
           const sw = cmd.width ?? 1;
           if (hasFill && hasOutline) {
-            paintArcMask(chordFillMask(acx, acy, arx, ary, aStart, aEnd, width, height), fillCol);
-            paintArcMask(chordOutlineMask(acx, acy, arx, ary, aStart, aEnd, sw, width, height), outlineCol);
+            paintArcMask(chordFillMask(acx, acy, arx, ary, aStart, aEnd, docW, docH), fillCol);
+            paintArcMask(chordOutlineMask(acx, acy, arx, ary, aStart, aEnd, sw, docW, docH), outlineCol);
           } else if (hasFill) {
-            paintArcMask(chordFillMask(acx, acy, arx, ary, aStart, aEnd, width, height), fillCol);
+            paintArcMask(chordFillMask(acx, acy, arx, ary, aStart, aEnd, docW, docH), fillCol);
           } else if (hasOutline) {
-            paintArcMask(chordOutlineMask(acx, acy, arx, ary, aStart, aEnd, sw, width, height), outlineCol);
+            paintArcMask(chordOutlineMask(acx, acy, arx, ary, aStart, aEnd, sw, docW, docH), outlineCol);
           }
         }
       }
@@ -235,10 +243,13 @@ export async function transpileAndRender({
         console.warn(`[transpile] radial_gradient without stops, skipped`);
       } else {
         const [gcx, gcy] = cmd.center ?? [64, 64];
-        const grad = radialGradientMask({ cx: gcx, cy: gcy, r0: cmd.r0 ?? 0, r1: cmd.r1 ?? 16, stops, w: width, h: height });
-        for (let gy = 0; gy < height; gy++) {
-          for (let gx = 0; gx < width; gx++) {
-            const packed = grad.data[gy * width + gx];
+        // Span the STORED document, not the recipe canvas: when export.canvas
+        // pads the document the mask and the paint loop must cover the same
+        // extent, or the gradient is written at the wrong stride.
+        const grad = radialGradientMask({ cx: gcx, cy: gcy, r0: cmd.r0 ?? 0, r1: cmd.r1 ?? 16, stops, w: docW, h: docH });
+        for (let gy = 0; gy < docH; gy++) {
+          for (let gx = 0; gx < docW; gx++) {
+            const packed = grad.data[gy * docW + gx];
             if (packed !== 0) writer.set(gx, gy, packed);
           }
         }
@@ -285,9 +296,9 @@ export async function transpileAndRender({
   fs.writeFileSync(outputDocPath, JSON.stringify(docJson, null, 2), "utf-8");
   console.log(`[Transpiler] Exported Document JSON -> ${outputDocPath}`);
 
-  // 2. Export PNG. A recipe that declares a viewport gets the cropped size, so
-  // the emitted PNG matches the legacy asset byte-for-byte in dimensions.
-  const cropToViewport = Boolean(ex.viewport);
+  // 2. Export PNG. A recipe that declares a viewport (or a legacy crop) gets the
+  // cropped size, so the emitted PNG matches the legacy asset's dimensions.
+  const cropToViewport = Boolean(vp);
   const pngBytes = await exportPngBytes(doc, { cropToViewport });
   fs.writeFileSync(outputPngPath, Buffer.from(pngBytes));
   console.log(`[Transpiler] Exported PNG -> ${outputPngPath}${cropToViewport ? " (viewport cropped)" : ""}`);
