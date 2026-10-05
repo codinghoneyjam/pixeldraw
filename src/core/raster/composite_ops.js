@@ -18,6 +18,7 @@
 // All take a PixelWriter because they read back through writer.get().
 
 import { applyShape } from "./shape_raster.js";
+import { lineMask } from "./segment.js";
 import { polygonMask } from "./polygon.js";
 import { rrectMask } from "./raster_masks.js";
 
@@ -186,20 +187,54 @@ export function sheenOverlay(writer, visorShape, sheen, w, h) {
     { a: [p1x, p1y], b: [p2x, p2y], alpha: 110, width: 2 },
     { a: [p1x + dx, p1y], b: [p2x + dx, p2y], alpha: 60, width: 1 },
   ];
+
+  // Stage 1: the sheen lives in its own overlay. The legacy path (_apply_mask)
+  // draws into a transparent overlay, multiplies that overlay's ALPHA by the
+  // visor mask, and only then composites. Compositing first and masking after is
+  // a different result.
+  const overlay = new Uint8Array(w * h * 4);
   for (const ln of lines) {
-    const m = stampLine(ln.a, ln.b, ln.width, w, h);
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        if (m.data[y * w + x] !== 1 || mask.data[y * w + x] !== 1) continue;
-        const px = writer.get(x, y);
-        if (px === 0) continue;
-        const sa = ln.alpha / 255;
-        const da = alphaOf(px) / 255;
-        const oa = sa + da * (1 - sa);
-        const mix = (sc) => Math.round((255 * sa + sc * da * (1 - sa)) / oa);
-        writer.set(x, y, packRGBA(mix(redOf(px)), mix(greenOf(px)), mix(blueOf(px)),
-          Math.round(oa * 255)));
+    // PIL d.line(width>=2) widens the segment into a ROTATED quad filled by the
+    // polygon scanline engine, not an axis-aligned stamp. segment.js lineMask is
+    // the PIL-exact implementation (verified 54/54 against Pillow).
+    const m = lineMask(ln.a, ln.b, ln.width);
+    for (let y = 0; y < m.h; y++) {
+      for (let x = 0; x < m.w; x++) {
+        if (m.data[y * m.w + x] !== 1) continue;
+        const tx = m.x + x;
+        const ty = m.y + y;
+        if (tx < 0 || ty < 0 || tx >= w || ty >= h) continue;
+        const o = (ty * w + tx) * 4;
+        overlay[o] = 255;
+        overlay[o + 1] = 255;
+        overlay[o + 2] = 255;
+        overlay[o + 3] = Math.max(overlay[o + 3], ln.alpha);
       }
+    }
+  }
+
+  // Stage 2: multiply the overlay alpha by the visor mask (ImageChops.multiply
+  // is a per-channel multiply, NOT a lerp).
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const o = (y * w + x) * 4;
+      if (overlay[o + 3] === 0) continue;
+      overlay[o + 3] = (overlay[o + 3] * mask.data[y * w + x]) / 255;
+    }
+  }
+
+  // Stage 3: alpha_composite onto the tile.
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const o = (y * w + x) * 4;
+      const sN = overlay[o + 3] / 255;
+      if (sN === 0) continue;
+      const px = writer.get(x, y);
+      const dN = alphaOf(px) / 255;
+      const oN = sN + dN * (1 - sN);
+      const mix = (sc) => Math.round((overlay[o] * sN + sc * dN * (1 - sN)) / oN);
+      writer.set(x, y, packRGBA(mix(redOf(px)), mix(greenOf(px)), mix(blueOf(px)),
+        Math.round(oN * 255)));
     }
   }
 }
@@ -256,34 +291,4 @@ function shapeArgs(shape) {
     bbox: [Math.round(x0), Math.round(y0), Math.round(x1 - x0 + 1), Math.round(y1 - y0 + 1)],
     radius: shape.radius ?? 8,
   };
-}
-
-/** PIL d.line for width>1 stamps an n-wide square along the Bresenham path. */
-function stampLine(a, b, width, w, h) {
-  const data = new Uint8Array(w * h);
-  const [x0, y0] = a;
-  const [x1, y1] = b;
-  const dx = Math.abs(x1 - x0);
-  const dy = Math.abs(y1 - y0);
-  const sx = x0 < x1 ? 1 : -1;
-  const sy = y0 < y1 ? 1 : -1;
-  let err = dx - dy;
-  let x = Math.round(x0);
-  let y = Math.round(y0);
-  const xe = Math.round(x1);
-  const ye = Math.round(y1);
-  for (;;) {
-    for (let dy2 = 0; dy2 < width; dy2++) {
-      for (let dx2 = 0; dx2 < width; dx2++) {
-        const tx = x + dx2;
-        const ty = y + dy2;
-        if (tx >= 0 && ty >= 0 && tx < w && ty < h) data[ty * w + tx] = 1;
-      }
-    }
-    if (x === xe && y === ye) break;
-    const e2 = 2 * err;
-    if (e2 > -dy) { err -= dy; x += sx; }
-    if (e2 < dx) { err += dx; y += sy; }
-  }
-  return { w, h, data };
 }
