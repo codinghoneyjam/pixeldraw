@@ -40,6 +40,16 @@ const CASES = [
   { id: "title_logo_text_or", recipe: "draw_tool_v2/tests/fixtures/title_logo_text_or_recipe.json", layer: null, legacy: "assetdb/ui/title/title_logo_text_or.png" },
   { id: "title_logo_text_d", recipe: "draw_tool_v2/tests/fixtures/title_logo_text_d_recipe.json", layer: null, legacy: "assetdb/ui/title/title_logo_text_d.png" },
   { id: "shockwave_ring", recipe: "draw_tool_v2/tests/fixtures/shockwave_ring_recipe.json", layer: null, legacy: "assetdb/entity/player/shockwave_ring.png" },
+  // 16-slot enemy atlas (2048x128). The recipes flatten the legacy shape spec
+  // into per-slot command lists; residual is the sheen stamp model and the
+  // visor_50/25 cutout path. See docs/40_work/task/active/DRAWTOOL_REPRO.md.
+  { id: "enemy_keybot_c001_sheet", recipe: "assetdb/entity/enemy/enemy_C-001_sheet.json", layer: null, legacy: "assetdb/entity/enemy/enemy_keybot_c001_sheet.png" },
+  { id: "enemy_keybot_t002_sheet", recipe: "assetdb/entity/enemy/enemy_T-002_sheet.json", layer: null, legacy: "assetdb/entity/enemy/enemy_keybot_t002_sheet.png" },
+  { id: "enemy_keybot_r003_sheet", recipe: "assetdb/entity/enemy/enemy_R-003_sheet.json", layer: null, legacy: "assetdb/entity/enemy/enemy_keybot_r003_sheet.png" },
+  // B-001 (boss) is byte-identical to C-001 in the committed PNGs, so its recipe
+  // is C-001's palette. The boss signature #FF3B30 is intentionally NOT baked
+  // yet -- re-baking the boss is a separate, deliberate change.
+  { id: "enemy_keybot_b001_sheet", recipe: "assetdb/entity/enemy/enemy_B-001_sheet.json", layer: null, legacy: "assetdb/entity/enemy/enemy_keybot_b001_sheet.png" },
 ];
 
 // Player / chassis / emote layers promoted from tests/fixtures/player_arc/.

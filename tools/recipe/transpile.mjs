@@ -168,13 +168,18 @@ if (process.argv[1] && process.argv[1].endsWith("transpile.mjs")) {
   let layer = "socket";
   let slot = null;
   let outPath = "transpile_out.png";
+  let layerExplicit = false;
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--recipe") recipeRel = args[++i];
-    if (args[i] === "--layer") layer = args[++i];
+    if (args[i] === "--layer") { layer = args[++i]; layerExplicit = true; }
     if (args[i] === "--slot") slot = args[++i];
     if (args[i] === "--out") outPath = args[++i];
   }
+
+  // An atlas recipe renders every slot when no slot is named, so the CLI's
+  // default layer must not filter it out. Pass null unless --layer was given.
+  if (!layerExplicit) layer = null;
 
   const recipePath = path.resolve(process.cwd(), recipeRel);
   const outputPngPath = path.resolve(process.cwd(), outPath);

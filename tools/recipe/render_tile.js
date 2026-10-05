@@ -13,11 +13,34 @@ import { arcMask, chordFillMask, chordOutlineMask } from "../../src/core/raster/
 import { radialGradientMask } from "../../src/core/raster/gradient.js";
 import { measureText, textMask } from "../../src/core/raster/text_mask.js";
 import { applyShape } from "../../src/core/raster/shape_raster.js";
+import { clipAlpha, erasePolygon, hudBrackets, sheenOverlay, visorLayer } from "../../src/core/raster/composite_ops.js";
 import { loadGlyphSet } from "./text_glyphs.mjs";
 import { resolveColor } from "./color_tokens.mjs";
 import { ChunkStore, PixelWriter } from "../../src/core/chunkstore.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const withAlpha = (packed, a) =>
+  a === 0 ? 0 : (((packed & 0x00ffffff) | ((a & 255) << 24)) >>> 0);
+
+/** Recipe shape command -> ShapeSpec args, shared by the alpha branch. */
+function shapeArgsFor(cmd) {
+  if (cmd.box || cmd.bbox) {
+    const [[x0, y0], [x1, y1]] = cmd.box ?? cmd.bbox;
+    return {
+      kind: cmd.cmd === "ellipse" ? "ellipse" : "rrect",
+      bbox: [Math.round(x0), Math.round(y0), Math.round(x1 - x0 + 1), Math.round(y1 - y0 + 1)],
+      radius: cmd.radius ?? 8,
+    };
+  }
+  return { kind: "polygon", points: (cmd.points ?? cmd.pts ?? []).map((p) => (Array.isArray(p)
+    ? [Math.round(p[0]), Math.round(p[1])] : { x: Math.round(p.x), y: Math.round(p.y) })) };
+}
+
+function fillModeFor(fillCol, outlineCol) {
+  if (fillCol && outlineCol) return "both";
+  return fillCol ? "fill" : "outline";
+}
 
 // Committed bitmap glyphs (no runtime font parsing). Loaded once.
 const GLYPH_SETS = loadGlyphSet(path.join(__dirname, "text_glyphs.json"));
@@ -219,6 +242,28 @@ export function applyCommand(ctx, cmd) {
         }
       }
     }
+  } else if (type === "erase") {
+    erasePolygon(writer, cmd.points ?? cmd.pts ?? [], width, height);
+  } else if (type === "clip_alpha") {
+    clipAlpha(writer, cmd.shape ?? cmd, width, height);
+  } else if (type === "alpha") {
+    // Explicit translucency. Legacy bakers put alpha in the RGBA tuple;
+    // applyShape() takes no alpha, so the recipe names the opacity and the
+    // dispatch packs it. `outline: true` strokes instead of filling.
+    const packed = resolveColor(cmd.color ?? cmd.fill, palette);
+    const a = Math.max(0, Math.min(255, Math.round(cmd.alpha ?? 255)));
+    const shape = cmd.shape ?? cmd;
+    const mode = cmd.outline ? "outline" : "fill";
+    applyShape(writer, { ...shapeArgsFor(shape), strokeWidth: cmd.width ?? strokeWidth, fillMode: mode },
+      withAlpha(packed, a), withAlpha(packed, a));
+  } else if (type === "visor") {
+    visorLayer(writer, cmd.shape, cmd.crt_lines, width, height,
+      resolveColor(cmd.fill ?? cmd.shape?.fill, palette),
+      resolveColor(cmd.outline ?? cmd.shape?.outline, palette));
+  } else if (type === "sheen") {
+    sheenOverlay(writer, cmd.shape, cmd, width, height);
+  } else if (type === "hud_brackets") {
+    hudBrackets(writer, cmd, width, height);
   } else {
     console.warn(`[transpile] unsupported type ${type}, skipped (will be wired in T-5/T-6/T-7)`);
   }
