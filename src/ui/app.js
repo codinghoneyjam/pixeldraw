@@ -1,4 +1,4 @@
-// <META - FILE SUMMARY - App assembly: boot order 1-9, actions wiring>
+// <META - FILE SUMMARY - App assembly: boot order (settings -> autosave -> tools -> chrome)>
 import { DEFAULT_DOC } from "../core/constants.js";
 import { DrawToolError } from "../core/errors.js";
 import { EVENTS } from "../core/events.js";
@@ -93,7 +93,8 @@ async function boot() {
     }
   }
 
-  // 1. settings + recent
+  // Boot order matters: settings + recent colours first, then autosave restore,
+  // then tools/renderer/input, then panels.
   const saved = loadJson(SETTINGS_KEY);
   if (saved && typeof saved === "object") {
     for (const k of PERSIST_KEYS) {
@@ -106,7 +107,8 @@ async function boot() {
   const savedRecent = loadJson(RECENT_KEY);
   if (Array.isArray(savedRecent)) recentColors = savedRecent.filter((c) => typeof c === "string").slice(0, RECENT_MAX);
 
-  // 2. autosave peek/restore
+  // Autosave peek/restore runs BEFORE any document exists: if the user declines,
+  // newDocument() below supplies the default document instead.
   let store = null;
   try { store = await AutosaveStore.open(); } catch { store = null; }
   let restored = false;
@@ -128,7 +130,7 @@ async function boot() {
     session.newDocument({ widthPx: DEFAULT_DOC.widthPx, heightPx: DEFAULT_DOC.heightPx, background: DEFAULT_DOC.background });
   }
 
-  // 3. tools + renderer + input + view
+  // Tools, renderer, input, and view need the document from the step above.
   const env = { session, getView: () => viewStore.get(), requestRender: () => renderer && renderer.requestRender() };
   toolManager = new ToolManager({ session, getView: env.getView, requestRender: env.requestRender });
   toolManager.register(new PenTool(env, { mode: "draw" }));
@@ -177,7 +179,6 @@ async function boot() {
     "color.reset": () => runAction(() => colorReset(session)),
   };
 
-  // menubar wiring
   const menubar = document.getElementById("dt-menubar");
   const menuShell = createMenubar(menubar);
   const disposeHistoryButtons = createHistoryButtons(menubar, session);
@@ -191,7 +192,6 @@ async function boot() {
     });
   }
 
-  // toolbar wiring
   const toolbar = document.getElementById("dt-toolbar");
   function syncToolbar() {
     let active = "pen";
@@ -210,7 +210,7 @@ async function boot() {
   });
   syncToolbar();
 
-  // 4. panels + status
+  // Panels mount last: they read settings and the view store established above.
   statusApi = mountStatus(document.getElementById("dt-statusbar"), { session, view: viewStore });
   panelDisposers.push(mountColor(document.getElementById("dt-color-panel"), {
     session,
@@ -238,14 +238,11 @@ async function boot() {
     }, 250);
   });
 
-  // 5. autosave attach
   if (store) store.attach(session);
 
-  // 6. window events
   window.addEventListener("resize", () => { renderer.resize(); viewStore.set(viewStore.get()); });
   window.addEventListener("beforeunload", (e) => { if (session.history.isDirty()) e.preventDefault(); });
 
-  // 7-8. replaced => fit; status notify => toast for warn/error
   session.addEventListener(EVENTS.DOCUMENT_REPLACED, () => viewStore.fit());
   session.addEventListener(EVENTS.STATUS_MESSAGE, (e) => {
     const { level = "info", text = "" } = e.detail ?? {};
@@ -257,7 +254,7 @@ async function boot() {
     requestRedo: () => requestRedo(session, toolManager),
   });
 
-  // 9. debug
+  // `?debug` exposes the live session/tool handles on window for manual probing.
   try {
     if (new URLSearchParams(location.search).has("debug")) {
       window.__drawTool = { session, getView: () => viewStore.get(), toolManager };

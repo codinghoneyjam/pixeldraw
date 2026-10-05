@@ -191,7 +191,7 @@ export class CanvasRenderer {
       const s = this._session.settings;
       if (s && typeof s.gridMode === "string") return s.gridMode;
     } catch {
-      // fall through
+      // no settings bus (node / pre-attach): fall through to the default
     }
     return "off";
   }

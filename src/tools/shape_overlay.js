@@ -14,7 +14,8 @@ export function packOf(css) {
 // <META - ROLE : expand a ShapeSpec into colored paint layers | L14-34>
 // `color` is the FOREGROUND hex captured when the shape was drawn. The background slot
 // is a buffer only and must never paint, so there is exactly one colour here and no
-// "both" mode that used to flood the outer area with the secondary colour.
+// "both" mode that used to flood the outer area with the secondary colour. See
+// shape_render.js buildColor for the capture rule.
 export function computePaintLayers(spec, color) {
   const packed = packOf(color);
   if (spec.kind === "line") {
