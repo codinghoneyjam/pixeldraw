@@ -466,3 +466,49 @@ export function chordOutlineMask(box, start, end, width, w, h) {
   strokeOpenPathRef(data, w, h, [pts[0], pts[pts.length - 1]], width);
   return toGrid(data, w, h);
 }
+
+// PIL blend rounding: (value * mask + 127) / 255, truncated.
+function blend255Ref(value, mask) {
+  return Math.floor((value * mask + 127) / 255);
+}
+
+// PIL paste(tile, (i*cellW, 0), tile): the tile is used as its own mask, so
+// alpha is squared and the colour is premultiplied. Reference form of
+// src/core/raster/atlas.js; verified against the `paste` goldens.
+export function pasteTileRef(dst, src) {
+  const a = src[3];
+  if (a === 0) return dst.slice();
+  if (dst[3] === 0) {
+    return [blend255Ref(src[0], a), blend255Ref(src[1], a), blend255Ref(src[2], a), blend255Ref(a, a)];
+  }
+  const inv = 255 - a;
+  return [
+    blend255Ref(src[0], a) + Math.floor((dst[0] * inv + 127) / 255),
+    blend255Ref(src[1], a) + Math.floor((dst[1] * inv + 127) / 255),
+    blend255Ref(src[2], a) + Math.floor((dst[2] * inv + 127) / 255),
+    blend255Ref(src[3], a) + Math.floor((dst[3] * inv + 127) / 255),
+  ];
+}
+
+// Assemble tiles into a horizontal strip of RGBA hex rows, matching the
+// `paste` golden format: "%02X%02X%02X%02X" per pixel, row-major.
+export function assembleStripRef(tiles, cellW, cellH) {
+  const w = cellW * tiles.length;
+  const out = new Array(w * cellH);
+  for (let y = 0; y < cellH; y++) {
+    for (let x = 0; x < w; x++) {
+      const slot = Math.floor(x / cellW);
+      const src = tiles[slot][y * cellW + (x % cellW)];
+      const i = y * w + x;
+      out[i] = pasteTileRef([0, 0, 0, 0], src);
+    }
+  }
+  // One string per ROW, each holding the whole strip (matching PIL row order).
+  // Each entry of `out` is one pixel [r,g,b,a], so hex the channels per pixel.
+  const chan = (v) => v.toString(16).padStart(2, "0").toUpperCase();
+  const lines = [];
+  for (let y = 0; y < cellH; y++) {
+    lines.push(out.slice(y * w, y * w + w).map((px) => px.map(chan).join("")).join(""));
+  }
+  return lines;
+}

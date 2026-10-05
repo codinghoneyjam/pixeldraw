@@ -9378,6 +9378,80 @@
    ]
   }
  ],
+ "paste": [
+  {
+   "name": "opaque_only",
+   "cell_w": 1,
+   "cell_h": 1,
+   "slots": 3,
+   "inputs": [
+    "0A141EFF",
+    "28323CFF",
+    "46505AFF"
+   ],
+   "expect": [
+    "0A141EFF28323CFF46505AFF"
+   ]
+  },
+  {
+   "name": "alpha_ladder",
+   "cell_w": 1,
+   "cell_h": 1,
+   "slots": 5,
+   "inputs": [
+    "FF8000FF",
+    "FF800080",
+    "FF800040",
+    "FF800020",
+    "FF800001"
+   ],
+   "expect": [
+    "FF8000FF80400040402000102010000401010000"
+   ]
+  },
+  {
+   "name": "legacy_alphas",
+   "cell_w": 1,
+   "cell_h": 1,
+   "slots": 3,
+   "inputs": [
+    "F0B8005A",
+    "05080EF0",
+    "0A0F19D2"
+   ],
+   "expect": [
+    "5541002005080DE2080C15AD"
+   ]
+  },
+  {
+   "name": "with_transparent",
+   "cell_w": 1,
+   "cell_h": 1,
+   "slots": 3,
+   "inputs": [
+    "00000000",
+    "C86432FF",
+    "00000000"
+   ],
+   "expect": [
+    "00000000C86432FF00000000"
+   ]
+  },
+  {
+   "name": "channel_independent",
+   "cell_w": 1,
+   "cell_h": 1,
+   "slots": 3,
+   "inputs": [
+    "FF0000C8",
+    "00FF0064",
+    "0000FF96"
+   ],
+   "expect": [
+    "C800009D0064002700009658"
+   ]
+  }
+ ],
  "hashes": [
   {
    "what": "brush 64",

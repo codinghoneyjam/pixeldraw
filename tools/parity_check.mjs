@@ -82,6 +82,17 @@ for (const c of G.angle_snap) eq(R.angleSnap(...c.p0, ...c.p1), c.expect, `angle
 for (const c of G.resize) eq(R.resizeBBox(c.bbox, c.handle, c.pointer, c.lock, c.center), c.expect, `resize ${c.handle} ${c.pointer}`);
 for (const c of G.drag_bbox) eq(R.dragBBox(c.p0, c.p1, c.lock, c.center), c.expect, `drag_bbox ${c.p0}->${c.p1}`);
 for (const c of G.unit_snap) eq(R.unitSnap(c.bbox), c.expect, `unit_snap ${c.bbox}`);
+// PIL paste(t, (i*cell,0), t) ground truth: the atlas assembly law. `inputs`
+// holds what PIL was given (one hex RGBA run per slot), `expect` what it
+// produced. The JS assembler must reproduce `expect` from `inputs`.
+for (const c of G.paste) {
+  // Each golden input is one hex RGBA run; with cell 1x1 that is a single
+  // pixel, so wrap it as a one-pixel tile for the assembler.
+  const tiles = c.inputs.map((hex) => [
+    [0, 1, 2, 3].map((k) => parseInt(hex.slice(k * 2, k * 2 + 2), 16)),
+  ]);
+  eq(R.assembleStripRef(tiles, c.cell_w, c.cell_h), c.expect, `paste ${c.name}`);
+}
 for (const c of G.composite) eq(R.over(c.dst, c.src, c.opacity), c.expect, `composite ${JSON.stringify(c.src)}`);
 for (const c of G.fill) eq(R.flood(c.grid, c.x, c.y, c.new), c.expect, `fill ${c.x},${c.y}`);
 const big = { "brush 64": R.brushMask(64), "brush 33": R.brushMask(33), "ellipse 128x64": R.ellipseMask(128, 64),

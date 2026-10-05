@@ -138,6 +138,30 @@ def wide_line_mask(p0, p1, width, W, H):
     d.line([tuple(p0), tuple(p1)], fill=1, width=width)
     return [[im.getpixel((x, y)) != 0 for x in range(W)] for y in range(H)]
 
+def paste_strip(tiles):
+    """PIL ground truth for the legacy enemy sheet assembly.
+
+    gen_enemy_assets.generate_sheet() does `sheet.paste(part, (i*CANVAS, 0),
+    part)` -- it pastes each tile through ITSELF as the mask. That is not
+    source-over: PIL blends channel-wise, which squares the alpha and
+    premultiplies the colour. Reproduced here by calling PIL directly, and the
+    output is emitted as RGBA hex rows because unlike the boolean mask groups
+    above this carries colour and alpha.
+
+    src/core/raster/atlas.js ports the closed form:
+        out_c = (c*a + 127) / 255      out_a = (a*a + 127) / 255
+    """
+    cell_w, cell_h = tiles[0].size
+    sheet = Image.new("RGBA", (cell_w * len(tiles), cell_h), (0, 0, 0, 0))
+    for i, part in enumerate(tiles):
+        sheet.paste(part, (i * cell_w, 0), part)
+    return ["".join("%02X%02X%02X%02X" % sheet.getpixel((x, y))
+                    for x in range(sheet.width)) for y in range(sheet.height)]
+
+def paste_tile(rgba):
+    """One 1x1 RGBA tile per case; paste_strip assembles them into a strip."""
+    return Image.new("RGBA", (1, 1), rgba)
+
 # <META - ROLE : Execute outline ring | L47-56>
 def outline_ring(kind, w, h, r, n):
     outer = ellipse_mask(w, h) if kind == "ellipse" else rrect_mask(w, h, r)
@@ -388,6 +412,26 @@ def main():
         for wd in (1, 2, 3, 4, 5, 6):
             G["wide_line"].append({"name": f"{nm}_w{wd}", "p0": list(p0), "p1": list(p1), "width": wd,
                                    "W": 64, "H": 64, "rows": rows(wide_line_mask(p0, p1, wd, 64, 64))})
+    # PIL d.line/paste assembly goldens. Distinct from every group above: this is
+    # the ATLAS composition law, not a shape mask, and it carries colour+alpha so
+    # it is stored as RGBA hex rather than '#'/'.' rows.
+    G["paste"] = []
+    for nm, rgbas in [
+        ("opaque_only", [(10, 20, 30, 255), (40, 50, 60, 255), (70, 80, 90, 255)]),
+        ("alpha_ladder", [(255, 128, 0, 255), (255, 128, 0, 128), (255, 128, 0, 64),
+                          (255, 128, 0, 32), (255, 128, 0, 1)]),
+        ("legacy_alphas", [(240, 184, 0, 90), (5, 8, 14, 240), (10, 15, 25, 210)]),
+        ("with_transparent", [(0, 0, 0, 0), (200, 100, 50, 255), (0, 0, 0, 0)]),
+        ("channel_independent", [(255, 0, 0, 200), (0, 255, 0, 100), (0, 0, 255, 150)]),
+    ]:
+        tiles = [paste_tile(c) for c in rgbas]
+        # `inputs` is what PIL was given, one hex RGBA run per slot;
+        # `expect` is what PIL produced. The JS side assembles inputs and must
+        # reproduce expect exactly.
+        inputs = ["".join("%02X%02X%02X%02X" % c) for c in rgbas]
+        G["paste"].append({"name": nm, "cell_w": 1, "cell_h": 1, "slots": len(rgbas),
+                           "inputs": inputs, "expect": paste_strip(tiles)})
+
     G["hashes"] = [{"what": w, "sha256": sha(m)} for w, m in [
         ("brush 64", brush_mask(64)), ("brush 33", brush_mask(33)), ("ellipse 128x64", ellipse_mask(128, 64)),
         ("rrect 200x120 r30", rrect_mask(200, 120, 30)), ("outline ellipse 128x64 n8", outline_ring("ellipse",128,64,0,8)[0]),
