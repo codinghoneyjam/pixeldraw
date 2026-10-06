@@ -1,18 +1,30 @@
-import { transpileAndRender } from "./recipe/transpile.mjs";
-import { decodePng } from "../src/io/png.js";
+// SCRATCH diagnostic, one-off probe with no owner and not wired into any gate.
+// Kept because it is still the fastest way to see which pixels diverge for a
+// given case. If it stops answering a question, delete it rather than repair it.
+// Scratch probe: assets are read from asset_work/target/, same root the gates use.
+// The bare "../assetdb/..." paths this used to pass the transpiler
+// resolved against process.cwd(), so they only worked when it was run from
+// the game repo root. They now go through an explicit TARGET_ROOT.
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+const TARGET_ROOT = path.join(REPO_ROOT, "asset_work", "target");
+const targetPath = (rel) => path.join(TARGET_ROOT, rel);
+
+import { transpileAndRender } from "../../tools/recipe/transpile.mjs";
+import { decodePng } from "../../src/io/png.js";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "diamdiag-"));
 const png = path.join(tmp, "o.png");
 await transpileAndRender({
-  recipePath: "../assetdb/ui/data/diamond_gem.json",
+  recipePath: targetPath("assetdb/ui/data/diamond_gem.json"),
   layerKey: "body",
   outputDocPath: path.join(tmp, "o.json"),
   outputPngPath: png,
 });
-const legacy = await decodePng(fs.readFileSync("../assetdb/ui/hud/hud_icons_128_atlas.png"));
+const legacy = await decodePng(fs.readFileSync(targetPath("assetdb/ui/hud/hud_icons_128_atlas.png")));
 const cand = await decodePng(fs.readFileSync(png));
 const hex = (r, g, b) => "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("").toUpperCase();
 const pairs = new Map();

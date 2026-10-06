@@ -1,0 +1,48 @@
+{
+  "dynamic_colors": {
+    "body_color": "#FF7A00",
+    "glow_color": "#FED7AA"
+  },
+  "body": [
+    {
+      "desc": "사각형 1: 메인 용두 (크라운)",
+      "cmd": "rect",
+      "box": [[58, 16], [70, 26]],
+      "fill": "$body_color"
+    },
+    {
+      "desc": "사각형 2: 스타트 버튼",
+      "cmd": "rect",
+      "box": [[80, 24], [92, 34]],
+      "fill": "$body_color"
+    },
+    {
+      "desc": "원 1: 외곽 림 원",
+      "cmd": "circle",
+      "box": [[26, 26], [102, 102]],
+      "outline": "$body_color",
+      "width": 4
+    },
+    {
+      "desc": "원 2: 내부 원 다이얼 페이스",
+      "cmd": "circle",
+      "box": [[34, 34], [94, 94]],
+      "fill": "$body_color"
+    },
+    {
+      "desc": "직선 1: 시침 바늘 (12시 방향)",
+      "cmd": "line",
+      "points": [[64, 64], [64, 44]],
+      "color": "#FFFFFF",
+      "width": 3
+    },
+    {
+      "desc": "직선 2: 분침 바늘 (2시 방향)",
+      "cmd": "line",
+      "points": [[64, 64], [80, 52]],
+      "color": "#FFFFFF",
+      "width": 3
+    }
+  ],
+  "body_100": { "inherit": "body" }
+}

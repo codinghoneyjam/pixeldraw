@@ -1,0 +1,6 @@
+ID: U28
+PNG: assetdb/world/img/portal/portal_keycap_unpressed.png
+RECIPE: portal_keycap_master.json
+METHOD: RECIPE_JSON
+TOOL: dev/tools/assets/generators/gen_portal_assets.py
+COMMAND: python -m dev.tools.assets.generators.gen_portal_assets

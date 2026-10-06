@@ -1,0 +1,6 @@
+ID: U43
+PNG: assetdb/ui/title/title_logo_text_or.png
+RECIPE: U43_note_FONT_ONLY.txt
+METHOD: FONT_ONLY
+TOOL: dev/tools/assets/generators/gen_title_assets.py
+COMMAND: python -m dev.tools.assets.generators.gen_title_assets

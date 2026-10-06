@@ -12,9 +12,12 @@ import { loadGlyphSet } from "../tools/recipe/text_glyphs.mjs";
 import { decodePng } from "../src/io/png.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = path.resolve(__dirname, "..", "..");
-const RECIPE = path.join(REPO_ROOT, "assetdb/ui/data/title_diorama_sword_body.json");
-const LEGACY = path.join(REPO_ROOT, "assetdb/ui/title/title_diorama_sword_body.png");
+// Working assets live under asset_work/target/ (recipes + legacy PNGs + oracle ground truth).
+const REPO_ROOT = path.resolve(__dirname, "..");
+const TARGET_ROOT = path.join(REPO_ROOT, "asset_work", "target");
+const targetPath = (rel) => path.join(TARGET_ROOT, rel.replace(/^draw_tool_v2\//, ""));
+const RECIPE = targetPath("assetdb/ui/data/title_diorama_sword_body.json");
+const LEGACY = targetPath("assetdb/ui/title/title_diorama_sword_body.png");
 
 const recipe = JSON.parse(fs.readFileSync(RECIPE, "utf-8"));
 const GLYPHS = loadGlyphSet(path.join(__dirname, "..", "tools", "recipe", "text_glyphs.json"));

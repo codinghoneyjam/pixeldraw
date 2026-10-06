@@ -1,0 +1,65 @@
+{
+  "bow": {
+    "root_socket": [
+      64,
+      64
+    ],
+    "upper_limb_socket": [
+      40,
+      20
+    ],
+    "lower_limb_socket": [
+      40,
+      108
+    ],
+    "string_anchor_top": [
+      38,
+      20
+    ],
+    "string_anchor_bottom": [
+      38,
+      108
+    ],
+    "string_pull_point": [
+      80,
+      64
+    ],
+    "reach_multiplier": 1.0,
+    "albedo": "bow_albedo.png",
+    "emission_mask": "bow_mask.png"
+  },
+  "spear": {
+    "root_socket": [
+      64,
+      118
+    ],
+    "center_socket": [
+      64,
+      65
+    ],
+    "tip_socket": [
+      64,
+      10
+    ],
+    "reach_multiplier": 1.35,
+    "albedo": "spear_albedo.png",
+    "emission_mask": "spear_mask.png"
+  },
+  "sword": {
+    "root_socket": [
+      64,
+      110
+    ],
+    "center_socket": [
+      64,
+      70
+    ],
+    "tip_socket": [
+      64,
+      20
+    ],
+    "reach_multiplier": 1.0,
+    "albedo": "sword_albedo.png",
+    "emission_mask": "sword_mask.png"
+  }
+}

@@ -1,0 +1,6 @@
+ID: U26
+PNG: assetdb/world/stage/room_tileset.png
+RECIPE: U26_note_TRES_EXTRACTED.txt
+METHOD: TRES_EXTRACTED
+TOOL: dev/tools/assets/v2/migrate_assets.py
+COMMAND: source deleted; needs new JSON recipe

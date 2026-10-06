@@ -1,0 +1,6 @@
+ID: U39
+PNG: assetdb/ui/hud/floating_visor_window.png
+RECIPE: hud_composite_surfaces.json
+METHOD: RECIPE_JSON_SHARED
+TOOL: dev/tools/assets/generators/gen_hud_surfaces.py
+COMMAND: same manifest floating_visor_window 256x256 polygon

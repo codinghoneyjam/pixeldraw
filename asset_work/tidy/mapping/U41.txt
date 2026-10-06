@@ -1,0 +1,6 @@
+ID: U41
+PNG: assetdb/ui/title/title_diorama_sword_body.png
+RECIPE: title_diorama_sword_body.json
+METHOD: RECIPE_JSON_DUAL
+TOOL: dev/tools/assets/v2/engine.py + gen_title_assets.py:148
+COMMAND: v2: python -m dev.tools.assets.v2.engine assetdb/ui/data/title_diorama_sword_body.json

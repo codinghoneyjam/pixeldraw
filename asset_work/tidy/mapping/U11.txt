@@ -1,0 +1,6 @@
+ID: U11
+PNG: assetdb/entity/enemy/kb_z_amber_t1.png
+RECIPE: C-001.json
+METHOD: RECIPE_JSON
+TOOL: dev/tools/assets/generators/gen_enemy_assets.py
+COMMAND: python -m dev.tools.assets.generators.gen_enemy_assets --enemy C-001

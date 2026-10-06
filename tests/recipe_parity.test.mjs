@@ -9,7 +9,10 @@ import { fileURLToPath } from "node:url";
 import { transpileAndRender } from "../tools/recipe/transpile.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = path.resolve(__dirname, "..", "..");
+// Working assets live under asset_work/target/ (recipes + legacy PNGs + oracle ground truth).
+const REPO_ROOT = path.resolve(__dirname, "..");
+const TARGET_ROOT = path.join(REPO_ROOT, "asset_work", "target");
+const targetPath = (rel) => path.join(TARGET_ROOT, rel.replace(/^draw_tool_v2\//, ""));
 
 const PNG_SIG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
@@ -27,7 +30,7 @@ describe("recipe_parity smoke", () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "recipe-parity-"));
     const png = path.join(tmp, "weapon_sword.png");
     await transpileAndRender({
-      recipePath: path.join(REPO_ROOT, "assetdb/entity/weapon/weapon_sword.json"),
+      recipePath: targetPath("assetdb/entity/weapon/weapon_sword.json"),
       layerKey: "albedo",
       outputDocPath: path.join(tmp, "weapon_sword.json"),
       outputPngPath: png,
@@ -39,7 +42,7 @@ describe("recipe_parity smoke", () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "recipe-parity-"));
     const png = path.join(tmp, "weapon_bow.png");
     await transpileAndRender({
-      recipePath: path.join(REPO_ROOT, "assetdb/entity/weapon/weapon_bow.json"),
+      recipePath: targetPath("assetdb/entity/weapon/weapon_bow.json"),
       layerKey: "albedo",
       outputDocPath: path.join(tmp, "weapon_bow.json"),
       outputPngPath: png,

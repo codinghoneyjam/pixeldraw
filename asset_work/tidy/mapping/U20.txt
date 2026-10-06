@@ -1,0 +1,6 @@
+ID: U20
+PNG: assetdb/entity/weapon/sword_albedo.png
+RECIPE: weapon_sword.json
+METHOD: RECIPE_JSON
+TOOL: dev/tools/assets/generators/gen_modular_weapons.py
+COMMAND: python -m dev.tools.assets.generators.gen_modular_weapons --output assetdb/entity/weapon

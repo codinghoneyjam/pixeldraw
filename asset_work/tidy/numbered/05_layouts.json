@@ -1,0 +1,144 @@
+{
+  "s_standard": {
+    "size_category": "SMALL",
+    "grid_size": {
+      "width": 15,
+      "height": 11
+    },
+    "openings": {
+      "UP": {
+        "start": -2,
+        "end": 2
+      },
+      "DOWN": {
+        "start": -2,
+        "end": 2
+      },
+      "LEFT": {
+        "start": -2,
+        "end": 2
+      },
+      "RIGHT": {
+        "start": -2,
+        "end": 2
+      }
+    },
+    "ports": null,
+    "obstacles": []
+  },
+  "m_standard": {
+    "size_category": "MEDIUM",
+    "grid_size": {
+      "width": 21,
+      "height": 15
+    },
+    "openings": {
+      "UP": {
+        "start": -2,
+        "end": 2
+      },
+      "DOWN": {
+        "start": -2,
+        "end": 2
+      },
+      "LEFT": {
+        "start": -2,
+        "end": 2
+      },
+      "RIGHT": {
+        "start": -2,
+        "end": 2
+      }
+    },
+    "ports": null,
+    "obstacles": []
+  },
+  "m_four_blocks": {
+    "size_category": "MEDIUM",
+    "grid_size": {
+      "width": 21,
+      "height": 15
+    },
+    "openings": {
+      "UP": {
+        "start": -2,
+        "end": 2
+      },
+      "DOWN": {
+        "start": -2,
+        "end": 2
+      },
+      "LEFT": {
+        "start": -2,
+        "end": 2
+      },
+      "RIGHT": {
+        "start": -2,
+        "end": 2
+      }
+    },
+    "ports": null,
+    "obstacles": [
+      [
+        -4,
+        -3
+      ],
+      [
+        4,
+        -3
+      ],
+      [
+        -4,
+        3
+      ],
+      [
+        4,
+        3
+      ]
+    ]
+  },
+  "l_boss_arena": {
+    "size_category": "LARGE",
+    "grid_size": {
+      "width": 27,
+      "height": 19
+    },
+    "openings": {
+      "UP": {
+        "start": -2,
+        "end": 2
+      },
+      "DOWN": {
+        "start": -2,
+        "end": 2
+      },
+      "LEFT": {
+        "start": -2,
+        "end": 2
+      },
+      "RIGHT": {
+        "start": -2,
+        "end": 2
+      }
+    },
+    "ports": null,
+    "obstacles": [
+      [
+        -6,
+        -4
+      ],
+      [
+        6,
+        -4
+      ],
+      [
+        -6,
+        4
+      ],
+      [
+        6,
+        4
+      ]
+    ]
+  }
+}

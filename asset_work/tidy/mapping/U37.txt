@@ -1,0 +1,6 @@
+ID: U37
+PNG: assetdb/ui/hud/scanline_tile_fine.png
+RECIPE: U37_note_NO_MANIFEST.txt
+METHOD: NO_MANIFEST
+TOOL: dev/tools/assets/generators/gen_ui_surfaces.py
+COMMAND: add 32x32 scanline entry to hud_composite_surfaces.json then build

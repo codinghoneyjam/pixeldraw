@@ -1,0 +1,6 @@
+ID: U13
+PNG: assetdb/entity/enemy/kb_q_cobalt_t3.png
+RECIPE: R-003.json
+METHOD: RECIPE_JSON
+TOOL: dev/tools/assets/generators/gen_enemy_assets.py
+COMMAND: python -m dev.tools.assets.generators.gen_enemy_assets --enemy R-003

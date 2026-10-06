@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="ascii">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asset Gallery - USED vs UNUSED</title>
+<style>
+body{font-family:monospace;background:#0b0e14;color:#e2e8f0;margin:0;padding:24px}
+a{color:#38bdf8}
+h1{font-size:22px;margin:0 0 8px}
+p.sub{color:#94a3b8;font-size:13px;margin:0 0 16px}
+.nav{margin:16px 0}
+.nav a{margin-right:12px;font-size:13px}
+h2{font-size:18px;margin:32px 0 8px;border-bottom:1px solid #1e293b;padding-bottom:6px}
+h3{font-size:14px;margin:24px 0 8px;color:#fbbf24}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.card{background:#111827;border:1px solid #1e293b;border-radius:8px;padding:8px;text-align:center}
+.card img{width:100%;height:96px;object-fit:contain;background:#020617;border-radius:4px;image-rendering:pixelated}
+.card .cap{font-size:11px;margin-top:6px;line-height:1.4;word-break:break-all}
+.cap .no{color:#38bdf8}
+.cap .ev{color:#94a3b8}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;margin-right:8px}
+.used{background:#064e3b;color:#a7f3d0}
+.unused{background:#7f1d1d;color:#fecaca}
+table{font-size:12px;border-collapse:collapse;margin:12px 0}
+td,th{border:1px solid #1e293b;padding:6px 8px;text-align:left}
+th{background:#111827}
+code{color:#a7f3d0}
+</style>
+</head>
+<body>
+<h1>Asset Gallery - USED (34) vs UNUSED (17)</h1>
+<p class="sub">Scope: assetdb PNG only, 51 files. Method: static AssetDB call graph over features/, presentation/, core/, assetdb/, main/. USED = texture load reachable. UNUSED = split into A/B/C/D with evidence. Detail: ACTIVE_ASSET_LIST.md</p>
+<div class="nav">
+<a href="#used-entity">USED entity</a>
+<a href="#used-world">USED world</a>
+<a href="#used-global">USED global</a>
+<a href="#used-ui">USED ui</a>
+<a href="#unused-a">UNUSED A orphan</a>
+<a href="#unused-b">UNUSED B fallback</a>
+<a href="#unused-c">UNUSED C shadowed</a>
+<a href="#unused-d">UNUSED D const-only</a>
+</div>
+<p><span class="badge used">USED 34</span><span class="badge unused">UNUSED 17 = A5 + B4 + C6 + D2</span></p>
+<table>
+<tr><th>Group</th><th>Count</th><th>Rule</th></tr>
+<tr><td>USED</td><td>34</td><td>Exact file load via AssetDB getter found in code</td></tr>
+<tr><td>A orphan</td><td>5</td><td>Zero stem hit in any .gd under features/presentation/core/assetdb/main</td></tr>
+<tr><td>B fallback</td><td>4</td><td>Generic pattern enemy_keybot_%s_sheet.png exists (entity_asset_db.gd:178) but clean kb_*.png wins first</td></tr>
+<tr><td>C shadowed</td><td>6</td><td>Base ID string matches (sword/bow/mouse_hero) but exact X.png never constructed; loader uses _albedo/_mask/_sheet suffix</td></tr>
+<tr><td>D const-only</td><td>2</td><td>ID const defined in hud_theme_tokens.gd:61,63 but never passed to get_hud_texture</td></tr>
+</table>
+
+<h2 id="used-entity">USED - entity (15)</h2>
+<div class="grid">
+<div class="card"><img src="numbered/11_kb_z_amber_t1.png" alt="11"><div class="cap"><span class="no">11</span> kb_z_amber_t1.png<br><span class="ev">get_enemy_sheet:168 / Keybot layers</span></div></div>
+<div class="card"><img src="numbered/12_kb_f_crimson_t2.png" alt="12"><div class="cap"><span class="no">12</span> kb_f_crimson_t2.png<br><span class="ev">get_enemy_sheet:168 / Keybot layers</span></div></div>
+<div class="card"><img src="numbered/13_kb_q_cobalt_t3.png" alt="13"><div class="cap"><span class="no">13</span> kb_q_cobalt_t3.png<br><span class="ev">get_enemy_sheet:168 / Keybot layers</span></div></div>
+<div class="card"><img src="numbered/14_kb_b_obsidian_t4.png" alt="14"><div class="cap"><span class="no">14</span> kb_b_obsidian_t4.png<br><span class="ev">get_enemy_sheet:168 / boss scale 1.8</span></div></div>
+<div class="card"><img src="numbered/15_keycap_debris.png" alt="15"><div class="cap"><span class="no">15</span> keycap_debris.png<br><span class="ev">get_enemy_debris_texture:184 / FxPuppet</span></div></div>
+<div class="card"><img src="numbered/16_mouse_hero_sheet.png" alt="16"><div class="cap"><span class="no">16</span> mouse_hero_sheet.png<br><span class="ev">get_player_sheet:148 / Player 4 layers</span></div></div>
+<div class="card"><img src="numbered/17_hero_classic_gem_sheet.png" alt="17"><div class="cap"><span class="no">17</span> hero_classic_gem_sheet.png<br><span class="ev">get_player_sheet:148 / Player 4 layers</span></div></div>
+<div class="card"><img src="numbered/18_hero_trackball_cyber_sheet.png" alt="18"><div class="cap"><span class="no">18</span> hero_trackball_cyber_sheet.png<br><span class="ev">get_player_sheet:148 / Player 4 layers</span></div></div>
+<div class="card"><img src="numbered/19_shockwave_ring.png" alt="19"><div class="cap"><span class="no">19</span> shockwave_ring.png<br><span class="ev">get_shockwave_texture:140 / TrailPuppet</span></div></div>
+<div class="card"><img src="numbered/20_sword_albedo.png" alt="20"><div class="cap"><span class="no">20</span> sword_albedo.png<br><span class="ev">WEAPON_TEX_PRIMARY %s_albedo:17 / Assembler</span></div></div>
+<div class="card"><img src="numbered/21_sword_mask.png" alt="21"><div class="cap"><span class="no">21</span> sword_mask.png<br><span class="ev">WEAPON_MASK_PATH %s_mask:10 / shader mask</span></div></div>
+<div class="card"><img src="numbered/22_bow_albedo.png" alt="22"><div class="cap"><span class="no">22</span> bow_albedo.png<br><span class="ev">WEAPON_TEX_PRIMARY / Assembler + wire</span></div></div>
+<div class="card"><img src="numbered/23_bow_mask.png" alt="23"><div class="cap"><span class="no">23</span> bow_mask.png<br><span class="ev">WEAPON_MASK_PATH / shader mask</span></div></div>
+<div class="card"><img src="numbered/24_spear_albedo.png" alt="24"><div class="cap"><span class="no">24</span> spear_albedo.png<br><span class="ev">WEAPON_TEX_PRIMARY / Assembler</span></div></div>
+<div class="card"><img src="numbered/25_spear_mask.png" alt="25"><div class="cap"><span class="no">25</span> spear_mask.png<br><span class="ev">WEAPON_MASK_PATH / shader mask</span></div></div>
+</div>
+
+<h2 id="used-world">USED - world (4)</h2>
+<div class="grid">
+<div class="card"><img src="numbered/26_room_tileset.png" alt="26"><div class="cap"><span class="no">26</span> room_tileset.png<br><span class="ev">get_room_tileset:23 / TileMapLayer 4 cols</span></div></div>
+<div class="card"><img src="numbered/27_lobby_tileset.png" alt="27"><div class="cap"><span class="no">27</span> lobby_tileset.png<br><span class="ev">get_lobby_tileset:35 / 3 cols</span></div></div>
+<div class="card"><img src="numbered/28_portal_keycap_unpressed.png" alt="28"><div class="cap"><span class="no">28</span> portal_keycap_unpressed.png<br><span class="ev">get_portal_texture:76 / PortalPuppet</span></div></div>
+<div class="card"><img src="numbered/29_portal_keycap_pressed.png" alt="29"><div class="cap"><span class="no">29</span> portal_keycap_pressed.png<br><span class="ev">get_portal_texture:76 / PortalPuppet</span></div></div>
+</div>
+
+<h2 id="used-global">USED - global keycap (4)</h2>
+<div class="grid">
+<div class="card"><img src="numbered/30_keycap_sheet.png" alt="30"><div class="cap"><span class="no">30</span> keycap_sheet.png<br><span class="ev">get_keycap_texture sheet:53 / atlas</span></div></div>
+<div class="card"><img src="numbered/31_fused_keycap_9slice.png" alt="31"><div class="cap"><span class="no">31</span> fused_keycap_9slice.png<br><span class="ev">get_keycap_texture normal:53 / NinePatch</span></div></div>
+<div class="card"><img src="numbered/32_fused_keycap_hover_9slice.png" alt="32"><div class="cap"><span class="no">32</span> fused_keycap_hover_9slice.png<br><span class="ev">get_keycap_texture hover:53</span></div></div>
+<div class="card"><img src="numbered/33_fused_keycap_pressed_9slice.png" alt="33"><div class="cap"><span class="no">33</span> fused_keycap_pressed_9slice.png<br><span class="ev">get_keycap_texture pressed:53</span></div></div>
+</div>
+
+<h2 id="used-ui">USED - ui (11)</h2>
+<div class="grid">
+<div class="card"><img src="numbered/34_pantograph_sheet.png" alt="34"><div class="cap"><span class="no">34</span> pantograph_sheet.png<br><span class="ev">get_ui_texture pantograph_sheet:68 / 8 slots</span></div></div>
+<div class="card"><img src="numbered/35_hud_icons_128_atlas.png" alt="35"><div class="cap"><span class="no">35</span> hud_icons_128_atlas.png<br><span class="ev">get_hud_texture:51 / gauge + status icons</span></div></div>
+<div class="card"><img src="numbered/36_keycap_screen_9slice.png" alt="36"><div class="cap"><span class="no">36</span> keycap_screen_9slice.png<br><span class="ev">get_hud_texture:51 / badge + bar bg</span></div></div>
+<div class="card"><img src="numbered/37_scanline_tile_fine.png" alt="37"><div class="cap"><span class="no">37</span> scanline_tile_fine.png<br><span class="ev">get_hud_texture:51 / scanline TILE</span></div></div>
+<div class="card"><img src="numbered/38_keyboard_plate_block.png" alt="38"><div class="cap"><span class="no">38</span> keyboard_plate_block.png<br><span class="ev">make_frame_style / 3 panels</span></div></div>
+<div class="card"><img src="numbered/39_floating_visor_window.png" alt="39"><div class="cap"><span class="no">39</span> floating_visor_window.png<br><span class="ev">make_frame_style / feed + minimap</span></div></div>
+<div class="card"><img src="numbered/40_title_weapons_atlas.png" alt="40"><div class="cap"><span class="no">40</span> title_weapons_atlas.png<br><span class="ev">get_ui_texture:68 / scroller</span></div></div>
+<div class="card"><img src="numbered/41_title_diorama_sword_body.png" alt="41"><div class="cap"><span class="no">41</span> title_diorama_sword_body.png<br><span class="ev">get_ui_texture:68 / LBlade</span></div></div>
+<div class="card"><img src="numbered/42_title_logo_text_our.png" alt="42"><div class="cap"><span class="no">42</span> title_logo_text_our.png<br><span class="ev">get_ui_texture:68 / TitleLogo RowTop</span></div></div>
+<div class="card"><img src="numbered/43_title_logo_text_or.png" alt="43"><div class="cap"><span class="no">43</span> title_logo_text_or.png<br><span class="ev">get_ui_texture:68 / TitleLogo RowBottom</span></div></div>
+<div class="card"><img src="numbered/44_title_logo_text_d.png" alt="44"><div class="cap"><span class="no">44</span> title_logo_text_d.png<br><span class="ev">get_ui_texture:68 / TitleLogo RowBottom</span></div></div>
+</div>
+
+<h2 id="unused-a">UNUSED A - true orphan (5) - zero stem hit</h2>
+<p class="sub">Evidence: exact stem search over 203 .gd files returned 0. Safe delete candidates after SHA check.</p>
+<div class="grid">
+<div class="card"><img src="unused/U01_debris_1.png" alt="U01"><div class="cap"><span class="no">U01</span> debris_1.png<br><span class="ev">hits: 0 / getter uses keycap_debris.png:185</span></div></div>
+<div class="card"><img src="unused/U02_debris_2.png" alt="U02"><div class="cap"><span class="no">U02</span> debris_2.png<br><span class="ev">hits: 0 / same reason</span></div></div>
+<div class="card"><img src="unused/U03_debris_3.png" alt="U03"><div class="cap"><span class="no">U03</span> debris_3.png<br><span class="ev">hits: 0 / same reason</span></div></div>
+<div class="card"><img src="unused/U15_chip_particle_atlas.png" alt="U15"><div class="cap"><span class="no">U15</span> chip_particle_atlas.png<br><span class="ev">hits: 0 / no get_hud_texture call</span></div></div>
+<div class="card"><img src="unused/U16_hud_icons_128_mask.png" alt="U16"><div class="cap"><span class="no">U16</span> hud_icons_128_mask.png<br><span class="ev">hits: 0 / atlas used, mask never</span></div></div>
+</div>
+
+<h2 id="unused-b">UNUSED B - legacy fallback shadowed (4)</h2>
+<p class="sub">Evidence: generic pattern at assetdb/entity/entity_asset_db.gd:178. Clean kb_*.png hits first, so these 4 never load for current IDs (kb_z/f/q/b).</p>
+<div class="grid">
+<div class="card"><img src="unused/U04_enemy_keybot_b001_sheet.png" alt="U04"><div class="cap"><span class="no">U04</span> enemy_keybot_b001_sheet.png<br><span class="ev">fallback only / shadowed by kb_b_obsidian_t4</span></div></div>
+<div class="card"><img src="unused/U05_enemy_keybot_c001_sheet.png" alt="U05"><div class="cap"><span class="no">U05</span> enemy_keybot_c001_sheet.png<br><span class="ev">fallback only / shadowed by kb_z_amber_t1</span></div></div>
+<div class="card"><img src="unused/U06_enemy_keybot_r003_sheet.png" alt="U06"><div class="cap"><span class="no">U06</span> enemy_keybot_r003_sheet.png<br><span class="ev">fallback only / shadowed by kb_q_cobalt_t3</span></div></div>
+<div class="card"><img src="unused/U07_enemy_keybot_t002_sheet.png" alt="U07"><div class="cap"><span class="no">U07</span> enemy_keybot_t002_sheet.png<br><span class="ev">fallback only / shadowed by kb_f_crimson_t2</span></div></div>
+</div>
+
+<h2 id="unused-c">UNUSED C - name shadowed (6) - exact X.png never built</h2>
+<p class="sub">Evidence: exact bow.png/spear.png/sword.png/mouse_hero.png/heroes search = 0 hits. Only base IDs match. Loaders: WEAPON_TEX_PRIMARY %s_albedo:17, WEAPON_MASK_PATH %s_mask:10, get_player_sheet *sheet:150-154.</p>
+<div class="grid">
+<div class="card"><img src="unused/U08_hero_classic_gem.png" alt="U08"><div class="cap"><span class="no">U08</span> hero_classic_gem.png<br><span class="ev">exact png: 0 / loader uses *_sheet.png:152</span></div></div>
+<div class="card"><img src="unused/U09_hero_trackball_cyber.png" alt="U09"><div class="cap"><span class="no">U09</span> hero_trackball_cyber.png<br><span class="ev">exact png: 0 / loader uses *_sheet.png:154</span></div></div>
+<div class="card"><img src="unused/U10_mouse_hero.png" alt="U10"><div class="cap"><span class="no">U10</span> mouse_hero.png<br><span class="ev">exact png: 0 / loader uses mouse_hero_sheet:150</span></div></div>
+<div class="card"><img src="unused/U11_bow.png" alt="U11"><div class="cap"><span class="no">U11</span> bow.png<br><span class="ev">exact png: 0 / loader uses bow_albedo:17</span></div></div>
+<div class="card"><img src="unused/U12_spear.png" alt="U12"><div class="cap"><span class="no">U12</span> spear.png<br><span class="ev">exact png: 0 / loader uses spear_albedo:17</span></div></div>
+<div class="card"><img src="unused/U13_sword.png" alt="U13"><div class="cap"><span class="no">U13</span> sword.png<br><span class="ev">exact png: 0 / loader uses sword_albedo:17</span></div></div>
+</div>
+
+<h2 id="unused-d">UNUSED D - const-only (2) - ID defined, never drawn</h2>
+<p class="sub">Evidence: const in features/ui/stage/const/hud_theme_tokens.gd:61,63. No make_frame_style/get_hud_texture call passes these IDs. Only keyboard_plate_block + floating_visor_window + keycap_screen + scanline are called.</p>
+<div class="grid">
+<div class="card"><img src="unused/U14_chapter_title_well.png" alt="U14"><div class="cap"><span class="no">U14</span> chapter_title_well.png<br><span class="ev">const-only:63 / zero draw call</span></div></div>
+<div class="card"><img src="unused/U17_switch_socket_well.png" alt="U17"><div class="cap"><span class="no">U17</span> switch_socket_well.png<br><span class="ev">const-only:61 / zero draw call</span></div></div>
+</div>
+
+<p class="sub">Total: 51 PNG = 34 USED + 17 UNUSED. Open via file://asset_tidy/gallery.html. No server needed.</p>
+</body>
+</html>

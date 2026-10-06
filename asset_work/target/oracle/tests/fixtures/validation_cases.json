@@ -1,0 +1,1631 @@
+{
+ "cases": [
+  {
+   "name": "raster_only_sample",
+   "expect_valid": true,
+   "expect_code": null,
+   "expect_import_error": null,
+   "document": {
+    "schema_version": "2.0.0",
+    "format": "draw_tool.document",
+    "document_id": "sample-2x1_5-tiles",
+    "name": "sample (2.5 x 1.5 tiles)",
+    "canvas": {
+     "tile_px": 64,
+     "unit_px": 32,
+     "width_px": 160,
+     "height_px": 96,
+     "background": "transparent"
+    },
+    "active_layer_id": "layer-0002",
+    "layers": [
+     {
+      "layer_id": "layer-0001",
+      "name": "base",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 1,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 4,
+         "cy": 2,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAL0lEQVR4nO3OMQEAIAzAsIJ6XA8Ze1IDzZnXtNjdnAMAAAAAAAAAAAAAAAAAAFR9wUsCxkT9fpQAAAAASUVORK5CYII="
+        }
+       ]
+      }
+     },
+     {
+      "layer_id": "layer-0002",
+      "name": "line art",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.8,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        },
+        {
+         "cx": 1,
+         "cy": 1,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "sample_with_vector_layer",
+   "expect_valid": true,
+   "expect_code": null,
+   "expect_import_error": "UNSUPPORTED_LAYER_TYPE",
+   "document": {
+    "schema_version": "2.0.0",
+    "format": "draw_tool.document",
+    "document_id": "sample-2x1_5-tiles",
+    "name": "sample (2.5 x 1.5 tiles)",
+    "canvas": {
+     "tile_px": 64,
+     "unit_px": 32,
+     "width_px": 160,
+     "height_px": 96,
+     "background": "transparent"
+    },
+    "active_layer_id": "layer-0002",
+    "layers": [
+     {
+      "layer_id": "layer-0001",
+      "name": "base",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 1,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 4,
+         "cy": 2,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAL0lEQVR4nO3OMQEAIAzAsIJ6XA8Ze1IDzZnXtNjdnAMAAAAAAAAAAAAAAAAAAFR9wUsCxkT9fpQAAAAASUVORK5CYII="
+        }
+       ]
+      }
+     },
+     {
+      "layer_id": "layer-0002",
+      "name": "line art",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.8,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        },
+        {
+         "cx": 1,
+         "cy": 1,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        }
+       ]
+      }
+     },
+     {
+      "layer_id": "legacy-shapes",
+      "name": "legacy-shapes",
+      "type": "vector",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "normal",
+      "shapes": [
+       {
+        "shape_id": "shape-000001",
+        "kind": "line",
+        "points": [
+         [
+          8.0,
+          8.0
+         ],
+         [
+          150.0,
+          90.0
+         ]
+        ],
+        "fill": "#4cc2ff",
+        "stroke": "#123a52",
+        "corner_radius": 0.0,
+        "stroke_width": 2
+       },
+       {
+        "shape_id": "shape-000002",
+        "kind": "bezier",
+        "points": [
+         [
+          5.0,
+          5.0
+         ],
+         [
+          30.0,
+          80.0
+         ],
+         [
+          60.0,
+          10.0
+         ],
+         [
+          90.0,
+          90.0
+         ]
+        ],
+        "fill": "none",
+        "stroke": "#ff8800",
+        "corner_radius": 0.0,
+        "stroke_width": 2
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "width_not_multiple_of_32",
+   "expect_valid": false,
+   "expect_code": "SCHEMA",
+   "expect_import_error": null,
+   "document": {
+    "schema_version": "2.0.0",
+    "format": "draw_tool.document",
+    "document_id": "sample-2x1_5-tiles",
+    "name": "sample (2.5 x 1.5 tiles)",
+    "canvas": {
+     "tile_px": 64,
+     "unit_px": 32,
+     "width_px": 100,
+     "height_px": 96,
+     "background": "transparent"
+    },
+    "active_layer_id": "layer-0002",
+    "layers": [
+     {
+      "layer_id": "layer-0001",
+      "name": "base",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 1,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 4,
+         "cy": 2,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAL0lEQVR4nO3OMQEAIAzAsIJ6XA8Ze1IDzZnXtNjdnAMAAAAAAAAAAAAAAAAAAFR9wUsCxkT9fpQAAAAASUVORK5CYII="
+        }
+       ]
+      }
+     },
+     {
+      "layer_id": "layer-0002",
+      "name": "line art",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.8,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        },
+        {
+         "cx": 1,
+         "cy": 1,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "width_above_1920",
+   "expect_valid": false,
+   "expect_code": "SCHEMA",
+   "expect_import_error": null,
+   "document": {
+    "schema_version": "2.0.0",
+    "format": "draw_tool.document",
+    "document_id": "sample-2x1_5-tiles",
+    "name": "sample (2.5 x 1.5 tiles)",
+    "canvas": {
+     "tile_px": 64,
+     "unit_px": 32,
+     "width_px": 1952,
+     "height_px": 96,
+     "background": "transparent"
+    },
+    "active_layer_id": "layer-0002",
+    "layers": [
+     {
+      "layer_id": "layer-0001",
+      "name": "base",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 1,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 4,
+         "cy": 2,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAL0lEQVR4nO3OMQEAIAzAsIJ6XA8Ze1IDzZnXtNjdnAMAAAAAAAAAAAAAAAAAAFR9wUsCxkT9fpQAAAAASUVORK5CYII="
+        }
+       ]
+      }
+     },
+     {
+      "layer_id": "layer-0002",
+      "name": "line art",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.8,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        },
+        {
+         "cx": 1,
+         "cy": 1,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "height_above_1088",
+   "expect_valid": false,
+   "expect_code": "SCHEMA",
+   "expect_import_error": null,
+   "document": {
+    "schema_version": "2.0.0",
+    "format": "draw_tool.document",
+    "document_id": "sample-2x1_5-tiles",
+    "name": "sample (2.5 x 1.5 tiles)",
+    "canvas": {
+     "tile_px": 64,
+     "unit_px": 32,
+     "width_px": 160,
+     "height_px": 1120,
+     "background": "transparent"
+    },
+    "active_layer_id": "layer-0002",
+    "layers": [
+     {
+      "layer_id": "layer-0001",
+      "name": "base",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 1,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 4,
+         "cy": 2,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAL0lEQVR4nO3OMQEAIAzAsIJ6XA8Ze1IDzZnXtNjdnAMAAAAAAAAAAAAAAAAAAFR9wUsCxkT9fpQAAAAASUVORK5CYII="
+        }
+       ]
+      }
+     },
+     {
+      "layer_id": "layer-0002",
+      "name": "line art",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.8,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        },
+        {
+         "cx": 1,
+         "cy": 1,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "tile_px_changed",
+   "expect_valid": false,
+   "expect_code": "SCHEMA",
+   "expect_import_error": null,
+   "document": {
+    "schema_version": "2.0.0",
+    "format": "draw_tool.document",
+    "document_id": "sample-2x1_5-tiles",
+    "name": "sample (2.5 x 1.5 tiles)",
+    "canvas": {
+     "tile_px": 32,
+     "unit_px": 32,
+     "width_px": 160,
+     "height_px": 96,
+     "background": "transparent"
+    },
+    "active_layer_id": "layer-0002",
+    "layers": [
+     {
+      "layer_id": "layer-0001",
+      "name": "base",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 1,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 4,
+         "cy": 2,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAL0lEQVR4nO3OMQEAIAzAsIJ6XA8Ze1IDzZnXtNjdnAMAAAAAAAAAAAAAAAAAAFR9wUsCxkT9fpQAAAAASUVORK5CYII="
+        }
+       ]
+      }
+     },
+     {
+      "layer_id": "layer-0002",
+      "name": "line art",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.8,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        },
+        {
+         "cx": 1,
+         "cy": 1,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "unknown_blend",
+   "expect_valid": false,
+   "expect_code": "SCHEMA",
+   "expect_import_error": null,
+   "document": {
+    "schema_version": "2.0.0",
+    "format": "draw_tool.document",
+    "document_id": "sample-2x1_5-tiles",
+    "name": "sample (2.5 x 1.5 tiles)",
+    "canvas": {
+     "tile_px": 64,
+     "unit_px": 32,
+     "width_px": 160,
+     "height_px": 96,
+     "background": "transparent"
+    },
+    "active_layer_id": "layer-0002",
+    "layers": [
+     {
+      "layer_id": "layer-0001",
+      "name": "base",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "dissolve",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 1,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 4,
+         "cy": 2,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAL0lEQVR4nO3OMQEAIAzAsIJ6XA8Ze1IDzZnXtNjdnAMAAAAAAAAAAAAAAAAAAFR9wUsCxkT9fpQAAAAASUVORK5CYII="
+        }
+       ]
+      }
+     },
+     {
+      "layer_id": "layer-0002",
+      "name": "line art",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.8,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        },
+        {
+         "cx": 1,
+         "cy": 1,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "opacity_above_1",
+   "expect_valid": false,
+   "expect_code": "SCHEMA",
+   "expect_import_error": null,
+   "document": {
+    "schema_version": "2.0.0",
+    "format": "draw_tool.document",
+    "document_id": "sample-2x1_5-tiles",
+    "name": "sample (2.5 x 1.5 tiles)",
+    "canvas": {
+     "tile_px": 64,
+     "unit_px": 32,
+     "width_px": 160,
+     "height_px": 96,
+     "background": "transparent"
+    },
+    "active_layer_id": "layer-0002",
+    "layers": [
+     {
+      "layer_id": "layer-0001",
+      "name": "base",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.5,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 1,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 4,
+         "cy": 2,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAL0lEQVR4nO3OMQEAIAzAsIJ6XA8Ze1IDzZnXtNjdnAMAAAAAAAAAAAAAAAAAAFR9wUsCxkT9fpQAAAAASUVORK5CYII="
+        }
+       ]
+      }
+     },
+     {
+      "layer_id": "layer-0002",
+      "name": "line art",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.8,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        },
+        {
+         "cx": 1,
+         "cy": 1,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "raster_layer_with_shapes",
+   "expect_valid": false,
+   "expect_code": "SCHEMA",
+   "expect_import_error": null,
+   "document": {
+    "schema_version": "2.0.0",
+    "format": "draw_tool.document",
+    "document_id": "sample-2x1_5-tiles",
+    "name": "sample (2.5 x 1.5 tiles)",
+    "canvas": {
+     "tile_px": 64,
+     "unit_px": 32,
+     "width_px": 160,
+     "height_px": 96,
+     "background": "transparent"
+    },
+    "active_layer_id": "layer-0002",
+    "layers": [
+     {
+      "layer_id": "layer-0001",
+      "name": "base",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 1,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 4,
+         "cy": 2,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAL0lEQVR4nO3OMQEAIAzAsIJ6XA8Ze1IDzZnXtNjdnAMAAAAAAAAAAAAAAAAAAFR9wUsCxkT9fpQAAAAASUVORK5CYII="
+        }
+       ]
+      },
+      "shapes": []
+     },
+     {
+      "layer_id": "layer-0002",
+      "name": "line art",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.8,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        },
+        {
+         "cx": 1,
+         "cy": 1,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "chunk_png_signature_missing",
+   "expect_valid": false,
+   "expect_code": "SCHEMA",
+   "expect_import_error": null,
+   "document": {
+    "schema_version": "2.0.0",
+    "format": "draw_tool.document",
+    "document_id": "sample-2x1_5-tiles",
+    "name": "sample (2.5 x 1.5 tiles)",
+    "canvas": {
+     "tile_px": 64,
+     "unit_px": 32,
+     "width_px": 160,
+     "height_px": 96,
+     "background": "transparent"
+    },
+    "active_layer_id": "layer-0002",
+    "layers": [
+     {
+      "layer_id": "layer-0001",
+      "name": "base",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "AAAA"
+        },
+        {
+         "cx": 1,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 4,
+         "cy": 2,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAL0lEQVR4nO3OMQEAIAzAsIJ6XA8Ze1IDzZnXtNjdnAMAAAAAAAAAAAAAAAAAAFR9wUsCxkT9fpQAAAAASUVORK5CYII="
+        }
+       ]
+      }
+     },
+     {
+      "layer_id": "layer-0002",
+      "name": "line art",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.8,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        },
+        {
+         "cx": 1,
+         "cy": 1,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "cx_above_59",
+   "expect_valid": false,
+   "expect_code": "SCHEMA",
+   "expect_import_error": null,
+   "document": {
+    "schema_version": "2.0.0",
+    "format": "draw_tool.document",
+    "document_id": "sample-2x1_5-tiles",
+    "name": "sample (2.5 x 1.5 tiles)",
+    "canvas": {
+     "tile_px": 64,
+     "unit_px": 32,
+     "width_px": 160,
+     "height_px": 96,
+     "background": "transparent"
+    },
+    "active_layer_id": "layer-0002",
+    "layers": [
+     {
+      "layer_id": "layer-0001",
+      "name": "base",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 60,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 1,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 4,
+         "cy": 2,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAL0lEQVR4nO3OMQEAIAzAsIJ6XA8Ze1IDzZnXtNjdnAMAAAAAAAAAAAAAAAAAAFR9wUsCxkT9fpQAAAAASUVORK5CYII="
+        }
+       ]
+      }
+     },
+     {
+      "layer_id": "layer-0002",
+      "name": "line art",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.8,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        },
+        {
+         "cx": 1,
+         "cy": 1,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "cy_above_33",
+   "expect_valid": false,
+   "expect_code": "SCHEMA",
+   "expect_import_error": null,
+   "document": {
+    "schema_version": "2.0.0",
+    "format": "draw_tool.document",
+    "document_id": "sample-2x1_5-tiles",
+    "name": "sample (2.5 x 1.5 tiles)",
+    "canvas": {
+     "tile_px": 64,
+     "unit_px": 32,
+     "width_px": 160,
+     "height_px": 96,
+     "background": "transparent"
+    },
+    "active_layer_id": "layer-0002",
+    "layers": [
+     {
+      "layer_id": "layer-0001",
+      "name": "base",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 34,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 1,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 4,
+         "cy": 2,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAL0lEQVR4nO3OMQEAIAzAsIJ6XA8Ze1IDzZnXtNjdnAMAAAAAAAAAAAAAAAAAAFR9wUsCxkT9fpQAAAAASUVORK5CYII="
+        }
+       ]
+      }
+     },
+     {
+      "layer_id": "layer-0002",
+      "name": "line art",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.8,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        },
+        {
+         "cx": 1,
+         "cy": 1,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "extra_root_property",
+   "expect_valid": false,
+   "expect_code": "SCHEMA",
+   "expect_import_error": null,
+   "document": {
+    "schema_version": "2.0.0",
+    "format": "draw_tool.document",
+    "document_id": "sample-2x1_5-tiles",
+    "name": "sample (2.5 x 1.5 tiles)",
+    "canvas": {
+     "tile_px": 64,
+     "unit_px": 32,
+     "width_px": 160,
+     "height_px": 96,
+     "background": "transparent"
+    },
+    "active_layer_id": "layer-0002",
+    "layers": [
+     {
+      "layer_id": "layer-0001",
+      "name": "base",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 1,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 4,
+         "cy": 2,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAL0lEQVR4nO3OMQEAIAzAsIJ6XA8Ze1IDzZnXtNjdnAMAAAAAAAAAAAAAAAAAAFR9wUsCxkT9fpQAAAAASUVORK5CYII="
+        }
+       ]
+      }
+     },
+     {
+      "layer_id": "layer-0002",
+      "name": "line art",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.8,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        },
+        {
+         "cx": 1,
+         "cy": 1,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        }
+       ]
+      }
+     }
+    ],
+    "order": 1
+   }
+  },
+  {
+   "name": "empty_layers",
+   "expect_valid": false,
+   "expect_code": "SCHEMA",
+   "expect_import_error": null,
+   "document": {
+    "schema_version": "2.0.0",
+    "format": "draw_tool.document",
+    "document_id": "sample-2x1_5-tiles",
+    "name": "sample (2.5 x 1.5 tiles)",
+    "canvas": {
+     "tile_px": 64,
+     "unit_px": 32,
+     "width_px": 160,
+     "height_px": 96,
+     "background": "transparent"
+    },
+    "active_layer_id": "layer-0002",
+    "layers": []
+   }
+  },
+  {
+   "name": "wrong_schema_version",
+   "expect_valid": false,
+   "expect_code": "SCHEMA",
+   "expect_import_error": null,
+   "document": {
+    "schema_version": "1.0.0",
+    "format": "draw_tool.document",
+    "document_id": "sample-2x1_5-tiles",
+    "name": "sample (2.5 x 1.5 tiles)",
+    "canvas": {
+     "tile_px": 64,
+     "unit_px": 32,
+     "width_px": 160,
+     "height_px": 96,
+     "background": "transparent"
+    },
+    "active_layer_id": "layer-0002",
+    "layers": [
+     {
+      "layer_id": "layer-0001",
+      "name": "base",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 1,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 4,
+         "cy": 2,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAL0lEQVR4nO3OMQEAIAzAsIJ6XA8Ze1IDzZnXtNjdnAMAAAAAAAAAAAAAAAAAAFR9wUsCxkT9fpQAAAAASUVORK5CYII="
+        }
+       ]
+      }
+     },
+     {
+      "layer_id": "layer-0002",
+      "name": "line art",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.8,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        },
+        {
+         "cx": 1,
+         "cy": 1,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "missing_format",
+   "expect_valid": false,
+   "expect_code": "SCHEMA",
+   "expect_import_error": null,
+   "document": {
+    "schema_version": "2.0.0",
+    "document_id": "sample-2x1_5-tiles",
+    "name": "sample (2.5 x 1.5 tiles)",
+    "canvas": {
+     "tile_px": 64,
+     "unit_px": 32,
+     "width_px": 160,
+     "height_px": 96,
+     "background": "transparent"
+    },
+    "active_layer_id": "layer-0002",
+    "layers": [
+     {
+      "layer_id": "layer-0001",
+      "name": "base",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 1,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 4,
+         "cy": 2,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAL0lEQVR4nO3OMQEAIAzAsIJ6XA8Ze1IDzZnXtNjdnAMAAAAAAAAAAAAAAAAAAFR9wUsCxkT9fpQAAAAASUVORK5CYII="
+        }
+       ]
+      }
+     },
+     {
+      "layer_id": "layer-0002",
+      "name": "line art",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.8,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        },
+        {
+         "cx": 1,
+         "cy": 1,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "duplicate_chunk",
+   "expect_valid": false,
+   "expect_code": "CHUNK_DUPLICATE",
+   "expect_import_error": null,
+   "document": {
+    "schema_version": "2.0.0",
+    "format": "draw_tool.document",
+    "document_id": "sample-2x1_5-tiles",
+    "name": "sample (2.5 x 1.5 tiles)",
+    "canvas": {
+     "tile_px": 64,
+     "unit_px": 32,
+     "width_px": 160,
+     "height_px": 96,
+     "background": "transparent"
+    },
+    "active_layer_id": "layer-0002",
+    "layers": [
+     {
+      "layer_id": "layer-0001",
+      "name": "base",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 1,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 4,
+         "cy": 2,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAL0lEQVR4nO3OMQEAIAzAsIJ6XA8Ze1IDzZnXtNjdnAMAAAAAAAAAAAAAAAAAAFR9wUsCxkT9fpQAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        }
+       ]
+      }
+     },
+     {
+      "layer_id": "layer-0002",
+      "name": "line art",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.8,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        },
+        {
+         "cx": 1,
+         "cy": 1,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "chunk_outside_canvas",
+   "expect_valid": false,
+   "expect_code": "CHUNK_OUT_OF_CANVAS",
+   "expect_import_error": null,
+   "document": {
+    "schema_version": "2.0.0",
+    "format": "draw_tool.document",
+    "document_id": "sample-2x1_5-tiles",
+    "name": "sample (2.5 x 1.5 tiles)",
+    "canvas": {
+     "tile_px": 64,
+     "unit_px": 32,
+     "width_px": 160,
+     "height_px": 96,
+     "background": "transparent"
+    },
+    "active_layer_id": "layer-0002",
+    "layers": [
+     {
+      "layer_id": "layer-0001",
+      "name": "base",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 1,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 4,
+         "cy": 2,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAL0lEQVR4nO3OMQEAIAzAsIJ6XA8Ze1IDzZnXtNjdnAMAAAAAAAAAAAAAAAAAAFR9wUsCxkT9fpQAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 5,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        }
+       ]
+      }
+     },
+     {
+      "layer_id": "layer-0002",
+      "name": "line art",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.8,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        },
+        {
+         "cx": 1,
+         "cy": 1,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "chunk_wrong_size",
+   "expect_valid": false,
+   "expect_code": "CHUNK_BAD_PNG",
+   "expect_import_error": null,
+   "document": {
+    "schema_version": "2.0.0",
+    "format": "draw_tool.document",
+    "document_id": "sample-2x1_5-tiles",
+    "name": "sample (2.5 x 1.5 tiles)",
+    "canvas": {
+     "tile_px": 64,
+     "unit_px": 32,
+     "width_px": 160,
+     "height_px": 96,
+     "background": "transparent"
+    },
+    "active_layer_id": "layer-0002",
+    "layers": [
+     {
+      "layer_id": "layer-0001",
+      "name": "base",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAHUlEQVR4nGNkZGL+z0ABYKJE86gBowaMGjCYDAAAZZIBJQ70E+UAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 1,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 4,
+         "cy": 2,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAL0lEQVR4nO3OMQEAIAzAsIJ6XA8Ze1IDzZnXtNjdnAMAAAAAAAAAAAAAAAAAAFR9wUsCxkT9fpQAAAAASUVORK5CYII="
+        }
+       ]
+      }
+     },
+     {
+      "layer_id": "layer-0002",
+      "name": "line art",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.8,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        },
+        {
+         "cx": 1,
+         "cy": 1,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "duplicate_layer_id",
+   "expect_valid": false,
+   "expect_code": "DUP_LAYER_ID",
+   "expect_import_error": null,
+   "document": {
+    "schema_version": "2.0.0",
+    "format": "draw_tool.document",
+    "document_id": "sample-2x1_5-tiles",
+    "name": "sample (2.5 x 1.5 tiles)",
+    "canvas": {
+     "tile_px": 64,
+     "unit_px": 32,
+     "width_px": 160,
+     "height_px": 96,
+     "background": "transparent"
+    },
+    "active_layer_id": "layer-0002",
+    "layers": [
+     {
+      "layer_id": "layer-0001",
+      "name": "base",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 1,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 4,
+         "cy": 2,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAL0lEQVR4nO3OMQEAIAzAsIJ6XA8Ze1IDzZnXtNjdnAMAAAAAAAAAAAAAAAAAAFR9wUsCxkT9fpQAAAAASUVORK5CYII="
+        }
+       ]
+      }
+     },
+     {
+      "layer_id": "layer-0001",
+      "name": "line art",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.8,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        },
+        {
+         "cx": 1,
+         "cy": 1,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  },
+  {
+   "name": "dangling_active_layer",
+   "expect_valid": false,
+   "expect_code": "ACTIVE_LAYER_MISSING",
+   "expect_import_error": null,
+   "document": {
+    "schema_version": "2.0.0",
+    "format": "draw_tool.document",
+    "document_id": "sample-2x1_5-tiles",
+    "name": "sample (2.5 x 1.5 tiles)",
+    "canvas": {
+     "tile_px": 64,
+     "unit_px": 32,
+     "width_px": 160,
+     "height_px": 96,
+     "background": "transparent"
+    },
+    "active_layer_id": "nope",
+    "layers": [
+     {
+      "layer_id": "layer-0001",
+      "name": "base",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1.0,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 1,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
+        },
+        {
+         "cx": 4,
+         "cy": 2,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAL0lEQVR4nO3OMQEAIAzAsIJ6XA8Ze1IDzZnXtNjdnAMAAAAAAAAAAAAAAAAAAFR9wUsCxkT9fpQAAAAASUVORK5CYII="
+        }
+       ]
+      }
+     },
+     {
+      "layer_id": "layer-0002",
+      "name": "line art",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 0.8,
+      "blend": "normal",
+      "raster": {
+       "chunk_px": 32,
+       "encoding": "png_base64",
+       "chunks": [
+        {
+         "cx": 0,
+         "cy": 0,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        },
+        {
+         "cx": 1,
+         "cy": 1,
+         "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMElEQVR4nO3OwQAAAAgEsBjCCSN/l8K4z0aw6tmrNAkJCQkJCQkJCQkJCQkJiWTiATSQM6EAUJloAAAAAElFTkSuQmCC"
+        }
+       ]
+      }
+     }
+    ]
+   }
+  }
+ ]
+}

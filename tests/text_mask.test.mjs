@@ -12,7 +12,10 @@ import { transpileAndRender } from "../tools/recipe/transpile.mjs";
 import { decodePng } from "../src/io/png.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = path.resolve(__dirname, "..", "..");
+// Working assets live under asset_work/target/ (recipes + legacy PNGs + oracle ground truth).
+const REPO_ROOT = path.resolve(__dirname, "..");
+const TARGET_ROOT = path.join(REPO_ROOT, "asset_work", "target");
+const targetPath = (rel) => path.join(TARGET_ROOT, rel.replace(/^draw_tool_v2\//, ""));
 
 const GLYPHS = loadGlyphSet(path.join(__dirname, "..", "tools", "recipe", "text_glyphs.json"));
 
@@ -49,7 +52,7 @@ describe("text glyph integrity", () => {
 describe("title logo text reproduction", () => {
   for (const t of ["our", "or", "d"]) {
     it(`title_logo_text_${t} transpiles integer-exact`, async () => {
-      const recipePath = path.join(REPO_ROOT, "draw_tool_v2/tests/fixtures", `title_logo_text_${t}_recipe.json`);
+      const recipePath = path.join(TARGET_ROOT, "tests/fixtures", `title_logo_text_${t}_recipe.json`);
       const recipe = JSON.parse(fs.readFileSync(recipePath, "utf-8"));
       const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "titletext-"));
       const png = path.join(tmp, `${t}.png`);
@@ -59,7 +62,7 @@ describe("title logo text reproduction", () => {
         outputDocPath: path.join(tmp, `${t}.json`),
         outputPngPath: png,
       });
-      const legacy = await decodePng(fs.readFileSync(path.join(REPO_ROOT, "assetdb/ui/title", `title_logo_text_${t}.png`)));
+      const legacy = await decodePng(fs.readFileSync(path.join(TARGET_ROOT, "assetdb/ui/title".replace(/^draw_tool_v2\//, ""), `title_logo_text_${t}.png`)));
       const cand = await decodePng(fs.readFileSync(png));
       const [cw, ch] = recipe.crop;
       assert.equal(legacy.width, cw, "legacy width");
@@ -86,12 +89,12 @@ describe("hud icons atlas text cell", () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "diamond-"));
     const png = path.join(tmp, "diamond.png");
     await transpileAndRender({
-      recipePath: path.join(REPO_ROOT, "assetdb/ui/data/diamond_gem.json"),
+      recipePath: targetPath("assetdb/ui/data/diamond_gem.json"),
       layerKey: "body",
       outputDocPath: path.join(tmp, "diamond.json"),
       outputPngPath: png,
     });
-    const legacy = await decodePng(fs.readFileSync(path.join(REPO_ROOT, "assetdb/ui/hud", "hud_icons_128_atlas.png")));
+    const legacy = await decodePng(fs.readFileSync(path.join(TARGET_ROOT, "assetdb/ui/hud".replace(/^draw_tool_v2\//, ""), "hud_icons_128_atlas.png")));
     const cand = await decodePng(fs.readFileSync(png));
     // diamond_gem is ICON_NAMES index 7 -> cell (384, 128) in the 512 atlas
     const total = 128 * 128;

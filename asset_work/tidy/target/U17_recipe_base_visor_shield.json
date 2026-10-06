@@ -1,0 +1,130 @@
+{
+  "desc": "좌측 입체 옆면 랩어라운드 쉘(얇은 하늘색 꺾임선) 및 우측 모서리 완전 개방 바이저 지오메트리",
+  "visor_left": [
+    {
+      "desc": "좌측 바이저 일체형 6각 랩어라운드 메인 쉘 (X=22 옆면 모서리까지 완전 커버)",
+      "cmd": "polygon",
+      "points": [[67, 17], [36, 30], [22, 36], [22, 70], [36, 64], [67, 68]],
+      "fill": "$visor_color",
+      "outline": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "좌측 전면-옆면 꺾임 능선 얇은 하늘색 구분선",
+      "cmd": "line",
+      "points": [[36, 30], [36, 64]],
+      "color": "$eye_color",
+      "width": 1
+    }
+  ],
+  "visor_right": [
+    {
+      "desc": "우측 바이저 메인 쉘 (우측 끝 104까지 채우는 순수 fill, 몸통선과 평행)",
+      "cmd": "polygon",
+      "points": [[73, 17], [104, 30], [104, 62], [73, 68]],
+      "fill": "$visor_color"
+    },
+    {
+      "desc": "우측 바이저 중앙 안쪽 세로 테두리",
+      "cmd": "line",
+      "points": [[73, 17], [73, 68]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "우측 바이저 상단 경사 테두리",
+      "cmd": "line",
+      "points": [[73, 17], [104, 30]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "우측 바이저 하단 경사 테두리 (몸통선과 완벽 평행 & 마진 확보)",
+      "cmd": "line",
+      "points": [[73, 68], [104, 62]],
+      "color": "$eye_color",
+      "width": 3
+    }
+  ],
+  "visor_cracked_left": [
+    {
+      "desc": "좌측 바이저 일체형 6각 쉘",
+      "cmd": "polygon",
+      "points": [[67, 17], [36, 30], [22, 36], [22, 70], [36, 64], [67, 68]],
+      "fill": "$visor_color",
+      "outline": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "좌측 전면-옆면 꺾임 능선 얇은 하늘색 구분선",
+      "cmd": "line",
+      "points": [[36, 30], [36, 64]],
+      "color": "$eye_color",
+      "width": 1
+    },
+    {
+      "desc": "상단에서 꺾임선을 거쳐 옆면으로 뻗어나가는 메인 번개 가지 크랙",
+      "cmd": "line",
+      "points": [[56, 22], [46, 34], [36, 44], [24, 52]],
+      "color": "$glow_color",
+      "width": 2
+    },
+    {
+      "desc": "상단 중간 분기 1호 가지선",
+      "cmd": "line",
+      "points": [[46, 34], [52, 46], [50, 56]],
+      "color": "$glow_color",
+      "width": 1
+    },
+    {
+      "desc": "측면 하단 분기 2호 가지선",
+      "cmd": "line",
+      "points": [[36, 44], [40, 58]],
+      "color": "$glow_color",
+      "width": 1
+    }
+  ],
+  "visor_cracked_right": [
+    {
+      "desc": "우측 바이저 메인 쉘 (우측 모서리 완전 개방형, 몸통선과 평행)",
+      "cmd": "polygon",
+      "points": [[73, 17], [104, 30], [104, 62], [73, 68]],
+      "fill": "$visor_color"
+    },
+    {
+      "desc": "우측 바이저 중앙 안쪽 세로 테두리",
+      "cmd": "line",
+      "points": [[73, 17], [73, 68]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "우측 바이저 상단 경사 테두리",
+      "cmd": "line",
+      "points": [[73, 17], [104, 30]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "우측 바이저 하단 경사 테두리 (몸통선과 완벽 평행)",
+      "cmd": "line",
+      "points": [[73, 68], [104, 62]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "우측 외곽 끝단에서 안쪽으로 파고드는 메인 수평 가지 크랙",
+      "cmd": "line",
+      "points": [[102, 46], [90, 44], [78, 38]],
+      "color": "$glow_color",
+      "width": 2
+    },
+    {
+      "desc": "하단 분기 가지 크랙",
+      "cmd": "line",
+      "points": [[90, 44], [86, 54]],
+      "color": "$glow_color",
+      "width": 1
+    }
+  ]
+}

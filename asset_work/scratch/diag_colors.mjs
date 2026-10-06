@@ -1,14 +1,20 @@
+// SCRATCH diagnostic, one-off probe with no owner and not wired into any gate.
+// Kept because it is still the fastest way to see which pixels diverge for a
+// given case. If it stops answering a question, delete it rather than repair it.
 // Diagnostic: check color resolution + pixel diffs for the 3 failing assets
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { resolveColor, resolveColorToken } from "./recipe/color_tokens.mjs";
-import { transpileAndRender } from "./recipe/transpile.mjs";
-import { decodePng } from "../src/io/png.js";
-import { unpackRGBA } from "../src/core/pixel.js";
+import { resolveColor, resolveColorToken } from "../../tools/recipe/color_tokens.mjs";
+import { transpileAndRender } from "../../tools/recipe/transpile.mjs";
+import { decodePng } from "../../src/io/png.js";
+import { unpackRGBA } from "../../src/core/pixel.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// Scratch probe: assets are read from asset_work/target/, same root the gates use.
 const REPO_ROOT = path.resolve(__dirname, "..", "..");
+const TARGET_ROOT = path.join(REPO_ROOT, "asset_work", "target");
+const targetPath = (rel) => path.join(TARGET_ROOT, rel);
 
 // --- Part 1: weapon_bow palette resolution ---
 const bowPalette = {
@@ -51,8 +57,8 @@ for (const tok of ["$keycap_skirt_shadow", "$keycap_face", "$accent_neon", "$acc
 // --- Part 3: pixel diffs ---
 const CASES = [
   { id: "bow_albedo", recipe: "assetdb/entity/weapon/weapon_bow.json", layer: "albedo", legacy: "assetdb/entity/weapon/bow_albedo.png" },
-  { id: "portal_keycap_unpressed", recipe: "assetdb/world/data/portal/portal_keycap_master.json", layer: "keycap_unpressed", legacy: "assetdb/world/img/portal/portal_keycap_unpressed.png" },
-  { id: "portal_keycap_pressed", recipe: "assetdb/world/data/portal/portal_keycap_master.json", layer: "keycap_pressed", legacy: "assetdb/world/img/portal/portal_keycap_pressed.png" },
+  { id: "portal_keycap_unpressed", recipe: "assetdb/world/object/portal_keycap_master.json", layer: "keycap_unpressed", legacy: "assetdb/world/img/portal/portal_keycap_unpressed.png" },
+  { id: "portal_keycap_pressed", recipe: "assetdb/world/object/portal_keycap_master.json", layer: "keycap_pressed", legacy: "assetdb/world/img/portal/portal_keycap_pressed.png" },
 ];
 
 const hex = (r, g, b) => "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("").toUpperCase();
@@ -61,12 +67,12 @@ for (const c of CASES) {
   const outPng = path.join(__dirname, `diag_${c.id}.png`);
   const outDoc = path.join(__dirname, `diag_${c.id}.json`);
   await transpileAndRender({
-    recipePath: path.join(REPO_ROOT, c.recipe),
+    recipePath: targetPath(c.recipe),
     layerKey: c.layer,
     outputDocPath: outDoc,
     outputPngPath: outPng,
   });
-  const legacy = await decodePng(fs.readFileSync(path.join(REPO_ROOT, c.legacy)));
+  const legacy = await decodePng(fs.readFileSync(targetPath(c.legacy)));
   const cand = await decodePng(fs.readFileSync(outPng));
   const a = legacy.rgba, b = cand.rgba;
   const total = legacy.width * legacy.height;

@@ -1,0 +1,300 @@
+{
+  "combat_room_normal_01": {
+    "room_type": "NORMAL",
+    "size": {
+      "width": 21,
+      "height": 15
+    },
+    "size_category": "MEDIUM",
+    "layout_id": "m_standard",
+    "corridor_enabled": true,
+    "waves": [
+      {
+        "wave_index": 1,
+        "intro_delay": 0.5,
+        "spawns": [
+          {
+            "enemy": "crawler",
+            "spawn_mode": "SCATTER",
+            "anchor": "TOP_LEFT",
+            "radius": 100.0,
+            "delay": 0.0,
+            "vfx": "WARP_INDICATOR"
+          },
+          {
+            "enemy": "crawler",
+            "spawn_mode": "SCATTER",
+            "anchor": "TOP_RIGHT",
+            "radius": 100.0,
+            "delay": 0.2,
+            "vfx": "WARP_INDICATOR"
+          },
+          {
+            "enemy": "piercer",
+            "spawn_mode": "RANDOM",
+            "min_player_dist": 250.0,
+            "delay": 0.8,
+            "carrier_letter": "AUTO"
+          }
+        ]
+      },
+      {
+        "wave_index": 2,
+        "intro_delay": 1.2,
+        "spawns": [
+          {
+            "enemy": "sniper",
+            "spawn_mode": "EXACT",
+            "pos": [
+              0.0,
+              -260.0
+            ],
+            "delay": 0.0
+          },
+          {
+            "enemy": "piercer",
+            "spawn_mode": "SURROUND",
+            "distance": 300.0,
+            "angle_deg": 0.0,
+            "delay": 0.4
+          },
+          {
+            "enemy": "piercer",
+            "spawn_mode": "SURROUND",
+            "distance": 300.0,
+            "angle_deg": 180.0,
+            "delay": 0.4
+          }
+        ]
+      }
+    ],
+    "clear_event": {
+      "open_doors": true,
+      "drop_bonus_currency": 10
+    },
+    "portal_enabled": false,
+    "portal_id": "HEX_LIME_01",
+    "portal_open_condition": "ALL_WAVES_CLEARED"
+  },
+  "combat_room_elite_01": {
+    "room_type": "ELITE",
+    "size": {
+      "width": 21,
+      "height": 15
+    },
+    "size_category": "MEDIUM",
+    "layout_id": "m_four_blocks",
+    "corridor_enabled": true,
+    "waves": [
+      {
+        "wave_index": 1,
+        "intro_delay": 0.4,
+        "spawns": [
+          {
+            "enemy": "crawler",
+            "spawn_mode": "SCATTER",
+            "anchor": "TOP_LEFT",
+            "radius": 80.0,
+            "delay": 0.0,
+            "vfx": "WARP_INDICATOR"
+          },
+          {
+            "enemy": "crawler",
+            "spawn_mode": "SCATTER",
+            "anchor": "TOP_RIGHT",
+            "radius": 80.0,
+            "delay": 0.1,
+            "vfx": "WARP_INDICATOR"
+          }
+        ]
+      },
+      {
+        "wave_index": 2,
+        "intro_delay": 0.8,
+        "spawns": [
+          {
+            "enemy": "piercer",
+            "spawn_mode": "SURROUND",
+            "distance": 260.0,
+            "angle_deg": 45.0,
+            "delay": 0.0
+          },
+          {
+            "enemy": "piercer",
+            "spawn_mode": "SURROUND",
+            "distance": 260.0,
+            "angle_deg": 225.0,
+            "delay": 0.1
+          },
+          {
+            "enemy": "sniper",
+            "spawn_mode": "EXACT",
+            "pos": [
+              0.0,
+              -180.0
+            ],
+            "delay": 0.3
+          }
+        ]
+      }
+    ],
+    "clear_event": {
+      "open_doors": true,
+      "drop_bonus_currency": 25
+    },
+    "portal_enabled": false,
+    "portal_id": "HEX_LIME_01",
+    "portal_open_condition": "ALL_WAVES_CLEARED"
+  },
+  "combat_room_boss_01": {
+    "room_type": "BOSS",
+    "size": {
+      "width": 27,
+      "height": 19
+    },
+    "size_category": "LARGE",
+    "layout_id": "l_boss_arena",
+    "corridor_enabled": true,
+    "waves": [
+      {
+        "wave_index": 1,
+        "intro_delay": 0.5,
+        "spawns": [
+          {
+            "enemy": "sniper",
+            "spawn_mode": "EXACT",
+            "pos": [
+              0.0,
+              -140.0
+            ],
+            "delay": 0.0
+          },
+          {
+            "enemy": "piercer",
+            "spawn_mode": "SURROUND",
+            "distance": 280.0,
+            "angle_deg": 90.0,
+            "delay": 0.4
+          },
+          {
+            "enemy": "piercer",
+            "spawn_mode": "SURROUND",
+            "distance": 280.0,
+            "angle_deg": 270.0,
+            "delay": 0.4
+          }
+        ]
+      },
+      {
+        "wave_index": 2,
+        "intro_delay": 0.8,
+        "spawns": [
+          {
+            "enemy": "boss",
+            "spawn_mode": "EXACT",
+            "pos": [
+              0.0,
+              -40.0
+            ],
+            "delay": 0.2,
+            "vfx": "BOSS_SUMMON"
+          },
+          {
+            "enemy": "crawler",
+            "spawn_mode": "SCATTER",
+            "anchor": "BOTTOM_LEFT",
+            "radius": 60.0,
+            "delay": 0.5
+          },
+          {
+            "enemy": "crawler",
+            "spawn_mode": "SCATTER",
+            "anchor": "BOTTOM_RIGHT",
+            "radius": 60.0,
+            "delay": 0.5
+          }
+        ]
+      }
+    ],
+    "clear_event": {
+      "open_doors": true,
+      "drop_bonus_currency": 50
+    },
+    "portal_enabled": true,
+    "portal_id": "HEX_LIME_01",
+    "portal_open_condition": "ALL_WAVES_CLEARED"
+  },
+  "exit_room_warp_01": {
+    "room_type": "EXIT",
+    "size": {
+      "width": 15,
+      "height": 11
+    },
+    "size_category": "SMALL",
+    "layout_id": "s_standard",
+    "corridor_enabled": true,
+    "waves": [
+      {
+        "wave_index": 1,
+        "intro_delay": 0.3,
+        "spawns": [
+          {
+            "enemy": "crawler",
+            "spawn_mode": "RANDOM",
+            "min_player_dist": 200.0,
+            "delay": 0.0
+          },
+          {
+            "enemy": "piercer",
+            "spawn_mode": "RANDOM",
+            "min_player_dist": 200.0,
+            "delay": 0.3
+          }
+        ]
+      }
+    ],
+    "clear_event": {
+      "open_doors": true,
+      "drop_bonus_currency": 15
+    },
+    "portal_enabled": true,
+    "portal_id": "HEX_LIME_01",
+    "portal_open_condition": "ALL_WAVES_CLEARED"
+  },
+  "start_room_sanctuary_01": {
+    "room_type": "START",
+    "size": {
+      "width": 15,
+      "height": 11
+    },
+    "size_category": "SMALL",
+    "layout_id": "s_standard",
+    "corridor_enabled": true,
+    "waves": [],
+    "clear_event": {
+      "open_doors": true,
+      "drop_bonus_currency": 0
+    },
+    "portal_enabled": false,
+    "portal_id": "HEX_LIME_01",
+    "portal_open_condition": "IMMEDIATE"
+  },
+  "shop_room_depot_01": {
+    "room_type": "SHOP",
+    "size": {
+      "width": 15,
+      "height": 11
+    },
+    "size_category": "SMALL",
+    "layout_id": "s_standard",
+    "corridor_enabled": true,
+    "waves": [],
+    "clear_event": {
+      "open_doors": true,
+      "drop_bonus_currency": 0
+    },
+    "portal_enabled": false,
+    "portal_id": "HEX_LIME_01",
+    "portal_open_condition": "IMMEDIATE"
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "dynamic_colors": {
+    "body_color": "#F472B6",
+    "glow_color": "#FF007F"
+  },
+  "body": [
+    {
+      "desc": "사각형 1: 큐브 상면 마름모",
+      "cmd": "polygon",
+      "points": [[64, 22], [100, 43], [64, 64], [28, 43]],
+      "fill": "#FDF2F8"
+    },
+    {
+      "desc": "사각형 2: 큐브 우측면 마름모",
+      "cmd": "polygon",
+      "points": [[64, 64], [100, 43], [100, 85], [64, 106]],
+      "fill": "#FCE7F3"
+    },
+    {
+      "desc": "사각형 3: 큐브 좌측면 마름모",
+      "cmd": "polygon",
+      "points": [[28, 43], [64, 64], [64, 106], [28, 85]],
+      "fill": "#FBCFE8"
+    },
+    {
+      "desc": "직선 1: 중심 Y축 상부 선분",
+      "cmd": "line",
+      "points": [[64, 64], [64, 22]],
+      "color": "#F472B6",
+      "width": 2
+    },
+    {
+      "desc": "직선 2: 중심 Y축 우하단 선분",
+      "cmd": "line",
+      "points": [[64, 64], [100, 85]],
+      "color": "#F472B6",
+      "width": 2
+    },
+    {
+      "desc": "직선 3: 중심 Y축 좌하단 선분",
+      "cmd": "line",
+      "points": [[64, 64], [28, 85]],
+      "color": "#F472B6",
+      "width": 2
+    },
+    {
+      "desc": "육각형 1: 외곽 윤곽 정육각형",
+      "cmd": "polygon",
+      "points": [[64, 22], [100, 43], [100, 85], [64, 106], [28, 85], [28, 43]],
+      "outline": "#F472B6",
+      "width": 3
+    },
+    {
+      "desc": "글자 1: 전면 브랜드 심볼 'A'",
+      "cmd": "text",
+      "pos": [64, 64],
+      "text": "A",
+      "font": "default-42",
+      "color": "#FF007F",
+      "stroke_width": 3,
+      "stroke_fill": "#FF007F",
+      "size": 42
+    }
+  ],
+  "body_100": { "inherit": "body" }
+}

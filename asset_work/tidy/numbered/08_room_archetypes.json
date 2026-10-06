@@ -1,0 +1,63 @@
+{
+  "START": {
+    "allowed_sizes": [
+      "SMALL",
+      "MEDIUM"
+    ],
+    "default_size": "SMALL",
+    "size_weights": null,
+    "has_combat": false,
+    "has_shop": false,
+    "portal_rule": "NONE"
+  },
+  "NORMAL": {
+    "allowed_sizes": [
+      "SMALL",
+      "MEDIUM",
+      "LARGE"
+    ],
+    "default_size": null,
+    "size_weights": {
+      "SMALL": 0.2,
+      "MEDIUM": 0.6,
+      "LARGE": 0.2
+    },
+    "has_combat": true,
+    "has_shop": false,
+    "portal_rule": "NONE"
+  },
+  "ELITE": {
+    "allowed_sizes": [
+      "MEDIUM",
+      "LARGE"
+    ],
+    "default_size": null,
+    "size_weights": {
+      "MEDIUM": 0.5,
+      "LARGE": 0.5
+    },
+    "has_combat": true,
+    "has_shop": false,
+    "portal_rule": "ON_CLEAR"
+  },
+  "SHOP": {
+    "allowed_sizes": [
+      "SMALL"
+    ],
+    "default_size": "SMALL",
+    "size_weights": null,
+    "has_combat": false,
+    "has_shop": true,
+    "portal_rule": "NONE"
+  },
+  "BOSS": {
+    "allowed_sizes": [
+      "LARGE"
+    ],
+    "default_size": "LARGE",
+    "size_weights": null,
+    "has_combat": true,
+    "has_shop": false,
+    "portal_rule": "ON_CLEAR"
+  }
+}

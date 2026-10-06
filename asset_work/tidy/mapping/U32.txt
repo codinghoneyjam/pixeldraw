@@ -1,0 +1,7 @@
+ID: U32
+PNG: assetdb/global/img/keycap/fused_keycap_hover_9slice.png
+RECIPE: pantograph_keycap_profile.json
+METHOD: RECIPE_JSON_SHARED
+TOOL: dev/tools/assets/generators/gen_pantograph_atlas.py
+COMMAND: same profile nine_patch fused_keycap_hover
+NOTE: shared pantograph profile; global copies mirror hud bake output

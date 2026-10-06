@@ -1,0 +1,6 @@
+ID: U36
+PNG: assetdb/ui/hud/keycap_screen_9slice.png
+RECIPE: hud_composite_surfaces.json
+METHOD: RECIPE_JSON_SHARED
+TOOL: dev/tools/assets/generators/gen_hud_surfaces.py
+COMMAND: python -m dev.tools.assets.generators.gen_hud_surfaces

@@ -1,0 +1,32 @@
+{
+  "sword": {
+    "rarity": "COMMON",
+    "cooldown": 1.0,
+    "base_damage": 10,
+    "attack_speed": 1.0,
+    "attack_range": 85.0,
+    "weapon_type": "melee",
+    "hit_type": "slash",
+    "signature_color_hex": "#00FFCC"
+  },
+  "bow": {
+    "rarity": "COMMON",
+    "cooldown": 1.0,
+    "base_damage": 8,
+    "attack_speed": 1.2,
+    "attack_range": 220.0,
+    "weapon_type": "ranged",
+    "hit_type": "shot",
+    "signature_color_hex": "#38BDF8"
+  },
+  "spear": {
+    "rarity": "COMMON",
+    "cooldown": 1.2,
+    "base_damage": 12,
+    "attack_speed": 0.9,
+    "attack_range": 120.0,
+    "weapon_type": "melee",
+    "hit_type": "thrust",
+    "signature_color_hex": "#F59E0B"
+  }
+}

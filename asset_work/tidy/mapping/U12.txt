@@ -1,0 +1,6 @@
+ID: U12
+PNG: assetdb/entity/enemy/kb_f_crimson_t2.png
+RECIPE: T-002.json
+METHOD: RECIPE_JSON
+TOOL: dev/tools/assets/generators/gen_enemy_assets.py
+COMMAND: python -m dev.tools.assets.generators.gen_enemy_assets --enemy T-002

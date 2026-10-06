@@ -1,0 +1,6 @@
+ID: U21
+PNG: assetdb/entity/weapon/sword_mask.png
+RECIPE: weapon_sword.json
+METHOD: RECIPE_JSON
+TOOL: dev/tools/assets/generators/gen_modular_weapons.py
+COMMAND: same shape as U20, mask output

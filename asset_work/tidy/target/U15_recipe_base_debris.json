@@ -1,0 +1,106 @@
+{
+  "canvas": 64,
+  "description": "키봇 피격 및 사망 시 산산조각 나는 조립식 기계 부품 파편 (키캡 모서리, 스위치 십자축, 다크 바이저 유리, 네온 칩)",
+  "layers": [
+    {
+      "id": "keycap_corner",
+      "type": "polygon",
+      "points": [
+        [
+          8,
+          8
+        ],
+        [
+          28,
+          6
+        ],
+        [
+          24,
+          26
+        ],
+        [
+          6,
+          22
+        ]
+      ],
+      "fill": "",
+      "outline": "",
+      "outline_width": 2
+    },
+    {
+      "id": "switch_stem",
+      "type": "polygon",
+      "points": [
+        [
+          36,
+          12
+        ],
+        [
+          46,
+          12
+        ],
+        [
+          46,
+          28
+        ],
+        [
+          36,
+          28
+        ]
+      ],
+      "fill": "#333333",
+      "outline": "#1A1A1A",
+      "outline_width": 1
+    },
+    {
+      "id": "visor_glass",
+      "type": "polygon",
+      "points": [
+        [
+          10,
+          36
+        ],
+        [
+          30,
+          32
+        ],
+        [
+          26,
+          56
+        ],
+        [
+          12,
+          52
+        ]
+      ],
+      "fill": "",
+      "outline": "",
+      "outline_width": 2
+    },
+    {
+      "id": "neon_chip",
+      "type": "polygon",
+      "points": [
+        [
+          40,
+          38
+        ],
+        [
+          54,
+          38
+        ],
+        [
+          52,
+          54
+        ],
+        [
+          38,
+          50
+        ]
+      ],
+      "fill": "",
+      "outline": "",
+      "outline_width": 1
+    }
+  ]
+}

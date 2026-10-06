@@ -1,0 +1,58 @@
+{
+  "kb_z_amber_t1": {
+    "health": 80,
+    "speed_tiles": 3.5,
+    "attack_damage": 10,
+    "attack_range_tiles": 1.4,
+    "attack_cooldown": 1.2,
+    "detection_range_tiles": 5.5,
+    "windup_duration": 0.2,
+    "ai_behavior": "chase",
+    "reward": 1,
+    "knockback_weight": 1.0,
+    "scale_multiplier": 1.0,
+    "signature_color_hex": "#F0B800"
+  },
+  "kb_f_crimson_t2": {
+    "health": 60,
+    "speed_tiles": 3.8,
+    "attack_damage": 15,
+    "attack_range_tiles": 2.6,
+    "attack_cooldown": 1.4,
+    "detection_range_tiles": 6.0,
+    "windup_duration": 0.15,
+    "ai_behavior": "dash",
+    "reward": 1,
+    "knockback_weight": 0.85,
+    "scale_multiplier": 1.0,
+    "signature_color_hex": "#FF1A38"
+  },
+  "kb_q_cobalt_t3": {
+    "health": 200,
+    "speed_tiles": 2.5,
+    "attack_damage": 25,
+    "attack_range_tiles": 4.5,
+    "attack_cooldown": 2.0,
+    "detection_range_tiles": 7.5,
+    "windup_duration": 0.35,
+    "ai_behavior": "kiting",
+    "reward": 2,
+    "knockback_weight": 0.6,
+    "scale_multiplier": 1.0,
+    "signature_color_hex": "#3388FF"
+  },
+  "kb_b_obsidian_t4": {
+    "health": 600,
+    "speed_tiles": 2.75,
+    "attack_damage": 35,
+    "attack_range_tiles": 2.2,
+    "attack_cooldown": 2.4,
+    "detection_range_tiles": 13.0,
+    "windup_duration": 0.6,
+    "ai_behavior": "chase",
+    "reward": 15,
+    "knockback_weight": 0.25,
+    "scale_multiplier": 1.8,
+    "signature_color_hex": "#FF3B30"
+  }
+}

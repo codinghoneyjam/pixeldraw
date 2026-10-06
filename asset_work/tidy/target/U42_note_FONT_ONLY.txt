@@ -1,0 +1,4 @@
+NO_JSON_RECIPE__FONT_ONLY
+tool=dev/tools/assets/generators/gen_title_assets.py:114 bake_retro_text
+input=core/asset/font/monogram.ttf 240px, canvas h=200 baseline y=145
+command: python -m dev.tools.assets.generators.gen_title_assets

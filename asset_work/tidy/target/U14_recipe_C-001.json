@@ -1,0 +1,249 @@
+{
+  "bases": [
+    "base_keycap_1u",
+    "base_visor_wrap"
+  ],
+  "face_neutral": [
+    {
+      "desc": "좌측 샤프한 사선 눈썹",
+      "cmd": "line",
+      "points": [[50, 52], [64, 57]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "우측 샤프한 사선 눈썹",
+      "cmd": "line",
+      "points": [[92, 52], [78, 57]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "좌측 사각 픽셀 눈 (우측 쏠림 웰 피팅)",
+      "cmd": "rounded_rect",
+      "box": [[52, 58], [64, 68]],
+      "radius": 2,
+      "fill": "$eye_color"
+    },
+    {
+      "desc": "우측 사각 픽셀 눈 (우측 쏠림 웰 피팅)",
+      "cmd": "rounded_rect",
+      "box": [[78, 58], [90, 68]],
+      "radius": 2,
+      "fill": "$eye_color"
+    },
+    {
+      "desc": "일자 입선 (우측 웰 중심)",
+      "cmd": "line",
+      "points": [[66, 73], [76, 73]],
+      "color": "$eye_color",
+      "width": 2
+    }
+  ],
+  "face_idle_100": [
+    {
+      "desc": "좌측 샤프한 사선 눈썹",
+      "cmd": "line",
+      "points": [[50, 52], [64, 57]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "우측 샤프한 사선 눈썹",
+      "cmd": "line",
+      "points": [[92, 52], [78, 57]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "좌측 사각 픽셀 눈",
+      "cmd": "rounded_rect",
+      "box": [[52, 58], [64, 68]],
+      "radius": 2,
+      "fill": "$eye_color"
+    },
+    {
+      "desc": "우측 사각 픽셀 눈",
+      "cmd": "rounded_rect",
+      "box": [[78, 58], [90, 68]],
+      "radius": 2,
+      "fill": "$eye_color"
+    },
+    {
+      "desc": "일자 입선",
+      "cmd": "line",
+      "points": [[66, 73], [76, 73]],
+      "color": "$eye_color",
+      "width": 2
+    }
+  ],
+  "face_idle_50": [
+    {
+      "desc": "좌측 사선 눈썹",
+      "cmd": "line",
+      "points": [[50, 52], [64, 57]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "우측 사선 눈썹",
+      "cmd": "line",
+      "points": [[92, 52], [78, 57]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "좌측 사각 픽셀 눈 (온전함)",
+      "cmd": "rounded_rect",
+      "box": [[52, 58], [64, 68]],
+      "radius": 2,
+      "fill": "$eye_color"
+    },
+    {
+      "desc": "우측 반눈 (상단 5px 인하 사각 픽셀, radius 1)",
+      "cmd": "rounded_rect",
+      "box": [[78, 63], [90, 68]],
+      "radius": 1,
+      "fill": "$eye_color"
+    },
+    {
+      "desc": "일자 입선",
+      "cmd": "line",
+      "points": [[66, 73], [76, 73]],
+      "color": "$eye_color",
+      "width": 2
+    }
+  ],
+  "face_idle_25": [
+    {
+      "desc": "좌측 사선 눈썹",
+      "cmd": "line",
+      "points": [[50, 52], [64, 57]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "우측 사선 눈썹",
+      "cmd": "line",
+      "points": [[92, 52], [78, 57]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "좌측 반눈 (상단 5px 인하 사각 픽셀, radius 1)",
+      "cmd": "rounded_rect",
+      "box": [[52, 63], [64, 68]],
+      "radius": 1,
+      "fill": "$eye_color"
+    },
+    {
+      "desc": "우측 반눈 (상단 5px 인하 사각 픽셀, radius 1)",
+      "cmd": "rounded_rect",
+      "box": [[78, 63], [90, 68]],
+      "radius": 1,
+      "fill": "$eye_color"
+    },
+    {
+      "desc": "일자 입선",
+      "cmd": "line",
+      "points": [[66, 73], [76, 73]],
+      "color": "$eye_color",
+      "width": 2
+    }
+  ],
+  "face_alert": [
+    {
+      "desc": "가파르고 날카로운 좌측 사선 눈썹",
+      "cmd": "line",
+      "points": [[46, 48], [64, 60]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "가파르고 날카로운 우측 사선 눈썹",
+      "cmd": "line",
+      "points": [[96, 48], [78, 60]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "좌측 매서운 화난 사각 픽셀 눈",
+      "cmd": "polygon",
+      "points": [[52, 56], [64, 61], [64, 68], [52, 68]],
+      "fill": "$eye_color"
+    },
+    {
+      "desc": "우측 매서운 화난 사각 픽셀 눈",
+      "cmd": "polygon",
+      "points": [[78, 61], [90, 56], [90, 68], [78, 68]],
+      "fill": "$eye_color"
+    },
+    {
+      "desc": "일자 입선 (철학 유지)",
+      "cmd": "line",
+      "points": [[66, 73], [76, 73]],
+      "color": "$eye_color",
+      "width": 2
+    }
+  ],
+  "face_damaged": [
+    {
+      "desc": "좌측 찡그린 꺾쇠 눈 상단",
+      "cmd": "line",
+      "points": [[52, 58], [62, 63]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "좌측 찡그린 꺾쇠 눈 하단",
+      "cmd": "line",
+      "points": [[62, 63], [52, 68]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "우측 찡그린 꺾쇠 눈 상단",
+      "cmd": "line",
+      "points": [[90, 58], [80, 63]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "우측 찡그린 꺾쇠 눈 하단",
+      "cmd": "line",
+      "points": [[80, 63], [90, 68]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "앙다문 입선",
+      "cmd": "line",
+      "points": [[66, 74], [76, 74]],
+      "color": "$eye_color",
+      "width": 2
+    }
+  ],
+  "face_dead": [
+    {
+      "desc": "좌측 눈 감은 일자선",
+      "cmd": "line",
+      "points": [[52, 63], [64, 63]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "우측 눈 감은 일자선",
+      "cmd": "line",
+      "points": [[78, 63], [90, 63]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "꺼진 입선",
+      "cmd": "line",
+      "points": [[68, 74], [74, 74]],
+      "color": "$eye_color",
+      "width": 2
+    }
+  ]
+}

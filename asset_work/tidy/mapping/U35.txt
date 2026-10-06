@@ -1,0 +1,6 @@
+ID: U35
+PNG: assetdb/ui/hud/hud_icons_128_atlas.png
+RECIPE: heart.json, shield.json, lightning.json, speaker.json, book.json, gear.json, stopwatch.json, diamond_gem.json, cross_mount.json, kill_skull.json, chest.json
+METHOD: RECIPE_JSONx11
+TOOL: dev/tools/assets/generators/gen_hud_icons_128.py
+COMMAND: python -m dev.tools.assets.generators.gen_hud_icons_128

@@ -1,0 +1,32 @@
+{
+ "cases": [
+  {
+   "name": "all_five_filters_6x5",
+   "png": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAAFCAYAAABmWJ3mAAAAbUlEQVR4nD3MsQnDQAwF0C/LRIQzdnccnJur4kLVNV7DQ3gIt9kk42Qr5aexQPDgfwngbIo4HojrCXwmxHdBiHXEpolhEu7tgQGsJxZyWG+003vofOJdao5SV5TapNQX7Rj/r4znpllMG+20yw+xVBVqPwoVTQAAAABJRU5ErkJggg==",
+   "width": 6,
+   "height": 5,
+   "expect_error": null,
+   "rgba_hex": "00000000280300ff500600ff78090000a00c00ffc80f00ff073200ff2f350bff573816007f3b21ffa73e2cffcf4137000e6400ff366716005e6a2cff866d42ffae705800d6736eff159600003d9921ff659c42ff8d9f6300b5a284ffdda5a5ff1cc800ff44cb2cff6cce580094d184ffbcd4b0ffe4d7dc00"
+  },
+  {
+   "name": "bad_crc",
+   "png": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAAFCAYAAABmWJ3mAAAAbUlEQVSHnD3MsQnDQAwF0C/LRIQzdnccnJur4kLVNV7DQ3gIt9kk42Qr5aexQPDgfwngbIo4HojrCXwmxHdBiHXEpolhEu7tgQGsJxZyWG+003vofOJdao5SV5TapNQX7Rj/r4znpllMG+20yw+xVBVqPwoVTQAAAABJRU5ErkJggg==",
+   "expect_error": "PNG_CRC"
+  },
+  {
+   "name": "gray_8bit_unsupported",
+   "png": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAAAAACMmsGiAAAAEElEQVR4nGNMYWBgYGJAIQAH0ABsHhdV2wAAAABJRU5ErkJggg==",
+   "expect_error": "PNG_UNSUPPORTED"
+  },
+  {
+   "name": "rgb_8bit_unsupported",
+   "png": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAIAAAAmkwkpAAAAFElEQVR4nGNkZGJmgAEmBiSAmwMAAi4ADiYq83cAAAAASUVORK5CYII=",
+   "expect_error": "PNG_UNSUPPORTED"
+  },
+  {
+   "name": "not_a_png",
+   "png": "aGVsbG8gd29ybGQsIG5vdCBhIHBuZw==",
+   "expect_error": "PNG_SIGNATURE"
+  }
+ ]
+}

@@ -1,0 +1,6 @@
+ID: U29
+PNG: assetdb/world/img/portal/portal_keycap_pressed.png
+RECIPE: portal_keycap_master.json
+METHOD: RECIPE_JSON
+TOOL: dev/tools/assets/generators/gen_portal_assets.py
+COMMAND: same command, pressed layer

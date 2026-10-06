@@ -1,0 +1,4 @@
+NO_JSON_RECIPE__NO_MANIFEST_ENTRY
+renderer exists: dev/tools/assets/generators/gen_ui_surfaces.py:112 _render_scanline_tile
+manifest assetdb/ui/data/manifests/hud_composite_surfaces.json has NO scanline entry
+current file 32x32 2-color handmade; add 32x32 entry to manifest to regenerate

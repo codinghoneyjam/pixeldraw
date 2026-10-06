@@ -1,0 +1,4 @@
+NO_JSON_RECIPE__CODE_ONLY
+tool=dev/tools/assets/generators/gen_speedster_assets.py:23 generate_shockwave_ring
+output 256x256 grayscale+alpha, tinted at runtime by Sprite2D modulate
+command: python -m dev.tools.assets.generators.gen_speedster_assets

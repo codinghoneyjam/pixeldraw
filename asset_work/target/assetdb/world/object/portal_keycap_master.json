@@ -1,0 +1,179 @@
+{
+  "name": "portal_keycap_master",
+  "type": "master_warp_keycap",
+  "dynamic_colors": {
+    "socket_plate": "#0E141C",
+    "socket_rim": "#253448",
+    "keycap_skirt_top": "#1D382B",
+    "keycap_skirt_side": "#13261D",
+    "keycap_skirt_shadow": "#0A1610",
+    "keycap_face": "#152E22",
+    "accent_neon": "#00FF88",
+    "accent_glow": "#39FF14",
+    "sky_gate_primary": "#00FF88",
+    "sky_gate_secondary": "#39FF14",
+    "core_black": "#050A07"
+  },
+  "layers": {
+    "socket": [
+      {
+        "cmd": "rounded_rect",
+        "box": [[10, 10], [118, 118]],
+        "radius": 14,
+        "fill": "$socket_plate",
+        "outline": "$socket_rim",
+        "width": 3
+      },
+      {
+        "cmd": "rounded_rect",
+        "box": [[18, 18], [110, 110]],
+        "radius": 10,
+        "fill": "#070C12",
+        "outline": "#1A2534",
+        "width": 2
+      },
+      {
+        "cmd": "circle",
+        "box": [[16, 16], [24, 24]],
+        "fill": "#4B5E78"
+      },
+      {
+        "cmd": "circle",
+        "box": [[104, 16], [112, 24]],
+        "fill": "#4B5E78"
+      },
+      {
+        "cmd": "circle",
+        "box": [[16, 104], [24, 112]],
+        "fill": "#4B5E78"
+      },
+      {
+        "cmd": "circle",
+        "box": [[104, 104], [112, 112]],
+        "fill": "#4B5E78"
+      },
+      {
+        "cmd": "rounded_rect",
+        "box": [[34, 34], [94, 94]],
+        "radius": 8,
+        "fill": "#030605",
+        "outline": "$accent_neon",
+        "width": 1
+      }
+    ],
+    "keycap_unpressed": [
+      {
+        "cmd": "polygon",
+        "points": [[16, 20], [112, 20], [98, 16], [30, 16]],
+        "fill": "$keycap_skirt_top"
+      },
+      {
+        "cmd": "polygon",
+        "points": [[16, 20], [30, 16], [30, 84], [16, 108]],
+        "fill": "$keycap_skirt_side"
+      },
+      {
+        "cmd": "polygon",
+        "points": [[112, 20], [112, 108], [98, 84], [98, 16]],
+        "fill": "$keycap_skirt_shadow"
+      },
+      {
+        "cmd": "polygon",
+        "points": [[16, 108], [30, 84], [98, 84], [112, 108]],
+        "fill": "$keycap_skirt_shadow"
+      },
+      {
+        "cmd": "rounded_rect",
+        "box": [[26, 16], [102, 86]],
+        "radius": 10,
+        "fill": "$keycap_face",
+        "outline": "$accent_neon",
+        "width": 3
+      },
+      {
+        "cmd": "rounded_rect",
+        "box": [[32, 22], [96, 80]],
+        "radius": 6,
+        "fill": null,
+        "outline": "$accent_glow",
+        "width": 1
+      },
+      {
+        "cmd": "lines",
+        "segments": [
+          {"points": [[48, 51], [80, 51]], "color": "$accent_neon", "width": 4},
+          {"points": [[64, 35], [64, 67]], "color": "$accent_neon", "width": 4},
+          {"points": [[48, 35], [56, 35]], "color": "$accent_glow", "width": 2},
+          {"points": [[48, 35], [48, 43]], "color": "$accent_glow", "width": 2},
+          {"points": [[80, 35], [72, 35]], "color": "$accent_glow", "width": 2},
+          {"points": [[80, 35], [80, 43]], "color": "$accent_glow", "width": 2},
+          {"points": [[48, 67], [56, 67]], "color": "$accent_glow", "width": 2},
+          {"points": [[48, 67], [48, 59]], "color": "$accent_glow", "width": 2},
+          {"points": [[80, 67], [72, 67]], "color": "$accent_glow", "width": 2},
+          {"points": [[80, 67], [80, 59]], "color": "$accent_glow", "width": 2}
+        ]
+      }
+    ],
+    "keycap_pressed": [
+      {
+        "cmd": "rounded_rect",
+        "box": [[20, 24], [108, 104]],
+        "radius": 12,
+        "fill": "$keycap_skirt_shadow",
+        "outline": "#0A1811",
+        "width": 2
+      },
+      {
+        "cmd": "rounded_rect",
+        "box": [[26, 32], [102, 98]],
+        "radius": 8,
+        "fill": "$core_black",
+        "outline": "$accent_glow",
+        "width": 3
+      },
+      {
+        "cmd": "lines",
+        "segments": [
+          {"points": [[50, 65], [78, 65]], "color": "$accent_glow", "width": 3},
+          {"points": [[64, 51], [64, 79]], "color": "$accent_glow", "width": 3}
+        ]
+      }
+    ],
+    "sky_gate": [
+      {
+        "cmd": "circle",
+        "box": [[12, 12], [116, 116]],
+        "fill": null,
+        "outline": "$sky_gate_primary",
+        "width": 4
+      },
+      {
+        "cmd": "circle",
+        "box": [[24, 24], [104, 104]],
+        "fill": null,
+        "outline": "$sky_gate_secondary",
+        "width": 2
+      },
+      {
+        "cmd": "circle",
+        "box": [[40, 40], [88, 88]],
+        "fill": "$core_black",
+        "outline": "$sky_gate_primary",
+        "width": 2
+      },
+      {
+        "cmd": "lines",
+        "segments": [
+          {"points": [[64, 6], [64, 18]], "color": "$sky_gate_primary", "width": 3},
+          {"points": [[64, 110], [64, 122]], "color": "$sky_gate_primary", "width": 3},
+          {"points": [[6, 64], [18, 64]], "color": "$sky_gate_primary", "width": 3},
+          {"points": [[110, 64], [122, 64]], "color": "$sky_gate_primary", "width": 3},
+          {"points": [[23, 23], [32, 32]], "color": "$sky_gate_secondary", "width": 2},
+          {"points": [[105, 23], [96, 32]], "color": "$sky_gate_secondary", "width": 2},
+          {"points": [[23, 105], [32, 96]], "color": "$sky_gate_secondary", "width": 2},
+          {"points": [[105, 105], [96, 96]], "color": "$sky_gate_secondary", "width": 2}
+        ]
+      }
+    ]
+  }
+}

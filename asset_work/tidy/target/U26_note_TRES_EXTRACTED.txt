@@ -1,0 +1,4 @@
+NO_JSON_RECIPE__TRES_EXTRACTED
+tool=dev/tools/assets/v2/migrate_assets.py:88 extract_png_from_tres
+source tres deleted after migration, 256x64 RGBA
+currently NOT regenerable from committed source; needs new JSON recipe

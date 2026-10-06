@@ -1,0 +1,31 @@
+{
+ "name": "title_logo_text_or",
+ "canvas": [
+  256,
+  224
+ ],
+ "crop": [
+  228,
+  200
+ ],
+ "layers": [
+  {
+   "id": "text",
+   "commands": [
+    {
+     "cmd": "text",
+     "text": "or",
+     "xy": [
+      24,
+      -15
+     ],
+     "font": "monogram-240",
+     "fill": "#FFFFFF",
+     "stroke": "#000000",
+     "stroke_width": 9,
+     "stroke_mode": "disk"
+    }
+   ]
+  }
+ ]
+}

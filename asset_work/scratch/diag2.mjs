@@ -1,31 +1,44 @@
+// SCRATCH diagnostic, one-off probe with no owner and not wired into any gate.
+// Kept because it is still the fastest way to see which pixels diverge for a
+// given case. If it stops answering a question, delete it rather than repair it.
 // Diagnostic 2: count colors in legacy vs drawtool; dump diff coords
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { transpileAndRender } from "./recipe/transpile.mjs";
-import { decodePng } from "../src/io/png.js";
+import { transpileAndRender } from "../../tools/recipe/transpile.mjs";
+import { decodePng } from "../../src/io/png.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// Scratch probe: assets are read from asset_work/target/, same root the gates use.
 const REPO_ROOT = path.resolve(__dirname, "..", "..");
+const TARGET_ROOT = path.join(REPO_ROOT, "asset_work", "target");
+const targetPath = (rel) => path.join(TARGET_ROOT, rel);
 
 const CASES = [
   { id: "bow_albedo", recipe: "assetdb/entity/weapon/weapon_bow.json", layer: "albedo", legacy: "assetdb/entity/weapon/bow_albedo.png" },
-  { id: "portal_keycap_unpressed", recipe: "assetdb/world/data/portal/portal_keycap_master.json", layer: "keycap_unpressed", legacy: "assetdb/world/img/portal/portal_keycap_unpressed.png" },
-  { id: "portal_keycap_pressed", recipe: "assetdb/world/data/portal/portal_keycap_master.json", layer: "keycap_pressed", legacy: "assetdb/world/img/portal/portal_keycap_pressed.png" },
+  { id: "portal_keycap_unpressed", recipe: "assetdb/world/object/portal_keycap_master.json", layer: "keycap_unpressed", legacy: "assetdb/world/img/portal/portal_keycap_unpressed.png" },
+  { id: "portal_keycap_pressed", recipe: "assetdb/world/object/portal_keycap_master.json", layer: "keycap_pressed", legacy: "assetdb/world/img/portal/portal_keycap_pressed.png" },
 ];
 
 const hex = (r, g, b) => "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("").toUpperCase();
 
+// Outputs go to a temp dir, not next to the script: this used to write
+// diag_*.png/diag_*.json straight into tools/, so every run left untracked
+// build droppings in the repo.
+const OUT_DIR = fs.mkdtempSync(path.join(os.tmpdir(), "diag2-"));
+console.log(`outputs -> ${OUT_DIR}`);
+
 for (const c of CASES) {
-  const outPng = path.join(__dirname, `diag_${c.id}.png`);
-  const outDoc = path.join(__dirname, `diag_${c.id}.json`);
+  const outPng = path.join(OUT_DIR, `diag_${c.id}.png`);
+  const outDoc = path.join(OUT_DIR, `diag_${c.id}.json`);
   await transpileAndRender({
-    recipePath: path.join(REPO_ROOT, c.recipe),
+    recipePath: targetPath(c.recipe),
     layerKey: c.layer,
     outputDocPath: outDoc,
     outputPngPath: outPng,
   });
-  const legacy = await decodePng(fs.readFileSync(path.join(REPO_ROOT, c.legacy)));
+  const legacy = await decodePng(fs.readFileSync(targetPath(c.legacy)));
   const cand = await decodePng(fs.readFileSync(outPng));
   const a = legacy.rgba, b = cand.rgba;
   const total = legacy.width * legacy.height;

@@ -1,0 +1,6 @@
+ID: U22
+PNG: assetdb/entity/weapon/bow_albedo.png
+RECIPE: weapon_bow.json
+METHOD: RECIPE_JSON
+TOOL: dev/tools/assets/generators/gen_modular_weapons.py
+COMMAND: same command, bow shape

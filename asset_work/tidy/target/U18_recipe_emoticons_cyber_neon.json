@@ -1,0 +1,67 @@
+{
+  "desc": "사이버 네온 이모티콘 3대 핵심 표정 팩 (Normal, Hurt, Dead)",
+  "face_normal": [
+    {
+      "desc": "좌측 하단 반원 눈 (기본)",
+      "cmd": "chord",
+      "box": [[45, 46], [59, 60]],
+      "start": 0,
+      "end": 180,
+      "fill": "$eye_color"
+    },
+    {
+      "desc": "우측 하단 반원 눈 (기본)",
+      "cmd": "chord",
+      "box": [[81, 46], [95, 60]],
+      "start": 0,
+      "end": 180,
+      "fill": "$eye_color"
+    }
+  ],
+  "face_hurt": [
+    {
+      "desc": "좌측 찡그린 꺾쇠 눈 상단 (>)",
+      "cmd": "line",
+      "points": [[47, 49], [56, 53]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "좌측 찡그린 꺾쇠 눈 하단 (>)",
+      "cmd": "line",
+      "points": [[56, 53], [47, 57]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "우측 찡그린 꺾쇠 눈 상단 (<)",
+      "cmd": "line",
+      "points": [[93, 49], [84, 53]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "우측 찡그린 꺾쇠 눈 하단 (<)",
+      "cmd": "line",
+      "points": [[84, 53], [93, 57]],
+      "color": "$eye_color",
+      "width": 3
+    }
+  ],
+  "face_dead": [
+    {
+      "desc": "좌측 눈 감은 수평 일자선 (—)",
+      "cmd": "line",
+      "points": [[58, 53], [46, 53]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "우측 눈 감은 수평 일자선 (—)",
+      "cmd": "line",
+      "points": [[94, 53], [82, 53]],
+      "color": "$eye_color",
+      "width": 3
+    }
+  ]
+}

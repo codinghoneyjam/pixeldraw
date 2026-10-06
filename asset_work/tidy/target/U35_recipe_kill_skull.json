@@ -1,0 +1,54 @@
+{
+  "dynamic_colors": {
+    "body_color": "#e2e8f0",
+    "glow_color": "#38bdf8"
+  },
+  "body": [
+    {
+      "desc": "해골 상단 크레인 (기계식 바이저 하우징)",
+      "cmd": "rounded_rect",
+      "box": [[30, 22], [98, 66]],
+      "radius": 16,
+      "fill": "$body_color",
+      "outline": "$body_outline",
+      "width": 3
+    },
+    {
+      "desc": "해골 하단 턱",
+      "cmd": "rounded_rect",
+      "box": [[42, 62], [86, 82]],
+      "radius": 4,
+      "fill": "$body_color",
+      "outline": "$body_outline",
+      "width": 3
+    },
+    {
+      "desc": "상단 하이라이트",
+      "cmd": "rounded_rect",
+      "box": [[36, 28], [92, 40]],
+      "radius": 8,
+      "fill": "$body_bright"
+    },
+    {
+      "desc": "좌안와 (다크 바이저)",
+      "cmd": "rounded_rect",
+      "box": [[38, 38], [56, 54]],
+      "radius": 3,
+      "fill": "$body_outline"
+    },
+    {
+      "desc": "우안와 (다크 바이저)",
+      "cmd": "rounded_rect",
+      "box": [[72, 38], [90, 54]],
+      "radius": 3,
+      "fill": "$body_outline"
+    },
+    {
+      "desc": "비강 삼각",
+      "cmd": "polygon",
+      "points": [[64, 56], [60, 62], [68, 62]],
+      "fill": "$body_outline"
+    }
+  ],
+  "body_100": { "inherit": "body" }
+}

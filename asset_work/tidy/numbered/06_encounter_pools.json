@@ -1,0 +1,56 @@
+{
+  "NORMAL": {
+    "budget_min": 6,
+    "budget_max": 10,
+    "wave_count_min": 1,
+    "wave_count_max": 2,
+    "enemies": [
+      {
+        "enemy": "kb_z_amber_t1",
+        "weight": 60,
+        "cost": 1
+      },
+      {
+        "enemy": "kb_f_crimson_t2",
+        "weight": 40,
+        "cost": 2
+      }
+    ]
+  },
+  "ELITE": {
+    "budget_min": 14,
+    "budget_max": 20,
+    "wave_count_min": 2,
+    "wave_count_max": 3,
+    "enemies": [
+      {
+        "enemy": "kb_z_amber_t1",
+        "weight": 30,
+        "cost": 1
+      },
+      {
+        "enemy": "kb_f_crimson_t2",
+        "weight": 45,
+        "cost": 2
+      },
+      {
+        "enemy": "kb_q_cobalt_t3",
+        "weight": 25,
+        "cost": 3
+      }
+    ]
+  },
+  "BOSS": {
+    "budget_min": 1,
+    "budget_max": 1,
+    "wave_count_min": 1,
+    "wave_count_max": 1,
+    "enemies": [
+      {
+        "enemy": "kb_b_obsidian_t4",
+        "weight": 100,
+        "cost": 1
+      }
+    ]
+  }
+}

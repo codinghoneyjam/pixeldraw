@@ -1,0 +1,65 @@
+{
+  "name": "spear",
+  "canvas": [128, 128],
+  "metadata": {
+    "root_socket": [64, 118],
+    "center_socket": [64, 65],
+    "tip_socket": [64, 10],
+    "reach_multiplier": 1.35
+  },
+  "palette": {
+    "$slate_dark": "#1E293B",
+    "$outline": "#0F172A",
+    "$metal_mid": "#94A3B8",
+    "$metal_light": "#E2E8F0",
+    "$neon_cyan": "#22D3EE"
+  },
+  "albedo_layers": [
+    {
+      "cmd": "rect",
+      "box": [[61, 50], [67, 120]],
+      "fill": "$slate_dark",
+      "outline": "$outline"
+    },
+    {
+      "cmd": "rect",
+      "box": [[62, 62], [66, 94]],
+      "fill": "$neon_cyan"
+    },
+    {
+      "cmd": "polygon",
+      "pts": [[64, 10], [74, 30], [68, 44], [60, 44], [54, 30]],
+      "fill": "$metal_light",
+      "outline": "$outline"
+    },
+    {
+      "cmd": "polygon",
+      "pts": [[64, 10], [60, 44], [54, 30]],
+      "fill": "$metal_mid"
+    },
+    {
+      "cmd": "polygon",
+      "pts": [[52, 44], [76, 44], [72, 50], [56, 50]],
+      "fill": "$slate_dark",
+      "outline": "$outline"
+    }
+  ],
+  "mask_layers": [
+    {
+      "cmd": "line",
+      "pts": [[54, 30], [64, 10], [74, 30]],
+      "color": [255, 0, 0, 255],
+      "width": 2
+    },
+    {
+      "cmd": "rect",
+      "box": [[62, 62], [66, 94]],
+      "fill": [0, 255, 0, 255]
+    },
+    {
+      "cmd": "rect",
+      "box": [[61, 44], [67, 50]],
+      "fill": [0, 0, 255, 255]
+    }
+  ]
+}

@@ -1,0 +1,2820 @@
+{
+ "name": "enemy_keybot_c001_sheet",
+ "canvas": [
+  2048,
+  128
+ ],
+ "palette": {
+  "body_color": "#F0B800",
+  "body_dark": "#906E00",
+  "body_deep": "#342800",
+  "body_light": "#FFE600",
+  "body_bright": "#FFE600",
+  "body_outline": "#000000",
+  "eye_color": "#FFE84D",
+  "visor_color": "#000000",
+  "glow_color": "#FFD700"
+ },
+ "export": {
+  "canvas": {
+   "width": 2048,
+   "height": 128
+  },
+  "atlas": {
+   "cell_width": 128,
+   "cell_height": 128,
+   "slots": [
+    {
+     "id": "shadow",
+     "layers": [
+      {
+       "id": "shadow",
+       "commands": [
+        {
+         "cmd": "alpha",
+         "shape": {
+          "cmd": "ellipse",
+          "box": [
+           [
+            30,
+            101
+           ],
+           [
+            98,
+            119
+           ]
+          ]
+         },
+         "color": "#FFD700",
+         "alpha": 90
+        },
+        {
+         "cmd": "alpha",
+         "shape": {
+          "cmd": "ellipse",
+          "box": [
+           [
+            33,
+            102
+           ],
+           [
+            95,
+            118
+           ]
+          ]
+         },
+         "color": "#FFD700",
+         "alpha": 240,
+         "outline": true,
+         "width": 2
+        },
+        {
+         "cmd": "alpha",
+         "shape": {
+          "cmd": "ellipse",
+          "box": [
+           [
+            36,
+            104
+           ],
+           [
+            92,
+            116
+           ]
+          ]
+         },
+         "color": "#0A0F19",
+         "alpha": 210
+        },
+        {
+         "cmd": "alpha",
+         "shape": {
+          "cmd": "ellipse",
+          "box": [
+           [
+            42,
+            106
+           ],
+           [
+            86,
+            114
+           ]
+          ]
+         },
+         "color": "#05080E",
+         "alpha": 240
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "body_100",
+     "layers": [
+      {
+       "id": "body_100",
+       "commands": [
+        {
+         "desc": "\ud0a4\ucea1 \uc0c1\ub2e8 \uacbd\uc0ac\uba74 (\ud558\uc774\ub77c\uc774\ud2b8)",
+         "cmd": "polygon",
+         "points": [
+          [
+           22,
+           16
+          ],
+          [
+           106,
+           16
+          ],
+          [
+           100,
+           26
+          ],
+          [
+           42,
+           26
+          ]
+         ],
+         "fill": "$body_bright"
+        },
+        {
+         "desc": "\ud0a4\ucea1 \uc88c\uce21 \uacbd\uc0ac\uba74 (\uc67c\ucabd\uc5d0\uc11c \ubc14\ub77c\ubd10 \ub113\uac8c \ubcf4\uc774\ub294 \uc88c\uce21 \uc2a4\ucee4\ud2b8)",
+         "cmd": "polygon",
+         "points": [
+          [
+           22,
+           16
+          ],
+          [
+           42,
+           26
+          ],
+          [
+           42,
+           82
+          ],
+          [
+           22,
+           106
+          ]
+         ],
+         "fill": "$body_dark"
+        },
+        {
+         "desc": "\ud0a4\ucea1 \uc6b0\uce21 \uacbd\uc0ac\uba74 (\uc6b0\uce21\uc73c\ub85c \uc3e0\ub824 \uc881\uac8c \ubcf4\uc774\ub294 \uc6b0\uce21 \uc2a4\ucee4\ud2b8)",
+         "cmd": "polygon",
+         "points": [
+          [
+           106,
+           16
+          ],
+          [
+           100,
+           26
+          ],
+          [
+           100,
+           82
+          ],
+          [
+           106,
+           106
+          ]
+         ],
+         "fill": "$body_dark"
+        },
+        {
+         "desc": "\ud0a4\ucea1 \ud558\ub2e8 \uacbd\uc0ac\uba74",
+         "cmd": "polygon",
+         "points": [
+          [
+           22,
+           106
+          ],
+          [
+           42,
+           82
+          ],
+          [
+           100,
+           82
+          ],
+          [
+           106,
+           106
+          ]
+         ],
+         "fill": "$body_deep"
+        },
+        {
+         "desc": "\ud0a4\ucea1 \uc0c1\ud310 \uc624\ubaa9 \uc6f0 \uba54\uc778 \ubc14\ub514 (\uc6b0\uce21\uc73c\ub85c \uc3e0\ub9b0 \uc0c1\ud310)",
+         "cmd": "rounded_rect",
+         "box": [
+          [
+           42,
+           26
+          ],
+          [
+           100,
+           82
+          ]
+         ],
+         "radius": 10,
+         "fill": "$body_color"
+        },
+        {
+         "desc": "\uc0c1\ud310 \ub0b4\ubd80 \ubbf8\uc138 \ud558\uc774\ub77c\uc774\ud2b8",
+         "cmd": "rounded_rect",
+         "box": [
+          [
+           45,
+           29
+          ],
+          [
+           97,
+           79
+          ]
+         ],
+         "radius": 8,
+         "fill": "$body_bright"
+        },
+        {
+         "desc": "4\uac1c \ucf54\ub108 \uc0ac\uc120 \ubca0\ubca8 \ub77c\uc778 \uc88c\uc0c1",
+         "cmd": "line",
+         "points": [
+          [
+           22,
+           16
+          ],
+          [
+           42,
+           26
+          ]
+         ],
+         "color": "#000000",
+         "width": 2
+        },
+        {
+         "desc": "4\uac1c \ucf54\ub108 \uc0ac\uc120 \ubca0\ubca8 \ub77c\uc778 \uc6b0\uc0c1",
+         "cmd": "line",
+         "points": [
+          [
+           106,
+           16
+          ],
+          [
+           100,
+           26
+          ]
+         ],
+         "color": "#000000",
+         "width": 2
+        },
+        {
+         "desc": "4\uac1c \ucf54\ub108 \uc0ac\uc120 \ubca0\ubca8 \ub77c\uc778 \uc88c\ud558",
+         "cmd": "line",
+         "points": [
+          [
+           22,
+           106
+          ],
+          [
+           42,
+           82
+          ]
+         ],
+         "color": "#000000",
+         "width": 2
+        },
+        {
+         "desc": "4\uac1c \ucf54\ub108 \uc0ac\uc120 \ubca0\ubca8 \ub77c\uc778 \uc6b0\ud558",
+         "cmd": "line",
+         "points": [
+          [
+           106,
+           106
+          ],
+          [
+           100,
+           82
+          ]
+         ],
+         "color": "#000000",
+         "width": 2
+        },
+        {
+         "cmd": "clip_alpha",
+         "shape": {
+          "cmd": "rounded_rect",
+          "box": [
+           [
+            22,
+            16
+           ],
+           [
+            106,
+            106
+           ]
+          ],
+          "radius": 14,
+          "fill": "#FFFFFF"
+         }
+        },
+        {
+         "cmd": "rounded_rect",
+         "box": [
+          [
+           22,
+           16
+          ],
+          [
+           106,
+           106
+          ]
+         ],
+         "radius": 14,
+         "outline": "#000000",
+         "width": 3
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "body_50",
+     "layers": [
+      {
+       "id": "body_50",
+       "commands": [
+        {
+         "desc": "\ud0a4\ucea1 \uc0c1\ub2e8 \uacbd\uc0ac\uba74 (\ud558\uc774\ub77c\uc774\ud2b8)",
+         "cmd": "polygon",
+         "points": [
+          [
+           22,
+           16
+          ],
+          [
+           106,
+           16
+          ],
+          [
+           100,
+           26
+          ],
+          [
+           42,
+           26
+          ]
+         ],
+         "fill": "$body_bright"
+        },
+        {
+         "desc": "\ud0a4\ucea1 \uc88c\uce21 \uacbd\uc0ac\uba74 (\uc67c\ucabd\uc5d0\uc11c \ubc14\ub77c\ubd10 \ub113\uac8c \ubcf4\uc774\ub294 \uc88c\uce21 \uc2a4\ucee4\ud2b8)",
+         "cmd": "polygon",
+         "points": [
+          [
+           22,
+           16
+          ],
+          [
+           42,
+           26
+          ],
+          [
+           42,
+           82
+          ],
+          [
+           22,
+           106
+          ]
+         ],
+         "fill": "$body_dark"
+        },
+        {
+         "desc": "\ud0a4\ucea1 \uc6b0\uce21 \uacbd\uc0ac\uba74 (\uc6b0\uce21\uc73c\ub85c \uc3e0\ub824 \uc881\uac8c \ubcf4\uc774\ub294 \uc6b0\uce21 \uc2a4\ucee4\ud2b8)",
+         "cmd": "polygon",
+         "points": [
+          [
+           106,
+           16
+          ],
+          [
+           100,
+           26
+          ],
+          [
+           100,
+           82
+          ],
+          [
+           106,
+           106
+          ]
+         ],
+         "fill": "$body_dark"
+        },
+        {
+         "desc": "\ud0a4\ucea1 \ud558\ub2e8 \uacbd\uc0ac\uba74",
+         "cmd": "polygon",
+         "points": [
+          [
+           22,
+           106
+          ],
+          [
+           42,
+           82
+          ],
+          [
+           100,
+           82
+          ],
+          [
+           106,
+           106
+          ]
+         ],
+         "fill": "$body_deep"
+        },
+        {
+         "desc": "\ud0a4\ucea1 \uc0c1\ud310 \uc624\ubaa9 \uc6f0 \uba54\uc778 \ubc14\ub514 (\uc6b0\uce21\uc73c\ub85c \uc3e0\ub9b0 \uc0c1\ud310)",
+         "cmd": "rounded_rect",
+         "box": [
+          [
+           42,
+           26
+          ],
+          [
+           100,
+           82
+          ]
+         ],
+         "radius": 10,
+         "fill": "$body_color"
+        },
+        {
+         "desc": "\uc0c1\ud310 \ub0b4\ubd80 \ubbf8\uc138 \ud558\uc774\ub77c\uc774\ud2b8",
+         "cmd": "rounded_rect",
+         "box": [
+          [
+           45,
+           29
+          ],
+          [
+           97,
+           79
+          ]
+         ],
+         "radius": 8,
+         "fill": "$body_bright"
+        },
+        {
+         "desc": "4\uac1c \ucf54\ub108 \uc0ac\uc120 \ubca0\ubca8 \ub77c\uc778 \uc88c\uc0c1",
+         "cmd": "line",
+         "points": [
+          [
+           22,
+           16
+          ],
+          [
+           42,
+           26
+          ]
+         ],
+         "color": "#000000",
+         "width": 2
+        },
+        {
+         "desc": "4\uac1c \ucf54\ub108 \uc0ac\uc120 \ubca0\ubca8 \ub77c\uc778 \uc6b0\uc0c1",
+         "cmd": "line",
+         "points": [
+          [
+           106,
+           16
+          ],
+          [
+           100,
+           26
+          ]
+         ],
+         "color": "#000000",
+         "width": 2
+        },
+        {
+         "desc": "4\uac1c \ucf54\ub108 \uc0ac\uc120 \ubca0\ubca8 \ub77c\uc778 \uc88c\ud558",
+         "cmd": "line",
+         "points": [
+          [
+           22,
+           106
+          ],
+          [
+           42,
+           82
+          ]
+         ],
+         "color": "#000000",
+         "width": 2
+        },
+        {
+         "desc": "4\uac1c \ucf54\ub108 \uc0ac\uc120 \ubca0\ubca8 \ub77c\uc778 \uc6b0\ud558",
+         "cmd": "line",
+         "points": [
+          [
+           106,
+           106
+          ],
+          [
+           100,
+           82
+          ]
+         ],
+         "color": "#000000",
+         "width": 2
+        },
+        {
+         "desc": "\uc88c\uc0c1\ub2e8 \uc6f0 \uacbd\uacc4 \uc2dc\uc791 \ub098\ubb47\uac00\uc9c0\ud615 \ubd84\uae30 \ud06c\ub799",
+         "cmd": "lines",
+         "segments": [
+          {
+           "points": [
+            [
+             36,
+             32
+            ],
+            [
+             48,
+             44
+            ]
+           ],
+           "color": "#000000",
+           "width": 2
+          },
+          {
+           "points": [
+            [
+             48,
+             44
+            ],
+            [
+             62,
+             54
+            ]
+           ],
+           "color": "#000000",
+           "width": 2
+          },
+          {
+           "points": [
+            [
+             48,
+             44
+            ],
+            [
+             42,
+             60
+            ]
+           ],
+           "color": "#000000",
+           "width": 2
+          },
+          {
+           "points": [
+            [
+             62,
+             54
+            ],
+            [
+             78,
+             60
+            ]
+           ],
+           "color": "#000000",
+           "width": 2
+          }
+         ]
+        },
+        {
+         "cmd": "clip_alpha",
+         "shape": {
+          "cmd": "rounded_rect",
+          "box": [
+           [
+            22,
+            16
+           ],
+           [
+            106,
+            106
+           ]
+          ],
+          "radius": 14,
+          "fill": "#FFFFFF"
+         }
+        },
+        {
+         "cmd": "rounded_rect",
+         "box": [
+          [
+           22,
+           16
+          ],
+          [
+           106,
+           106
+          ]
+         ],
+         "radius": 14,
+         "outline": "#000000",
+         "width": 3
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "body_25",
+     "layers": [
+      {
+       "id": "body_25",
+       "commands": [
+        {
+         "desc": "\ud0a4\ucea1 \uc0c1\ub2e8 \uacbd\uc0ac\uba74 (\ud558\uc774\ub77c\uc774\ud2b8)",
+         "cmd": "polygon",
+         "points": [
+          [
+           22,
+           16
+          ],
+          [
+           106,
+           16
+          ],
+          [
+           100,
+           26
+          ],
+          [
+           42,
+           26
+          ]
+         ],
+         "fill": "$body_bright"
+        },
+        {
+         "desc": "\ud0a4\ucea1 \uc88c\uce21 \uacbd\uc0ac\uba74 (\uc67c\ucabd\uc5d0\uc11c \ubc14\ub77c\ubd10 \ub113\uac8c \ubcf4\uc774\ub294 \uc88c\uce21 \uc2a4\ucee4\ud2b8)",
+         "cmd": "polygon",
+         "points": [
+          [
+           22,
+           16
+          ],
+          [
+           42,
+           26
+          ],
+          [
+           42,
+           82
+          ],
+          [
+           22,
+           106
+          ]
+         ],
+         "fill": "$body_dark"
+        },
+        {
+         "desc": "\ud0a4\ucea1 \uc6b0\uce21 \uacbd\uc0ac\uba74 (\uc6b0\uce21\uc73c\ub85c \uc3e0\ub824 \uc881\uac8c \ubcf4\uc774\ub294 \uc6b0\uce21 \uc2a4\ucee4\ud2b8)",
+         "cmd": "polygon",
+         "points": [
+          [
+           106,
+           16
+          ],
+          [
+           100,
+           26
+          ],
+          [
+           100,
+           82
+          ],
+          [
+           106,
+           106
+          ]
+         ],
+         "fill": "$body_dark"
+        },
+        {
+         "desc": "\ud0a4\ucea1 \ud558\ub2e8 \uacbd\uc0ac\uba74",
+         "cmd": "polygon",
+         "points": [
+          [
+           22,
+           106
+          ],
+          [
+           42,
+           82
+          ],
+          [
+           100,
+           82
+          ],
+          [
+           106,
+           106
+          ]
+         ],
+         "fill": "$body_deep"
+        },
+        {
+         "desc": "\ud0a4\ucea1 \uc0c1\ud310 \uc624\ubaa9 \uc6f0 \uba54\uc778 \ubc14\ub514 (\uc6b0\uce21\uc73c\ub85c \uc3e0\ub9b0 \uc0c1\ud310)",
+         "cmd": "rounded_rect",
+         "box": [
+          [
+           42,
+           26
+          ],
+          [
+           100,
+           82
+          ]
+         ],
+         "radius": 10,
+         "fill": "$body_color"
+        },
+        {
+         "desc": "\uc0c1\ud310 \ub0b4\ubd80 \ubbf8\uc138 \ud558\uc774\ub77c\uc774\ud2b8",
+         "cmd": "rounded_rect",
+         "box": [
+          [
+           45,
+           29
+          ],
+          [
+           97,
+           79
+          ]
+         ],
+         "radius": 8,
+         "fill": "$body_bright"
+        },
+        {
+         "desc": "4\uac1c \ucf54\ub108 \uc0ac\uc120 \ubca0\ubca8 \ub77c\uc778 \uc88c\uc0c1",
+         "cmd": "line",
+         "points": [
+          [
+           22,
+           16
+          ],
+          [
+           42,
+           26
+          ]
+         ],
+         "color": "#000000",
+         "width": 2
+        },
+        {
+         "desc": "4\uac1c \ucf54\ub108 \uc0ac\uc120 \ubca0\ubca8 \ub77c\uc778 \uc6b0\uc0c1",
+         "cmd": "line",
+         "points": [
+          [
+           106,
+           16
+          ],
+          [
+           100,
+           26
+          ]
+         ],
+         "color": "#000000",
+         "width": 2
+        },
+        {
+         "desc": "4\uac1c \ucf54\ub108 \uc0ac\uc120 \ubca0\ubca8 \ub77c\uc778 \uc88c\ud558",
+         "cmd": "line",
+         "points": [
+          [
+           22,
+           106
+          ],
+          [
+           42,
+           82
+          ]
+         ],
+         "color": "#000000",
+         "width": 2
+        },
+        {
+         "desc": "4\uac1c \ucf54\ub108 \uc0ac\uc120 \ubca0\ubca8 \ub77c\uc778 \uc6b0\ud558",
+         "cmd": "line",
+         "points": [
+          [
+           106,
+           106
+          ],
+          [
+           100,
+           82
+          ]
+         ],
+         "color": "#000000",
+         "width": 2
+        },
+        {
+         "desc": "\uc88c\uc0c1\ub2e8 \uc6f0 \uacbd\uacc4 \uc2dc\uc791 \ub098\ubb47\uac00\uc9c0\ud615 \ubd84\uae30 \ud06c\ub799",
+         "cmd": "lines",
+         "segments": [
+          {
+           "points": [
+            [
+             36,
+             32
+            ],
+            [
+             48,
+             44
+            ]
+           ],
+           "color": "#000000",
+           "width": 2
+          },
+          {
+           "points": [
+            [
+             48,
+             44
+            ],
+            [
+             62,
+             54
+            ]
+           ],
+           "color": "#000000",
+           "width": 2
+          },
+          {
+           "points": [
+            [
+             48,
+             44
+            ],
+            [
+             42,
+             60
+            ]
+           ],
+           "color": "#000000",
+           "width": 2
+          },
+          {
+           "points": [
+            [
+             62,
+             54
+            ],
+            [
+             78,
+             60
+            ]
+           ],
+           "color": "#000000",
+           "width": 2
+          }
+         ]
+        },
+        {
+         "desc": "\ud558\ub2e8 \uc2a4\ucee4\ud2b8 \ubc0f \uad00\ud1b5 \ucd94\uac00 \uac00\uc9c0",
+         "cmd": "lines",
+         "segments": [
+          {
+           "points": [
+            [
+             62,
+             54
+            ],
+            [
+             68,
+             76
+            ]
+           ],
+           "color": "#000000",
+           "width": 2
+          },
+          {
+           "points": [
+            [
+             68,
+             76
+            ],
+            [
+             82,
+             92
+            ]
+           ],
+           "color": "#000000",
+           "width": 2
+          },
+          {
+           "points": [
+            [
+             42,
+             60
+            ],
+            [
+             32,
+             74
+            ]
+           ],
+           "color": "#000000",
+           "width": 2
+          },
+          {
+           "points": [
+            [
+             68,
+             76
+            ],
+            [
+             56,
+             84
+            ]
+           ],
+           "color": "#000000",
+           "width": 2
+          }
+         ]
+        },
+        {
+         "cmd": "clip_alpha",
+         "shape": {
+          "cmd": "rounded_rect",
+          "box": [
+           [
+            22,
+            16
+           ],
+           [
+            106,
+            106
+           ]
+          ],
+          "radius": 14,
+          "fill": "#FFFFFF"
+         }
+        },
+        {
+         "cmd": "rounded_rect",
+         "box": [
+          [
+           22,
+           16
+          ],
+          [
+           106,
+           106
+          ]
+         ],
+         "radius": 14,
+         "outline": "#000000",
+         "width": 3
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "visor_100",
+     "layers": [
+      {
+       "id": "visor_100",
+       "commands": [
+        {
+         "cmd": "visor",
+         "shape": {
+          "cmd": "polygon",
+          "points": [
+           [
+            14,
+            40
+           ],
+           [
+            42,
+            50
+           ],
+           [
+            100,
+            50
+           ],
+           [
+            112,
+            40
+           ],
+           [
+            112,
+            70
+           ],
+           [
+            100,
+            80
+           ],
+           [
+            42,
+            80
+           ],
+           [
+            14,
+            70
+           ]
+          ],
+          "fill": "#000000",
+          "outline": "$glow_color",
+          "width": 3
+         },
+         "crt_lines": {
+          "y_range": [
+           44,
+           76,
+           3
+          ],
+          "x_range": [
+           18,
+           108
+          ]
+         }
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "visor_50",
+     "layers": [
+      {
+       "id": "visor_50",
+       "commands": [
+        {
+         "cmd": "visor",
+         "shape": {
+          "cmd": "polygon",
+          "points": [
+           [
+            14,
+            40
+           ],
+           [
+            42,
+            50
+           ],
+           [
+            100,
+            50
+           ],
+           [
+            112,
+            40
+           ],
+           [
+            112,
+            70
+           ],
+           [
+            100,
+            80
+           ],
+           [
+            42,
+            80
+           ],
+           [
+            14,
+            70
+           ]
+          ],
+          "fill": "#000000",
+          "outline": "$glow_color",
+          "width": 3
+         },
+         "crt_lines": {
+          "y_range": [
+           44,
+           76,
+           3
+          ],
+          "x_range": [
+           18,
+           108
+          ]
+         }
+        },
+        {
+         "cmd": "erase",
+         "points": [
+          [
+           98,
+           48
+          ],
+          [
+           114,
+           38
+          ],
+          [
+           114,
+           58
+          ],
+          [
+           102,
+           58
+          ]
+         ]
+        },
+        {
+         "desc": "\uc6b0\uc0c1\ub2e8 \ucef7\uc544\uc6c3 \ub2e8\uba74 \ud30c\uc190\uc120",
+         "cmd": "lines",
+         "segments": [
+          {
+           "points": [
+            [
+             98,
+             48
+            ],
+            [
+             102,
+             58
+            ]
+           ],
+           "color": "$glow_color",
+           "width": 2
+          },
+          {
+           "points": [
+            [
+             102,
+             58
+            ],
+            [
+             114,
+             58
+            ]
+           ],
+           "color": "$glow_color",
+           "width": 2
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "visor_25",
+     "layers": [
+      {
+       "id": "visor_25",
+       "commands": [
+        {
+         "cmd": "visor",
+         "shape": {
+          "cmd": "polygon",
+          "points": [
+           [
+            14,
+            40
+           ],
+           [
+            42,
+            50
+           ],
+           [
+            100,
+            50
+           ],
+           [
+            112,
+            40
+           ],
+           [
+            112,
+            70
+           ],
+           [
+            100,
+            80
+           ],
+           [
+            42,
+            80
+           ],
+           [
+            14,
+            70
+           ]
+          ],
+          "fill": "#000000",
+          "outline": "$glow_color",
+          "width": 3
+         },
+         "crt_lines": {
+          "y_range": [
+           44,
+           76,
+           3
+          ],
+          "x_range": [
+           18,
+           108
+          ]
+         }
+        },
+        {
+         "cmd": "erase",
+         "points": [
+          [
+           98,
+           48
+          ],
+          [
+           114,
+           38
+          ],
+          [
+           114,
+           58
+          ],
+          [
+           102,
+           58
+          ]
+         ]
+        },
+        {
+         "desc": "\uc6b0\uc0c1\ub2e8 \ucef7\uc544\uc6c3 \ub2e8\uba74 \ud30c\uc190\uc120",
+         "cmd": "lines",
+         "segments": [
+          {
+           "points": [
+            [
+             98,
+             48
+            ],
+            [
+             102,
+             58
+            ]
+           ],
+           "color": "$glow_color",
+           "width": 2
+          },
+          {
+           "points": [
+            [
+             102,
+             58
+            ],
+            [
+             114,
+             58
+            ]
+           ],
+           "color": "$glow_color",
+           "width": 2
+          }
+         ]
+        },
+        {
+         "cmd": "erase",
+         "points": [
+          [
+           12,
+           58
+          ],
+          [
+           30,
+           72
+          ],
+          [
+           36,
+           82
+          ],
+          [
+           12,
+           82
+          ]
+         ]
+        },
+        {
+         "desc": "\uc88c\ud558\ub2e8 \ucef7\uc544\uc6c3 \ub2e8\uba74 \ud30c\uc190\uc120 \ubc0f \uad00\ud1b5\uc120",
+         "cmd": "lines",
+         "segments": [
+          {
+           "points": [
+            [
+             12,
+             58
+            ],
+            [
+             30,
+             72
+            ]
+           ],
+           "color": "$glow_color",
+           "width": 2
+          },
+          {
+           "points": [
+            [
+             30,
+             72
+            ],
+            [
+             36,
+             82
+            ]
+           ],
+           "color": "$glow_color",
+           "width": 2
+          },
+          {
+           "points": [
+            [
+             60,
+             50
+            ],
+            [
+             72,
+             64
+            ]
+           ],
+           "color": "$glow_color",
+           "width": 2
+          },
+          {
+           "points": [
+            [
+             72,
+             64
+            ],
+            [
+             66,
+             78
+            ]
+           ],
+           "color": "$glow_color",
+           "width": 2
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "visor_flipped",
+     "layers": [
+      {
+       "id": "visor_flipped",
+       "commands": [
+        {
+         "desc": "\uc88c\uce21 \uc811\ud78c \ub0a0\uac1c",
+         "cmd": "polygon",
+         "points": [
+          [
+           18,
+           22
+          ],
+          [
+           38,
+           16
+          ],
+          [
+           38,
+           42
+          ],
+          [
+           18,
+           36
+          ]
+         ],
+         "fill": "#000000",
+         "outline": "$glow_color",
+         "width": 3
+        },
+        {
+         "desc": "\uc6b0\uce21 \uc811\ud78c \ub0a0\uac1c",
+         "cmd": "polygon",
+         "points": [
+          [
+           90,
+           16
+          ],
+          [
+           110,
+           22
+          ],
+          [
+           110,
+           36
+          ],
+          [
+           90,
+           42
+          ]
+         ],
+         "fill": "#000000",
+         "outline": "$glow_color",
+         "width": 3
+        },
+        {
+         "desc": "\uc911\uc559 \uba54\uc778 \ubc14\ub514",
+         "cmd": "polygon",
+         "points": [
+          [
+           38,
+           16
+          ],
+          [
+           90,
+           16
+          ],
+          [
+           90,
+           42
+          ],
+          [
+           38,
+           42
+          ]
+         ],
+         "fill": "#000000",
+         "outline": "$glow_color",
+         "width": 3
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "face_idle_100",
+     "layers": [
+      {
+       "id": "face_idle_100",
+       "commands": [
+        {
+         "desc": "\uc88c\uce21 \uc0e4\ud504\ud55c \uc0ac\uc120 \ub208\uc379",
+         "cmd": "line",
+         "points": [
+          [
+           50,
+           52
+          ],
+          [
+           64,
+           57
+          ]
+         ],
+         "color": "$eye_color",
+         "width": 3
+        },
+        {
+         "desc": "\uc6b0\uce21 \uc0e4\ud504\ud55c \uc0ac\uc120 \ub208\uc379",
+         "cmd": "line",
+         "points": [
+          [
+           92,
+           52
+          ],
+          [
+           78,
+           57
+          ]
+         ],
+         "color": "$eye_color",
+         "width": 3
+        },
+        {
+         "desc": "\uc88c\uce21 \uc0ac\uac01 \ud53d\uc140 \ub208",
+         "cmd": "rounded_rect",
+         "box": [
+          [
+           52,
+           58
+          ],
+          [
+           64,
+           68
+          ]
+         ],
+         "radius": 2,
+         "fill": "$eye_color"
+        },
+        {
+         "desc": "\uc6b0\uce21 \uc0ac\uac01 \ud53d\uc140 \ub208",
+         "cmd": "rounded_rect",
+         "box": [
+          [
+           78,
+           58
+          ],
+          [
+           90,
+           68
+          ]
+         ],
+         "radius": 2,
+         "fill": "$eye_color"
+        },
+        {
+         "desc": "\uc77c\uc790 \uc785\uc120",
+         "cmd": "line",
+         "points": [
+          [
+           66,
+           73
+          ],
+          [
+           76,
+           73
+          ]
+         ],
+         "color": "$eye_color",
+         "width": 2
+        },
+        {
+         "cmd": "sheen",
+         "shape": {
+          "cmd": "polygon",
+          "points": [
+           [
+            14,
+            40
+           ],
+           [
+            42,
+            50
+           ],
+           [
+            100,
+            50
+           ],
+           [
+            112,
+            40
+           ],
+           [
+            112,
+            70
+           ],
+           [
+            100,
+            80
+           ],
+           [
+            42,
+            80
+           ],
+           [
+            14,
+            70
+           ]
+          ],
+          "fill": "#000000",
+          "outline": "$glow_color",
+          "width": 3
+         },
+         "p1": [
+          44,
+          44
+         ],
+         "p2": [
+          34,
+          76
+         ],
+         "dx": 6
+        },
+        {
+         "cmd": "hud_brackets",
+         "visor_shape": {
+          "cmd": "polygon",
+          "points": [
+           [
+            14,
+            40
+           ],
+           [
+            42,
+            50
+           ],
+           [
+            100,
+            50
+           ],
+           [
+            112,
+            40
+           ],
+           [
+            112,
+            70
+           ],
+           [
+            100,
+            80
+           ],
+           [
+            42,
+            80
+           ],
+           [
+            14,
+            70
+           ]
+          ],
+          "fill": "#000000",
+          "outline": "$glow_color",
+          "width": 3
+         },
+         "box": [
+          [
+           46,
+           52
+          ],
+          [
+           96,
+           78
+          ]
+         ],
+         "arm": 5,
+         "color": [
+          255,
+          255,
+          255,
+          220
+         ],
+         "width": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "face_idle_50",
+     "layers": [
+      {
+       "id": "face_idle_50",
+       "commands": [
+        {
+         "desc": "\uc88c\uce21 \uc0ac\uc120 \ub208\uc379",
+         "cmd": "line",
+         "points": [
+          [
+           50,
+           52
+          ],
+          [
+           64,
+           57
+          ]
+         ],
+         "color": "$eye_color",
+         "width": 3
+        },
+        {
+         "desc": "\uc6b0\uce21 \uc0ac\uc120 \ub208\uc379",
+         "cmd": "line",
+         "points": [
+          [
+           92,
+           52
+          ],
+          [
+           78,
+           57
+          ]
+         ],
+         "color": "$eye_color",
+         "width": 3
+        },
+        {
+         "desc": "\uc88c\uce21 \uc0ac\uac01 \ud53d\uc140 \ub208 (\uc628\uc804\ud568)",
+         "cmd": "rounded_rect",
+         "box": [
+          [
+           52,
+           58
+          ],
+          [
+           64,
+           68
+          ]
+         ],
+         "radius": 2,
+         "fill": "$eye_color"
+        },
+        {
+         "desc": "\uc6b0\uce21 \ubc18\ub208 (\uc0c1\ub2e8 5px \uc778\ud558 \uc0ac\uac01 \ud53d\uc140, radius 1)",
+         "cmd": "rounded_rect",
+         "box": [
+          [
+           78,
+           63
+          ],
+          [
+           90,
+           68
+          ]
+         ],
+         "radius": 1,
+         "fill": "$eye_color"
+        },
+        {
+         "desc": "\uc77c\uc790 \uc785\uc120",
+         "cmd": "line",
+         "points": [
+          [
+           66,
+           73
+          ],
+          [
+           76,
+           73
+          ]
+         ],
+         "color": "$eye_color",
+         "width": 2
+        },
+        {
+         "cmd": "sheen",
+         "shape": {
+          "cmd": "polygon",
+          "points": [
+           [
+            14,
+            40
+           ],
+           [
+            42,
+            50
+           ],
+           [
+            100,
+            50
+           ],
+           [
+            112,
+            40
+           ],
+           [
+            112,
+            70
+           ],
+           [
+            100,
+            80
+           ],
+           [
+            42,
+            80
+           ],
+           [
+            14,
+            70
+           ]
+          ],
+          "fill": "#000000",
+          "outline": "$glow_color",
+          "width": 3
+         },
+         "p1": [
+          44,
+          44
+         ],
+         "p2": [
+          34,
+          76
+         ],
+         "dx": 6
+        },
+        {
+         "cmd": "hud_brackets",
+         "visor_shape": {
+          "cmd": "polygon",
+          "points": [
+           [
+            14,
+            40
+           ],
+           [
+            42,
+            50
+           ],
+           [
+            100,
+            50
+           ],
+           [
+            112,
+            40
+           ],
+           [
+            112,
+            70
+           ],
+           [
+            100,
+            80
+           ],
+           [
+            42,
+            80
+           ],
+           [
+            14,
+            70
+           ]
+          ],
+          "fill": "#000000",
+          "outline": "$glow_color",
+          "width": 3
+         },
+         "box": [
+          [
+           46,
+           52
+          ],
+          [
+           96,
+           78
+          ]
+         ],
+         "arm": 5,
+         "color": [
+          255,
+          255,
+          255,
+          220
+         ],
+         "width": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "face_idle_25",
+     "layers": [
+      {
+       "id": "face_idle_25",
+       "commands": [
+        {
+         "desc": "\uc88c\uce21 \uc0ac\uc120 \ub208\uc379",
+         "cmd": "line",
+         "points": [
+          [
+           50,
+           52
+          ],
+          [
+           64,
+           57
+          ]
+         ],
+         "color": "$eye_color",
+         "width": 3
+        },
+        {
+         "desc": "\uc6b0\uce21 \uc0ac\uc120 \ub208\uc379",
+         "cmd": "line",
+         "points": [
+          [
+           92,
+           52
+          ],
+          [
+           78,
+           57
+          ]
+         ],
+         "color": "$eye_color",
+         "width": 3
+        },
+        {
+         "desc": "\uc88c\uce21 \ubc18\ub208 (\uc0c1\ub2e8 5px \uc778\ud558 \uc0ac\uac01 \ud53d\uc140, radius 1)",
+         "cmd": "rounded_rect",
+         "box": [
+          [
+           52,
+           63
+          ],
+          [
+           64,
+           68
+          ]
+         ],
+         "radius": 1,
+         "fill": "$eye_color"
+        },
+        {
+         "desc": "\uc6b0\uce21 \ubc18\ub208 (\uc0c1\ub2e8 5px \uc778\ud558 \uc0ac\uac01 \ud53d\uc140, radius 1)",
+         "cmd": "rounded_rect",
+         "box": [
+          [
+           78,
+           63
+          ],
+          [
+           90,
+           68
+          ]
+         ],
+         "radius": 1,
+         "fill": "$eye_color"
+        },
+        {
+         "desc": "\uc77c\uc790 \uc785\uc120",
+         "cmd": "line",
+         "points": [
+          [
+           66,
+           73
+          ],
+          [
+           76,
+           73
+          ]
+         ],
+         "color": "$eye_color",
+         "width": 2
+        },
+        {
+         "cmd": "sheen",
+         "shape": {
+          "cmd": "polygon",
+          "points": [
+           [
+            14,
+            40
+           ],
+           [
+            42,
+            50
+           ],
+           [
+            100,
+            50
+           ],
+           [
+            112,
+            40
+           ],
+           [
+            112,
+            70
+           ],
+           [
+            100,
+            80
+           ],
+           [
+            42,
+            80
+           ],
+           [
+            14,
+            70
+           ]
+          ],
+          "fill": "#000000",
+          "outline": "$glow_color",
+          "width": 3
+         },
+         "p1": [
+          44,
+          44
+         ],
+         "p2": [
+          34,
+          76
+         ],
+         "dx": 6
+        },
+        {
+         "cmd": "hud_brackets",
+         "visor_shape": {
+          "cmd": "polygon",
+          "points": [
+           [
+            14,
+            40
+           ],
+           [
+            42,
+            50
+           ],
+           [
+            100,
+            50
+           ],
+           [
+            112,
+            40
+           ],
+           [
+            112,
+            70
+           ],
+           [
+            100,
+            80
+           ],
+           [
+            42,
+            80
+           ],
+           [
+            14,
+            70
+           ]
+          ],
+          "fill": "#000000",
+          "outline": "$glow_color",
+          "width": 3
+         },
+         "box": [
+          [
+           46,
+           52
+          ],
+          [
+           96,
+           78
+          ]
+         ],
+         "arm": 5,
+         "color": [
+          255,
+          255,
+          255,
+          220
+         ],
+         "width": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "face_alert",
+     "layers": [
+      {
+       "id": "face_alert",
+       "commands": [
+        {
+         "desc": "\uac00\ud30c\ub974\uace0 \ub0a0\uce74\ub85c\uc6b4 \uc88c\uce21 \uc0ac\uc120 \ub208\uc379",
+         "cmd": "line",
+         "points": [
+          [
+           46,
+           48
+          ],
+          [
+           64,
+           60
+          ]
+         ],
+         "color": "$eye_color",
+         "width": 3
+        },
+        {
+         "desc": "\uac00\ud30c\ub974\uace0 \ub0a0\uce74\ub85c\uc6b4 \uc6b0\uce21 \uc0ac\uc120 \ub208\uc379",
+         "cmd": "line",
+         "points": [
+          [
+           96,
+           48
+          ],
+          [
+           78,
+           60
+          ]
+         ],
+         "color": "$eye_color",
+         "width": 3
+        },
+        {
+         "desc": "\uc88c\uce21 \ub9e4\uc11c\uc6b4 \ud654\ub09c \uc0ac\uac01 \ud53d\uc140 \ub208",
+         "cmd": "polygon",
+         "points": [
+          [
+           52,
+           56
+          ],
+          [
+           64,
+           61
+          ],
+          [
+           64,
+           68
+          ],
+          [
+           52,
+           68
+          ]
+         ],
+         "fill": "$eye_color"
+        },
+        {
+         "desc": "\uc6b0\uce21 \ub9e4\uc11c\uc6b4 \ud654\ub09c \uc0ac\uac01 \ud53d\uc140 \ub208",
+         "cmd": "polygon",
+         "points": [
+          [
+           78,
+           61
+          ],
+          [
+           90,
+           56
+          ],
+          [
+           90,
+           68
+          ],
+          [
+           78,
+           68
+          ]
+         ],
+         "fill": "$eye_color"
+        },
+        {
+         "desc": "\uc77c\uc790 \uc785\uc120 (\ucca0\ud559 \uc720\uc9c0)",
+         "cmd": "line",
+         "points": [
+          [
+           66,
+           73
+          ],
+          [
+           76,
+           73
+          ]
+         ],
+         "color": "$eye_color",
+         "width": 2
+        },
+        {
+         "cmd": "sheen",
+         "shape": {
+          "cmd": "polygon",
+          "points": [
+           [
+            14,
+            40
+           ],
+           [
+            42,
+            50
+           ],
+           [
+            100,
+            50
+           ],
+           [
+            112,
+            40
+           ],
+           [
+            112,
+            70
+           ],
+           [
+            100,
+            80
+           ],
+           [
+            42,
+            80
+           ],
+           [
+            14,
+            70
+           ]
+          ],
+          "fill": "#000000",
+          "outline": "$glow_color",
+          "width": 3
+         },
+         "p1": [
+          44,
+          44
+         ],
+         "p2": [
+          34,
+          76
+         ],
+         "dx": 6
+        },
+        {
+         "cmd": "hud_brackets",
+         "visor_shape": {
+          "cmd": "polygon",
+          "points": [
+           [
+            14,
+            40
+           ],
+           [
+            42,
+            50
+           ],
+           [
+            100,
+            50
+           ],
+           [
+            112,
+            40
+           ],
+           [
+            112,
+            70
+           ],
+           [
+            100,
+            80
+           ],
+           [
+            42,
+            80
+           ],
+           [
+            14,
+            70
+           ]
+          ],
+          "fill": "#000000",
+          "outline": "$glow_color",
+          "width": 3
+         },
+         "box": [
+          [
+           46,
+           52
+          ],
+          [
+           96,
+           78
+          ]
+         ],
+         "arm": 5,
+         "color": [
+          255,
+          255,
+          255,
+          220
+         ],
+         "width": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "face_damaged",
+     "layers": [
+      {
+       "id": "face_damaged",
+       "commands": [
+        {
+         "desc": "\uc88c\uce21 \ucc21\uadf8\ub9b0 \uaebe\uc1e0 \ub208 \uc0c1\ub2e8",
+         "cmd": "line",
+         "points": [
+          [
+           52,
+           58
+          ],
+          [
+           62,
+           63
+          ]
+         ],
+         "color": "$eye_color",
+         "width": 3
+        },
+        {
+         "desc": "\uc88c\uce21 \ucc21\uadf8\ub9b0 \uaebe\uc1e0 \ub208 \ud558\ub2e8",
+         "cmd": "line",
+         "points": [
+          [
+           62,
+           63
+          ],
+          [
+           52,
+           68
+          ]
+         ],
+         "color": "$eye_color",
+         "width": 3
+        },
+        {
+         "desc": "\uc6b0\uce21 \ucc21\uadf8\ub9b0 \uaebe\uc1e0 \ub208 \uc0c1\ub2e8",
+         "cmd": "line",
+         "points": [
+          [
+           90,
+           58
+          ],
+          [
+           80,
+           63
+          ]
+         ],
+         "color": "$eye_color",
+         "width": 3
+        },
+        {
+         "desc": "\uc6b0\uce21 \ucc21\uadf8\ub9b0 \uaebe\uc1e0 \ub208 \ud558\ub2e8",
+         "cmd": "line",
+         "points": [
+          [
+           80,
+           63
+          ],
+          [
+           90,
+           68
+          ]
+         ],
+         "color": "$eye_color",
+         "width": 3
+        },
+        {
+         "desc": "\uc559\ub2e4\ubb38 \uc785\uc120",
+         "cmd": "line",
+         "points": [
+          [
+           66,
+           74
+          ],
+          [
+           76,
+           74
+          ]
+         ],
+         "color": "$eye_color",
+         "width": 2
+        },
+        {
+         "cmd": "sheen",
+         "shape": {
+          "cmd": "polygon",
+          "points": [
+           [
+            14,
+            40
+           ],
+           [
+            42,
+            50
+           ],
+           [
+            100,
+            50
+           ],
+           [
+            112,
+            40
+           ],
+           [
+            112,
+            70
+           ],
+           [
+            100,
+            80
+           ],
+           [
+            42,
+            80
+           ],
+           [
+            14,
+            70
+           ]
+          ],
+          "fill": "#000000",
+          "outline": "$glow_color",
+          "width": 3
+         },
+         "p1": [
+          44,
+          44
+         ],
+         "p2": [
+          34,
+          76
+         ],
+         "dx": 6
+        },
+        {
+         "cmd": "hud_brackets",
+         "visor_shape": {
+          "cmd": "polygon",
+          "points": [
+           [
+            14,
+            40
+           ],
+           [
+            42,
+            50
+           ],
+           [
+            100,
+            50
+           ],
+           [
+            112,
+            40
+           ],
+           [
+            112,
+            70
+           ],
+           [
+            100,
+            80
+           ],
+           [
+            42,
+            80
+           ],
+           [
+            14,
+            70
+           ]
+          ],
+          "fill": "#000000",
+          "outline": "$glow_color",
+          "width": 3
+         },
+         "box": [
+          [
+           46,
+           52
+          ],
+          [
+           96,
+           78
+          ]
+         ],
+         "arm": 5,
+         "color": [
+          255,
+          255,
+          255,
+          220
+         ],
+         "width": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "face_dead",
+     "layers": [
+      {
+       "id": "face_dead",
+       "commands": [
+        {
+         "desc": "\uc88c\uce21 \ub208 \uac10\uc740 \uc77c\uc790\uc120",
+         "cmd": "line",
+         "points": [
+          [
+           52,
+           63
+          ],
+          [
+           64,
+           63
+          ]
+         ],
+         "color": "$eye_color",
+         "width": 3
+        },
+        {
+         "desc": "\uc6b0\uce21 \ub208 \uac10\uc740 \uc77c\uc790\uc120",
+         "cmd": "line",
+         "points": [
+          [
+           78,
+           63
+          ],
+          [
+           90,
+           63
+          ]
+         ],
+         "color": "$eye_color",
+         "width": 3
+        },
+        {
+         "desc": "\uaebc\uc9c4 \uc785\uc120",
+         "cmd": "line",
+         "points": [
+          [
+           68,
+           74
+          ],
+          [
+           74,
+           74
+          ]
+         ],
+         "color": "$eye_color",
+         "width": 2
+        },
+        {
+         "cmd": "sheen",
+         "shape": {
+          "cmd": "polygon",
+          "points": [
+           [
+            14,
+            40
+           ],
+           [
+            42,
+            50
+           ],
+           [
+            100,
+            50
+           ],
+           [
+            112,
+            40
+           ],
+           [
+            112,
+            70
+           ],
+           [
+            100,
+            80
+           ],
+           [
+            42,
+            80
+           ],
+           [
+            14,
+            70
+           ]
+          ],
+          "fill": "#000000",
+          "outline": "$glow_color",
+          "width": 3
+         },
+         "p1": [
+          44,
+          44
+         ],
+         "p2": [
+          34,
+          76
+         ],
+         "dx": 6
+        },
+        {
+         "cmd": "hud_brackets",
+         "visor_shape": {
+          "cmd": "polygon",
+          "points": [
+           [
+            14,
+            40
+           ],
+           [
+            42,
+            50
+           ],
+           [
+            100,
+            50
+           ],
+           [
+            112,
+            40
+           ],
+           [
+            112,
+            70
+           ],
+           [
+            100,
+            80
+           ],
+           [
+            42,
+            80
+           ],
+           [
+            14,
+            70
+           ]
+          ],
+          "fill": "#000000",
+          "outline": "$glow_color",
+          "width": 3
+         },
+         "box": [
+          [
+           46,
+           52
+          ],
+          [
+           96,
+           78
+          ]
+         ],
+         "arm": 5,
+         "color": [
+          255,
+          255,
+          255,
+          220
+         ],
+         "width": 1
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "slot_keycap_body",
+     "layers": [
+      {
+       "id": "slot_keycap_body",
+       "commands": [
+        {
+         "desc": "UI \ub3c4\ud0b9 \ud0a4\ucea1 \uc678\uacfd \ud504\ub808\uc784",
+         "cmd": "rounded_rect",
+         "box": [
+          [
+           2,
+           2
+          ],
+          [
+           126,
+           126
+          ]
+         ],
+         "radius": 18,
+         "fill": [
+          9,
+          13,
+          20,
+          255
+         ],
+         "outline": [
+          51,
+          65,
+          85,
+          255
+         ],
+         "width": 3
+        },
+        {
+         "desc": "\uc18c\ucf13 \uc6f0",
+         "cmd": "rounded_rect",
+         "box": [
+          [
+           8,
+           8
+          ],
+          [
+           120,
+           120
+          ]
+         ],
+         "radius": 16,
+         "fill": [
+          6,
+          9,
+          14,
+          255
+         ]
+        },
+        {
+         "desc": "\ud0a4\ucea1 \ubcf8\uccb4",
+         "cmd": "rounded_rect",
+         "box": [
+          [
+           12,
+           12
+          ],
+          [
+           116,
+           114
+          ]
+         ],
+         "radius": 14,
+         "fill": "$body_color",
+         "outline": "$body_bright",
+         "width": 2
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "slot_keycap_pressed",
+     "layers": [
+      {
+       "id": "slot_keycap_pressed",
+       "commands": [
+        {
+         "desc": "UI \ub3c4\ud0b9 \ud0a4\ucea1 \uc678\uacfd \ud504\ub808\uc784",
+         "cmd": "rounded_rect",
+         "box": [
+          [
+           2,
+           2
+          ],
+          [
+           126,
+           126
+          ]
+         ],
+         "radius": 18,
+         "fill": [
+          9,
+          13,
+          20,
+          255
+         ],
+         "outline": [
+          51,
+          65,
+          85,
+          255
+         ],
+         "width": 3
+        },
+        {
+         "desc": "\uc18c\ucf13 \uc6f0",
+         "cmd": "rounded_rect",
+         "box": [
+          [
+           8,
+           8
+          ],
+          [
+           120,
+           120
+          ]
+         ],
+         "radius": 16,
+         "fill": [
+          6,
+          9,
+          14,
+          255
+         ]
+        },
+        {
+         "desc": "\ud0a4\ucea1 \ubcf8\uccb4 \ub20c\ub9bc",
+         "cmd": "rounded_rect",
+         "box": [
+          [
+           12,
+           16
+          ],
+          [
+           116,
+           118
+          ]
+         ],
+         "radius": 14,
+         "fill": "$body_dark",
+         "outline": "$body_deep",
+         "width": 2
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

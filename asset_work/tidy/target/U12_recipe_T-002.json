@@ -1,0 +1,245 @@
+{
+  "bases": [
+    "base_keycap_1u",
+    "base_visor_wrap"
+  ],
+  "face_neutral": [
+    {
+      "desc": "좌측 샤프한 눈썹",
+      "cmd": "line",
+      "points": [[50, 52], [64, 56]],
+      "color": "$eye_color",
+      "width": 2
+    },
+    {
+      "desc": "우측 샤프한 눈썹",
+      "cmd": "line",
+      "points": [[92, 52], [78, 56]],
+      "color": "$eye_color",
+      "width": 2
+    },
+    {
+      "desc": "좌측 화난 반원 눈 (타 몹 정규화 12x10)",
+      "cmd": "polygon",
+      "points": [[51, 57], [63, 60], [63, 64], [61, 66], [57, 67], [53, 66], [51, 64]],
+      "fill": "$eye_color"
+    },
+    {
+      "desc": "우측 화난 반원 눈 (타 몹 정규화 12x10)",
+      "cmd": "polygon",
+      "points": [[79, 60], [91, 57], [91, 64], [89, 66], [85, 67], [81, 66], [79, 64]],
+      "fill": "$eye_color"
+    },
+    {
+      "desc": "사선 입선 (우측 웰 중심)",
+      "cmd": "line",
+      "points": [[68, 73], [76, 73]],
+      "color": "$eye_color",
+      "width": 2
+    }
+  ],
+  "face_idle_100": [
+    {
+      "desc": "좌측 샤프한 눈썹",
+      "cmd": "line",
+      "points": [[50, 52], [64, 56]],
+      "color": "$eye_color",
+      "width": 2
+    },
+    {
+      "desc": "우측 샤프한 눈썹",
+      "cmd": "line",
+      "points": [[92, 52], [78, 56]],
+      "color": "$eye_color",
+      "width": 2
+    },
+    {
+      "desc": "좌측 화난 반원 눈",
+      "cmd": "polygon",
+      "points": [[51, 57], [63, 60], [63, 64], [61, 66], [57, 67], [53, 66], [51, 64]],
+      "fill": "$eye_color"
+    },
+    {
+      "desc": "우측 화난 반원 눈",
+      "cmd": "polygon",
+      "points": [[79, 60], [91, 57], [91, 64], [89, 66], [85, 67], [81, 66], [79, 64]],
+      "fill": "$eye_color"
+    },
+    {
+      "desc": "사선 입선",
+      "cmd": "line",
+      "points": [[68, 73], [76, 73]],
+      "color": "$eye_color",
+      "width": 2
+    }
+  ],
+  "face_idle_50": [
+    {
+      "desc": "좌측 샤프한 눈썹",
+      "cmd": "line",
+      "points": [[50, 52], [64, 56]],
+      "color": "$eye_color",
+      "width": 2
+    },
+    {
+      "desc": "우측 샤프한 눈썹",
+      "cmd": "line",
+      "points": [[92, 52], [78, 56]],
+      "color": "$eye_color",
+      "width": 2
+    },
+    {
+      "desc": "좌측 화난 반원 눈 (온전함)",
+      "cmd": "polygon",
+      "points": [[51, 57], [63, 60], [63, 64], [61, 66], [57, 67], [53, 66], [51, 64]],
+      "fill": "$eye_color"
+    },
+    {
+      "desc": "우측 반원 반눈 (폭 12 유지, 높이 5 납작)",
+      "cmd": "polygon",
+      "points": [[79, 62], [91, 60], [91, 64], [89, 66], [85, 67], [81, 66], [79, 64]],
+      "fill": "$eye_color"
+    },
+    {
+      "desc": "사선 입선",
+      "cmd": "line",
+      "points": [[68, 73], [76, 73]],
+      "color": "$eye_color",
+      "width": 2
+    }
+  ],
+  "face_idle_25": [
+    {
+      "desc": "좌측 샤프한 눈썹",
+      "cmd": "line",
+      "points": [[50, 52], [64, 56]],
+      "color": "$eye_color",
+      "width": 2
+    },
+    {
+      "desc": "우측 샤프한 눈썹",
+      "cmd": "line",
+      "points": [[92, 52], [78, 56]],
+      "color": "$eye_color",
+      "width": 2
+    },
+    {
+      "desc": "좌측 반원 슬릿 눈 (폭 12 유지, 높이 3)",
+      "cmd": "polygon",
+      "points": [[51, 64], [63, 64], [61, 66], [57, 67], [53, 66], [51, 64]],
+      "fill": "$eye_color"
+    },
+    {
+      "desc": "우측 반원 슬릿 눈 (폭 12 유지, 높이 3)",
+      "cmd": "polygon",
+      "points": [[79, 64], [91, 64], [89, 66], [85, 67], [81, 66], [79, 64]],
+      "fill": "$eye_color"
+    },
+    {
+      "desc": "사선 입선",
+      "cmd": "line",
+      "points": [[68, 73], [76, 73]],
+      "color": "$eye_color",
+      "width": 2
+    }
+  ],
+  "face_alert": [
+    {
+      "desc": "더 날카로운 좌측 눈썹",
+      "cmd": "line",
+      "points": [[48, 50], [64, 57]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "더 날카로운 우측 눈썹",
+      "cmd": "line",
+      "points": [[94, 50], [78, 57]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "좌측 짓누르는 화난 반원 눈",
+      "cmd": "polygon",
+      "points": [[51, 56], [63, 60], [63, 64], [61, 66], [57, 67], [53, 66], [51, 64]],
+      "fill": "$eye_color"
+    },
+    {
+      "desc": "우측 짓누르는 화난 반원 눈",
+      "cmd": "polygon",
+      "points": [[79, 60], [91, 56], [91, 64], [89, 66], [85, 67], [81, 66], [79, 64]],
+      "fill": "$eye_color"
+    },
+    {
+      "desc": "사선 입선",
+      "cmd": "line",
+      "points": [[67, 73], [77, 71]],
+      "color": "$eye_color",
+      "width": 2
+    }
+  ],
+  "face_damaged": [
+    {
+      "desc": "좌측 꺾쇠 눈 상단",
+      "cmd": "line",
+      "points": [[52, 56], [62, 61]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "좌측 꺾쇠 눈 하단",
+      "cmd": "line",
+      "points": [[62, 61], [52, 66]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "우측 꺾쇠 눈 상단",
+      "cmd": "line",
+      "points": [[90, 56], [80, 61]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "우측 꺾쇠 눈 하단",
+      "cmd": "line",
+      "points": [[80, 61], [90, 66]],
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "앙다문 입선",
+      "cmd": "line",
+      "points": [[67, 74], [77, 74]],
+      "color": "$eye_color",
+      "width": 2
+    }
+  ],
+  "face_dead": [
+    {
+      "desc": "좌측 감은 호 눈 (14x10 와이드)",
+      "cmd": "arc",
+      "box": [[49, 58], [63, 68]],
+      "start": 0,
+      "end": 180,
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "우측 감은 호 눈 (14x10 와이드)",
+      "cmd": "arc",
+      "box": [[79, 58], [93, 68]],
+      "start": 0,
+      "end": 180,
+      "color": "$eye_color",
+      "width": 3
+    },
+    {
+      "desc": "수평 입선",
+      "cmd": "line",
+      "points": [[68, 74], [76, 74]],
+      "color": "$eye_color",
+      "width": 2
+    }
+  ]
+}

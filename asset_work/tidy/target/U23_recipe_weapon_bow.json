@@ -1,0 +1,75 @@
+{
+  "name": "bow",
+  "canvas": [128, 128],
+  "metadata": {
+    "root_socket": [64, 64],
+    "upper_limb_socket": [40, 20],
+    "lower_limb_socket": [40, 108],
+    "string_anchor_top": [38, 20],
+    "string_anchor_bottom": [38, 108],
+    "string_pull_point": [80, 64],
+    "reach_multiplier": 1.0
+  },
+  "palette": {
+    "$slate_dark": "#1E293B",
+    "$outline": "#0F172A",
+    "$metal_mid": "#94A3B8",
+    "$metal_light": "#E2E8F0",
+    "$neon_cyan": "#22D3EE"
+  },
+  "albedo_layers": [
+    {
+      "cmd": "polygon",
+      "pts": [[40, 20], [52, 28], [66, 52], [58, 52], [46, 34], [36, 22]],
+      "fill": "$metal_light",
+      "outline": "$outline"
+    },
+    {
+      "cmd": "polygon",
+      "pts": [[40, 108], [52, 100], [66, 76], [58, 76], [46, 94], [36, 106]],
+      "fill": "$metal_light",
+      "outline": "$outline"
+    },
+    {
+      "cmd": "polygon",
+      "pts": [[46, 34], [58, 52], [66, 52]],
+      "fill": "$metal_mid"
+    },
+    {
+      "cmd": "polygon",
+      "pts": [[46, 94], [58, 76], [66, 76]],
+      "fill": "$metal_mid"
+    },
+    {
+      "cmd": "polygon",
+      "pts": [[58, 50], [70, 50], [70, 78], [58, 78]],
+      "fill": "$slate_dark",
+      "outline": "$outline"
+    },
+    {
+      "cmd": "line",
+      "pts": [[38, 20], [80, 64], [38, 108]],
+      "color": "$neon_cyan",
+      "width": 2
+    }
+  ],
+  "mask_layers": [
+    {
+      "cmd": "line",
+      "pts": [[40, 20], [52, 28], [66, 52]],
+      "color": [255, 0, 0, 255],
+      "width": 2
+    },
+    {
+      "cmd": "line",
+      "pts": [[40, 108], [52, 100], [66, 76]],
+      "color": [255, 0, 0, 255],
+      "width": 2
+    },
+    {
+      "cmd": "rect",
+      "box": [[61, 61], [67, 67]],
+      "fill": [0, 0, 255, 255]
+    }
+  ]
+}

@@ -14,7 +14,11 @@ import { transpileAndRender } from "./recipe/transpile.mjs";
 import { decodePng } from "../src/io/png.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = path.resolve(__dirname, "..", "..");
+// Working assets live under asset_work/ (tidy/ evidence, target/ gate inputs).
+const REPO_ROOT = path.resolve(__dirname, "..");
+const TARGET_ROOT = path.join(REPO_ROOT, "asset_work", "target");
+const resolveCasePath = (rel) =>
+  path.join(TARGET_ROOT, rel.startsWith("draw_tool_v2/") ? rel.slice("draw_tool_v2/".length) : rel);
 
 const MATCH_THRESHOLD = 0.99;
 const ELEMENT_DELTA_CHANNEL_THRESHOLD = 128;
@@ -56,7 +60,7 @@ const CASES = [
 // Those legacy PNGs are per-layer 128x128 crops baked with the manifest's
 // palette spec, so each case carries its own palette override.
 const PALETTE_SPEC = JSON.parse(
-  fs.readFileSync(path.join(REPO_ROOT, "draw_tool_v2/tests/fixtures/player_arc/manifest.json"), "utf-8"),
+  fs.readFileSync(path.join(TARGET_ROOT, "tests/fixtures/player_arc/manifest.json"), "utf-8"),
 ).spec;
 const LAYER_CASES = [
   { id: "player_mouse__shadow", recipe: "assetdb/entity/player/player_mouse.json", layer: "shadow" },
@@ -66,7 +70,7 @@ const LAYER_CASES = [
   { id: "base_chassis_trackball__shadow", recipe: "assetdb/entity/player/base_chassis_trackball.json", layer: "shadow" },
   { id: "base_chassis_trackball__body", recipe: "assetdb/entity/player/base_chassis_trackball.json", layer: "body" },
   { id: "emoticons_cyber_neon__face_normal", recipe: "assetdb/entity/player/emoticons_cyber_neon.json", layer: "face_normal" },
-].map((c) => ({ ...c, legacy: `draw_tool_v2/tests/fixtures/player_arc/${c.id}_legacy.png`, palette: PALETTE_SPEC }));
+].map((c) => ({ ...c, legacy: `tests/fixtures/player_arc/${c.id}_legacy.png`, palette: PALETTE_SPEC }));
 
 // <META - ROLE : Compare two decoded RGBA buffers pixel-by-pixel and measure divergence | L62-123>
 function compareRgba(legacy, candidate) {
@@ -134,8 +138,8 @@ function compareRgba(legacy, candidate) {
 
 // <META - ROLE : Render one case via the transpiler and compare against its legacy PNG | L126-144>
 async function runCase(caseInfo, tmpDir) {
-  const recipePath = path.join(REPO_ROOT, caseInfo.recipe);
-  const legacyPath = path.join(REPO_ROOT, caseInfo.legacy);
+  const recipePath = resolveCasePath(caseInfo.recipe);
+  const legacyPath = resolveCasePath(caseInfo.legacy);
   const outPng = path.join(tmpDir, `${caseInfo.id}.png`);
   const outDoc = path.join(tmpDir, `${caseInfo.id}.json`);
 

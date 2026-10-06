@@ -1,0 +1,7 @@
+ID: U15
+PNG: assetdb/entity/enemy/keycap_debris.png
+RECIPE: base_debris.json
+METHOD: RECIPE_UNWIRED
+TOOL: (none) base_debris.json has no generator caller
+COMMAND: wire base_debris.json to v2 engine canvas to regenerate
+NOTE: shared 64x64 gray texture; per-enemy color via particles.color=signature_color

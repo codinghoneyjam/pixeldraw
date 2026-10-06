@@ -1,0 +1,62 @@
+{
+  "desc": "사이버네틱 트랙볼 오브 섀시 본체 지오메트리 (조립형 바디)",
+  "shadow": [
+    {
+      "desc": "바닥 타원 그림자",
+      "cmd": "ellipse",
+      "box": [[34, 104], [94, 116]],
+      "fill": [10, 15, 25, 170]
+    },
+    {
+      "desc": "부유 센서 얇은 네온 외곽 림",
+      "cmd": "arc",
+      "box": [[34, 104], [94, 116]],
+      "start": 10,
+      "end": 170,
+      "color": "$eye_color",
+      "width": 2
+    }
+  ],
+  "body": [
+    {
+      "desc": "구형 챔버 하단 베이스 소켓",
+      "cmd": "polygon",
+      "points": [[30, 80], [110, 80], [98, 106], [42, 106]],
+      "fill": "$body_dark",
+      "outline": "$body_outline",
+      "width": 3
+    },
+    {
+      "desc": "구형 챔버 메인 돔 쉘",
+      "cmd": "chord",
+      "box": [[28, 20], [112, 100]],
+      "start": 180,
+      "end": 360,
+      "fill": "$body_color"
+    },
+    {
+      "desc": "중앙 수평 기계식 조인트 링",
+      "cmd": "rounded_rect",
+      "box": [[24, 60], [116, 76]],
+      "radius": 4,
+      "fill": "$body_deep",
+      "outline": "$body_outline",
+      "width": 2
+    },
+    {
+      "desc": "상단 돔 센터 코어",
+      "cmd": "ellipse",
+      "box": [[54, 24], [86, 44]],
+      "fill": "$body_bright"
+    }
+  ],
+  "spine_stream": [
+    {
+      "desc": "중앙 에너지 관통선",
+      "cmd": "line",
+      "points": [[70, 20], [70, 100]],
+      "color": "$eye_color",
+      "width": 3
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+ID: U14
+PNG: assetdb/entity/enemy/kb_b_obsidian_t4.png
+RECIPE: C-001.json
+METHOD: RECIPE_JSON+VIA_OVERRIDE
+TOOL: dev/tools/assets/generators/gen_enemy_assets.py
+COMMAND: B-001 uses C-001 geometry via SHAPE_SOURCE_OVERRIDE:42 + enemy.json color #FF3B30
+NOTE: B-001.json absent; geometry reuses C-001 via override, color from enemy.json #FF3B30

@@ -1,0 +1,6 @@
+ID: U40
+PNG: assetdb/ui/title/title_weapons_atlas.png
+RECIPE: U40_note_NO_PROFILE.txt
+METHOD: MISSING_PROFILE
+TOOL: dev/tools/assets/generators/gen_weapon_visuals.py
+COMMAND: needs committed profiles JSON with palette/weapons/polys

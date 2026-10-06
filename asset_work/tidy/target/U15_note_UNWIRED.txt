@@ -1,0 +1,5 @@
+RECIPE_EXISTS_BUT_UNWIRED
+recipe=assetdb/entity/enemy/base_debris.json
+fills: keycap_corner='' visor_glass='' neon_chip='' switch_stem='#333333'
+no generator references base_debris under dev/tools/assets/generators
+runtime tint path: KeybotFxPuppet.emit_debris particles.color=signature_color

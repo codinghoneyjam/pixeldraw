@@ -1,0 +1,5 @@
+NO_JSON_RECIPE__NO_COMMITTED_PROFILE
+tool=dev/tools/assets/generators/gen_weapon_visuals.py:61 build(profiles,output)
+requires --profiles JSON with palette/weapons/polys; no committed file found
+output_manifest excluded_families confirms no canonical invocation
+currently NOT regenerable; needs profiles JSON commit

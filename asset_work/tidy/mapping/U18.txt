@@ -1,0 +1,6 @@
+ID: U18
+PNG: assetdb/entity/player/hero_trackball_cyber_sheet.png
+RECIPE: base_chassis_trackball.json, base_visor_shield.json, emoticons_cyber_neon.json
+METHOD: RECIPE_JSONx3
+TOOL: dev/tools/assets/generators/gen_player_assets.py
+COMMAND: python -m dev.tools.assets.generators.gen_player_assets

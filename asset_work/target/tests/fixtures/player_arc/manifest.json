@@ -1,0 +1,51 @@
+{
+ "spec": {
+  "body_color": "#2C323D",
+  "body_dark": "#161920",
+  "body_deep": "#0E1015",
+  "body_bright": "#475569",
+  "body_outline": "#07080B",
+  "visor_color": "#000000",
+  "eye_color": "#38BDF8",
+  "glow_color": "#7DD3FC",
+  "wheel_core": "#0284C7",
+  "wheel_light": "#FFFFFF"
+ },
+ "cases": [
+  {
+   "id": "player_mouse__shadow",
+   "recipe": "assetdb/entity/player/player_mouse.json",
+   "layer": "shadow"
+  },
+  {
+   "id": "player_mouse__visor_left",
+   "recipe": "assetdb/entity/player/player_mouse.json",
+   "layer": "visor_left"
+  },
+  {
+   "id": "player_mouse__visor_right",
+   "recipe": "assetdb/entity/player/player_mouse.json",
+   "layer": "visor_right"
+  },
+  {
+   "id": "base_chassis_gem__shadow",
+   "recipe": "assetdb/entity/player/base_chassis_gem.json",
+   "layer": "shadow"
+  },
+  {
+   "id": "base_chassis_trackball__shadow",
+   "recipe": "assetdb/entity/player/base_chassis_trackball.json",
+   "layer": "shadow"
+  },
+  {
+   "id": "base_chassis_trackball__body",
+   "recipe": "assetdb/entity/player/base_chassis_trackball.json",
+   "layer": "body"
+  },
+  {
+   "id": "emoticons_cyber_neon__face_normal",
+   "recipe": "assetdb/entity/player/emoticons_cyber_neon.json",
+   "layer": "face_normal"
+  }
+ ]
+}

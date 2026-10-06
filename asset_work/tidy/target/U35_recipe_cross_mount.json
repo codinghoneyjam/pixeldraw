@@ -1,0 +1,41 @@
+{
+  "dynamic_colors": {
+    "body_color": "#38bdf8",
+    "glow_color": "#00e5ff"
+  },
+  "body": [
+    {
+      "desc": "MX 스타일 십자 스템 세로 기둥",
+      "cmd": "rounded_rect",
+      "box": [[56, 28], [72, 100]],
+      "radius": 2,
+      "fill": "$body_color",
+      "outline": "$body_outline",
+      "width": 3
+    },
+    {
+      "desc": "MX 스타일 십자 스템 가로 기둥",
+      "cmd": "rounded_rect",
+      "box": [[28, 56], [100, 72]],
+      "radius": 2,
+      "fill": "$body_color",
+      "outline": "$body_outline",
+      "width": 3
+    },
+    {
+      "desc": "세로 기둥 하이라이트",
+      "cmd": "line",
+      "points": [[60, 32], [60, 96]],
+      "color": "$body_bright",
+      "width": 3
+    },
+    {
+      "desc": "가로 기둥 하이라이트",
+      "cmd": "line",
+      "points": [[32, 60], [96, 60]],
+      "color": "$body_bright",
+      "width": 3
+    }
+  ],
+  "body_100": { "inherit": "body" }
+}

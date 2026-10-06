@@ -1,0 +1,6 @@
+ID: U19
+PNG: assetdb/entity/player/shockwave_ring.png
+RECIPE: U19_note_CODE_ONLY.txt
+METHOD: CODE_ONLY
+TOOL: dev/tools/assets/generators/gen_speedster_assets.py
+COMMAND: python -m dev.tools.assets.generators.gen_speedster_assets
