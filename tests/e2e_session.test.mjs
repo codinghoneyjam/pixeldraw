@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 import { Session } from "../src/model/session.js";
 import { ToolManager } from "../src/tools/tool_manager.js";
 import { PenTool } from "../src/tools/pen.js";
-import { ShapeTool } from "../src/tools/shape.js";
+import { ShapeTool } from "../src/features/shape/shape.js";
 import { EVENTS } from "../src/core/events.js";
 import { flattenToRgba, exportPngBytes } from "../src/io/export_png.js";
 import { documentToJson, jsonToDocument, layerToJson, importLayerJson } from "../src/io/serialize.js";

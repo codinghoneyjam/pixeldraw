@@ -10,7 +10,7 @@ import { PenTool } from "../tools/pen.js";
 import { EyedropperTool } from "../features/eyedropper/eyedropper.js";
 import { FillTool } from "../features/fill/fill.js";
 import { HandTool } from "../features/hand/hand.js";
-import { ShapeTool } from "../tools/shape.js";
+import { ShapeTool } from "../features/shape/shape.js";
 import { AutosaveStore } from "../io/store_idb.js";
 import { mountColor } from "./color/panel_color.js";
 import { mountBrush } from "./brush/panel_brush.js";

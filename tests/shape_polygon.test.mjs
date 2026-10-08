@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { applyShape } from "../src/core/raster/shape_raster.js";
 import { polygonBBox, polygonInsetRing, polygonMask, polygonOutlineMask } from "../src/core/raster/polygon.js";
-import { ShapeTool } from "../src/tools/shape.js";
+import { ShapeTool } from "../src/features/shape/shape.js";
 
 const G = JSON.parse(
   readFileSync(new URL("./fixtures/raster_golden.json", import.meta.url), "utf-8"),

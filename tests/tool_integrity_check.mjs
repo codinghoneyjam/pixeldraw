@@ -22,7 +22,7 @@ const mods = {
   "src/tools/pointer_event.js": ["buildToolEvent"],
   "src/tools/pointer_bindings.js": [],
   "src/tools/keyboard_bindings.js": [],
-  "src/tools/shape_render.js": [],
+  "src/features/shape/shape_render.js": [],
   "src/model/commands_pixel.js": ["MergeDownCommand", "ResizeCanvasCommand"],
 };
 for (const [f, names] of Object.entries(mods)) {

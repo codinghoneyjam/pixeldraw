@@ -4,8 +4,8 @@
 // preview masks, canvas overlay). shape.js keeps the interactive pending state
 // machine and delegates its render-facing methods here.
 
-import { applyShape } from "../core/raster/shape_raster.js";
-import { polygonBBox } from "../core/raster/polygon.js";
+import { applyShape } from "../../core/raster/shape_raster.js";
+import { polygonBBox } from "../../core/raster/polygon.js";
 import { buildSpec, drawSpec, geomFromSpec, layoutHandles, parseBoxGeom, parseLineGeom, parsePolygonGeom } from "./shape_geom.js";
 import { computePaintLayers, packOf, renderOverlay } from "./shape_overlay.js";
 

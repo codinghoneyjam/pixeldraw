@@ -1,6 +1,6 @@
 // <META - FILE SUMMARY - Pure shape geometry: handles, hit tests, drag/resize/move>
-import { angleSnap, dragBBox, resizeBBox, rnd, unitSnap } from "../core/raster/raster_snap.js";
-import { DrawToolError } from "../core/errors.js";
+import { angleSnap, dragBBox, resizeBBox, rnd, unitSnap } from "../../core/raster/raster_snap.js";
+import { DrawToolError } from "../../core/errors.js";
 
 // <META - ROLE : integer field guard | L4-8>
 function asInt(v, what) {

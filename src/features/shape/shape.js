@@ -1,7 +1,7 @@
 // <META - FILE SUMMARY - ShapeTool: pending state machine and pointer/key interaction>
 // <META - SUMMARY CONT - Commit, preview, and overlay output live in shape_render.js>
-import { DrawToolError } from "../core/errors.js";
-import { EVENTS } from "../core/events.js";
+import { DrawToolError } from "../../core/errors.js";
+import { EVENTS } from "../../core/events.js";
 import { dragGeom, hitHandle, insideShape, moveGeom, resizeGeom, snapPlacePoint } from "./shape_geom.js";
 import { commitPending, paintPreview, parsePendingValue, renderToolOverlay } from "./shape_render.js";
 

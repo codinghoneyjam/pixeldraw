@@ -1,9 +1,9 @@
 // <META - FILE SUMMARY - Shape overlay paint layers and canvas rendering>
-import { ellipseMask, outlineRing, rrectMask } from "../core/raster/raster_masks.js";
-import { lineMask } from "../core/raster/segment.js";
-import { polygonBBox, polygonInsetRing, polygonMask, polygonOutlineMask } from "../core/raster/polygon.js";
-import { DrawToolError } from "../core/errors.js";
-import { packRGBA, parseHex } from "../core/pixel.js";
+import { ellipseMask, outlineRing, rrectMask } from "../../core/raster/raster_masks.js";
+import { lineMask } from "../../core/raster/segment.js";
+import { polygonBBox, polygonInsetRing, polygonMask, polygonOutlineMask } from "../../core/raster/polygon.js";
+import { DrawToolError } from "../../core/errors.js";
+import { packRGBA, parseHex } from "../../core/pixel.js";
 
 // <META - ROLE : pack a normalized css hex color, preserving its alpha | L6-12>
 export function packOf(css) {

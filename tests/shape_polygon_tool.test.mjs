@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { packRGBA, unpackRGBA } from "../src/core/pixel.js";
 import { applyShape } from "../src/core/raster/shape_raster.js";
 import { validateSetting } from "../src/model/settings_validator.js";
-import { packOf } from "../src/tools/shape_overlay.js";
+import { packOf } from "../src/features/shape/shape_overlay.js";
 import { normHex } from "../src/ui/color/panel_color_fields.js";
 import { assertDrawError } from "./helpers/model.js";
 import { setup, ev, key, drag, pixel } from "./helpers/shape_tool.js";
@@ -158,7 +158,7 @@ describe("RGBA color plumbing", () => {
   it("fill with translucent color stores alpha pixels", async () => {
     const { session } = setup("rect");
     session.setSetting("primaryColor", "#0000ff80");
-    const { FillTool } = await import("../src/tools/fill.js");
+    const { FillTool } = await import("../src/features/fill/fill.js");
     const fill = new FillTool({ session });
     fill.pointerDown(ev(2, 2, { button: 0 }));
     const [r, g, b, a] = unpackRGBA(pixel(session, activeLayer(session), 2, 2));
