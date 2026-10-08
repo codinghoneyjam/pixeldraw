@@ -4,8 +4,8 @@ import { EVENTS } from "../../core/events.js";
 import { documentToJson, importLayerJson, jsonToDocument, layerToJson, documentToVectorJson, vectorJsonToDocument, recipeJsonToDocument } from "../../io/serialize.js";
 import { exportPngBytes } from "../../io/export_png.js";
 import { pickFile, readJsonFile, saveBinaryFile, saveTextFile } from "../../io/file_io.js";
-import { confirmDiscardChanges, showNewDocumentDialog, showProgress } from "../dialogs.js";
-import { STRINGS } from "../strings.js";
+import { confirmDiscardChanges, showNewDocumentDialog, showProgress } from "../shared/dialogs.js";
+import { STRINGS } from "../shared/strings.js";
 
 // <META - ROLE : Save document to JSON file | L1-18>
 export async function doSave(session, toast) {

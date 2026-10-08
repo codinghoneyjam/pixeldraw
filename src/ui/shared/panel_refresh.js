@@ -1,6 +1,6 @@
 // <META - FILE SUMMARY - Repaint canvas-backed panel content after collapsed section reopens>
-import { paintPreview } from "./brush/panel_brush.js";
-import { paintThumb } from "./layers/panel_layers.js";
+import { paintPreview } from "../brush/panel_brush.js";
+import { paintThumb } from "../layers/panel_layers.js";
 
 // <META - ROLE : Repaint canvas-backed panel content after a collapsed section reopens | L1-16>
 export function refreshPanelCanvases(session) {

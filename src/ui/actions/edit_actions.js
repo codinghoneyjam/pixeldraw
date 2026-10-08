@@ -1,6 +1,6 @@
 // <META - FILE SUMMARY - Merged edit/tool/view actions: undo/redo, tool & color, view commands>
 
-import { showResizeCanvasDialog } from "../dialogs.js";
+import { showResizeCanvasDialog } from "../shared/dialogs.js";
 
 const GRID_CYCLE = ["off", "unit", "tile", "pixel"];
 

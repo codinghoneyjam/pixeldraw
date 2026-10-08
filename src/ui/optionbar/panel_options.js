@@ -2,8 +2,8 @@
 import { ZOOM_LEVELS } from "../../core/constants.js";
 import { EVENTS } from "../../core/events.js";
 import { DrawToolError } from "../../core/errors.js";
-import { createTooltips } from "../tooltip.js";
-export { mountCollapsibleSections } from "../collapsible_sections.js";
+import { createTooltips } from "../shared/tooltip.js";
+export { mountCollapsibleSections } from "../shared/collapsible_sections.js";
 
 const SHAPE_TOOLS = ["line", "rect", "rrect", "ellipse", "polygon"];
 

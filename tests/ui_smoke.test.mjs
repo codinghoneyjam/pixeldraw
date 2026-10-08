@@ -1,9 +1,9 @@
 // UI smoke — Node-safe (no DOM, no jsdom).
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { STRINGS } from "../src/ui/strings.js";
+import { STRINGS } from "../src/ui/shared/strings.js";
 import { ICONS, iconFor, hasIcon } from "../src/ui/toolbar/icons.js";
-import { el, qs, qsa, on, setHidden } from "../src/ui/dom.js";
+import { el, qs, qsa, on, setHidden } from "../src/ui/shared/dom.js";
 import { DEFAULT_PALETTE, mountColor } from "../src/ui/color/panel_color.js";
 import { SIZE_PRESETS, mountBrush, paintPreview } from "../src/ui/brush/panel_brush.js";
 import { mountLayers, paintThumb } from "../src/ui/layers/panel_layers.js";
@@ -15,7 +15,7 @@ import {
   showProgress,
   showResizeCanvasDialog,
   showRestoreDialog,
-} from "../src/ui/dialogs.js";
+} from "../src/ui/shared/dialogs.js";
 import { createShortcuts, isEditableTarget, resolveShortcut } from "../src/ui/toolbar/shortcuts.js";
 
 describe("strings", () => {

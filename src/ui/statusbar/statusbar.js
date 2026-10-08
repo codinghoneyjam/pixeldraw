@@ -1,7 +1,7 @@
 // <META - FILE SUMMARY - Status bar: message timers, pixel/grid cursor, zoom, canvas, tool, dirty>
 import { CHUNK_PX, TILE_PX } from "../../core/constants.js";
 import { EVENTS } from "../../core/events.js";
-import { STRINGS } from "../strings.js";
+import { STRINGS } from "../shared/strings.js";
 
 const INFO_MS = 4000;
 const WARN_MS = 8000;
