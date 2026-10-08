@@ -2,7 +2,7 @@
 import { ChunkStore } from "../core/chunkstore.js";
 import { isValidCanvasSize } from "../core/constants.js";
 import { Document, IdGen } from "../model/document.js";
-import { Layer } from "../model/layer.js";
+import { Layer } from "../features/layers/layer.js";
 import { promisify } from "./idb_schema.js";
 import { chunkRecordKey } from "./idb_record_builder.js";
 

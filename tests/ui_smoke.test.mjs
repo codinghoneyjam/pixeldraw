@@ -6,7 +6,7 @@ import { ICONS, iconFor, hasIcon } from "../src/ui/toolbar/icons.js";
 import { el, qs, qsa, on, setHidden } from "../src/ui/shared/dom.js";
 import { DEFAULT_PALETTE, mountColor } from "../src/features/color/panel_color.js";
 import { SIZE_PRESETS, mountBrush, paintPreview } from "../src/features/pen/panel_brush.js";
-import { mountLayers, paintThumb } from "../src/ui/layers/panel_layers.js";
+import { mountLayers, paintThumb } from "../src/features/layers/panel_layers.js";
 import { mountOptions } from "../src/ui/optionbar/panel_options.js";
 import { mountStatus } from "../src/ui/statusbar/statusbar.js";
 import {

@@ -2,9 +2,9 @@
 //
 // Pixel-rewriting commands (merge-down, canvas resize) live in commands_pixel.js.
 
-import { CHUNK_LEN } from "../core/constants.js";
-import { DrawToolError } from "../core/errors.js";
-import { changeSetBytes } from "../core/chunkstore.js";
+import { CHUNK_LEN } from "../../core/constants.js";
+import { DrawToolError } from "../../core/errors.js";
+import { changeSetBytes } from "../../core/chunkstore.js";
 import { LAYER_PROP_FIELDS } from "./layer.js";
 
 export { MergeDownCommand, ResizeCanvasCommand } from "./commands_pixel.js";

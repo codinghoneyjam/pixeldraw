@@ -6,7 +6,7 @@ import { ChunkStore, PixelWriter } from "../core/chunkstore.js";
 import { packRGBA } from "../core/pixel.js";
 import { DrawToolError } from "../core/errors.js";
 import { Document, IdGen } from "../model/document.js";
-import { Layer } from "../model/layer.js";
+import { Layer } from "../features/layers/layer.js";
 import { base64ToBytes, bytesToBase64 } from "./base64.js";
 import { decodePng, encodePng } from "./png.js";
 import { validateDocument, validateLayerFile } from "./validate.js";

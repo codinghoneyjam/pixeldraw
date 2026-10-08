@@ -23,7 +23,7 @@ const mods = {
   "src/tools/pointer_bindings.js": [],
   "src/tools/keyboard_bindings.js": [],
   "src/features/shape/shape_render.js": [],
-  "src/model/commands_pixel.js": ["MergeDownCommand", "ResizeCanvasCommand"],
+  "src/features/layers/commands_pixel.js": ["MergeDownCommand", "ResizeCanvasCommand"],
 };
 for (const [f, names] of Object.entries(mods)) {
   const m = await imp(f);
@@ -31,7 +31,7 @@ for (const [f, names] of Object.entries(mods)) {
   check(`${path.basename(f)} exports ${names.join(",") || "(bindings)"}`, ok,
     `keys=${Object.keys(m)}`);
 }
-const cmds = await imp("src/model/commands.js");
+const cmds = await imp("src/features/layers/commands.js");
 check("commands.js re-exports the pixel commands",
   typeof cmds.MergeDownCommand === "function" && typeof cmds.ResizeCanvasCommand === "function");
 
@@ -49,7 +49,7 @@ check("direction reversal resets residue", rev.feed(-120) === 2, `got ${rev.feed
 
 console.log("\n=== 3. mergeDown copies down and undo restores ===");
 const { Session } = await imp("src/model/session.js");
-const { Layer } = await imp("src/model/layer.js");
+const { Layer } = await imp("src/features/layers/layer.js");
 const { packRGBA } = await imp("src/core/pixel.js");
 const s = new Session();
 s.newDocument({ widthPx: 32, heightPx: 32 });
@@ -58,7 +58,7 @@ s.doc.getLayer(lowerId).store._setPixel(1, 1, packRGBA(255, 0, 0, 255));
 const upper = Layer.create({ id: s.doc.ids.next(), name: "U", widthPx: 32, heightPx: 32 });
 upper.store._setPixel(1, 1, packRGBA(0, 0, 255, 255));
 s.doc._insert(upper, 1);
-const cmd = new (await imp("src/model/commands_pixel.js")).MergeDownCommand(upper.id);
+const cmd = new (await imp("src/features/layers/commands_pixel.js")).MergeDownCommand(upper.id);
 cmd.do(s.doc);
 check("upper pixel copied down",
   s.doc.getLayer(lowerId).store.getPixel(1, 1) === packRGBA(0, 0, 255, 255));

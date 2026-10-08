@@ -2,11 +2,11 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { packRGBA, unpackRGBA } from "../src/core/pixel.js";
 import { over } from "../src/core/blend.js";
-import { Layer } from "../src/model/layer.js";
+import { Layer } from "../src/features/layers/layer.js";
 import { newDocument } from "../src/model/document.js";
 import { UndoManager } from "../src/model/history.js";
 import { Session } from "../src/model/session.js";
-import { MergeDownCommand, SetLayerPropCommand } from "../src/model/commands.js";
+import { MergeDownCommand, SetLayerPropCommand } from "../src/features/layers/commands.js";
 import { assertDrawError } from "./helpers/model.js";
 
 describe("B5.4 history", () => {

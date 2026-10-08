@@ -2,7 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { packRGBA } from "../src/core/pixel.js";
 import { EVENTS } from "../src/core/events.js";
-import { Layer } from "../src/model/layer.js";
+import { Layer } from "../src/features/layers/layer.js";
 import { IdGen, newDocument } from "../src/model/document.js";
 import { Session } from "../src/model/session.js";
 import {
@@ -11,7 +11,7 @@ import {
   RemoveLayerCommand,
   ResizeCanvasCommand,
   SetLayerPropCommand,
-} from "../src/model/commands.js";
+} from "../src/features/layers/commands.js";
 import { assertDrawError, collectEvents, paintPixel, snapshotStore } from "./helpers/model.js";
 
 describe("B5.1 document invariants", () => {

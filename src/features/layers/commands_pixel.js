@@ -3,11 +3,11 @@
 // Split out of commands.js: these two rewrite chunk contents (not just layer
 // structure), so they carry their own chunk/pixel imports.
 
-import { CHUNK_LEN, isValidCanvasSize } from "../core/constants.js";
-import { DrawToolError } from "../core/errors.js";
-import { isAllZero } from "../core/chunkstore.js";
-import { over } from "../core/blend.js";
-import { packRGBA, unpackRGBA } from "../core/pixel.js";
+import { CHUNK_LEN, isValidCanvasSize } from "../../core/constants.js";
+import { DrawToolError } from "../../core/errors.js";
+import { isAllZero } from "../../core/chunkstore.js";
+import { over } from "../../core/blend.js";
+import { packRGBA, unpackRGBA } from "../../core/pixel.js";
 
 // <META - ROLE : composite lower under upper through both opacities | L15-18>
 function mergePixel(lowerArr, lowerOpacity, upperArr, upperOpacity) {

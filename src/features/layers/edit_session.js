@@ -1,6 +1,6 @@
-import { PixelWriter } from "../core/chunkstore.js";
-import { DrawToolError } from "../core/errors.js";
-import { EVENTS } from "../core/events.js";
+import { PixelWriter } from "../../core/chunkstore.js";
+import { DrawToolError } from "../../core/errors.js";
+import { EVENTS } from "../../core/events.js";
 import { PaintCommand } from "./commands.js";
 
 export function beginEdit(session, { layerId, label = "연필" } = {}) {

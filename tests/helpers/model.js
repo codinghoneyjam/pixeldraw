@@ -2,7 +2,7 @@
 
 import assert from "node:assert/strict";
 import { PixelWriter } from "../../src/core/chunkstore.js";
-import { PaintCommand } from "../../src/model/commands.js";
+import { PaintCommand } from "../../src/features/layers/commands.js";
 
 // <META - ROLE : assert a DrawToolError with an exact code | L8-17>
 export function assertDrawError(fn, code) {

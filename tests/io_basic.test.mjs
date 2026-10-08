@@ -195,7 +195,7 @@ describe("C8.6 flattenToRgba", () => {
     fillLayer(doc, doc.layers[0].id, packRGBA(0, 0, 255, 255));
     const { document: doc2 } = await jsonToDocument(await documentToJson(doc));
     void doc2;
-    const top = (await import("../src/model/layer.js")).Layer.create({ id: doc.ids.next(), name: "top", widthPx: 32, heightPx: 32 });
+    const top = (await import("../src/features/layers/layer.js")).Layer.create({ id: doc.ids.next(), name: "top", widthPx: 32, heightPx: 32 });
     doc._insert(top, 1);
     fillLayer(doc, top.id, packRGBA(0, 255, 0, 255));
     const flat = flattenToRgba(doc, { includeBackground: true });

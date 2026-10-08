@@ -16,8 +16,8 @@ import {
   setLayerLocked,
   setLayerOpacity,
   setActiveLayer,
-} from "./layer_operations.js";
-import { beginEdit } from "./edit_session.js";
+} from "../features/layers/layer_operations.js";
+import { beginEdit } from "../features/layers/edit_session.js";
 
 export { TOOL_IDS, validateSetting } from "./settings_validator.js";
 

@@ -1,6 +1,6 @@
-import { ChunkStore } from "../core/chunkstore.js";
-import { isValidCanvasSize } from "../core/constants.js";
-import { DrawToolError } from "../core/errors.js";
+import { ChunkStore } from "../../core/chunkstore.js";
+import { isValidCanvasSize } from "../../core/constants.js";
+import { DrawToolError } from "../../core/errors.js";
 
 export const BLEND_MODES = Object.freeze(["normal"]);
 export const LAYER_PROP_FIELDS = Object.freeze(["name", "visible", "locked", "opacity"]);
