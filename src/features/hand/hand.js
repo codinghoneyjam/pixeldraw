@@ -1,4 +1,4 @@
-import { Tool } from "./tool_base.js";
+import { Tool } from "../../tools/tool_base.js";
 
 export class HandTool extends Tool {
   get id() {

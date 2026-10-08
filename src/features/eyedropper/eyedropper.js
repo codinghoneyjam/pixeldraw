@@ -14,9 +14,9 @@
  * button is no longer changing and would otherwise retarget a right-drag.
  */
 
-import { toHex8, unpackRGBA } from "../core/pixel.js";
-import { samplePixel } from "../render/composite.js";
-import { Tool } from "./tool_base.js";
+import { toHex8, unpackRGBA } from "../../core/pixel.js";
+import { samplePixel } from "../../render/composite.js";
+import { Tool } from "../../tools/tool_base.js";
 
 const EYEDROPPER_CURSOR =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Crect x='10.5' y='2' width='3' height='9' fill='white' stroke='black' stroke-width='1'/%3E%3Ccircle cx='12' cy='14' r='3.5' fill='white' stroke='black' stroke-width='1.2'/%3E%3Cpath d='M12 17.5 L12 21' stroke='black' stroke-width='1.5'/%3E%3Ccircle cx='12' cy='21' r='1' fill='black'/%3E%3C/svg%3E\") 12 21, crosshair";

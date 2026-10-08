@@ -1,5 +1,5 @@
-import { packRGBA, parseHex } from "../core/pixel.js";
-import { Tool } from "./tool_base.js";
+import { packRGBA, parseHex } from "../../core/pixel.js";
+import { Tool } from "../../tools/tool_base.js";
 
 const FILL_CURSOR =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Cpath d='M12 3 C12 3 5.5 11.5 5.5 15.5 A6.5 6.5 0 0 0 18.5 15.5 C18.5 11.5 12 3 12 3 Z' fill='white' stroke='black' stroke-width='1.5'/%3E%3Ccircle cx='12' cy='15.5' r='2' fill='black'/%3E%3C/svg%3E\") 12 18, copy";
