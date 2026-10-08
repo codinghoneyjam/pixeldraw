@@ -2,7 +2,7 @@
 
 import { EVENTS } from "../../src/core/events.js";
 import { packRGBA } from "../../src/core/pixel.js";
-import { Session } from "../../src/model/session.js";
+import { Session } from "../../src/features/document/session.js";
 import { ShapeTool } from "../../src/features/shape/shape.js";
 
 export const P = "#ff0000";

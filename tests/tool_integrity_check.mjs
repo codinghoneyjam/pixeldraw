@@ -48,7 +48,7 @@ rev.feed(30);
 check("direction reversal resets residue", rev.feed(-120) === 2, `got ${rev.feed(-120)}`);
 
 console.log("\n=== 3. mergeDown copies down and undo restores ===");
-const { Session } = await imp("src/model/session.js");
+const { Session } = await imp("src/features/document/session.js");
 const { Layer } = await imp("src/features/layers/layer.js");
 const { packRGBA } = await imp("src/core/pixel.js");
 const s = new Session();

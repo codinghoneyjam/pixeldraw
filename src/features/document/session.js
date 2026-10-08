@@ -1,5 +1,5 @@
-import { DrawToolError } from "../core/errors.js";
-import { EVENTS } from "../core/events.js";
+import { DrawToolError } from "../../core/errors.js";
+import { EVENTS } from "../../core/events.js";
 import { newDocument as createDocument, Document } from "./document.js";
 import { UndoManager } from "./history.js";
 import { validateSetting } from "./settings_validator.js";
@@ -16,8 +16,8 @@ import {
   setLayerLocked,
   setLayerOpacity,
   setActiveLayer,
-} from "../features/layers/layer_operations.js";
-import { beginEdit } from "../features/layers/edit_session.js";
+} from "../layers/layer_operations.js";
+import { beginEdit } from "../layers/edit_session.js";
 
 export { TOOL_IDS, validateSetting } from "./settings_validator.js";
 

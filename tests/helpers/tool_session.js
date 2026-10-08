@@ -1,7 +1,7 @@
 // <META - FILE SUMMARY - Shared session fixtures and cursor assertion for the tool test files>
 
 import assert from "node:assert/strict";
-import { Session } from "../../src/model/session.js";
+import { Session } from "../../src/features/document/session.js";
 
 // Cursors are inline SVG data URLs with a CSS keyword fallback
 // (`url("data:image/svg+xml,...") <hx> <hy>, <fallback>`). Docs treat SVG cursors

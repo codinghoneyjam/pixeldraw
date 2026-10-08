@@ -2,7 +2,7 @@
 import { DEFAULT_DOC } from "../core/constants.js";
 import { DrawToolError } from "../core/errors.js";
 import { EVENTS } from "../core/events.js";
-import { Session } from "../model/session.js";
+import { Session } from "../features/document/session.js";
 import { CanvasRenderer } from "../render/renderer.js";
 import { ToolManager } from "../tools/tool_manager.js";
 import { InputController } from "../tools/input_controller.js";

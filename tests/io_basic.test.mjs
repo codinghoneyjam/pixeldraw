@@ -6,7 +6,7 @@ import { DrawToolError } from "../src/core/errors.js";
 import { over } from "../src/core/blend.js";
 import { packRGBA } from "../src/core/pixel.js";
 import { PixelWriter, isAllZero } from "../src/core/chunkstore.js";
-import { newDocument } from "../src/model/document.js";
+import { newDocument } from "../src/features/document/document.js";
 import { base64ToBytes, bytesToBase64 } from "../src/io/base64.js";
 import { decodePng, encodePng } from "../src/io/png.js";
 import { validateDocument } from "../src/io/validate.js";

@@ -2,7 +2,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { Session } from "../src/model/session.js";
+import { Session } from "../src/features/document/session.js";
 import { ToolManager } from "../src/tools/tool_manager.js";
 import { PenTool } from "../src/features/pen/pen.js";
 import { ShapeTool } from "../src/features/shape/shape.js";

@@ -1,7 +1,7 @@
-import { isValidCanvasSize, MAX_LAYERS } from "../core/constants.js";
-import { DrawToolError, ERROR_CODES } from "../core/errors.js";
-import { parseHex } from "../core/pixel.js";
-import { Layer, validateLayerName } from "../features/layers/layer.js";
+import { isValidCanvasSize, MAX_LAYERS } from "../../core/constants.js";
+import { DrawToolError, ERROR_CODES } from "../../core/errors.js";
+import { parseHex } from "../../core/pixel.js";
+import { Layer, validateLayerName } from "../layers/layer.js";
 
 const LAYER_ID_RE = /^layer-(\d+)$/;
 

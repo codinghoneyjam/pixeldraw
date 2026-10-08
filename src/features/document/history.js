@@ -1,4 +1,4 @@
-import { UNDO_MAX_BYTES, UNDO_MAX_STEPS } from "../core/constants.js";
+import { UNDO_MAX_BYTES, UNDO_MAX_STEPS } from "../../core/constants.js";
 
 export class UndoManager {
   constructor({ limitSteps = UNDO_MAX_STEPS, limitBytes = UNDO_MAX_BYTES } = {}) {

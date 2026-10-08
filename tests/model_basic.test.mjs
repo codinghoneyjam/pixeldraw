@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import { packRGBA } from "../src/core/pixel.js";
 import { EVENTS } from "../src/core/events.js";
 import { Layer } from "../src/features/layers/layer.js";
-import { IdGen, newDocument } from "../src/model/document.js";
-import { Session } from "../src/model/session.js";
+import { IdGen, newDocument } from "../src/features/document/document.js";
+import { Session } from "../src/features/document/session.js";
 import {
   AddLayerCommand,
   MoveLayerCommand,

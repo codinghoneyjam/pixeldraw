@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { packRGBA, unpackRGBA } from "../src/core/pixel.js";
 import { applyShape } from "../src/core/raster/shape_raster.js";
-import { validateSetting } from "../src/model/settings_validator.js";
+import { validateSetting } from "../src/features/document/settings_validator.js";
 import { packOf } from "../src/features/shape/shape_overlay.js";
 import { normHex } from "../src/features/color/panel_color_fields.js";
 import { assertDrawError } from "./helpers/model.js";

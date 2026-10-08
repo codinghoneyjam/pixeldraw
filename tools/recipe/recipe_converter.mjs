@@ -15,7 +15,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { Session } from "../../src/model/session.js";
+import { Session } from "../../src/features/document/session.js";
 import { PixelWriter } from "../../src/core/chunkstore.js";
 import { exportPngBytes } from "../../src/io/export_png.js";
 import { documentToJson, jsonToDocument } from "../../src/io/serialize.js";

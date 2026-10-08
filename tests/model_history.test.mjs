@@ -3,9 +3,9 @@ import assert from "node:assert/strict";
 import { packRGBA, unpackRGBA } from "../src/core/pixel.js";
 import { over } from "../src/core/blend.js";
 import { Layer } from "../src/features/layers/layer.js";
-import { newDocument } from "../src/model/document.js";
-import { UndoManager } from "../src/model/history.js";
-import { Session } from "../src/model/session.js";
+import { newDocument } from "../src/features/document/document.js";
+import { UndoManager } from "../src/features/document/history.js";
+import { Session } from "../src/features/document/session.js";
 import { MergeDownCommand, SetLayerPropCommand } from "../src/features/layers/commands.js";
 import { assertDrawError } from "./helpers/model.js";
 

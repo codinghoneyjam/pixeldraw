@@ -1,6 +1,6 @@
-import { DrawToolError } from "../core/errors.js";
-import { SETTING_KEYS } from "../core/events.js";
-import { parseHex, toHex, toHex8 } from "../core/pixel.js";
+import { DrawToolError } from "../../core/errors.js";
+import { SETTING_KEYS } from "../../core/events.js";
+import { parseHex, toHex, toHex8 } from "../../core/pixel.js";
 
 export const TOOL_IDS = Object.freeze([
   "pen",

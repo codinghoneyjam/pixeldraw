@@ -3,7 +3,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
-import { newDocument, validateViewport } from "../src/model/document.js";
+import { newDocument, validateViewport } from "../src/features/document/document.js";
 import { exportPngBytes, flattenToRgba } from "../src/io/export_png.js";
 import { documentToJson, jsonToDocument } from "../src/io/serialize.js";
 import { decodePng } from "../src/io/png.js";
