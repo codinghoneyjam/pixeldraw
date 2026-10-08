@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Layer Gallery - 레거시 드로우 34종 레이어 전환 검증</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Layer Gallery</h1>
+      <p>
+        레거시 드로우에서 <strong>34종 전부</strong>을 Draw Tool v2
+        <strong>레이어 단위</strong>로 변환한 결과 — 각 에셋마다
+        <strong>레이어 / 레이어로 만든 PNG / 기존 작업</strong> 3종을 나란히 검증
+      </p>
+      <div class="summary" id="summary"></div>
+      <div class="gate-line" id="gateLine"></div>
+    </header>
+
+    <div class="controls">
+      <div class="category-tabs" id="categoryTabs"></div>
+      <div class="search-box">
+        <input type="search" id="search" placeholder="에셋 검색 (이름·ID·레이어)" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="asset-grid" id="assetGrid"></div>
+
+    <footer>
+      <p>
+        데이터 생성: <code>node tools/build_layer_gallery.mjs</code> ·
+        레이어 추출: <code>node tools/extract_layers.mjs</code> ·
+        패리티 게이트: <code>node tools/recipe_parity_check.mjs</code> (39/39)
+      </p>
+      <p><a href="recipe_viewer.html">레시피 뷰어 →</a></p>
+    </footer>
+  </div>
+
+  <script src="js/gallery_data.js"></script>
+  <script src="js/comparator.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

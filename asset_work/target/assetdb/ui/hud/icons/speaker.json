@@ -1,0 +1,56 @@
+{
+  "dynamic_colors": {
+    "body_color": "#00E5FF",
+    "glow_color": "#E0F2FE"
+  },
+  "body": [
+    {
+      "desc": "직사각형 1: 후면 마그넷 하우징",
+      "cmd": "rect",
+      "box": [[22, 48], [40, 80]],
+      "outline": "$body_color",
+      "width": 3
+    },
+    {
+      "desc": "사다리꼴 1: 외곽 혼 사다리꼴",
+      "cmd": "polygon",
+      "points": [[40, 48], [68, 28], [68, 100], [40, 80]],
+      "outline": "$body_color",
+      "width": 3
+    },
+    {
+      "desc": "사다리꼴 2: 내부 반사면 사다리꼴",
+      "cmd": "polygon",
+      "points": [[44, 52], [64, 36], [64, 92], [44, 76]],
+      "fill": "$body_color"
+    },
+    {
+      "desc": "곡선 1: 음파 호 (소)",
+      "cmd": "arc",
+      "box": [[56, 48], [78, 80]],
+      "start": -45,
+      "end": 45,
+      "color": "$body_color",
+      "width": 3
+    },
+    {
+      "desc": "곡선 2: 음파 호 (중)",
+      "cmd": "arc",
+      "box": [[66, 38], [94, 90]],
+      "start": -45,
+      "end": 45,
+      "color": "$body_color",
+      "width": 3
+    },
+    {
+      "desc": "곡선 3: 음파 호 (대)",
+      "cmd": "arc",
+      "box": [[76, 28], [112, 100]],
+      "start": -45,
+      "end": 45,
+      "color": "$body_color",
+      "width": 3
+    }
+  ],
+  "body_100": { "inherit": "body" }
+}

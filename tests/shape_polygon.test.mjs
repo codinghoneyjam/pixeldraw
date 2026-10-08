@@ -150,9 +150,10 @@ describe("polygon fillMode", () => {
 });
 
 describe("polygon kind isolation", () => {
-  it("unknown kind still throws in ShapeTool; polygon not in tool KINDS", () => {
+  it("unknown kind still throws in ShapeTool; polygon is a tool kind now", () => {
     assert.throws(() => new ShapeTool({}, "triangle"), /unknown shape kind/);
-    assert.throws(() => new ShapeTool({}, "polygon"), /unknown shape kind/);
+    const stub = { session: { addEventListener() {} } };
+    assert.equal(new ShapeTool(stub, "polygon").id, "polygon");
   });
 
   it("rect path unchanged (fill equals rrect-region of bbox from spec.bbox)", () => {

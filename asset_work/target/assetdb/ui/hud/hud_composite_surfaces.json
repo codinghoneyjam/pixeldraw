@@ -1,0 +1,866 @@
+{
+  "manifest_id": "hud_composite_surfaces",
+  "description": "Stage HUD 6대 복합 서피스 및 파티클 칩 아틀라스 선언적 JSON 레시피 (refer.png 기준)",
+  "surfaces": [
+    {
+      "id": "keyboard_plate_block",
+      "canvas": {
+        "width": 256,
+        "height": 256,
+        "background": "#00000000"
+      },
+      "output": "assetdb/ui/hud/keyboard_plate_block.png",
+      "nine_slice": {
+        "left": 32,
+        "top": 32,
+        "right": 32,
+        "bottom": 32
+      },
+      "role": "keyboard_plate_housing",
+      "layers": [
+        {
+          "type": "rounded_rect",
+          "bbox": [
+            [
+              4,
+              8
+            ],
+            [
+              251,
+              254
+            ]
+          ],
+          "radius": 16,
+          "fill": "#05080EFF"
+        },
+        {
+          "type": "rounded_rect",
+          "bbox": [
+            [
+              4,
+              4
+            ],
+            [
+              251,
+              250
+            ]
+          ],
+          "radius": 16,
+          "fill": "#0E1624FF",
+          "outline": "#1E2E4AFF",
+          "width": 2
+        },
+        {
+          "type": "rounded_rect",
+          "bbox": [
+            [
+              7,
+              7
+            ],
+            [
+              248,
+              247
+            ]
+          ],
+          "radius": 13,
+          "outline": "#2A3B5CFF",
+          "width": 1
+        }
+      ]
+    },
+    {
+      "id": "switch_socket_well",
+      "canvas": {
+        "width": 96,
+        "height": 96,
+        "background": "#00000000"
+      },
+      "output": "assetdb/ui/hud/switch_socket_well.png",
+      "nine_slice": {
+        "left": 16,
+        "top": 16,
+        "right": 16,
+        "bottom": 16
+      },
+      "role": "switch_recessed_hole",
+      "layers": [
+        {
+          "type": "rounded_rect",
+          "bbox": [
+            [
+              2,
+              2
+            ],
+            [
+              93,
+              93
+            ]
+          ],
+          "radius": 10,
+          "fill": "#080E18FF",
+          "outline": "#1A2638FF",
+          "width": 1
+        },
+        {
+          "type": "rounded_rect",
+          "bbox": [
+            [
+              8,
+              8
+            ],
+            [
+              87,
+              87
+            ]
+          ],
+          "radius": 6,
+          "fill": "#04060AFF"
+        },
+        {
+          "type": "rect",
+          "bbox": [
+            [
+              8,
+              8
+            ],
+            [
+              87,
+              14
+            ]
+          ],
+          "fill": "#020305FF"
+        },
+        {
+          "type": "rect",
+          "bbox": [
+            [
+              8,
+              8
+            ],
+            [
+              14,
+              87
+            ]
+          ],
+          "fill": "#020305FF"
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              14,
+              86
+            ],
+            [
+              87,
+              86
+            ]
+          ],
+          "fill": "#121C2BFF",
+          "width": 1
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              86,
+              14
+            ],
+            [
+              86,
+              86
+            ]
+          ],
+          "fill": "#121C2BFF",
+          "width": 1
+        }
+      ]
+    },
+    {
+      "id": "keycap_screen_9slice",
+      "canvas": {
+        "width": 128,
+        "height": 64,
+        "background": "#00000000"
+      },
+      "output": "assetdb/ui/hud/keycap_screen_9slice.png",
+      "nine_slice": {
+        "left": 24,
+        "top": 16,
+        "right": 24,
+        "bottom": 16
+      },
+      "role": "gauge_bar_and_info_slot_keycap",
+      "layers": [
+        {
+          "type": "rounded_rect",
+          "bbox": [
+            [
+              6,
+              10
+            ],
+            [
+              121,
+              61
+            ]
+          ],
+          "radius": 12,
+          "fill": "#080E18FF"
+        },
+        {
+          "type": "rounded_rect",
+          "bbox": [
+            [
+              6,
+              4
+            ],
+            [
+              121,
+              56
+            ]
+          ],
+          "radius": 12,
+          "fill": "#162238FF",
+          "outline": "#2A3B5CFF",
+          "width": 2
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              18,
+              4
+            ],
+            [
+              109,
+              4
+            ]
+          ],
+          "fill": "#465F8CFF",
+          "width": 2
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              6,
+              16
+            ],
+            [
+              6,
+              44
+            ]
+          ],
+          "fill": "#465F8CFF",
+          "width": 2
+        },
+        {
+          "type": "rounded_rect",
+          "bbox": [
+            [
+              18,
+              12
+            ],
+            [
+              109,
+              48
+            ]
+          ],
+          "radius": 6,
+          "fill": "#050811FF",
+          "outline": "#0B1320FF",
+          "width": 1
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              22,
+              14
+            ],
+            [
+              105,
+              14
+            ]
+          ],
+          "fill": "#1A2840FF",
+          "width": 1
+        }
+      ]
+    },
+    {
+      "id": "chapter_title_well",
+      "canvas": {
+        "width": 192,
+        "height": 48,
+        "background": "#00000000"
+      },
+      "output": "assetdb/ui/hud/chapter_title_well.png",
+      "nine_slice": {
+        "left": 16,
+        "top": 8,
+        "right": 16,
+        "bottom": 8
+      },
+      "role": "chapter_title_screen_well",
+      "layers": [
+        {
+          "type": "rounded_rect",
+          "bbox": [
+            [
+              2,
+              2
+            ],
+            [
+              189,
+              45
+            ]
+          ],
+          "radius": 4,
+          "fill": "#020408FF",
+          "outline": "#152238FF",
+          "width": 1
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              3,
+              3
+            ],
+            [
+              188,
+              3
+            ]
+          ],
+          "fill": "#000000FF",
+          "width": 1
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              3,
+              3
+            ],
+            [
+              3,
+              44
+            ]
+          ],
+          "fill": "#000000FF",
+          "width": 1
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              4,
+              44
+            ],
+            [
+              187,
+              44
+            ]
+          ],
+          "fill": "#101A2BFF",
+          "width": 1
+        }
+      ]
+    },
+    {
+      "id": "floating_visor_window",
+      "canvas": {
+        "width": 256,
+        "height": 256,
+        "background": "#00000000"
+      },
+      "output": "assetdb/ui/hud/floating_visor_window.png",
+      "nine_slice": {
+        "left": 32,
+        "top": 32,
+        "right": 32,
+        "bottom": 32
+      },
+      "role": "floating_message_minimap_visor",
+      "layers": [
+        {
+          "type": "polygon",
+          "points": [
+            [
+              20,
+              4
+            ],
+            [
+              235,
+              4
+            ],
+            [
+              251,
+              20
+            ],
+            [
+              251,
+              235
+            ],
+            [
+              235,
+              251
+            ],
+            [
+              20,
+              251
+            ],
+            [
+              4,
+              235
+            ],
+            [
+              4,
+              20
+            ]
+          ],
+          "fill": "#07101DE0",
+          "outline": "#00E5FFFF",
+          "width": 2
+        },
+        {
+          "type": "polygon",
+          "points": [
+            [
+              24,
+              8
+            ],
+            [
+              231,
+              8
+            ],
+            [
+              247,
+              24
+            ],
+            [
+              247,
+              231
+            ],
+            [
+              231,
+              247
+            ],
+            [
+              24,
+              247
+            ],
+            [
+              8,
+              231
+            ],
+            [
+              8,
+              24
+            ]
+          ],
+          "outline": "#007A99B4",
+          "width": 1
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              12,
+              24
+            ],
+            [
+              12,
+              12
+            ]
+          ],
+          "fill": "#00E5FFFF",
+          "width": 2
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              12,
+              12
+            ],
+            [
+              24,
+              12
+            ]
+          ],
+          "fill": "#00E5FFFF",
+          "width": 2
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              243,
+              24
+            ],
+            [
+              243,
+              12
+            ]
+          ],
+          "fill": "#00E5FFFF",
+          "width": 2
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              231,
+              12
+            ],
+            [
+              243,
+              12
+            ]
+          ],
+          "fill": "#00E5FFFF",
+          "width": 2
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              12,
+              231
+            ],
+            [
+              12,
+              243
+            ]
+          ],
+          "fill": "#00E5FFFF",
+          "width": 2
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              12,
+              243
+            ],
+            [
+              24,
+              243
+            ]
+          ],
+          "fill": "#00E5FFFF",
+          "width": 2
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              243,
+              231
+            ],
+            [
+              243,
+              243
+            ]
+          ],
+          "fill": "#00E5FFFF",
+          "width": 2
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              231,
+              243
+            ],
+            [
+              243,
+              243
+            ]
+          ],
+          "fill": "#00E5FFFF",
+          "width": 2
+        }
+      ]
+    },
+    {
+      "id": "scanline_tile_fine",
+      "canvas": {
+        "width": 32,
+        "height": 32,
+        "background": "#00000000"
+      },
+      "output": "assetdb/ui/hud/scanline_tile_fine.png",
+      "role": "crt_scanline_overlay_tile (added for U37; absent from tidy evidence)",
+      "layers": [
+        {
+          "type": "line",
+          "points": [
+            [
+              0,
+              3
+            ],
+            [
+              31,
+              3
+            ]
+          ],
+          "fill": "#22D3EE28",
+          "width": 1
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              0,
+              6
+            ],
+            [
+              31,
+              6
+            ]
+          ],
+          "fill": "#22D3EE28",
+          "width": 1
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              0,
+              9
+            ],
+            [
+              31,
+              9
+            ]
+          ],
+          "fill": "#22D3EE28",
+          "width": 1
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              0,
+              12
+            ],
+            [
+              31,
+              12
+            ]
+          ],
+          "fill": "#22D3EE28",
+          "width": 1
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              0,
+              15
+            ],
+            [
+              31,
+              15
+            ]
+          ],
+          "fill": "#22D3EE28",
+          "width": 1
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              0,
+              18
+            ],
+            [
+              31,
+              18
+            ]
+          ],
+          "fill": "#22D3EE28",
+          "width": 1
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              0,
+              21
+            ],
+            [
+              31,
+              21
+            ]
+          ],
+          "fill": "#22D3EE28",
+          "width": 1
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              0,
+              24
+            ],
+            [
+              31,
+              24
+            ]
+          ],
+          "fill": "#22D3EE28",
+          "width": 1
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              0,
+              27
+            ],
+            [
+              31,
+              27
+            ]
+          ],
+          "fill": "#22D3EE28",
+          "width": 1
+        },
+        {
+          "type": "line",
+          "points": [
+            [
+              0,
+              30
+            ],
+            [
+              31,
+              30
+            ]
+          ],
+          "fill": "#22D3EE28",
+          "width": 1
+        }
+      ]
+    }
+  ],
+  "atlases": [
+    {
+      "id": "chip_particle_atlas",
+      "canvas": {
+        "width": 128,
+        "height": 64,
+        "background": "#00000000"
+      },
+      "output": "assetdb/ui/hud/chip_particle_atlas.png",
+      "cell_size": [
+        64,
+        64
+      ],
+      "cells": {
+        "flat_square": [
+          0,
+          0,
+          64,
+          64
+        ],
+        "bevel_2_5d": [
+          64,
+          0,
+          64,
+          64
+        ]
+      },
+      "layers": [
+        {
+          "type": "rect",
+          "bbox": [
+            [
+              16,
+              16
+            ],
+            [
+              47,
+              47
+            ]
+          ],
+          "fill": "#FFFFFFFF"
+        },
+        {
+          "type": "rect",
+          "bbox": [
+            [
+              80,
+              16
+            ],
+            [
+              111,
+              47
+            ]
+          ],
+          "fill": "#D0D8E8FF"
+        },
+        {
+          "type": "rect",
+          "bbox": [
+            [
+              80,
+              16
+            ],
+            [
+              111,
+              19
+            ]
+          ],
+          "fill": "#FFFFFFFF"
+        },
+        {
+          "type": "rect",
+          "bbox": [
+            [
+              80,
+              16
+            ],
+            [
+              83,
+              47
+            ]
+          ],
+          "fill": "#FFFFFFFF"
+        },
+        {
+          "type": "rect",
+          "bbox": [
+            [
+              80,
+              44
+            ],
+            [
+              111,
+              47
+            ]
+          ],
+          "fill": "#708098FF"
+        },
+        {
+          "type": "rect",
+          "bbox": [
+            [
+              108,
+              16
+            ],
+            [
+              111,
+              47
+            ]
+          ],
+          "fill": "#708098FF"
+        }
+      ]
+    }
+  ]
+}

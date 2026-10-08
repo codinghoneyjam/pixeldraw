@@ -1,7 +1,7 @@
 // <META - FILE SUMMARY - File actions: save, open, exportLayer, importLayer, exportPng, new>
 import { DrawToolError } from "../../core/errors.js";
 import { EVENTS } from "../../core/events.js";
-import { documentToJson, importLayerJson, jsonToDocument, layerToJson } from "../../io/serialize.js";
+import { documentToJson, importLayerJson, jsonToDocument, layerToJson, documentToVectorJson, vectorJsonToDocument, recipeJsonToDocument } from "../../io/serialize.js";
 import { exportPngBytes } from "../../io/export_png.js";
 import { pickFile, readJsonFile, saveBinaryFile, saveTextFile } from "../../io/file_io.js";
 import { confirmDiscardChanges, showNewDocumentDialog, showProgress } from "../dialogs.js";
@@ -113,4 +113,73 @@ export async function doNew(session) {
     if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") id = crypto.randomUUID();
   } catch { /* ignore */ }
   session.newDocument({ widthPx: res.widthPx, heightPx: res.heightPx, background: res.background, name: res.name, id });
+}
+
+// <META - ROLE : Import legacy recipe JSON as a new document | L106-140>
+export async function doImportRecipe(session, toast) {
+  if (session.history.isDirty()) {
+    const go = await confirmDiscardChanges();
+    if (!go) return;
+  }
+  const file = await pickFile(".json,application/json");
+  if (!file) return;
+  const prog = showProgress("레시피 가져오기");
+  try {
+    const obj = await readJsonFile(file);
+    if (obj && obj.format === "draw_tool.document") {
+      const doc = await jsonToDocument(obj);
+      session.loadDocument(doc);
+      toast(STRINGS.toast.importedRecipe);
+    } else if (obj && obj.format === "draw_tool.vector") {
+      const doc = await vectorJsonToDocument(obj);
+      session.loadDocument(doc);
+      toast(STRINGS.toast.importedRecipe);
+    } else if (obj && (obj.canvas || obj.geometry || obj.surfaces || obj.albedo_layers || obj.mask_layers || obj.layers)) {
+      // Legacy asset recipe (weapon/player/enemy/hud/pantograph dialects).
+      const doc = recipeJsonToDocument(obj);
+      session.loadDocument(doc);
+      toast(STRINGS.toast.importedRecipe);
+    } else {
+      throw new DrawToolError("SCHEMA", "unknown or unsupported recipe format");
+    }
+  } finally {
+    prog.close();
+  }
+}
+
+// <META - ROLE : Export document as vector command JSON | L142-165>
+export async function doExportVector(session, toast) {
+  const doc = session.doc;
+  if (!doc) return;
+  const prog = showProgress("벡터 내보내기");
+  try {
+    const obj = documentToVectorJson(doc);
+    const ok = await saveTextFile(`${doc.name || "untitled"}.vector.json`, JSON.stringify(obj));
+    if (ok) toast(STRINGS.toast.exportedVector);
+  } finally {
+    prog.close();
+  }
+}
+
+// <META - ROLE : Import vector command JSON as a new document | L167-195>
+export async function doImportVector(session, toast) {
+  if (session.history.isDirty()) {
+    const go = await confirmDiscardChanges();
+    if (!go) return;
+  }
+  const file = await pickFile(".json,application/json");
+  if (!file) return;
+  const prog = showProgress("벡터 가져오기");
+  try {
+    const obj = await readJsonFile(file);
+    if (obj && obj.format === "draw_tool.vector") {
+      const doc = await vectorJsonToDocument(obj);
+      session.loadDocument(doc);
+      toast(STRINGS.toast.importedVector);
+    } else {
+      throw new DrawToolError("SCHEMA", "unknown or unsupported vector format");
+    }
+  } finally {
+    prog.close();
+  }
 }

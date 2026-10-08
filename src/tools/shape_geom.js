@@ -21,13 +21,16 @@ export function distSeg(px, py, a, b) {
   return Math.hypot(px - (a.x + t * dx), py - (a.y + t * dy));
 }
 
-// <META - ROLE : handle layout for bbox kinds and line endpoints | L19-30>
+// <META - ROLE : handle layout for bbox kinds, line endpoints, and polygon vertices | L19-36>
 export function layoutHandles(kind, pending) {
   if (kind === "line") {
     return [
       { id: "p0", end: 0, x: pending.p0.x, y: pending.p0.y },
       { id: "p1", end: 1, x: pending.p1.x, y: pending.p1.y },
     ];
+  }
+  if (kind === "polygon") {
+    return pending.points.map((p, i) => ({ id: `v${i}`, x: p.x, y: p.y }));
   }
   const { x, y, w, h } = pending.bbox;
   const x1 = x + w - 1;
@@ -46,9 +49,30 @@ export function hitHandle(kind, pending, fx, fy, tol) {
   return null;
 }
 
-// <META - ROLE : inside test for bbox kinds and line grab width | L40-48>
+// <META - ROLE : even-odd point-in-polygon for integer or float test points | L40-56>
+export function pointInPolygon(pts, fx, fy) {
+  let inside = false;
+  for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+    const xi = pts[i].x, yi = pts[i].y;
+    const xj = pts[j].x, yj = pts[j].y;
+    if ((yi > fy) !== (yj > fy) && fx < ((xj - xi) * (fy - yi)) / (yj - yi) + xi) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
+// <META - ROLE : inside test for bbox kinds, line grab width, and polygon fill/edge | L58-72>
 export function insideShape(kind, pending, fx, fy, grab) {
   if (kind === "line") return distSeg(fx, fy, pending.p0, pending.p1) <= grab;
+  if (kind === "polygon") {
+    const pts = pending.points;
+    if (pointInPolygon(pts, fx, fy)) return true;
+    for (let i = 0; i < pts.length; i++) {
+      if (distSeg(fx, fy, pts[i], pts[(i + 1) % pts.length]) <= grab) return true;
+    }
+    return false;
+  }
   const { x, y, w, h } = pending.bbox;
   return fx >= x && fx <= x + w - 1 && fy >= y && fy <= y + h - 1;
 }
@@ -64,7 +88,7 @@ export function dragGeom(kind, p0, p1, flags, shapeRadius) {
   return { bbox: { x: b[0], y: b[1], w: b[2], h: b[3] }, p0: null, p1: null, radius: shapeRadius };
 }
 
-// <META - ROLE : pending resize from a handle drag | L62-74>
+// <META - ROLE : pending resize from a handle drag | L62-84>
 export function resizeGeom(kind, orig, handleId, end, p, flags, shiftSnap) {
   if (kind === "line") {
     const fixed = end === 0 ? orig.p1 : orig.p0;
@@ -72,16 +96,27 @@ export function resizeGeom(kind, orig, handleId, end, p, flags, shiftSnap) {
     const named = { x: np[0], y: np[1] };
     return end === 0 ? { ...orig, p0: named } : { ...orig, p1: named };
   }
+  if (kind === "polygon") {
+    const idx = Number(String(handleId).slice(1));
+    if (!Number.isInteger(idx) || idx < 0 || idx >= orig.points.length) return orig;
+    const np = flags.snap ? { x: rnd(p.x / 32) * 32, y: rnd(p.y / 32) * 32 } : { x: p.x, y: p.y };
+    const points = orig.points.map((q, i) => (i === idx ? np : { ...q }));
+    return { ...orig, points };
+  }
   let b = resizeBBox([orig.bbox.x, orig.bbox.y, orig.bbox.w, orig.bbox.h], handleId, [p.x, p.y], flags.lock, flags.center);
   if (flags.snap) b = unitSnap(b);
   return { ...orig, bbox: { x: b[0], y: b[1], w: b[2], h: b[3] } };
 }
 
-// <META - ROLE : pending move by integer delta with optional unit snap | L76-86>
+// <META - ROLE : pending move by integer delta with optional unit snap | L86-96>
 export function moveGeom(kind, orig, dx, dy, snap) {
   if (kind === "line") {
     const sh = (q) => (snap ? { x: rnd((q.x + dx) / 32) * 32, y: rnd((q.y + dy) / 32) * 32 } : { x: q.x + dx, y: q.y + dy });
     return { ...orig, p0: sh(orig.p0), p1: sh(orig.p1) };
+  }
+  if (kind === "polygon") {
+    const sh = (q) => (snap ? { x: rnd((q.x + dx) / 32) * 32, y: rnd((q.y + dy) / 32) * 32 } : { x: q.x + dx, y: q.y + dy });
+    return { ...orig, points: orig.points.map(sh) };
   }
   const nx = snap ? rnd((orig.bbox.x + dx) / 32) * 32 : orig.bbox.x + dx;
   const ny = snap ? rnd((orig.bbox.y + dy) / 32) * 32 : orig.bbox.y + dy;
@@ -106,6 +141,25 @@ export function parseLineGeom(v) {
   return { bbox: null, p0: { x, y }, p1: { x: x + w - 1, y: y + h - 1 }, radius: 0 };
 }
 
+// <META - ROLE : validated option-bar geometry for polygon pending | L106-120>
+export function parsePolygonGeom(v) {
+  if (v === null || typeof v !== "object" || !Array.isArray(v.points)) {
+    throw new DrawToolError("OUT_OF_RANGE", "polygon needs points");
+  }
+  if (v.points.length < 3) throw new DrawToolError("OUT_OF_RANGE", "polygon needs >= 3 points");
+  const points = v.points.map((p, i) => {
+    const q = Array.isArray(p) ? { x: p[0], y: p[1] } : p;
+    if (!q || typeof q !== "object") throw new DrawToolError("OUT_OF_RANGE", `invalid polygon point ${i}`);
+    return { x: asInt(q.x, `points[${i}].x`), y: asInt(q.y, `points[${i}].y`) };
+  });
+  return { bbox: null, p0: null, p1: null, points };
+}
+
+// <META - ROLE : snap one placement point to the 32px grid when snapping | L122-126>
+export function snapPlacePoint(p, snap) {
+  if (!snap) return { ...p };
+  return { x: rnd(p.x / 32) * 32, y: rnd(p.y / 32) * 32 };
+}
 // <META - ROLE : validated option-bar geometry for bbox pending | L106-116>
 export function parseBoxGeom(v, shapeRadius) {
   const x = asInt(v.x, "x");
@@ -118,9 +172,17 @@ export function parseBoxGeom(v, shapeRadius) {
   return { bbox: { x, y, w, h }, p0: null, p1: null, radius: r };
 }
 
-// <META - ROLE : commit-time ShapeSpec from pending geometry | L118-130>
+// <META - ROLE : commit-time ShapeSpec from pending geometry | L118-136>
 export function buildSpec(kind, pending, settings) {
   if (kind === "line") return { kind: "line", p0: { ...pending.p0 }, p1: { ...pending.p1 }, strokeWidth: settings.penSize };
+  if (kind === "polygon") {
+    return {
+      kind: "polygon",
+      points: pending.points.map((p) => ({ x: p.x, y: p.y })),
+      strokeWidth: settings.penSize,
+      fillMode: settings.shapeFill,
+    };
+  }
   return {
     kind,
     bbox: { ...pending.bbox },
@@ -139,8 +201,9 @@ export function drawSpec(kind, draw, settings) {
   return { kind, bbox: g.bbox, radius: kind === "rrect" ? g.radius : 0, strokeWidth: settings.penSize, fillMode: settings.shapeFill };
 }
 
-// <META - ROLE : pending-like geometry back from a spec for handles | L144-148>
+// <META - ROLE : pending-like geometry back from a spec for handles | L144-152>
 export function geomFromSpec(spec) {
   if (spec.kind === "line") return { bbox: null, p0: spec.p0, p1: spec.p1, radius: 0 };
+  if (spec.kind === "polygon") return { bbox: null, p0: null, p1: null, points: spec.points.map((p) => ({ ...p })) };
   return { bbox: { ...spec.bbox }, p0: null, p1: null, radius: spec.radius ?? 0 };
 }

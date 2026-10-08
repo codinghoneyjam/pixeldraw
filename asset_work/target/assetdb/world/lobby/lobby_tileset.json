@@ -1,0 +1,239 @@
+{
+  "provenance": {
+    "generated_by": "node tools/recipe/bake_tileset.mjs",
+    "legacy": "asset_work/tidy/numbered/27_lobby_tileset.png (TRES-extracted, source deleted)",
+    "method": "reverse-engineered solid-rect decomposition; every rect is one legacy color"
+  },
+  "canvas": {
+    "width": 192,
+    "height": 64
+  },
+  "layers": {
+    "tiles": [
+      {
+        "cmd": "rect",
+        "box": [
+          [
+            0,
+            0
+          ],
+          [
+            63,
+            0
+          ]
+        ],
+        "fill": "#0A1829"
+      },
+      {
+        "cmd": "rect",
+        "box": [
+          [
+            64,
+            0
+          ],
+          [
+            127,
+            0
+          ]
+        ],
+        "fill": "#162C46"
+      },
+      {
+        "cmd": "rect",
+        "box": [
+          [
+            128,
+            0
+          ],
+          [
+            191,
+            3
+          ]
+        ],
+        "fill": "#00E5FF"
+      },
+      {
+        "cmd": "rect",
+        "box": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            62
+          ]
+        ],
+        "fill": "#0A1829"
+      },
+      {
+        "cmd": "rect",
+        "box": [
+          [
+            1,
+            1
+          ],
+          [
+            62,
+            62
+          ]
+        ],
+        "fill": "#07101D"
+      },
+      {
+        "cmd": "rect",
+        "box": [
+          [
+            63,
+            1
+          ],
+          [
+            63,
+            62
+          ]
+        ],
+        "fill": "#0A1829"
+      },
+      {
+        "cmd": "rect",
+        "box": [
+          [
+            64,
+            1
+          ],
+          [
+            64,
+            62
+          ]
+        ],
+        "fill": "#162C46"
+      },
+      {
+        "cmd": "rect",
+        "box": [
+          [
+            65,
+            1
+          ],
+          [
+            126,
+            62
+          ]
+        ],
+        "fill": "#0F1E32"
+      },
+      {
+        "cmd": "rect",
+        "box": [
+          [
+            127,
+            1
+          ],
+          [
+            127,
+            62
+          ]
+        ],
+        "fill": "#162C46"
+      },
+      {
+        "cmd": "rect",
+        "box": [
+          [
+            128,
+            4
+          ],
+          [
+            191,
+            19
+          ]
+        ],
+        "fill": "#475569"
+      },
+      {
+        "cmd": "rect",
+        "box": [
+          [
+            128,
+            20
+          ],
+          [
+            128,
+            62
+          ]
+        ],
+        "fill": "#0F172A"
+      },
+      {
+        "cmd": "rect",
+        "box": [
+          [
+            129,
+            20
+          ],
+          [
+            190,
+            62
+          ]
+        ],
+        "fill": "#1E293B"
+      },
+      {
+        "cmd": "rect",
+        "box": [
+          [
+            191,
+            20
+          ],
+          [
+            191,
+            62
+          ]
+        ],
+        "fill": "#0F172A"
+      },
+      {
+        "cmd": "rect",
+        "box": [
+          [
+            0,
+            63
+          ],
+          [
+            63,
+            63
+          ]
+        ],
+        "fill": "#0A1829"
+      },
+      {
+        "cmd": "rect",
+        "box": [
+          [
+            64,
+            63
+          ],
+          [
+            127,
+            63
+          ]
+        ],
+        "fill": "#162C46"
+      },
+      {
+        "cmd": "rect",
+        "box": [
+          [
+            128,
+            63
+          ],
+          [
+            191,
+            63
+          ]
+        ],
+        "fill": "#0F172A"
+      }
+    ]
+  }
+}

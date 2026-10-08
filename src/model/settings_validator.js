@@ -1,6 +1,6 @@
 import { DrawToolError } from "../core/errors.js";
 import { SETTING_KEYS } from "../core/events.js";
-import { parseHex, toHex } from "../core/pixel.js";
+import { parseHex, toHex, toHex8 } from "../core/pixel.js";
 
 export const TOOL_IDS = Object.freeze([
   "pen",
@@ -11,6 +11,7 @@ export const TOOL_IDS = Object.freeze([
   "rect",
   "rrect",
   "ellipse",
+  "polygon",
   "hand",
 ]);
 
@@ -19,10 +20,12 @@ const SHAPE_FILLS = Object.freeze(["outline", "fill"]);
 
 function validateColor(value) {
   const c = parseHex(value);
-  if (c === null || c.a !== 255) {
+  // Fully transparent paint would silently erase, so alpha 0 is rejected.
+  if (c === null || c.a === 0) {
     throw new DrawToolError("OUT_OF_RANGE", `invalid color ${String(value)}`);
   }
-  return toHex(c.r, c.g, c.b);
+  // Canonical form keeps alpha only when translucent: opaque stays #rrggbb.
+  return c.a === 255 ? toHex(c.r, c.g, c.b) : toHex8(c.r, c.g, c.b, c.a);
 }
 
 function validateInt(value, min, max, what) {

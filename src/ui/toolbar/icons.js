@@ -10,6 +10,7 @@ export const ICONS = Object.freeze({
   rect: svg('<rect x="4" y="6" width="16" height="12"/>'),
   rrect: svg('<rect x="4" y="6" width="16" height="12" rx="4"/>'),
   ellipse: svg('<ellipse cx="12" cy="12" rx="8" ry="6"/>'),
+  polygon: svg('<path d="M12 3l8 16H4l8-16z"/>'),
   hand: svg('<path d="M8 12V5a1.5 1.5 0 0 1 3 0v6V4a1.5 1.5 0 0 1 3 0v7V6a1.5 1.5 0 0 1 3 0v8a7 7 0 0 1-7 7h-1a7 7 0 0 1-6-3l-2-4a1.5 1.5 0 0 1 2.5-1.5L8 14z"/>'),
   eye: svg('<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.5"/>'),
   eyeOff: svg('<path d="M3 3l18 18"/><path d="M10 6c.7-.1 1.3-.1 2-.1 6.5 0 10 6 10 6a17 17 0 0 1-3 3.5M6 7A16 16 0 0 0 2 12s3.5 6 10 6c1.5 0 2.8-.3 4-.8"/>'),
@@ -28,6 +29,7 @@ const FALLBACK_CHAR = Object.freeze({
   rect: "사",
   rrect: "둥",
   ellipse: "타",
+  polygon: "다",
   hand: "손",
 });
 

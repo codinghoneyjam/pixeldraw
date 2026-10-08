@@ -21,7 +21,7 @@ import { createShortcuts, isEditableTarget, resolveShortcut } from "../src/ui/to
 describe("strings", () => {
   it("has Korean catalog", () => {
     assert.equal(typeof STRINGS.tools.pen, "string");
-    for (const id of ["pen", "eraser", "fill", "eyedropper", "line", "rect", "rrect", "ellipse", "hand"]) {
+    for (const id of ["pen", "eraser", "fill", "eyedropper", "line", "rect", "rrect", "ellipse", "polygon", "hand"]) {
       assert.ok(STRINGS.tools[id], id);
       assert.ok(STRINGS.toolShortcuts[id], id);
     }
@@ -33,7 +33,7 @@ describe("strings", () => {
 
 describe("icons", () => {
   it("inline SVG with viewBox + currentColor, fallback char", () => {
-    for (const id of ["pen", "eraser", "fill", "eyedropper", "line", "rect", "rrect", "ellipse", "hand"]) {
+    for (const id of ["pen", "eraser", "fill", "eyedropper", "line", "rect", "rrect", "ellipse", "polygon", "hand"]) {
       assert.equal(hasIcon(id), true, id);
       const s = iconFor(id);
       assert.ok(s.includes("viewBox=\"0 0 24 24\""), id);
@@ -78,7 +78,7 @@ describe("panel modules import without DOM", () => {
 
 describe("shortcuts pure map", () => {
   it("tool keys", () => {
-    const cases = { b: "pen", e: "eraser", g: "fill", i: "eyedropper", l: "line", r: "rect", u: "rrect", o: "ellipse", h: "hand" };
+    const cases = { b: "pen", e: "eraser", g: "fill", i: "eyedropper", l: "line", r: "rect", u: "rrect", o: "ellipse", p: "polygon", h: "hand" };
     for (const [key, tool] of Object.entries(cases)) {
       assert.deepEqual(resolveShortcut({ key }), { kind: "tool", tool }, key);
     }

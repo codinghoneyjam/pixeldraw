@@ -1,5 +1,5 @@
 // <META - FILE SUMMARY - Hue ring + centered SV square: HSV math, raster cache, pointer pick, mount>
-import { toHex } from "../../core/pixel.js";
+import { parseHex, toHex } from "../../core/pixel.js";
 
 export const WHEEL_PX = 176;
 export const RING_OUT = 88;
@@ -268,11 +268,27 @@ export function createColorWheel(options = {}) {
   };
 }
 
+// <META - ROLE : Re-attach the active slot alpha to an opaque wheel pick | L271-279>
+function withSlotAlpha(ui, hex) {
+  if (typeof hex !== "string" || !hex.startsWith("#")) return hex;
+  let a = 255;
+  try {
+    const cur = ui.session ? ui.session.settings[ui.slot] : null;
+    a = parseHex(cur)?.a ?? 255;
+  } catch {
+    a = 255;
+  }
+  if (a === 255) return hex;
+  return `${hex}${a.toString(16).padStart(2, "0")}`;
+}
+
 // <META - ROLE : Hue ring + SV square; the wheel is a view fed only by paint() | L229-272>
+// Wheel picks are opaque by construction, so the current slot alpha is
+// re-attached here instead of resetting translucency on every drag.
 export function mountWheel(ui) {
   ui.wheel = createColorWheel({
     container: ui.els.wheelWrap,
-    onChange: (hex) => ui.safe(() => ui.applyColor(ui.slot, hex, { record: false })),
+    onChange: (hex) => ui.safe(() => ui.applyColor(ui.slot, withSlotAlpha(ui, hex), { record: false })),
     onCommit: () => ui.safe(() => ui.pushRecent(ui.canonical())),
   });
   return () => ui.wheel?.dispose();

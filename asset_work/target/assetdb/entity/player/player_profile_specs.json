@@ -1,0 +1,27 @@
+{
+  "_provenance": "Player profile palettes for full-sheet bakes. HERO_CLASSIC_GEM is the tests/fixtures/player_arc/manifest.json spec. HERO_TRACKBALL_CYBER is reverse-engineered from the committed 18_hero_trackball_cyber_sheet.png slot palette (emerald family; body tones derive exactly from body_color via color_tokens factors 0.6/0.22/1.25; body_outline renders black by design).",
+  "HERO_CLASSIC_GEM": {
+    "body_color": "#2C323D",
+    "body_dark": "#161920",
+    "body_deep": "#0E1015",
+    "body_bright": "#475569",
+    "body_outline": "#07080B",
+    "visor_color": "#000000",
+    "eye_color": "#38BDF8",
+    "glow_color": "#7DD3FC",
+    "wheel_core": "#0284C7",
+    "wheel_light": "#FFFFFF"
+  },
+  "HERO_TRACKBALL_CYBER": {
+    "body_color": "#1E293B",
+    "body_dark": "#121823",
+    "body_deep": "#06090C",
+    "body_bright": "#253349",
+    "body_outline": "#000000",
+    "visor_color": "#050505",
+    "eye_color": "#10B981",
+    "glow_color": "#34D399",
+    "wheel_core": "#059669",
+    "wheel_light": "#A7F3D0"
+  }
+}

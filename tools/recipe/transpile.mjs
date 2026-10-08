@@ -10,8 +10,76 @@ import { PixelWriter } from "../../src/core/chunkstore.js";
 import { exportPngBytes } from "../../src/io/export_png.js";
 import { documentToJson } from "../../src/io/serialize.js";
 import { assembleSheet } from "../../src/core/raster/atlas.js";
-import { applyCommand, renderTile } from "./render_tile.js";
+import { applyCommand, renderTile, setGlyphSets } from "./render_tile.js";
+import { loadGlyphSet } from "./text_glyphs.mjs";
 import { packRGBA } from "../../src/core/pixel.js";
+import { isPantographProfile, isSurfaceManifest, pantographCommandsForLayers, surfaceCommandsFor } from "./schema.mjs";
+import { fileURLToPath } from "node:url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+setGlyphSets(loadGlyphSet(path.join(__dirname, "text_glyphs.json")));
+
+async function renderPantographProfile({ recipe, layerKey, slotId, paletteOverrides, outputDocPath, outputPngPath }) {
+  const key = slotId ?? layerKey;
+  let docW;
+  let docH;
+  let commands = [];
+  if (key && recipe.nine_patch?.[key]) {
+    const entry = recipe.nine_patch[key];
+    docW = entry.width;
+    docH = entry.height;
+    commands = pantographCommandsForLayers(recipe, entry.layers);
+    console.log(`[Transpiler] Processing ${commands.length} commands for pantograph nine_patch '${key}'...`);
+  } else {
+    const canvas = recipe.canvas;
+    const cellW = canvas.slot_width;
+    docW = canvas.total_width;
+    docH = canvas.total_height;
+    for (const slot of recipe.slots) {
+      const dx = slot.index * cellW;
+      for (const cmd of pantographCommandsForLayers(recipe, slot.layers)) {
+        const shifted = { ...cmd, box: [[cmd.box[0][0] + dx, cmd.box[0][1]], [cmd.box[1][0] + dx, cmd.box[1][1]]] };
+        commands.push(shifted);
+      }
+    }
+    console.log(`[Transpiler] Processing ${commands.length} commands for pantograph sheet (${recipe.slots.length} slots)...`);
+  }
+  const session = new Session();
+  session.newDocument({ widthPx: docW, heightPx: docH });
+  const doc = session.doc;
+  const activeLayer = doc.getLayer(doc.activeLayerId);
+  const writer = new PixelWriter(activeLayer.store, activeLayer.id);
+  const ctx = { writer, palette: { ...(paletteOverrides ?? {}) }, width: docW, height: docH };
+  for (const cmd of commands) {
+    applyCommand(ctx, cmd);
+  }
+  writer.finish();
+  return await emitOutputs(doc, outputDocPath, outputPngPath, null);
+}
+
+// Composite-surface manifest (asset_work/tidy U36-U39 evidence:
+// hud_composite_surfaces.json) is the SSOT for U36-U39 (+U37 scanline entry,
+// which the mapping card prescribes adding). Surface layers already speak the
+// transpiler dialect under legacy names: `type` for the command, `bbox` for
+// the box. Colors are literal #RRGGBB(AA); the manifest carries no $tokens.
+async function renderSurfaceManifest({ recipe, layerKey, slotId, paletteOverrides, outputDocPath, outputPngPath }) {
+  const key = slotId ?? layerKey;
+  const { surface, commands } = surfaceCommandsFor(recipe, key);
+  const docW = surface.canvas.width;
+  const docH = surface.canvas.height;
+  console.log(`[Transpiler] Processing ${commands.length} commands for surface '${surface.id}'...`);
+  const session = new Session();
+  session.newDocument({ widthPx: docW, heightPx: docH });
+  const doc = session.doc;
+  const activeLayer = doc.getLayer(doc.activeLayerId);
+  const writer = new PixelWriter(activeLayer.store, activeLayer.id);
+  const ctx = { writer, palette: { ...(paletteOverrides ?? {}) }, width: docW, height: docH };
+  for (const cmd of commands) {
+    applyCommand(ctx, cmd);
+  }
+  writer.finish();
+  return await emitOutputs(doc, outputDocPath, outputPngPath, null);
+}
 
 // <META - ROLE : Transpile recipe JSON into a rendered Document + PNG | L13-176>
 export async function transpileAndRender({
@@ -26,6 +94,18 @@ export async function transpileAndRender({
 }) {
   const content = fs.readFileSync(recipePath, "utf-8");
   const recipe = JSON.parse(content);
+
+  if (isPantographProfile(recipe)) {
+    return await renderPantographProfile({
+      recipe, layerKey, slotId, paletteOverrides, outputDocPath, outputPngPath,
+    });
+  }
+
+  if (isSurfaceManifest(recipe)) {
+    return await renderSurfaceManifest({
+      recipe, layerKey, slotId, paletteOverrides, outputDocPath, outputPngPath,
+    });
+  }
 
   const width = recipe.canvas?.width ?? (Array.isArray(recipe.canvas) ? recipe.canvas[0] : canvasWidth);
   const height = recipe.canvas?.height ?? (Array.isArray(recipe.canvas) ? recipe.canvas[1] : canvasHeight);

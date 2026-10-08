@@ -1,6 +1,6 @@
 import { brushFootprint, strokePoint, strokeSegment } from "../core/brush.js";
 import { EVENTS } from "../core/events.js";
-import { packRGBA, parseHex, toHex } from "../core/pixel.js";
+import { packRGBA, parseHex, toHex8 } from "../core/pixel.js";
 import { samplePixel } from "../render/composite.js";
 import { Tool } from "./tool_base.js";
 
@@ -68,7 +68,7 @@ export class PenTool extends Tool {
     const hex = this.session.settings.primaryColor;
     const c = parseHex(hex);
     if (!c) return packRGBA(0, 0, 0, 255);
-    return packRGBA(c.r, c.g, c.b, 255);
+    return packRGBA(c.r, c.g, c.b, c.a);
   }
 
   _eyedrop(ev) {
@@ -79,7 +79,7 @@ export class PenTool extends Tool {
       this.session.notify("info", "투명 픽셀");
       return;
     }
-    this.session.setSetting("primaryColor", toHex(rgba[0], rgba[1], rgba[2]));
+    this.session.setSetting("primaryColor", toHex8(rgba[0], rgba[1], rgba[2], rgba[3]));
   }
 
   pointerDown(ev) {

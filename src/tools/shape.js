@@ -2,12 +2,12 @@
 // <META - SUMMARY CONT - Commit, preview, and overlay output live in shape_render.js>
 import { DrawToolError } from "../core/errors.js";
 import { EVENTS } from "../core/events.js";
-import { dragGeom, hitHandle, insideShape, moveGeom, resizeGeom } from "./shape_geom.js";
+import { dragGeom, hitHandle, insideShape, moveGeom, resizeGeom, snapPlacePoint } from "./shape_geom.js";
 import { commitPending, paintPreview, parsePendingValue, renderToolOverlay } from "./shape_render.js";
 
 // <META - ROLE : kind table, labels, live settings keys | L9-14>
-const KINDS = ["line", "rect", "rrect", "ellipse"];
-const LABELS = { line: "직선", rect: "사각형", rrect: "둥근 사각형", ellipse: "타원" };
+const KINDS = ["line", "rect", "rrect", "ellipse", "polygon"];
+const LABELS = { line: "직선", rect: "사각형", rrect: "둥근 사각형", ellipse: "타원", polygon: "다각형" };
 // Colours are deliberately NOT live keys: a pending shape owns the colour it was drawn
 // with (see shape_render.js buildColor for why).
 const LIVE_KEYS = ["penSize", "shapeFill", "shapeRadius", "snapUnit", "shapeLockAspect"];
@@ -34,6 +34,8 @@ export class ShapeTool {
     this._pending = null;
     this._draw = null;
     this._op = null;
+    this._place = null;
+    this._hoverPt = null;
     this._emitted = undefined;
     this._masks = { key: null, layers: null };
     this._tmp = {};
@@ -72,9 +74,16 @@ export class ShapeTool {
     this._render();
   }
   deactivate() {
+    if (this._mode === "placing" && this._place) {
+      // Same rule as pending: leaving the tool keeps finished work.
+      if (this._place.points.length >= 3) this._finishPlacing();
+      else { this._place = null; this._hoverPt = null; this._mode = this._pending ? "pending" : "idle"; }
+    }
     if (this.hasPending()) this.commit();
     this._draw = null;
     this._op = null;
+    this._place = null;
+    this._hoverPt = null;
     this._mode = "idle";
   }
   hover() {}
@@ -85,11 +94,22 @@ export class ShapeTool {
     this._pending = null;
     this._draw = null;
     this._op = null;
+    this._place = null;
+    this._hoverPt = null;
     this._mode = "idle";
     this._emitChanged();
     this._render();
   }
   cancel() {
+    if (this._mode === "placing") {
+      // Placing never opened an edit, so there is nothing to roll back.
+      this._place = null;
+      this._hoverPt = null;
+      this._mode = this._pending ? "pending" : "idle";
+      this._emitChanged();
+      this._render();
+      return;
+    }
     if (this._mode === "drawing") {
       this._draw = null;
       this._mode = this._pending ? "pending" : "idle";
@@ -132,11 +152,15 @@ export class ShapeTool {
     return { shift: !!ev.shift, lock: !!ev.shift || s.shapeLockAspect, center: !!ev.alt, snap: s.snapUnit };
   }
 
-  // <META - ROLE : pointer down: handles, move, or commit-plus-new | L137-160>
+  // <META - ROLE : pointer down: handles, move, commit-plus-new, or polygon placing | L137-178>
   pointerDown(ev) {
     if (ev.button !== 0 && ev.button !== undefined) return;
-    if (!this._session.doc || this._mode !== "idle" && this._mode !== "pending") return;
+    if (!this._session.doc || this._mode !== "idle" && this._mode !== "pending" && this._mode !== "placing") return;
     const p = { x: asInt(ev.x, "x"), y: asInt(ev.y, "y") };
+    if (this._mode === "placing" && this._place) {
+      this._placePoint(ev, p);
+      return;
+    }
     if (this._mode === "pending" && this._pending) {
       const h = hitHandle(this._kind, this._pending, ev.fx ?? p.x, ev.fy ?? p.y, 6 / this._zoom());
       if (h) {
@@ -153,17 +177,63 @@ export class ShapeTool {
       }
       this.commit();
     }
+    if (this._kind === "polygon") {
+      this._place = { points: [snapPlacePoint(p, this._session.settings.snapUnit)], layerId: this._session.doc.activeLayerId };
+      this._hoverPt = null;
+      this._mode = "placing";
+      this._emitChanged();
+      this._render();
+      return;
+    }
     this._draw = { p0: p, layerId: this._session.doc.activeLayerId, shift: !!ev.shift, alt: !!ev.alt };
     this._mode = "drawing";
     this._render();
   }
 
-  // <META - ROLE : pointer move: drawing, resizing, or moving preview | L163-182>
+  // <META - ROLE : polygon vertex append; clicking the first vertex closes | L180-198>
+  _placePoint(ev, p) {
+    const pts = this._place.points;
+    const first = pts[0];
+    const tol = 6 / this._zoom();
+    const fx = ev.fx ?? p.x;
+    const fy = ev.fy ?? p.y;
+    if (pts.length >= 3 && Math.abs(fx - first.x) <= tol && Math.abs(fy - first.y) <= tol) {
+      this._finishPlacing();
+      return;
+    }
+    pts.push(snapPlacePoint(p, this._session.settings.snapUnit));
+    this._emitChanged();
+    this._render();
+  }
+
+  // <META - ROLE : placing with >= 3 vertices becomes pending | L200-212>
+  _finishPlacing() {
+    if (!this._place || this._place.points.length < 3) return false;
+    this._pending = {
+      layerId: this._place.layerId,
+      color: this._session.settings.primaryColor,
+      bbox: null,
+      p0: null,
+      p1: null,
+      points: this._place.points.map((q) => ({ ...q })),
+    };
+    this._place = null;
+    this._hoverPt = null;
+    this._mode = "pending";
+    this._emitChanged();
+    this._render();
+    return true;
+  }
+
+  // <META - ROLE : pointer move: drawing, placing hover, resizing, or moving preview | L214-236>
   pointerMove(ev) {
     if (this._mode === "drawing" && this._draw) {
       this._draw.cur = { x: ev.x, y: ev.y };
       this._draw.shift = !!ev.shift;
       this._draw.alt = !!ev.alt;
+      this._render();
+    } else if (this._mode === "placing" && this._place) {
+      this._hoverPt = { x: ev.x, y: ev.y };
       this._render();
     } else if (this._mode === "resizing" && this._op) {
       this._resizeTo(ev);
@@ -210,9 +280,10 @@ export class ShapeTool {
     }
   }
 
-  // <META - ROLE : keyboard commit, discard, and arrow nudge | L217-246>
+  // <META - ROLE : keyboard commit, discard, placing finish, and arrow nudge | L238-278>
   keyDown(ev) {
     if (ev.key === "Enter") {
+      if (this._mode === "placing") return this._finishPlacing();
       if (this._mode === "drawing" || !this.hasPending()) return false;
       this._op = null;
       this._mode = "pending";
@@ -220,6 +291,21 @@ export class ShapeTool {
       return true;
     }
     if (ev.key === "Escape" || ev.key === "Delete" || ev.key === "Backspace") {
+      if (this._mode === "placing" && this._place) {
+        if (ev.key === "Escape" && this._place.points.length > 1) {
+          // Esc steps back one vertex; the last click is what the user regrets.
+          this._place.points.pop();
+          this._emitChanged();
+          this._render();
+          return true;
+        }
+        this._place = null;
+        this._hoverPt = null;
+        this._mode = this._pending ? "pending" : "idle";
+        this._emitChanged();
+        this._render();
+        return true;
+      }
       if ((this._mode === "drawing" || this._mode === "resizing" || this._mode === "moving") && ev.key === "Escape") {
         this.cancel();
         return true;
@@ -234,9 +320,13 @@ export class ShapeTool {
     const d = ev.key === "ArrowLeft" ? [-step, 0] : ev.key === "ArrowRight" ? [step, 0] : ev.key === "ArrowUp" ? [0, -step] : ev.key === "ArrowDown" ? [0, step] : null;
     if (!d || !this.hasPending() || this._mode !== "pending") return false;
     const p = this._pending;
-    this._pending = this._kind === "line"
-      ? { ...p, p0: { x: p.p0.x + d[0], y: p.p0.y + d[1] }, p1: { x: p.p1.x + d[0], y: p.p1.y + d[1] } }
-      : { ...p, bbox: { ...p.bbox, x: p.bbox.x + d[0], y: p.bbox.y + d[1] } };
+    if (this._kind === "polygon") {
+      this._pending = { ...p, points: p.points.map((q) => ({ x: q.x + d[0], y: q.y + d[1] })) };
+    } else if (this._kind === "line") {
+      this._pending = { ...p, p0: { x: p.p0.x + d[0], y: p.p0.y + d[1] }, p1: { x: p.p1.x + d[0], y: p.p1.y + d[1] } };
+    } else {
+      this._pending = { ...p, bbox: { ...p.bbox, x: p.bbox.x + d[0], y: p.bbox.y + d[1] } };
+    }
     this._emitChanged();
     this._render();
     return true;
@@ -247,6 +337,7 @@ export class ShapeTool {
     if (!this._pending) return null;
     const p = this._pending;
     if (this._kind === "line") return { x0: p.p0.x, y0: p.p0.y, x1: p.p1.x, y1: p.p1.y };
+    if (this._kind === "polygon") return { points: p.points.map((q) => ({ x: q.x, y: q.y })) };
     return { x: p.bbox.x, y: p.bbox.y, w: p.bbox.w, h: p.bbox.h, radius: p.radius };
   }
   setPending(v) {

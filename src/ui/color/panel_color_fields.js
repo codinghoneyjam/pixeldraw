@@ -1,13 +1,13 @@
-// <META - FILE SUMMARY - Picker cells + R/G/B + HEX fields: build, read, commit, repaint>
-import { parseHex, toHex } from "../../core/pixel.js";
+// <META - FILE SUMMARY - Picker cells + R/G/B/A + HEX fields: build, read, commit, repaint>
+import { parseHex, toHex, toHex8 } from "../../core/pixel.js";
 
 export const CHANNELS = ["r", "g", "b"];
 
-// <META - ROLE : Normalize any hex input to #rrggbb, null when invalid | L6-11>
+// <META - ROLE : Normalize any hex input to #rrggbb[aa], null when invalid | L6-12>
 export function normHex(v) {
   const c = parseHex(v);
-  if (!c || c.a !== 255) return null;
-  return toHex(c.r, c.g, c.b);
+  if (!c || c.a === 0) return null;
+  return c.a === 255 ? toHex(c.r, c.g, c.b) : toHex8(c.r, c.g, c.b, c.a);
 }
 
 // <META - ROLE : True when the element owns the keyboard caret | L13-16>
@@ -25,17 +25,18 @@ function setValue(input, value, force) {
   if (writable(input, force)) input.value = value;
 }
 
-// <META - ROLE : Locate the 2x4 grid and its four inputs inside the panel root | L28-36>
+// <META - ROLE : Locate the 2x4 grid and its five inputs inside the panel root | L28-37>
 export function resolveColorFields(root) {
   if (!root || typeof root.querySelector !== "function") return null;
   const rgb = {};
   for (const ch of CHANNELS) rgb[ch] = root.querySelector(`#dt-color-${ch}`);
   const hex = root.querySelector("#dt-color-hex");
+  const alpha = root.querySelector("#dt-color-a");
   if (!hex && !rgb.r) return null;
-  return { grid: root.querySelector(".dt-color-fields"), hex, rgb };
+  return { grid: root.querySelector(".dt-color-fields"), hex, rgb, alpha };
 }
 
-// <META - ROLE : Mirror the canonical hex into HEX and the three RGB inputs | L38-46>
+// <META - ROLE : Mirror the canonical hex into HEX and the RGBA inputs | L39-49>
 export function paintColorFields(fields, hex, force = false) {
   if (!fields) return;
   setValue(fields.hex, hex, force);
@@ -43,22 +44,35 @@ export function paintColorFields(fields, hex, force = false) {
   if (!c) return;
   const vals = { r: c.r, g: c.g, b: c.b };
   for (const ch of CHANNELS) setValue(fields.rgb[ch], String(vals[ch]), force);
+  setValue(fields.alpha, String(c.a ?? 255), force);
 }
 
-// <META - ROLE : New hex from an RGB cell edit; null when the edit is out of range | L48-59>
+// <META - ROLE : New hex from an RGB cell edit; null when the edit is out of range | L51-64>
+// Alpha is preserved: editing R/G/B never resets translucency.
 function readRgbEdit(fields, ch, canonical) {
   const input = fields.rgb[ch];
   if (!input) return null;
   const raw = String(input.value ?? "");
   const n = Number(raw);
   if (raw.trim() === "" || !Number.isInteger(n) || n < 0 || n > 255) return null;
-  const base = parseHex(canonical) ?? { r: 0, g: 0, b: 0 };
-  const parts = { r: base.r, g: base.g, b: base.b };
+  const base = parseHex(canonical) ?? { r: 0, g: 0, b: 0, a: 255 };
+  const parts = { r: base.r, g: base.g, b: base.b, a: base.a ?? 255 };
   parts[ch] = n;
-  return toHex(parts.r, parts.g, parts.b);
+  return parts.a === 255 ? toHex(parts.r, parts.g, parts.b) : toHex8(parts.r, parts.g, parts.b, parts.a);
 }
 
-// <META - ROLE : New hex from a HEX edit; null when the text is not #rgb/#rrggbb | L61-65>
+// <META - ROLE : New hex from an alpha cell edit; null when out of range | L66-77>
+function readAlphaEdit(fields, canonical) {
+  const input = fields.alpha;
+  if (!input) return null;
+  const raw = String(input.value ?? "");
+  const n = Number(raw);
+  if (raw.trim() === "" || !Number.isInteger(n) || n < 1 || n > 255) return null;
+  const base = parseHex(canonical) ?? { r: 0, g: 0, b: 0 };
+  return n === 255 ? toHex(base.r, base.g, base.b) : toHex8(base.r, base.g, base.b, n);
+}
+
+// <META - ROLE : New hex from a HEX edit; null when the text is not #rgb/#rrggbb/#rrggbbaa | L61-65>
 function readHexEdit(fields) {
   if (!fields.hex) return null;
   return normHex(String(fields.hex.value ?? ""));
@@ -125,6 +139,7 @@ export function mountColorFields(ui, fields) {
   };
   bind(fields.hex, (f) => readHexEdit(f));
   for (const ch of CHANNELS) bind(fields.rgb[ch], (f, c) => readRgbEdit(f, ch, c));
+  bind(fields.alpha, (f, c) => readAlphaEdit(f, c));
   return () => {
     for (const off of offs) {
       try { off(); } catch { /* ignore */ }

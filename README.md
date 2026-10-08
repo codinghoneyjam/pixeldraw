@@ -20,10 +20,26 @@ which is why `run.py` exists.
 ```bash
 npm test            # node --test tests/  (Node >= 20, no framework)
 npm run parity      # node tools/parity_check.mjs  (115 golden checks)
+npm run parity:assets  # node tools/recipe_parity_check.mjs  (39 legacy PNG renders)
+npm run layers      # node tools/extract_layers.mjs  (per-layer PNG + Document JSON)
+npm run gallery     # node tools/build_layer_gallery.mjs  (34 assets x 3, see below)
 node tools/png_cases_check.mjs   # PNG codec cases 5/5
 node tools/view_check.mjs        # view-math worked examples
 python schema/schema_selfcheck.py  # schema + semantic + flatten parity
 ```
+
+## Layer gallery (viewer/)
+
+`viewer/index.html` lists the 34 ACTIVE legacy assets
+(`asset_work/tidy/numbered/11_*.png` .. `44_*.png`) as triples:
+① the draw_tool_v2 **layer units** (PNG + `_drawtool.json`), ② the **PNG rendered
+from those layers**, ③ the **legacy PNG**. Each card also bakes a diff map and
+reports RGBA parity against the legacy file.
+
+`node tools/build_layer_gallery.mjs` regenerates everything
+(`asset_work/layers/gallery/` + `viewer/js/gallery_data.js`) and fails the process
+if any of the 34 lacks layers or scores below 0.99. Serve it with
+`python run.py` and open `/viewer/`; it also works from `file://`.
 
 ## Layout
 
@@ -73,14 +89,16 @@ undo, no-AA PNG check, locked/hidden reject, small-budget history eviction).
   - `src/core/raster/*` throws `RangeError`, but `docs/contract.md` section 2-7
     allows `DrawToolError` only.
 
-## Verification status (2026-10-01)
+## Verification status (2026-10-08)
 
-All five gates pass:
+All gates pass:
 
 | Gate | Result |
 |:---|:---|
-| `node --test "tests/*.test.mjs"` | 186/186 |
-| `node tools/parity_check.mjs` | 115 golden checks |
+| `node --test "tests/*.test.mjs"` | 324/324 |
+| `node tools/parity_check.mjs` | 201 golden checks |
+| `node tools/recipe_parity_check.mjs` | 39/39 legacy renders |
+| `node tools/build_layer_gallery.mjs` | 34/34 assets layered, min parity 0.990131 |
 | `node tools/png_cases_check.mjs` | 5/5 |
 | `node tools/view_check.mjs` | OK |
 | `python schema/schema_selfcheck.py` | OK |

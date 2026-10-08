@@ -25,7 +25,7 @@ import { createViewStore } from "./canvas-host/view_store.js";
 import { createMenubar } from "./menubar/menubar.js";
 import { createHistoryButtons } from "./menubar/history_buttons.js";
 import { refreshPanelCanvases } from "./panel_refresh.js";
-import { doSave, doOpen, doExportLayer, doImportLayer, doExportPng, doNew } from "./actions/file_actions.js";
+import { doSave, doOpen, doExportLayer, doImportLayer, doExportPng, doNew, doImportRecipe, doExportVector, doImportVector } from "./actions/file_actions.js";
 import { requestUndo, requestRedo, brushStep, colorSwap, colorReset } from "./actions/edit_actions.js";
 import { zoomIn, zoomOut, fit, actual, gridCycle, canvasResize } from "./actions/edit_actions.js";
 import { layerAdd, layerDuplicate, layerRemove, layerMergeDown, layerUp, layerDown } from "./layers/actions/layer_actions.js";
@@ -137,7 +137,7 @@ async function boot() {
   toolManager.register(new PenTool(env, { mode: "erase" }));
   toolManager.register(new FillTool(env));
   toolManager.register(new EyedropperTool(env));
-  for (const kind of ["line", "rect", "rrect", "ellipse"]) toolManager.register(new ShapeTool(env, kind));
+  for (const kind of ["line", "rect", "rrect", "ellipse", "polygon"]) toolManager.register(new ShapeTool(env, kind));
   toolManager.register(new HandTool(env));
   renderer = new CanvasRenderer({ host, session, getView: () => viewStore.get(), getOverlay: () => toolManager.overlay });
   renderer.attach();
@@ -160,6 +160,9 @@ async function boot() {
     "file.exportLayer": () => runAction(() => doExportLayer(session, toast)),
     "file.importLayer": () => runAction(() => doImportLayer(session, toast)),
     "file.exportPng": () => runAction(() => doExportPng(session, toast)),
+    "file.importRecipe": () => runAction(() => doImportRecipe(session, toast)),
+    "file.exportVector": () => runAction(() => doExportVector(session, toast)),
+    "file.importVector": () => runAction(() => doImportVector(session, toast)),
     "edit.undo": () => runAction(() => requestUndo(session, toolManager)),
     "edit.redo": () => runAction(() => requestRedo(session, toolManager)),
     "canvas.resize": () => runAction(() => canvasResize(session)),

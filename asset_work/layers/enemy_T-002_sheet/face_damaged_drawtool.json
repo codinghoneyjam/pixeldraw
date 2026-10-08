@@ -1,0 +1,61 @@
+{
+  "schema_version": "2.0.0",
+  "format": "draw_tool.document",
+  "document_id": "doc-0044",
+  "name": "Untitled",
+  "canvas": {
+    "tile_px": 64,
+    "unit_px": 32,
+    "width_px": 2048,
+    "height_px": 128,
+    "background": "transparent"
+  },
+  "active_layer_id": "layer-0001",
+  "layers": [
+    {
+      "layer_id": "layer-0001",
+      "name": "Layer 1",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1,
+      "blend": "normal",
+      "raster": {
+        "chunk_px": 32,
+        "encoding": "png_base64",
+        "chunks": [
+          {
+            "cx": 1,
+            "cy": 1,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAARElEQVR4nO3OwQkAIAxD0U7jHO4/g7vEk7eK4CGl8B/knB8BAAAAfJK0slkDbGetAjSmygPOygMsITeEtAgpO7YGvI43oAeCyPO0cDUAAAAASUVORK5CYII="
+          },
+          {
+            "cx": 2,
+            "cy": 1,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAQElEQVR4nO3RsQ0AIAwDwUzDHOw/A7uYiiaitoX4k1L7pVQBAAAARpJWv3TTRzSmYsPnYsPWAIajv7YO3wKeDNlmOGuypuHtbgAAAABJRU5ErkJggg=="
+          },
+          {
+            "cx": 3,
+            "cy": 1,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAI0lEQVR4nO3OAQEAAAgCIP9v7IsNERaQAAAwr+0JCGwHYN4DYecXF38CBhYAAAAASUVORK5CYII="
+          },
+          {
+            "cx": 1,
+            "cy": 2,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAQklEQVR4nO3OsQ0AIAwDwUzDHOw/A7uYFqFUSIkp/iTX/ogiGlP3qr7+OM4CWo/PAMsx0E7SIoAAe0A2axQAAMCLDXswS8ykPHM4AAAAAElFTkSuQmCC"
+          },
+          {
+            "cx": 2,
+            "cy": 2,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAARElEQVR4nO3UsQ0AIAhEUaZxDvefwV3O1hDsMATzX3I1v8IsmcaUX/aNviElAWdIaQDQQ/Q8bvszAK9JWn7VTQAAALYBxl5pToLtPBwAAAAASUVORK5CYII="
+          },
+          {
+            "cx": 3,
+            "cy": 2,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAJElEQVR4nO3OMQEAAAgDIPtntMuMsUNIwAxAW5IVEPgdAABoO2BZFxfsVqoqAAAAAElFTkSuQmCC"
+          }
+        ]
+      }
+    }
+  ]
+}

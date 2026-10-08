@@ -32,7 +32,7 @@ function makeSafe(session) {
   };
 }
 
-// <META - ROLE : SSOT READ: the canonical hex of the active slot, always #rrggbb | L12-15>
+// <META - ROLE : SSOT READ: the canonical hex of the active slot, #rrggbb or #rrggbbaa | L12-15>
 function canonicalHex(ui) {
   const raw = ui.session ? ui.session.settings[ui.slot] : "#000000";
   return normHex(raw) ?? "#000000";

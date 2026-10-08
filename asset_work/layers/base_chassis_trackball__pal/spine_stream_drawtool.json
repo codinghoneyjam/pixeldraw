@@ -1,0 +1,51 @@
+{
+  "schema_version": "2.0.0",
+  "format": "draw_tool.document",
+  "document_id": "doc-0110",
+  "name": "Untitled",
+  "canvas": {
+    "tile_px": 64,
+    "unit_px": 32,
+    "width_px": 128,
+    "height_px": 128,
+    "background": "transparent"
+  },
+  "active_layer_id": "layer-0001",
+  "layers": [
+    {
+      "layer_id": "layer-0001",
+      "name": "Layer 1",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1,
+      "blend": "normal",
+      "raster": {
+        "chunk_px": 32,
+        "encoding": "png_base64",
+        "chunks": [
+          {
+            "cx": 2,
+            "cy": 0,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAALElEQVR4nO3OsQ0AMAjAMM7ief7qViY2LkC2lD0RAACwyHp/MmDAgAED5wcamcNpMfZ+ASwAAAAASUVORK5CYII="
+          },
+          {
+            "cx": 2,
+            "cy": 1,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAN0lEQVR4nO3OoREAMAgEQcpK8/SFIwqHTdTezKs3G7F0snq2/c8DAAAAAAAAAAAAAAAAAAD4CbhHERiQ7a/lcwAAAABJRU5ErkJggg=="
+          },
+          {
+            "cx": 2,
+            "cy": 2,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAN0lEQVR4nO3OoREAMAgEQcpK8/SFIwqHTdTezKs3G7F0snq2/c8DAAAAAAAAAAAAAAAAAAD4CbhHERiQ7a/lcwAAAABJRU5ErkJggg=="
+          },
+          {
+            "cx": 2,
+            "cy": 3,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAALUlEQVR4nO3OoREAMAgEQcpK8/SFIwqHTdTuzKs3F7E4WT3b/ucECAAAAOCnCyjcK9WMzRc2AAAAAElFTkSuQmCC"
+          }
+        ]
+      }
+    }
+  ]
+}

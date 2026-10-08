@@ -6,19 +6,13 @@
 // Do not fork a second copy and do not reorder the branches: the branch order
 // is the recipe semantics and the 20-asset parity gate depends on it.
 
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
 import { arcMask, chordFillMask, chordOutlineMask } from "../../src/core/raster/arc.js";
 import { radialGradientMask } from "../../src/core/raster/gradient.js";
 import { measureText, textMask } from "../../src/core/raster/text_mask.js";
 import { applyShape } from "../../src/core/raster/shape_raster.js";
 import { clipAlpha, erasePolygon, hudBrackets, sheenOverlay, visorLayer } from "../../src/core/raster/composite_ops.js";
-import { loadGlyphSet } from "./text_glyphs.mjs";
-import { resolveColor } from "./color_tokens.mjs";
+import { resolveColor } from "./color_tokens.js";
 import { ChunkStore, PixelWriter } from "../../src/core/chunkstore.js";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const withAlpha = (packed, a) =>
   a === 0 ? 0 : (((packed & 0x00ffffff) | ((a & 255) << 24)) >>> 0);
@@ -42,8 +36,14 @@ function fillModeFor(fillCol, outlineCol) {
   return fillCol ? "fill" : "outline";
 }
 
-// Committed bitmap glyphs (no runtime font parsing). Loaded once.
-const GLYPH_SETS = loadGlyphSet(path.join(__dirname, "text_glyphs.json"));
+// Committed bitmap glyphs (no runtime font parsing). Node entry points
+// (transpile.mjs, *_converter.mjs) inject the committed sets once via
+// setGlyphSets(); the browser path never touches node:fs, so text commands
+// there are skipped with a warning unless a set is registered.
+let GLYPH_SETS = null;
+export function setGlyphSets(sets) {
+  GLYPH_SETS = sets;
+}
 
 // <META - ROLE : Apply one recipe command to the context writer | L25-215>
 /**
@@ -214,7 +214,7 @@ export function applyCommand(ctx, cmd) {
     }
   } else if (type === "text") {
     const txt = cmd.text ?? "";
-    const glyphs = GLYPH_SETS[cmd.font ?? "monogram-240"]?.glyphs;
+    const glyphs = GLYPH_SETS?.[cmd.font ?? "monogram-240"]?.glyphs;
     if (!txt || !glyphs || ![...txt].every((ch) => glyphs[ch])) {
       console.warn(`[transpile] unsupported text ${JSON.stringify(txt)}, skipped`);
     } else {
@@ -241,6 +241,14 @@ export function applyCommand(ctx, cmd) {
           if (packed !== 0) writer.set(tx, ty, packed);
         }
       }
+    }
+  } else if (type === "pixel") {
+    // 1x1 cell emitted by src/io/serialize.js extractShapesFromChunk.
+    // fillCol already resolves cmd.fill ?? cmd.color through the palette.
+    if (fillCol !== 0) {
+      const px = Math.round(cmd.x ?? cmd.pos?.[0] ?? cmd.xy?.[0] ?? 0);
+      const py = Math.round(cmd.y ?? cmd.pos?.[1] ?? cmd.xy?.[1] ?? 0);
+      writer.set(px, py, fillCol);
     }
   } else if (type === "erase") {
     erasePolygon(writer, cmd.points ?? cmd.pts ?? [], width, height);

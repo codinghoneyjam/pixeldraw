@@ -1,0 +1,61 @@
+{
+  "schema_version": "2.0.0",
+  "format": "draw_tool.document",
+  "document_id": "doc-0060",
+  "name": "Untitled",
+  "canvas": {
+    "tile_px": 64,
+    "unit_px": 32,
+    "width_px": 2048,
+    "height_px": 128,
+    "background": "transparent"
+  },
+  "active_layer_id": "layer-0001",
+  "layers": [
+    {
+      "layer_id": "layer-0001",
+      "name": "Layer 1",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1,
+      "blend": "normal",
+      "raster": {
+        "chunk_px": 32,
+        "encoding": "png_base64",
+        "chunks": [
+          {
+            "cx": 1,
+            "cy": 1,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAa0lEQVR4nO2SQQrAIBAD/WY/2Ff1LykeCkWWNCtWPWRgL7JmgliKMcYYY4wxnQC4oplaoD07TkC5q+6lCtTQZ77kyl6qwDuUhat76QJK+FB5VIBJhssZkWyaXCnxu5yVWCrf4vmXfEB2XrkBNwwoZDoETugAAAAASUVORK5CYII="
+          },
+          {
+            "cx": 2,
+            "cy": 1,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAXElEQVR4nO2SwQkAIQwEbdMGryp7WV8H4iPqkcR7zEA+smSWYCkAAAAAAIlIavO4LK6P5Jk7lr/jkfsst5bv5kJKhMpXkhS5VSJNvlMiXG6VuCr/xfmvfEDrfaQDRzQRTviNuVEAAAAASUVORK5CYII="
+          },
+          {
+            "cx": 3,
+            "cy": 1,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAI0lEQVR4nO3OAQEAAAgCIP9v7IsNERaQAAAwr+0JCGwHYN4DYecXF38CBhYAAAAASUVORK5CYII="
+          },
+          {
+            "cx": 1,
+            "cy": 2,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAQklEQVR4nO3OsQ0AIAhEUdZ0Qadyl7M3NpJTLP5LqCDhR5i0Lq1zsr/6/HmE4y4d4bwD/iZpEEBAecBuSqMAAAAyJpXqfgDuEjY2AAAAAElFTkSuQmCC"
+          },
+          {
+            "cx": 2,
+            "cy": 2,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAARklEQVR4nO3SwQkAIAxD0a7pgk7lLvEugqjVgv4HObXQHGq2KWWpzcz86PHrJTz2lkt47iFG71NHeasA8AVJpU10JwAAAKsqBbSc9VKjgwAAAABJRU5ErkJggg=="
+          },
+          {
+            "cx": 3,
+            "cy": 2,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAJElEQVR4nO3OMQEAAAgDIPtntMuMsUNIwAxAW5IVEPgdAABoO2BZFxfsVqoqAAAAAElFTkSuQmCC"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -59,7 +59,7 @@ export class FillTool extends Tool {
     const layer = doc.getLayer(doc.activeLayerId);
     const seed = layer.store.getPixel(ev.x, ev.y);
     const c = parseHex(this.session.settings.primaryColor);
-    const fill = c ? packRGBA(c.r, c.g, c.b, 255) : packRGBA(0, 0, 0, 255);
+    const fill = c ? packRGBA(c.r, c.g, c.b, c.a) : packRGBA(0, 0, 0, 255);
     if (seed === fill) {
       this.session.notify("info", "이미 같은 색입니다");
       try {

@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recipe Viewer - Vector Commands</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #222633;
+      --border: #2e3342;
+      --text: #e4e6eb;
+      --text-dim: #9ca3af;
+      --accent: #6366f1;
+      --accent-light: #818cf8;
+      --green: #22c55e;
+      --green-dim: #166534;
+      --red: #ef4444;
+      --red-dim: #991b1b;
+      --amber: #f59e0b;
+      --amber-dim: #92400e;
+      --blue: #3b82f6;
+      --blue-dim: #1e40af;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding: 2rem;
+      background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, var(--accent-light), var(--blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    header p {
+      color: var(--text-dim);
+      font-size: 1.1rem;
+    }
+
+    .pipeline {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin: 2rem 0;
+      flex-wrap: wrap;
+    }
+
+    .pipeline-step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      min-width: 180px;
+      position: relative;
+    }
+
+    .pipeline-step.highlight {
+      border-color: var(--accent);
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    .pipeline-step .step-number {
+      width: 32px;
+      height: 32px;
+      background: var(--accent);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 0.75rem;
+      font-weight: 700;
+    }
+
+    .pipeline-step h3 {
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .pipeline-step p {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+
+    .pipeline-arrow {
+      color: var(--text-dim);
+      font-size: 2rem;
+    }
+
+    .conversion-panel {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 900px) {
+      .conversion-panel {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--surface);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 1rem 1.5rem;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-header h3 {
+      font-size: 1rem;
+    }
+
+    .panel-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .panel-badge.legacy {
+      background: var(--red-dim);
+      color: #fca5a5;
+    }
+
+    .panel-badge.vector {
+      background: var(--green-dim);
+      color: #86efac;
+    }
+
+    .panel-badge.raster {
+      background: var(--amber-dim);
+      color: #fcd34d;
+    }
+
+    .panel-body {
+      padding: 1.5rem;
+    }
+
+    .code-block {
+      background: var(--bg);
+      border-radius: 8px;
+      padding: 1rem;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.8rem;
+      overflow-x: auto;
+      max-height: 500px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+    }
+
+    .code-block pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .layer-list {
+      list-style: none;
+    }
+
+    .layer-item {
+      padding: 0.75rem;
+      background: var(--bg);
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      border: 1px solid var(--border);
+    }
+
+    .layer-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .layer-name {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .layer-info {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+
+    .command-list {
+      list-style: none;
+      margin-top: 0.5rem;
+    }
+
+    .command-item {
+      padding: 0.5rem;
+      background: var(--surface2);
+      border-radius: 4px;
+      margin-bottom: 0.25rem;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.75rem;
+    }
+
+    .command-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+    }
+
+    .feature-card h4 {
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .feature-card p {
+      font-size: 0.875rem;
+      color: var(--text-dim);
+    }
+
+    .feature-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.875rem;
+    }
+
+    .feature-icon.green {
+      background: var(--green-dim);
+      color: #86efac;
+    }
+
+    .feature-icon.blue {
+      background: var(--blue-dim);
+      color: #93c5fd;
+    }
+
+    .feature-icon.amber {
+      background: var(--amber-dim);
+      color: #fcd34d;
+    }
+
+    .feature-icon.red {
+      background: var(--red-dim);
+      color: #fca5a5;
+    }
+
+    .comparison-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+      margin-bottom: 2rem;
+    }
+
+    .comparison-table th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      background: var(--surface2);
+      color: var(--text-dim);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+
+    .comparison-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .comparison-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .comparison-table tr:hover td {
+      background: var(--surface2);
+    }
+
+    .highlight {
+      color: var(--accent-light);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Recipe Viewer</h1>
+      <p>벡터 명령어 기반 저장 형식</p>
+    </header>
+
+    <!-- Pipeline -->
+    <div class="pipeline">
+      <div class="pipeline-step">
+        <div class="step-number">1</div>
+        <h3>Legacy Recipe</h3>
+        <p>JSON + 벡터 명령어</p>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step highlight">
+        <div class="step-number">2</div>
+        <h3>Vector JSON</h3>
+        <p>레이어 = 명령어 리스트</p>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step">
+        <div class="step-number">3</div>
+        <h3>Document</h3>
+        <p>Session + Layer + ChunkStore</p>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step">
+        <div class="step-number">4</div>
+        <h3>PNG</h3>
+        <p>렌더링 출력</p>
+      </div>
+    </div>
+
+    <!-- Features -->
+    <div class="feature-grid">
+      <div class="feature-card">
+        <h4><span class="feature-icon green">✓</span> 벡터 명령어 저장</h4>
+        <p>픽셀 대신 도형 명령어로 저장 (rect, circle, rounded_rect 등)</p>
+      </div>
+      <div class="feature-card">
+        <h4><span class="feature-icon blue">✓</span> 레이어 단위 구조</h4>
+        <p>각 레이어는 독립적인 명령어 시퀀스를 가짐</p>
+      </div>
+      <div class="feature-card">
+        <h4><span class="feature-icon amber">✓</span> 양방향 변환</h4>
+        <p>Vector JSON ↔ Document JSON 변환 가능</p>
+      </div>
+      <div class="feature-card">
+        <h4><span class="feature-icon red">✓</span> 레거시 호환</h4>
+        <p>기존 레거시 레시피와 동일한 명령어 형식</p>
+      </div>
+    </div>
+
+    <!-- Comparison Table -->
+    <div class="panel">
+      <div class="panel-header">
+        <h3>저장 형식 비교</h3>
+      </div>
+      <div class="panel-body">
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>항목</th>
+              <th>Legacy Recipe</th>
+              <th>Vector JSON</th>
+              <th>Document JSON</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>레이어 구조</td>
+              <td class="highlight">명령어 리스트</td>
+              <td class="highlight">명령어 리스트</td>
+              <td>청크 (32x32 픽셀)</td>
+            </tr>
+            <tr>
+              <td>저장 형식</td>
+              <td>JSON</td>
+              <td>JSON</td>
+              <td>JSON</td>
+            </tr>
+            <tr>
+              <td>벡터 명령어</td>
+              <td class="highlight">✓</td>
+              <td class="highlight">✓</td>
+              <td>✗ (래스터로 변환됨)</td>
+            </tr>
+            <tr>
+              <td>파일 크기</td>
+              <td>작음</td>
+              <td>작음</td>
+              <td>큼 (PNG base64)</td>
+            </tr>
+            <tr>
+              <td>편집 가능</td>
+              <td class="highlight">✓</td>
+              <td class="highlight">✓</td>
+              <td>제한적</td>
+            </tr>
+            </tr>
+            <tr>
+              <td>렌더링</td>
+              <td>필요</td>
+              <td>필요</td>
+              <td class="highlight">즉시 가능</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Conversion Panel -->
+    <div class="conversion-panel">
+      <!-- Legacy Recipe -->
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Legacy Recipe</h3>
+          <span class="panel-badge legacy">Input</span>
+        </div>
+        <div class="panel-body">
+          <div class="code-block">
+            <pre>{
+  "canvas": { "width": 128, "height": 128 },
+  "palette": {
+    "primary": "#38BDF8",
+    "secondary": "#1E40AF"
+  },
+  "layers": [
+    {
+      "id": "body",
+      "commands": [
+        { "cmd": "rect", "box": [[10, 10], [50, 50]], "fill": "$primary" },
+        { "cmd": "circle", "center": [30, 30], "radius": 15, "fill": "$secondary" }
+      ]
+    }
+  ]
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vector JSON -->
+      <div class="panel">
+        <div class="panel-header">
+          <h3>Vector JSON</h3>
+          <span class="panel-badge vector">Output</span>
+        </div>
+        <div class="panel-body">
+          <div class="code-block">
+            <pre>{
+  "schema_version": "2.0.0",
+  "format": "draw_tool.vector",
+  "canvas": {
+    "width_px": 128,
+    "height_px": 128,
+    "background": "transparent"
+  },
+  "layers": [
+    {
+      "layer_id": "layer_1",
+      "name": "body",
+      "visible": true,
+      "commands": [
+        { "cmd": "rect", "box": [[10, 10], [50, 50]], "fill": "#38BDF8" },
+        { "cmd": "circle", "center": [30, 30], "radius": 15, "fill": "#1E40AF" }
+      ]
+    }
+  ]
+}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Layer Structure -->
+    <div class="panel">
+      <div class="panel-header">
+        <h3>레이어 구조 (Vector JSON)</h3>
+        <span class="panel-badge vector">Vector</span>
+      </div>
+      <div class="panel-body">
+        <ul class="layer-list">
+          <li class="layer-item">
+            <div class="layer-name">Layer 1: body</div>
+            <div class="layer-info">Visible: true | Opacity: 1.0 | Commands: 2</div>
+            <ul class="command-list">
+              <li class="command-item">rect(10, 10, 50, 50) fill=#38BDF8</li>
+              <li class="command-item">circle(30, 30, r=15) fill=#1E40AF</li>
+            </ul>
+          </li>
+          <li class="layer-item">
+            <div class="layer-name">Layer 2: outline</div>
+            <div class="layer-info">Visible: true | Opacity: 1.0 | Commands: 1</div>
+            <ul class="command-list">
+              <li class="command-item">rect(8, 8, 52, 52) stroke=#000000 width=2</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- CLI Usage -->
+    <div class="panel">
+      <div class="panel-header">
+        <h3>CLI 사용법</h3>
+      </div>
+      <div class="panel-body">
+        <div class="code-block">
+          <pre># Document JSON -> Vector JSON (명령어 추출)
+node tools/recipe/vector_converter.mjs \
+  --to-vector \
+  --doc output.drawtool.json \
+  --out output.vector.json
+
+# Vector JSON -> Document JSON (복원)
+node tools/recipe/vector_converter.mjs \
+  --to-doc \
+  --vector output.vector.json \
+  --out restored.drawtool.json
+
+# 전체 파이프라인
+node tools/recipe/recipe_converter.mjs \
+  --to-doc \
+  --recipe legacy.json \
+  --out temp.drawtool.json
+
+node tools/recipe/vector_converter.mjs \
+  --to-vector \
+  --doc temp.drawtool.json \
+  --out final.vector.json</pre>
+        </div>
+      </div>
+    </div>
+
+    <footer style="text-align: center; padding: 2rem; color: var(--text-dim);">
+      <p>Draw Tool v2 — Vector Recipe Converter</p>
+    </footer>
+  </div>
+</body>
+</html>

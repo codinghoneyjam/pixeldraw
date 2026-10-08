@@ -59,6 +59,14 @@ def pick_port(preferred: int | None, host: str = "127.0.0.1") -> int:
 class QuietHandler(SimpleHTTPRequestHandler):
     """SimpleHTTPRequestHandler without the per-request stderr spam."""
 
+    # Windows' mimetypes registry maps .mjs to text/plain, which strict ES-module
+    # checking rejects. Pin JS extensions to a JS MIME type.
+    extensions_map = {
+        **SimpleHTTPRequestHandler.extensions_map,
+        ".js": "text/javascript",
+        ".mjs": "text/javascript",
+    }
+
     # <META - ROLE : Execute log message | L63-64>
     def log_message(self, format: str, *args: object) -> None:
         pass

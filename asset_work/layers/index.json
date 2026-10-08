@@ -1,0 +1,823 @@
+{
+  "schema": "draw_tool.layer_index",
+  "version": 1,
+  "outDir": "C:\\Users\\ksj20\\Your wor(l)d\\pixeldraw\\asset_work\\layers",
+  "recipes": [
+    {
+      "slug": "weapon_sword",
+      "recipe": "assetdb/entity/weapon/weapon_sword.json",
+      "assets": [
+        "sword_albedo",
+        "sword_mask"
+      ],
+      "units": [
+        {
+          "unit": "albedo",
+          "png": "weapon_sword\\albedo.png",
+          "doc": "weapon_sword\\albedo_drawtool.json"
+        },
+        {
+          "unit": "mask",
+          "png": "weapon_sword\\mask.png",
+          "doc": "weapon_sword\\mask_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "weapon_bow",
+      "recipe": "assetdb/entity/weapon/weapon_bow.json",
+      "assets": [
+        "bow_albedo",
+        "bow_mask"
+      ],
+      "units": [
+        {
+          "unit": "albedo",
+          "png": "weapon_bow\\albedo.png",
+          "doc": "weapon_bow\\albedo_drawtool.json"
+        },
+        {
+          "unit": "mask",
+          "png": "weapon_bow\\mask.png",
+          "doc": "weapon_bow\\mask_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "weapon_spear",
+      "recipe": "assetdb/entity/weapon/weapon_spear.json",
+      "assets": [
+        "spear_albedo",
+        "spear_mask"
+      ],
+      "units": [
+        {
+          "unit": "albedo",
+          "png": "weapon_spear\\albedo.png",
+          "doc": "weapon_spear\\albedo_drawtool.json"
+        },
+        {
+          "unit": "mask",
+          "png": "weapon_spear\\mask.png",
+          "doc": "weapon_spear\\mask_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "portal_keycap_master",
+      "recipe": "assetdb/world/object/portal_keycap_master.json",
+      "assets": [
+        "portal_keycap_unpressed",
+        "portal_keycap_pressed"
+      ],
+      "units": [
+        {
+          "unit": "socket",
+          "png": "portal_keycap_master\\socket.png",
+          "doc": "portal_keycap_master\\socket_drawtool.json"
+        },
+        {
+          "unit": "keycap_unpressed",
+          "png": "portal_keycap_master\\keycap_unpressed.png",
+          "doc": "portal_keycap_master\\keycap_unpressed_drawtool.json"
+        },
+        {
+          "unit": "keycap_pressed",
+          "png": "portal_keycap_master\\keycap_pressed.png",
+          "doc": "portal_keycap_master\\keycap_pressed_drawtool.json"
+        },
+        {
+          "unit": "sky_gate",
+          "png": "portal_keycap_master\\sky_gate.png",
+          "doc": "portal_keycap_master\\sky_gate_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "title_diorama_sword_body",
+      "recipe": "assetdb/ui/data/title_diorama_sword_body.json",
+      "assets": [
+        "title_diorama_sword_body"
+      ],
+      "units": [
+        {
+          "unit": "body",
+          "png": "title_diorama_sword_body\\body.png",
+          "doc": "title_diorama_sword_body\\body_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "title_logo_text_our_recipe",
+      "recipe": "draw_tool_v2/tests/fixtures/title_logo_text_our_recipe.json",
+      "assets": [
+        "title_logo_text_our"
+      ],
+      "units": [
+        {
+          "unit": "text",
+          "png": "title_logo_text_our_recipe\\text.png",
+          "doc": "title_logo_text_our_recipe\\text_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "title_logo_text_or_recipe",
+      "recipe": "draw_tool_v2/tests/fixtures/title_logo_text_or_recipe.json",
+      "assets": [
+        "title_logo_text_or"
+      ],
+      "units": [
+        {
+          "unit": "text",
+          "png": "title_logo_text_or_recipe\\text.png",
+          "doc": "title_logo_text_or_recipe\\text_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "title_logo_text_d_recipe",
+      "recipe": "draw_tool_v2/tests/fixtures/title_logo_text_d_recipe.json",
+      "assets": [
+        "title_logo_text_d"
+      ],
+      "units": [
+        {
+          "unit": "text",
+          "png": "title_logo_text_d_recipe\\text.png",
+          "doc": "title_logo_text_d_recipe\\text_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "shockwave_ring_recipe",
+      "recipe": "draw_tool_v2/tests/fixtures/shockwave_ring_recipe.json",
+      "assets": [
+        "shockwave_ring"
+      ],
+      "units": [
+        {
+          "unit": "ring",
+          "png": "shockwave_ring_recipe\\ring.png",
+          "doc": "shockwave_ring_recipe\\ring_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "enemy_C-001_sheet",
+      "recipe": "assetdb/entity/enemy/enemy_C-001_sheet.json",
+      "assets": [
+        "enemy_keybot_c001_sheet"
+      ],
+      "units": [
+        {
+          "unit": "shadow",
+          "png": "enemy_C-001_sheet\\shadow.png",
+          "doc": "enemy_C-001_sheet\\shadow_drawtool.json"
+        },
+        {
+          "unit": "body_100",
+          "png": "enemy_C-001_sheet\\body_100.png",
+          "doc": "enemy_C-001_sheet\\body_100_drawtool.json"
+        },
+        {
+          "unit": "body_50",
+          "png": "enemy_C-001_sheet\\body_50.png",
+          "doc": "enemy_C-001_sheet\\body_50_drawtool.json"
+        },
+        {
+          "unit": "body_25",
+          "png": "enemy_C-001_sheet\\body_25.png",
+          "doc": "enemy_C-001_sheet\\body_25_drawtool.json"
+        },
+        {
+          "unit": "visor_100",
+          "png": "enemy_C-001_sheet\\visor_100.png",
+          "doc": "enemy_C-001_sheet\\visor_100_drawtool.json"
+        },
+        {
+          "unit": "visor_50",
+          "png": "enemy_C-001_sheet\\visor_50.png",
+          "doc": "enemy_C-001_sheet\\visor_50_drawtool.json"
+        },
+        {
+          "unit": "visor_25",
+          "png": "enemy_C-001_sheet\\visor_25.png",
+          "doc": "enemy_C-001_sheet\\visor_25_drawtool.json"
+        },
+        {
+          "unit": "visor_flipped",
+          "png": "enemy_C-001_sheet\\visor_flipped.png",
+          "doc": "enemy_C-001_sheet\\visor_flipped_drawtool.json"
+        },
+        {
+          "unit": "face_idle_100",
+          "png": "enemy_C-001_sheet\\face_idle_100.png",
+          "doc": "enemy_C-001_sheet\\face_idle_100_drawtool.json"
+        },
+        {
+          "unit": "face_idle_50",
+          "png": "enemy_C-001_sheet\\face_idle_50.png",
+          "doc": "enemy_C-001_sheet\\face_idle_50_drawtool.json"
+        },
+        {
+          "unit": "face_idle_25",
+          "png": "enemy_C-001_sheet\\face_idle_25.png",
+          "doc": "enemy_C-001_sheet\\face_idle_25_drawtool.json"
+        },
+        {
+          "unit": "face_alert",
+          "png": "enemy_C-001_sheet\\face_alert.png",
+          "doc": "enemy_C-001_sheet\\face_alert_drawtool.json"
+        },
+        {
+          "unit": "face_damaged",
+          "png": "enemy_C-001_sheet\\face_damaged.png",
+          "doc": "enemy_C-001_sheet\\face_damaged_drawtool.json"
+        },
+        {
+          "unit": "face_dead",
+          "png": "enemy_C-001_sheet\\face_dead.png",
+          "doc": "enemy_C-001_sheet\\face_dead_drawtool.json"
+        },
+        {
+          "unit": "slot_keycap_body",
+          "png": "enemy_C-001_sheet\\slot_keycap_body.png",
+          "doc": "enemy_C-001_sheet\\slot_keycap_body_drawtool.json"
+        },
+        {
+          "unit": "slot_keycap_pressed",
+          "png": "enemy_C-001_sheet\\slot_keycap_pressed.png",
+          "doc": "enemy_C-001_sheet\\slot_keycap_pressed_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "enemy_T-002_sheet",
+      "recipe": "assetdb/entity/enemy/enemy_T-002_sheet.json",
+      "assets": [
+        "enemy_keybot_t002_sheet"
+      ],
+      "units": [
+        {
+          "unit": "shadow",
+          "png": "enemy_T-002_sheet\\shadow.png",
+          "doc": "enemy_T-002_sheet\\shadow_drawtool.json"
+        },
+        {
+          "unit": "body_100",
+          "png": "enemy_T-002_sheet\\body_100.png",
+          "doc": "enemy_T-002_sheet\\body_100_drawtool.json"
+        },
+        {
+          "unit": "body_50",
+          "png": "enemy_T-002_sheet\\body_50.png",
+          "doc": "enemy_T-002_sheet\\body_50_drawtool.json"
+        },
+        {
+          "unit": "body_25",
+          "png": "enemy_T-002_sheet\\body_25.png",
+          "doc": "enemy_T-002_sheet\\body_25_drawtool.json"
+        },
+        {
+          "unit": "visor_100",
+          "png": "enemy_T-002_sheet\\visor_100.png",
+          "doc": "enemy_T-002_sheet\\visor_100_drawtool.json"
+        },
+        {
+          "unit": "visor_50",
+          "png": "enemy_T-002_sheet\\visor_50.png",
+          "doc": "enemy_T-002_sheet\\visor_50_drawtool.json"
+        },
+        {
+          "unit": "visor_25",
+          "png": "enemy_T-002_sheet\\visor_25.png",
+          "doc": "enemy_T-002_sheet\\visor_25_drawtool.json"
+        },
+        {
+          "unit": "visor_flipped",
+          "png": "enemy_T-002_sheet\\visor_flipped.png",
+          "doc": "enemy_T-002_sheet\\visor_flipped_drawtool.json"
+        },
+        {
+          "unit": "face_idle_100",
+          "png": "enemy_T-002_sheet\\face_idle_100.png",
+          "doc": "enemy_T-002_sheet\\face_idle_100_drawtool.json"
+        },
+        {
+          "unit": "face_idle_50",
+          "png": "enemy_T-002_sheet\\face_idle_50.png",
+          "doc": "enemy_T-002_sheet\\face_idle_50_drawtool.json"
+        },
+        {
+          "unit": "face_idle_25",
+          "png": "enemy_T-002_sheet\\face_idle_25.png",
+          "doc": "enemy_T-002_sheet\\face_idle_25_drawtool.json"
+        },
+        {
+          "unit": "face_alert",
+          "png": "enemy_T-002_sheet\\face_alert.png",
+          "doc": "enemy_T-002_sheet\\face_alert_drawtool.json"
+        },
+        {
+          "unit": "face_damaged",
+          "png": "enemy_T-002_sheet\\face_damaged.png",
+          "doc": "enemy_T-002_sheet\\face_damaged_drawtool.json"
+        },
+        {
+          "unit": "face_dead",
+          "png": "enemy_T-002_sheet\\face_dead.png",
+          "doc": "enemy_T-002_sheet\\face_dead_drawtool.json"
+        },
+        {
+          "unit": "slot_keycap_body",
+          "png": "enemy_T-002_sheet\\slot_keycap_body.png",
+          "doc": "enemy_T-002_sheet\\slot_keycap_body_drawtool.json"
+        },
+        {
+          "unit": "slot_keycap_pressed",
+          "png": "enemy_T-002_sheet\\slot_keycap_pressed.png",
+          "doc": "enemy_T-002_sheet\\slot_keycap_pressed_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "enemy_R-003_sheet",
+      "recipe": "assetdb/entity/enemy/enemy_R-003_sheet.json",
+      "assets": [
+        "enemy_keybot_r003_sheet"
+      ],
+      "units": [
+        {
+          "unit": "shadow",
+          "png": "enemy_R-003_sheet\\shadow.png",
+          "doc": "enemy_R-003_sheet\\shadow_drawtool.json"
+        },
+        {
+          "unit": "body_100",
+          "png": "enemy_R-003_sheet\\body_100.png",
+          "doc": "enemy_R-003_sheet\\body_100_drawtool.json"
+        },
+        {
+          "unit": "body_50",
+          "png": "enemy_R-003_sheet\\body_50.png",
+          "doc": "enemy_R-003_sheet\\body_50_drawtool.json"
+        },
+        {
+          "unit": "body_25",
+          "png": "enemy_R-003_sheet\\body_25.png",
+          "doc": "enemy_R-003_sheet\\body_25_drawtool.json"
+        },
+        {
+          "unit": "visor_100",
+          "png": "enemy_R-003_sheet\\visor_100.png",
+          "doc": "enemy_R-003_sheet\\visor_100_drawtool.json"
+        },
+        {
+          "unit": "visor_50",
+          "png": "enemy_R-003_sheet\\visor_50.png",
+          "doc": "enemy_R-003_sheet\\visor_50_drawtool.json"
+        },
+        {
+          "unit": "visor_25",
+          "png": "enemy_R-003_sheet\\visor_25.png",
+          "doc": "enemy_R-003_sheet\\visor_25_drawtool.json"
+        },
+        {
+          "unit": "visor_flipped",
+          "png": "enemy_R-003_sheet\\visor_flipped.png",
+          "doc": "enemy_R-003_sheet\\visor_flipped_drawtool.json"
+        },
+        {
+          "unit": "face_idle_100",
+          "png": "enemy_R-003_sheet\\face_idle_100.png",
+          "doc": "enemy_R-003_sheet\\face_idle_100_drawtool.json"
+        },
+        {
+          "unit": "face_idle_50",
+          "png": "enemy_R-003_sheet\\face_idle_50.png",
+          "doc": "enemy_R-003_sheet\\face_idle_50_drawtool.json"
+        },
+        {
+          "unit": "face_idle_25",
+          "png": "enemy_R-003_sheet\\face_idle_25.png",
+          "doc": "enemy_R-003_sheet\\face_idle_25_drawtool.json"
+        },
+        {
+          "unit": "face_alert",
+          "png": "enemy_R-003_sheet\\face_alert.png",
+          "doc": "enemy_R-003_sheet\\face_alert_drawtool.json"
+        },
+        {
+          "unit": "face_damaged",
+          "png": "enemy_R-003_sheet\\face_damaged.png",
+          "doc": "enemy_R-003_sheet\\face_damaged_drawtool.json"
+        },
+        {
+          "unit": "face_dead",
+          "png": "enemy_R-003_sheet\\face_dead.png",
+          "doc": "enemy_R-003_sheet\\face_dead_drawtool.json"
+        },
+        {
+          "unit": "slot_keycap_body",
+          "png": "enemy_R-003_sheet\\slot_keycap_body.png",
+          "doc": "enemy_R-003_sheet\\slot_keycap_body_drawtool.json"
+        },
+        {
+          "unit": "slot_keycap_pressed",
+          "png": "enemy_R-003_sheet\\slot_keycap_pressed.png",
+          "doc": "enemy_R-003_sheet\\slot_keycap_pressed_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "enemy_B-001_sheet",
+      "recipe": "assetdb/entity/enemy/enemy_B-001_sheet.json",
+      "assets": [
+        "enemy_keybot_b001_sheet"
+      ],
+      "units": [
+        {
+          "unit": "shadow",
+          "png": "enemy_B-001_sheet\\shadow.png",
+          "doc": "enemy_B-001_sheet\\shadow_drawtool.json"
+        },
+        {
+          "unit": "body_100",
+          "png": "enemy_B-001_sheet\\body_100.png",
+          "doc": "enemy_B-001_sheet\\body_100_drawtool.json"
+        },
+        {
+          "unit": "body_50",
+          "png": "enemy_B-001_sheet\\body_50.png",
+          "doc": "enemy_B-001_sheet\\body_50_drawtool.json"
+        },
+        {
+          "unit": "body_25",
+          "png": "enemy_B-001_sheet\\body_25.png",
+          "doc": "enemy_B-001_sheet\\body_25_drawtool.json"
+        },
+        {
+          "unit": "visor_100",
+          "png": "enemy_B-001_sheet\\visor_100.png",
+          "doc": "enemy_B-001_sheet\\visor_100_drawtool.json"
+        },
+        {
+          "unit": "visor_50",
+          "png": "enemy_B-001_sheet\\visor_50.png",
+          "doc": "enemy_B-001_sheet\\visor_50_drawtool.json"
+        },
+        {
+          "unit": "visor_25",
+          "png": "enemy_B-001_sheet\\visor_25.png",
+          "doc": "enemy_B-001_sheet\\visor_25_drawtool.json"
+        },
+        {
+          "unit": "visor_flipped",
+          "png": "enemy_B-001_sheet\\visor_flipped.png",
+          "doc": "enemy_B-001_sheet\\visor_flipped_drawtool.json"
+        },
+        {
+          "unit": "face_idle_100",
+          "png": "enemy_B-001_sheet\\face_idle_100.png",
+          "doc": "enemy_B-001_sheet\\face_idle_100_drawtool.json"
+        },
+        {
+          "unit": "face_idle_50",
+          "png": "enemy_B-001_sheet\\face_idle_50.png",
+          "doc": "enemy_B-001_sheet\\face_idle_50_drawtool.json"
+        },
+        {
+          "unit": "face_idle_25",
+          "png": "enemy_B-001_sheet\\face_idle_25.png",
+          "doc": "enemy_B-001_sheet\\face_idle_25_drawtool.json"
+        },
+        {
+          "unit": "face_alert",
+          "png": "enemy_B-001_sheet\\face_alert.png",
+          "doc": "enemy_B-001_sheet\\face_alert_drawtool.json"
+        },
+        {
+          "unit": "face_damaged",
+          "png": "enemy_B-001_sheet\\face_damaged.png",
+          "doc": "enemy_B-001_sheet\\face_damaged_drawtool.json"
+        },
+        {
+          "unit": "face_dead",
+          "png": "enemy_B-001_sheet\\face_dead.png",
+          "doc": "enemy_B-001_sheet\\face_dead_drawtool.json"
+        },
+        {
+          "unit": "slot_keycap_body",
+          "png": "enemy_B-001_sheet\\slot_keycap_body.png",
+          "doc": "enemy_B-001_sheet\\slot_keycap_body_drawtool.json"
+        },
+        {
+          "unit": "slot_keycap_pressed",
+          "png": "enemy_B-001_sheet\\slot_keycap_pressed.png",
+          "doc": "enemy_B-001_sheet\\slot_keycap_pressed_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "pantograph_keycap_profile",
+      "recipe": "assetdb/ui/hud/pantograph_keycap_profile.json",
+      "assets": [
+        "pantograph_sheet",
+        "fused_keycap_9slice",
+        "fused_keycap_hover_9slice",
+        "fused_keycap_pressed_9slice"
+      ],
+      "units": [
+        {
+          "unit": "fused_keycap",
+          "png": "pantograph_keycap_profile\\fused_keycap.png",
+          "doc": "pantograph_keycap_profile\\fused_keycap_drawtool.json"
+        },
+        {
+          "unit": "fused_keycap_pressed",
+          "png": "pantograph_keycap_profile\\fused_keycap_pressed.png",
+          "doc": "pantograph_keycap_profile\\fused_keycap_pressed_drawtool.json"
+        },
+        {
+          "unit": "fused_keycap_hover",
+          "png": "pantograph_keycap_profile\\fused_keycap_hover.png",
+          "doc": "pantograph_keycap_profile\\fused_keycap_hover_drawtool.json"
+        },
+        {
+          "unit": "sheet",
+          "png": "pantograph_keycap_profile\\sheet.png",
+          "doc": "pantograph_keycap_profile\\sheet_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "hud_icons_128_atlas",
+      "recipe": "assetdb/ui/hud/hud_icons_128_atlas.json",
+      "assets": [
+        "hud_icons_128_atlas"
+      ],
+      "units": [
+        {
+          "unit": "atlas",
+          "png": "hud_icons_128_atlas\\atlas.png",
+          "doc": "hud_icons_128_atlas\\atlas_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "hud_composite_surfaces",
+      "recipe": "assetdb/ui/hud/hud_composite_surfaces.json",
+      "assets": [
+        "keycap_screen_9slice",
+        "keyboard_plate_block",
+        "floating_visor_window",
+        "scanline_tile_fine"
+      ],
+      "units": [
+        {
+          "unit": "keyboard_plate_block",
+          "png": "hud_composite_surfaces\\keyboard_plate_block.png",
+          "doc": "hud_composite_surfaces\\keyboard_plate_block_drawtool.json"
+        },
+        {
+          "unit": "switch_socket_well",
+          "png": "hud_composite_surfaces\\switch_socket_well.png",
+          "doc": "hud_composite_surfaces\\switch_socket_well_drawtool.json"
+        },
+        {
+          "unit": "keycap_screen_9slice",
+          "png": "hud_composite_surfaces\\keycap_screen_9slice.png",
+          "doc": "hud_composite_surfaces\\keycap_screen_9slice_drawtool.json"
+        },
+        {
+          "unit": "chapter_title_well",
+          "error": "invalid canvas size 192x48"
+        },
+        {
+          "unit": "floating_visor_window",
+          "png": "hud_composite_surfaces\\floating_visor_window.png",
+          "doc": "hud_composite_surfaces\\floating_visor_window_drawtool.json"
+        },
+        {
+          "unit": "scanline_tile_fine",
+          "png": "hud_composite_surfaces\\scanline_tile_fine.png",
+          "doc": "hud_composite_surfaces\\scanline_tile_fine_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "room_tileset",
+      "recipe": "assetdb/world/stage/room_tileset.json",
+      "assets": [
+        "room_tileset"
+      ],
+      "units": [
+        {
+          "unit": "tiles",
+          "png": "room_tileset\\tiles.png",
+          "doc": "room_tileset\\tiles_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "lobby_tileset",
+      "recipe": "assetdb/world/lobby/lobby_tileset.json",
+      "assets": [
+        "lobby_tileset"
+      ],
+      "units": [
+        {
+          "unit": "tiles",
+          "png": "lobby_tileset\\tiles.png",
+          "doc": "lobby_tileset\\tiles_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "base_debris",
+      "recipe": "assetdb/entity/enemy/base_debris.json",
+      "assets": [
+        "keycap_debris"
+      ],
+      "units": [
+        {
+          "unit": "debris",
+          "png": "base_debris\\debris.png",
+          "doc": "base_debris\\debris_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "title_weapons_atlas",
+      "recipe": "assetdb/ui/title/title_weapons_atlas.json",
+      "assets": [
+        "title_weapons_atlas"
+      ],
+      "units": [
+        {
+          "unit": "atlas",
+          "png": "title_weapons_atlas\\atlas.png",
+          "doc": "title_weapons_atlas\\atlas_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "mouse_hero_sheet",
+      "recipe": "assetdb/entity/player/mouse_hero_sheet.json",
+      "assets": [
+        "mouse_hero_sheet"
+      ],
+      "units": [
+        {
+          "unit": "sheet",
+          "png": "mouse_hero_sheet\\sheet.png",
+          "doc": "mouse_hero_sheet\\sheet_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "hero_trackball_cyber_sheet",
+      "recipe": "assetdb/entity/player/hero_trackball_cyber_sheet.json",
+      "assets": [
+        "hero_trackball_cyber_sheet"
+      ],
+      "units": [
+        {
+          "unit": "sheet",
+          "png": "hero_trackball_cyber_sheet\\sheet.png",
+          "doc": "hero_trackball_cyber_sheet\\sheet_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "player_mouse__pal",
+      "recipe": "assetdb/entity/player/player_mouse.json",
+      "assets": [
+        "player_mouse__shadow",
+        "player_mouse__visor_left",
+        "player_mouse__visor_right"
+      ],
+      "units": [
+        {
+          "unit": "shadow",
+          "png": "player_mouse__pal\\shadow.png",
+          "doc": "player_mouse__pal\\shadow_drawtool.json"
+        },
+        {
+          "unit": "body",
+          "png": "player_mouse__pal\\body.png",
+          "doc": "player_mouse__pal\\body_drawtool.json"
+        },
+        {
+          "unit": "visor_left",
+          "png": "player_mouse__pal\\visor_left.png",
+          "doc": "player_mouse__pal\\visor_left_drawtool.json"
+        },
+        {
+          "unit": "visor_right",
+          "png": "player_mouse__pal\\visor_right.png",
+          "doc": "player_mouse__pal\\visor_right_drawtool.json"
+        },
+        {
+          "unit": "visor_left_hurt",
+          "png": "player_mouse__pal\\visor_left_hurt.png",
+          "doc": "player_mouse__pal\\visor_left_hurt_drawtool.json"
+        },
+        {
+          "unit": "visor_right_hurt",
+          "png": "player_mouse__pal\\visor_right_hurt.png",
+          "doc": "player_mouse__pal\\visor_right_hurt_drawtool.json"
+        },
+        {
+          "unit": "visor_left_dead",
+          "png": "player_mouse__pal\\visor_left_dead.png",
+          "doc": "player_mouse__pal\\visor_left_dead_drawtool.json"
+        },
+        {
+          "unit": "visor_right_dead",
+          "png": "player_mouse__pal\\visor_right_dead.png",
+          "doc": "player_mouse__pal\\visor_right_dead_drawtool.json"
+        },
+        {
+          "unit": "spine_stream",
+          "png": "player_mouse__pal\\spine_stream.png",
+          "doc": "player_mouse__pal\\spine_stream_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "base_chassis_gem__pal",
+      "recipe": "assetdb/entity/player/base_chassis_gem.json",
+      "assets": [
+        "base_chassis_gem__shadow"
+      ],
+      "units": [
+        {
+          "unit": "shadow",
+          "png": "base_chassis_gem__pal\\shadow.png",
+          "doc": "base_chassis_gem__pal\\shadow_drawtool.json"
+        },
+        {
+          "unit": "body",
+          "png": "base_chassis_gem__pal\\body.png",
+          "doc": "base_chassis_gem__pal\\body_drawtool.json"
+        },
+        {
+          "unit": "spine_stream",
+          "png": "base_chassis_gem__pal\\spine_stream.png",
+          "doc": "base_chassis_gem__pal\\spine_stream_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "base_chassis_trackball__pal",
+      "recipe": "assetdb/entity/player/base_chassis_trackball.json",
+      "assets": [
+        "base_chassis_trackball__shadow",
+        "base_chassis_trackball__body"
+      ],
+      "units": [
+        {
+          "unit": "shadow",
+          "png": "base_chassis_trackball__pal\\shadow.png",
+          "doc": "base_chassis_trackball__pal\\shadow_drawtool.json"
+        },
+        {
+          "unit": "body",
+          "png": "base_chassis_trackball__pal\\body.png",
+          "doc": "base_chassis_trackball__pal\\body_drawtool.json"
+        },
+        {
+          "unit": "spine_stream",
+          "png": "base_chassis_trackball__pal\\spine_stream.png",
+          "doc": "base_chassis_trackball__pal\\spine_stream_drawtool.json"
+        }
+      ]
+    },
+    {
+      "slug": "emoticons_cyber_neon__pal",
+      "recipe": "assetdb/entity/player/emoticons_cyber_neon.json",
+      "assets": [
+        "emoticons_cyber_neon__face_normal"
+      ],
+      "units": [
+        {
+          "unit": "face_normal",
+          "png": "emoticons_cyber_neon__pal\\face_normal.png",
+          "doc": "emoticons_cyber_neon__pal\\face_normal_drawtool.json"
+        },
+        {
+          "unit": "face_hurt",
+          "png": "emoticons_cyber_neon__pal\\face_hurt.png",
+          "doc": "emoticons_cyber_neon__pal\\face_hurt_drawtool.json"
+        },
+        {
+          "unit": "face_dead",
+          "png": "emoticons_cyber_neon__pal\\face_dead.png",
+          "doc": "emoticons_cyber_neon__pal\\face_dead_drawtool.json"
+        }
+      ]
+    }
+  ]
+}

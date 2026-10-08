@@ -14,6 +14,9 @@ export const STRINGS = Object.freeze({
     "file.exportLayer": "레이어 내보내기",
     "file.importLayer": "레이어 가져오기",
     "file.exportPng": "PNG 내보내기",
+    "file.importRecipe": "레시피 가져오기",
+    "file.exportVector": "벡터 내보내기",
+    "file.importVector": "벡터 가져오기",
     "edit.undo": "실행 취소",
     "edit.redo": "다시 실행",
     "canvas.resize": "캔버스 크기",
@@ -38,6 +41,7 @@ export const STRINGS = Object.freeze({
     rect: "사각형",
     rrect: "둥근 사각형",
     ellipse: "타원",
+    polygon: "다각형",
     hand: "손",
   }),
   toolShortcuts: Object.freeze({
@@ -49,6 +53,7 @@ export const STRINGS = Object.freeze({
     rect: "R",
     rrect: "U",
     ellipse: "O",
+    polygon: "P",
     hand: "H",
   }),
   hints: Object.freeze({
@@ -57,6 +62,7 @@ export const STRINGS = Object.freeze({
     eyedropper: "클릭 = 주색, Shift+클릭 = 보조색, Alt = 활성 레이어 기준",
     hand: "드래그로 화면 이동, 휠로 확대/축소",
     shape: "드래그로 그린 뒤 Enter 확정, Esc 취소",
+    polygon: "클릭으로 정점 추가, 첫 정점 클릭·Enter 확정, Esc 한 점 되돌리기",
   }),
   color: Object.freeze({
     panel: "색상",
@@ -114,6 +120,9 @@ export const STRINGS = Object.freeze({
     droppedChunks: "캔버스 밖 청크",
     layerFileHint: "레이어 파일입니다. 레이어 가져오기로 여십시오",
     unexpected: "예상치 못한 오류가 발생했습니다",
+    importedRecipe: "레시피를 가져왔습니다",
+    exportedVector: "벡터를 내보냈습니다",
+    importedVector: "벡터를 가져왔습니다",
   }),
 });
 

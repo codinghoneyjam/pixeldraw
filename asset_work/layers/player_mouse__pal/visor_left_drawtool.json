@@ -1,0 +1,61 @@
+{
+  "schema_version": "2.0.0",
+  "format": "draw_tool.document",
+  "document_id": "doc-0098",
+  "name": "Untitled",
+  "canvas": {
+    "tile_px": 64,
+    "unit_px": 32,
+    "width_px": 128,
+    "height_px": 128,
+    "background": "transparent"
+  },
+  "active_layer_id": "layer-0001",
+  "layers": [
+    {
+      "layer_id": "layer-0001",
+      "name": "Layer 1",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1,
+      "blend": "normal",
+      "raster": {
+        "chunk_px": 32,
+        "encoding": "png_base64",
+        "chunks": [
+          {
+            "cx": 1,
+            "cy": 0,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAXElEQVR4nO2QsQ3AIBDEGCvLsxdd0oCEIMUD9/kitnS1rUsJAAAAAP7MlcsdJm4LlX8aMIqr3D/gTdzJ/QIMYp+ABbE2YEOsCTgQnwUIxPsBIvF6gFhsDxDePe0B0DoXovzUtm4AAAAASUVORK5CYII="
+          },
+          {
+            "cx": 2,
+            "cy": 0,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAANUlEQVR4nO3SsQ0AIAwDwYyV5dmLDipmcCTupNT+IlUAAJP02ic2/C46LiD1AwIECBDwd8AFAhSQX55N4VoAAAAASUVORK5CYII="
+          },
+          {
+            "cx": 1,
+            "cy": 1,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAYElEQVR4nO3WwQkAIQxE0SnL5rcvb9rAKjEZL/IDc56HEIm0mfb18RdJzsQB5uIzwKVyAAAAAAAAAAAAADnA6liNBMAbgCzCvgWG8voaFsvjgOxL2P6BQsFdgAF1Nm7UBDao0xB4kPhkAAAAAElFTkSuQmCC"
+          },
+          {
+            "cx": 2,
+            "cy": 1,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAM0lEQVR4nO3OMREAIBDAsMrCPL7YYMPCL+ld91Tdtc+/gQAAAAAAAAAAAAAAAAAAAEYBD2YHOHAeor6nAAAAAElFTkSuQmCC"
+          },
+          {
+            "cx": 1,
+            "cy": 2,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAN0lEQVR4nO3OIQ7AIAAEwXtWP8+/cEUhEUBTEDPJ+k02PaW+KyXpfW9y5B/HB0ZDxwYAAAC4RgOEumJr4H3U0AAAAABJRU5ErkJggg=="
+          },
+          {
+            "cx": 2,
+            "cy": 2,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OsQ0AIAwDQY/F8uxFBx2KGIA0d5Jrf5LsMdddfqvnAloC3pjWAAAAADocH90vwDmlpUYAAAAASUVORK5CYII="
+          }
+        ]
+      }
+    }
+  ]
+}

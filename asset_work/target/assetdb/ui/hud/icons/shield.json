@@ -1,0 +1,22 @@
+{
+  "dynamic_colors": {
+    "body_color": "#00E5FF",
+    "glow_color": "#E0F2FE"
+  },
+  "body": [
+    {
+      "desc": "방패 외곽 5각형 실루엣 (직선 5개)",
+      "cmd": "polygon",
+      "points": [[30, 26], [98, 26], [102, 66], [64, 110], [26, 66]],
+      "outline": "$body_color",
+      "width": 3
+    },
+    {
+      "desc": "방패 내부 동일 모양 꽉 찬 5각형 다각형",
+      "cmd": "polygon",
+      "points": [[40, 36], [88, 36], [92, 64], [64, 98], [36, 64]],
+      "fill": "$body_color"
+    }
+  ],
+  "body_100": { "inherit": "body" }
+}

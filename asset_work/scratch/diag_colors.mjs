@@ -5,7 +5,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { resolveColor, resolveColorToken } from "../../tools/recipe/color_tokens.mjs";
+import { resolveColor, resolveColorToken } from "../../tools/recipe/color_tokens.js";
 import { transpileAndRender } from "../../tools/recipe/transpile.mjs";
 import { decodePng } from "../../src/io/png.js";
 import { unpackRGBA } from "../../src/core/pixel.js";

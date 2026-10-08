@@ -1,0 +1,51 @@
+{
+  "schema_version": "2.0.0",
+  "format": "draw_tool.document",
+  "document_id": "doc-0009",
+  "name": "Untitled",
+  "canvas": {
+    "tile_px": 64,
+    "unit_px": 32,
+    "width_px": 64,
+    "height_px": 64,
+    "background": "transparent"
+  },
+  "active_layer_id": "layer-0001",
+  "layers": [
+    {
+      "layer_id": "layer-0001",
+      "name": "Layer 1",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1,
+      "blend": "normal",
+      "raster": {
+        "chunk_px": 32,
+        "encoding": "png_base64",
+        "chunks": [
+          {
+            "cx": 0,
+            "cy": 0,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAZ0lEQVR4nO3WyQ0AIAgEQPqvyE5sww7070EQwSPuJvuFMT6UCEEckiPlXt0G102h7TRAOlhaFWBl4dJyACyXA/De/QNwHPD36a8BWLx+asAIowGZfEI4EIcyXy5FbQdwoCMABEFmUwBhZdKSgwviFAAAAABJRU5ErkJggg=="
+          },
+          {
+            "cx": 1,
+            "cy": 0,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAATElEQVR4nO2WQQoAIAgE/ZPX/f+36gWRRWbEDHgfZRc0AwAYIKlFJ03A3aeDAALHBFZSn9KK6MZpF0GgPAO7F/mnhgg8KVD6DwDALTpRkHLq+r6ctAAAAABJRU5ErkJggg=="
+          },
+          {
+            "cx": 0,
+            "cy": 1,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAcElEQVR4nO3WQQoAIQwDwD6i//+Wz3FB6E13VxMrQgI5Zy5izZJSi9Vo6ljU3VvpgLexXiHA7BhlfHWMCkCHBbgbwELAz08AAa4GwD/gcQCKEIAGWEVQz7DZi2j7EfqFSbmCe5gApQJGoGMARVH+5AEJFEaGMNOd1AAAAABJRU5ErkJggg=="
+          },
+          {
+            "cx": 1,
+            "cy": 1,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAVklEQVR4nO3VQQoAIAhEUe9/wY5TqyCIjFQcpPnQ2lctFGGMXeoB+QFN7AcK8A6HA2o/PxxQ/v8J+Pv2su4AFGCDvIAiASooe7iKmaBMwAkEAzDGmKUB63rzJHhGMUUAAAAASUVORK5CYII="
+          }
+        ]
+      }
+    }
+  ]
+}

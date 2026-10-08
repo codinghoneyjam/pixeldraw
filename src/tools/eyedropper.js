@@ -14,7 +14,7 @@
  * button is no longer changing and would otherwise retarget a right-drag.
  */
 
-import { toHex, unpackRGBA } from "../core/pixel.js";
+import { toHex8, unpackRGBA } from "../core/pixel.js";
 import { samplePixel } from "../render/composite.js";
 import { Tool } from "./tool_base.js";
 
@@ -80,7 +80,7 @@ export class EyedropperTool extends Tool {
       this.session.notify("info", "투명 픽셀");
       return;
     }
-    const hex = toHex(rgba[0], rgba[1], rgba[2]);
+    const hex = toHex8(rgba[0], rgba[1], rgba[2], rgba[3]);
     const secondary = ev.shift === true || this._btn === 2;
     const key = secondary ? "secondaryColor" : "primaryColor";
     this.session.setSetting(key, hex);

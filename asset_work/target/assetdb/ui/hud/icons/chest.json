@@ -1,0 +1,57 @@
+{
+  "dynamic_colors": {
+    "body_color": "#ffd700",
+    "glow_color": "#facc15"
+  },
+  "body": [
+    {
+      "desc": "상자 뚜껑 (챔퍼 큐브 아치)",
+      "cmd": "chord",
+      "box": [[24, 30], [104, 72]],
+      "start": 180,
+      "end": 360,
+      "fill": "$body_color",
+      "outline": "$body_outline",
+      "width": 3
+    },
+    {
+      "desc": "상자 본체 하단",
+      "cmd": "rounded_rect",
+      "box": [[24, 50], [104, 84]],
+      "radius": 4,
+      "fill": "$body_color",
+      "outline": "$body_outline",
+      "width": 3
+    },
+    {
+      "desc": "뚜껑 상단 하이라이트",
+      "cmd": "chord",
+      "box": [[30, 34], [98, 60]],
+      "start": 180,
+      "end": 360,
+      "fill": "$body_bright"
+    },
+    {
+      "desc": "본체 하단 딥 음영",
+      "cmd": "rounded_rect",
+      "box": [[28, 70], [100, 82]],
+      "radius": 3,
+      "fill": "$body_deep"
+    },
+    {
+      "desc": "뚜껑-본체 밴드 라인",
+      "cmd": "line",
+      "points": [[24, 52], [104, 52]],
+      "color": "$body_outline",
+      "width": 3
+    },
+    {
+      "desc": "중앙 자물쇠",
+      "cmd": "rounded_rect",
+      "box": [[58, 56], [70, 72]],
+      "radius": 2,
+      "fill": "$body_outline"
+    }
+  ],
+  "body_100": { "inherit": "body" }
+}

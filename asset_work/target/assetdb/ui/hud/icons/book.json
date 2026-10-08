@@ -1,0 +1,57 @@
+{
+  "dynamic_colors": {
+    "body_color": "#00E5FF",
+    "glow_color": "#E0F2FE"
+  },
+  "body": [
+    {
+      "desc": "표지 볼록 4각형 밴드 (볼록다각형 1개)",
+      "cmd": "polygon",
+      "points": [[32, 54], [88, 48], [88, 74], [32, 80]],
+      "fill": "$body_color"
+    },
+    {
+      "desc": "선 1: 책등 수직선",
+      "cmd": "line",
+      "points": [[32, 34], [32, 98]],
+      "color": "$body_color",
+      "width": 3
+    },
+    {
+      "desc": "선 2: 표지 윗변선",
+      "cmd": "line",
+      "points": [[32, 34], [88, 28]],
+      "color": "$body_color",
+      "width": 3
+    },
+    {
+      "desc": "선 3: 표지 우측선",
+      "cmd": "line",
+      "points": [[88, 28], [88, 92]],
+      "color": "$body_color",
+      "width": 3
+    },
+    {
+      "desc": "선 4: 표지 밑변선",
+      "cmd": "line",
+      "points": [[32, 98], [88, 92]],
+      "color": "$body_color",
+      "width": 3
+    },
+    {
+      "desc": "선 5: 속지 상단선",
+      "cmd": "line",
+      "points": [[88, 28], [98, 36]],
+      "color": "$body_color",
+      "width": 3
+    },
+    {
+      "desc": "선 6: 속지 우측선",
+      "cmd": "line",
+      "points": [[98, 36], [98, 100]],
+      "color": "$body_color",
+      "width": 3
+    }
+  ],
+  "body_100": { "inherit": "body" }
+}

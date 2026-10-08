@@ -35,7 +35,7 @@ export function paintPreview(canvas, size, hex) {
   if (!canvas || typeof canvas.getContext !== "function") return false;
   const ctx = canvas.getContext("2d");
   if (!ctx) return false;
-  const c = parseHex(hex ?? "#000000") ?? { r: 0, g: 0, b: 0 };
+  const c = parseHex(hex ?? "#000000") ?? { r: 0, g: 0, b: 0, a: 255 };
   ctx.clearRect(0, 0, 64, 64);
   let fp = null;
   try {
@@ -43,7 +43,7 @@ export function paintPreview(canvas, size, hex) {
   } catch {
     return false;
   }
-  ctx.fillStyle = `rgb(${c.r},${c.g},${c.b})`;
+  ctx.fillStyle = `rgba(${c.r},${c.g},${c.b},${(c.a ?? 255) / 255})`;
   const ox = Math.floor((64 - size) / 2);
   const oy = Math.floor((64 - size) / 2);
   for (let by = 0; by < size; by++) {

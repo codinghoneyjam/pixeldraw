@@ -5,7 +5,7 @@ import { DrawToolError } from "../../core/errors.js";
 import { createTooltips } from "../tooltip.js";
 export { mountCollapsibleSections } from "../collapsible_sections.js";
 
-const SHAPE_TOOLS = ["line", "rect", "rrect", "ellipse"];
+const SHAPE_TOOLS = ["line", "rect", "rrect", "ellipse", "polygon"];
 
 // <META - ROLE : Mount option bar, return dispose | L9-230>
 export function mountOptions(root, deps = {}) {
@@ -66,8 +66,10 @@ export function mountOptions(root, deps = {}) {
     }
     if (radius) radius.disabled = id !== "rrect";
     const pending = shapeTool() && typeof shapeTool().hasPending === "function" && shapeTool().hasPending();
+    // Polygon pending is vertex-based, so the bbox number fields do not apply.
+    const numericOff = !pending || id === "polygon";
     for (const k of Object.keys(boxInputs)) {
-      if (boxInputs[k]) boxInputs[k].disabled = !pending;
+      if (boxInputs[k]) boxInputs[k].disabled = numericOff;
     }
     if (commitBtn) commitBtn.disabled = !pending;
     if (cancelBtn) cancelBtn.disabled = !pending;
@@ -91,6 +93,13 @@ export function mountOptions(root, deps = {}) {
   }
   function fillBox(pending) {
     if (!pending || typeof pending !== "object") {
+      for (const k of Object.keys(boxInputs)) {
+        if (boxInputs[k]) boxInputs[k].value = "";
+      }
+      return;
+    }
+    if (Array.isArray(pending.points)) {
+      // Polygon pending has no bbox numbers; keep the fields blank.
       for (const k of Object.keys(boxInputs)) {
         if (boxInputs[k]) boxInputs[k].value = "";
       }

@@ -48,3 +48,8 @@ export function toHex(r, g, b) {
   const hx = (v) => clampByte(v).toString(16).padStart(2, "0");
   return `#${hx(r)}${hx(g)}${hx(b)}`;
 }
+
+export function toHex8(r, g, b, a) {
+  const hx = (v) => clampByte(v).toString(16).padStart(2, "0");
+  return `#${hx(r)}${hx(g)}${hx(b)}${hx(a)}`;
+}

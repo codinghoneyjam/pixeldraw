@@ -1,14 +1,15 @@
 // <META - FILE SUMMARY - Shape overlay paint layers and canvas rendering>
 import { ellipseMask, outlineRing, rrectMask } from "../core/raster/raster_masks.js";
 import { lineMask } from "../core/raster/segment.js";
+import { polygonBBox, polygonInsetRing, polygonMask, polygonOutlineMask } from "../core/raster/polygon.js";
 import { DrawToolError } from "../core/errors.js";
 import { packRGBA, parseHex } from "../core/pixel.js";
 
-// <META - ROLE : pack a normalized css hex color | L6-12>
+// <META - ROLE : pack a normalized css hex color, preserving its alpha | L6-12>
 export function packOf(css) {
   const c = parseHex(css);
   if (!c) throw new DrawToolError("OUT_OF_RANGE", `invalid color ${String(css)}`);
-  return packRGBA(c.r, c.g, c.b, 255);
+  return packRGBA(c.r, c.g, c.b, c.a);
 }
 
 // <META - ROLE : expand a ShapeSpec into colored paint layers | L14-34>
@@ -21,6 +22,23 @@ export function computePaintLayers(spec, color) {
   if (spec.kind === "line") {
     const m = lineMask(spec.p0, spec.p1, spec.strokeWidth);
     return [{ x: m.x, y: m.y, w: m.w, h: m.h, data: m.data, packed, css: color }];
+  }
+  if (spec.kind === "polygon") {
+    // Mirrors applyShape polygon including both-mode, so the preview is WYSIWYG.
+    const bb = polygonBBox(spec.points);
+    const local = spec.points.map((p) => (Array.isArray(p) ? [p[0] - bb.x, p[1] - bb.y] : [p.x - bb.x, p.y - bb.y]));
+    const sw = spec.strokeWidth === undefined ? 1 : Math.trunc(spec.strokeWidth);
+    const mode = spec.fillMode ?? "outline";
+    const pfill = polygonMask(local, bb.w, bb.h);
+    if (mode === "fill") return [{ x: bb.x, y: bb.y, w: bb.w, h: bb.h, data: pfill.data, packed, css: color }];
+    const pring = sw >= 2 ? polygonInsetRing(pfill, sw) : polygonOutlineMask(local, Math.max(bb.w, bb.h), sw);
+    if (mode === "both") {
+      return [
+        { x: bb.x, y: bb.y, w: bb.w, h: bb.h, data: pfill.data, packed, css: color },
+        { x: bb.x, y: bb.y, w: pring.w, h: pring.h, data: pring.data, packed, css: color },
+      ];
+    }
+    return [{ x: bb.x, y: bb.y, w: pring.w, h: pring.h, data: pring.data, packed, css: color }];
   }
   const { x, y, w, h } = spec.bbox;
   const rk = spec.kind === "ellipse" ? "ellipse" : "rrect";
@@ -42,12 +60,13 @@ function blitLayer(ctx, tmpRef, layer, view, dpr, k) {
   tmpRef.el.width = layer.w;
   tmpRef.el.height = layer.h;
   const img = tctx.createImageData(layer.w, layer.h);
-  const c = parseHex(layer.css) ?? { r: 0, g: 0, b: 0 };
+  const c = parseHex(layer.css) ?? { r: 0, g: 0, b: 0, a: 255 };
+  const alpha = c.a ?? 255;
   for (let i = 0; i < layer.w * layer.h; i++) {
     img.data[i * 4] = c.r;
     img.data[i * 4 + 1] = c.g;
     img.data[i * 4 + 2] = c.b;
-    img.data[i * 4 + 3] = layer.data[i] === 1 ? 255 : 0;
+    img.data[i * 4 + 3] = layer.data[i] === 1 ? alpha : 0;
   }
   tctx.putImageData(img, 0, 0);
   const o = deviceOf(view, dpr, layer.x, layer.y);

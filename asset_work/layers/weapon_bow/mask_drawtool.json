@@ -1,0 +1,61 @@
+{
+  "schema_version": "2.0.0",
+  "format": "draw_tool.document",
+  "document_id": "doc-0004",
+  "name": "Untitled",
+  "canvas": {
+    "tile_px": 64,
+    "unit_px": 32,
+    "width_px": 128,
+    "height_px": 128,
+    "background": "transparent"
+  },
+  "active_layer_id": "layer-0001",
+  "layers": [
+    {
+      "layer_id": "layer-0001",
+      "name": "Layer 1",
+      "type": "raster",
+      "visible": true,
+      "locked": false,
+      "opacity": 1,
+      "blend": "normal",
+      "raster": {
+        "chunk_px": 32,
+        "encoding": "png_base64",
+        "chunks": [
+          {
+            "cx": 1,
+            "cy": 0,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAOklEQVR4nO3OMQoAAAjDQP//aQXB3a0ZEnTuVZmZmZmZPeq94Ph9DIGBIBAYCAKBgSAQGAgKEQd8EAPN3kG/PzJtfgAAAABJRU5ErkJggg=="
+          },
+          {
+            "cx": 1,
+            "cy": 1,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAASElEQVR4nO3WMQoAIAxD0dz/0hEEQdwlgf6/dH20S6VPWbL3CHUAFYgYoALBKcQWHgCIGkAFIg6oQMQABzEbQEREk/P1EkwHLASBX6EzHHf2AAAAAElFTkSuQmCC"
+          },
+          {
+            "cx": 2,
+            "cy": 1,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAANElEQVR4nO3OsQ0AAAjDMP5/ukhsPEAYYsHcVEmSJFrm4AA04k3Aiwg8AI/AxiXBkv0G3GpMzTPN1bukBQAAAABJRU5ErkJggg=="
+          },
+          {
+            "cx": 1,
+            "cy": 2,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAQ0lEQVR4nO2VwQkAMAjE3H9pC4XSEXJwCfpO8OMMwu5fAzoDREQkhL3TGvDeYWdAhBwPQOV4ACpHAjx9RAAqxwOi5Qe2uGOdo7iTkgAAAABJRU5ErkJggg=="
+          },
+          {
+            "cx": 2,
+            "cy": 2,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAOElEQVR4nO3OwQkAMAzDQO2/tAuFPrpAHaiO5G0Byf3PGVAPkCTIvuL4+WpAZXxMQG18RIAkSd9bO5MzzQBsTBwAAAAASUVORK5CYII="
+          },
+          {
+            "cx": 1,
+            "cy": 3,
+            "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAP0lEQVR4nO3PIRIAIAzEwPv/p4uqQWHaCLIzWHJNBlRS/Sb+fx6AxvEBaBwZgMW9ejWMxr16NXyPwOKSJElfOHs/S7WhUX6uAAAAAElFTkSuQmCC"
+          }
+        ]
+      }
+    }
+  ]
+}
