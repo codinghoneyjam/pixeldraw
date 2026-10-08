@@ -21,7 +21,7 @@ import { showRestoreDialog } from "./shared/dialogs.js";
 import { createShortcuts } from "./toolbar/shortcuts.js";
 import { STRINGS } from "./shared/strings.js";
 import { iconFor } from "./toolbar/icons.js";
-import { createViewStore } from "./canvas-host/view_store.js";
+import { createViewStore } from "../features/viewport/view_store.js";
 import { createMenubar } from "./menubar/menubar.js";
 import { createHistoryButtons } from "./menubar/history_buttons.js";
 import { refreshPanelCanvases } from "./shared/panel_refresh.js";

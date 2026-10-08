@@ -2,8 +2,8 @@
 // View: { zoom, offsetX, offsetY }; zoom = CSS px per canvas px,
 // offset = screen (CSS px, viewport-relative) position of canvas (0,0) corner.
 
-import { ZOOM_LEVELS, CHUNK_PX } from "../core/constants.js";
-import { DrawToolError } from "../core/errors.js";
+import { ZOOM_LEVELS, CHUNK_PX } from "../../core/constants.js";
+import { DrawToolError } from "../../core/errors.js";
 
 export { ZOOM_LEVELS };
 

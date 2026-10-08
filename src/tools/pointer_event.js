@@ -2,7 +2,7 @@
 //
 // Extracted from input_controller.js: pure mapping, no listener wiring.
 
-import { pixelAt, screenToCanvas } from "../render/view.js";
+import { pixelAt, screenToCanvas } from "../features/viewport/view.js";
 
 /**
  * Pixel-path pointer event builder (pan/zoom-scoped contract, frozen).

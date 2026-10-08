@@ -16,7 +16,7 @@ import {
   fitView,
   actualSizeView,
   visibleChunkRange,
-} from "../src/render/view.js";
+} from "../src/features/viewport/view.js";
 import { compositeChunk, samplePixel } from "../src/render/composite.js";
 import { over } from "../src/core/blend.js";
 import { DrawToolError } from "../src/core/errors.js";

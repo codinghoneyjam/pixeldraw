@@ -1,4 +1,4 @@
-import { visibleChunkRange } from "./view.js";
+import { visibleChunkRange } from "../features/viewport/view.js";
 import { compositeChunk } from "./composite.js";
 import { CHUNK_PX, chunkKey, chunkCoords } from "../core/constants.js";
 

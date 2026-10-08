@@ -3,7 +3,7 @@
 // Extracted from input_controller.js: listener registration only. Every decision
 // (should-pan, button acceptance, cursor) stays on the controller instance.
 
-import { clampView, panBy, stepZoom, zoomAt } from "../render/view.js";
+import { clampView, panBy, stepZoom, zoomAt } from "../features/viewport/view.js";
 import { buildToolEvent } from "./pointer_event.js";
 
 /**
