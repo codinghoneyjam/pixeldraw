@@ -1,9 +1,12 @@
 // <META - FILE SUMMARY - ShapeTool: pending state machine and pointer/key interaction>
-// <META - SUMMARY CONT - Commit, preview, and overlay output live in shape_render.js>
+// <META - SUMMARY CONT - Raster output lives in shape_render.js; placing +
+// <META - SUMMARY CONT - pending accessors in shape_pending.js; keys in shape_keys.js>
 import { DrawToolError } from "../../core/errors.js";
 import { EVENTS } from "../../core/events.js";
 import { dragGeom, hitHandle, insideShape, moveGeom, resizeGeom, snapPlacePoint } from "./shape_geom.js";
-import { commitPending, paintPreview, parsePendingValue, renderToolOverlay } from "./shape_render.js";
+import { commitPending, paintPreview, renderToolOverlay } from "./shape_render.js";
+import { placePoint, finishPlacing, readPending, writePending } from "./shape_pending.js";
+import { handleKeyDown } from "./shape_keys.js";
 
 // <META - ROLE : kind table, labels, live settings keys | L9-14>
 const KINDS = ["line", "rect", "rrect", "ellipse", "polygon"];
@@ -190,39 +193,14 @@ export class ShapeTool {
     this._render();
   }
 
-  // <META - ROLE : polygon vertex append; clicking the first vertex closes | L180-198>
+  // <META - ROLE : polygon placing delegates (flow in shape_pending.js) | L180-198>
   _placePoint(ev, p) {
-    const pts = this._place.points;
-    const first = pts[0];
-    const tol = 6 / this._zoom();
-    const fx = ev.fx ?? p.x;
-    const fy = ev.fy ?? p.y;
-    if (pts.length >= 3 && Math.abs(fx - first.x) <= tol && Math.abs(fy - first.y) <= tol) {
-      this._finishPlacing();
-      return;
-    }
-    pts.push(snapPlacePoint(p, this._session.settings.snapUnit));
-    this._emitChanged();
-    this._render();
+    placePoint(this, ev, p);
   }
 
   // <META - ROLE : placing with >= 3 vertices becomes pending | L200-212>
   _finishPlacing() {
-    if (!this._place || this._place.points.length < 3) return false;
-    this._pending = {
-      layerId: this._place.layerId,
-      color: this._session.settings.primaryColor,
-      bbox: null,
-      p0: null,
-      p1: null,
-      points: this._place.points.map((q) => ({ ...q })),
-    };
-    this._place = null;
-    this._hoverPt = null;
-    this._mode = "pending";
-    this._emitChanged();
-    this._render();
-    return true;
+    return finishPlacing(this);
   }
 
   // <META - ROLE : pointer move: drawing, placing hover, resizing, or moving preview | L214-236>
@@ -280,83 +258,17 @@ export class ShapeTool {
     }
   }
 
-  // <META - ROLE : keyboard commit, discard, placing finish, and arrow nudge | L238-278>
+  // <META - ROLE : keyboard dispatch lives in shape_keys.js | L238-278>
   keyDown(ev) {
-    if (ev.key === "Enter") {
-      if (this._mode === "placing") return this._finishPlacing();
-      if (this._mode === "drawing" || !this.hasPending()) return false;
-      this._op = null;
-      this._mode = "pending";
-      this.commit();
-      return true;
-    }
-    if (ev.key === "Escape" || ev.key === "Delete" || ev.key === "Backspace") {
-      if (this._mode === "placing" && this._place) {
-        if (ev.key === "Escape" && this._place.points.length > 1) {
-          // Esc steps back one vertex; the last click is what the user regrets.
-          this._place.points.pop();
-          this._emitChanged();
-          this._render();
-          return true;
-        }
-        this._place = null;
-        this._hoverPt = null;
-        this._mode = this._pending ? "pending" : "idle";
-        this._emitChanged();
-        this._render();
-        return true;
-      }
-      if ((this._mode === "drawing" || this._mode === "resizing" || this._mode === "moving") && ev.key === "Escape") {
-        this.cancel();
-        return true;
-      }
-      if (this.hasPending() || this._draw || this._op) {
-        this.discardPending();
-        return true;
-      }
-      return false;
-    }
-    const step = ev.shift ? 32 : 1;
-    const d = ev.key === "ArrowLeft" ? [-step, 0] : ev.key === "ArrowRight" ? [step, 0] : ev.key === "ArrowUp" ? [0, -step] : ev.key === "ArrowDown" ? [0, step] : null;
-    if (!d || !this.hasPending() || this._mode !== "pending") return false;
-    const p = this._pending;
-    if (this._kind === "polygon") {
-      this._pending = { ...p, points: p.points.map((q) => ({ x: q.x + d[0], y: q.y + d[1] })) };
-    } else if (this._kind === "line") {
-      this._pending = { ...p, p0: { x: p.p0.x + d[0], y: p.p0.y + d[1] }, p1: { x: p.p1.x + d[0], y: p.p1.y + d[1] } };
-    } else {
-      this._pending = { ...p, bbox: { ...p.bbox, x: p.bbox.x + d[0], y: p.bbox.y + d[1] } };
-    }
-    this._emitChanged();
-    this._render();
-    return true;
+    return handleKeyDown(this, ev);
   }
 
   // <META - ROLE : numeric pending accessors for the option bar | L249-273>
   getPending() {
-    if (!this._pending) return null;
-    const p = this._pending;
-    if (this._kind === "line") return { x0: p.p0.x, y0: p.p0.y, x1: p.p1.x, y1: p.p1.y };
-    if (this._kind === "polygon") return { points: p.points.map((q) => ({ x: q.x, y: q.y })) };
-    return { x: p.bbox.x, y: p.bbox.y, w: p.bbox.w, h: p.bbox.h, radius: p.radius };
+    return readPending(this);
   }
   setPending(v) {
-    if (v === null || v === undefined) {
-      this.discardPending();
-      return;
-    }
-    if (!this._session.doc) throw new DrawToolError("INVALID_STATE", "no document loaded");
-    const layerId = this._pending ? this._pending.layerId : this._session.doc.activeLayerId;
-    // Editing an EXISTING pending shape keeps its captured colour, so nudging the
-    // bbox in the option bar after a colour change still cannot recolour it.
-    const color = (this._pending && this._pending.color) || this._session.settings.primaryColor;
-    const geom = parsePendingValue(this, v);
-    this._pending = { layerId, color, ...geom };
-    this._draw = null;
-    this._op = null;
-    this._mode = "pending";
-    this._emitChanged();
-    this._render();
+    writePending(this, v);
   }
 
   // <META - ROLE : commit + preview + overlay entry points (raster in shape_render.js) | L272-284>
