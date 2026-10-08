@@ -1,12 +1,12 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { brushFootprint } from "../src/core/brush.js";
+import { brushFootprint } from "../src/features/pen/brush.js";
 import { EVENTS } from "../src/core/events.js";
 import { packRGBA } from "../src/core/pixel.js";
-import { PenTool } from "../src/tools/pen.js";
-import { EyedropperTool } from "../src/tools/eyedropper.js";
-import { FillTool, floodFillScanline } from "../src/tools/fill.js";
+import { PenTool } from "../src/features/pen/pen.js";
+import { EyedropperTool } from "../src/features/eyedropper/eyedropper.js";
+import { FillTool, floodFillScanline } from "../src/features/fill/fill.js";
 import { toolEvent } from "./helpers/tool_event.js";
 import { cursorFallback, envFor, makeSession, snapshotDoc, undoCount } from "./helpers/tool_session.js";
 

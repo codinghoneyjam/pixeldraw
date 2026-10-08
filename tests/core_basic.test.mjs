@@ -27,7 +27,7 @@ import {
 import { packRGBA, unpackRGBA, parseHex, toHex, TRANSPARENT } from "../src/core/pixel.js";
 import { over } from "../src/core/blend.js";
 import { ChunkStore, PixelWriter, isAllZero, changeSetBytes } from "../src/core/chunkstore.js";
-import { brushFootprint, forEachBresenham, strokeSegment, strokePoint } from "../src/core/brush.js";
+import { brushFootprint, forEachBresenham, strokeSegment, strokePoint } from "../src/features/pen/brush.js";
 
 const G = JSON.parse(
   readFileSync(new URL("./fixtures/raster_golden.json", import.meta.url))

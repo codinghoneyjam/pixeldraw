@@ -1,5 +1,5 @@
 // <META - FILE SUMMARY - Brush panel: pen size inputs, wheel stepping, preset grid, footprint preview>
-import { brushFootprint } from "../../core/brush.js";
+import { brushFootprint } from "./brush.js";
 import { PEN_MAX, PEN_MIN } from "../../core/constants.js";
 import { EVENTS } from "../../core/events.js";
 import { DrawToolError } from "../../core/errors.js";

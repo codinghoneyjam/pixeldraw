@@ -1,5 +1,5 @@
-import { PEN_MAX, PEN_MIN } from "./constants.js";
-import { DrawToolError } from "./errors.js";
+import { PEN_MAX, PEN_MIN } from "../../core/constants.js";
+import { DrawToolError } from "../../core/errors.js";
 
 const footprintCache = new Map();
 

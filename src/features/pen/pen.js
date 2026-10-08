@@ -1,8 +1,8 @@
-import { brushFootprint, strokePoint, strokeSegment } from "../core/brush.js";
-import { EVENTS } from "../core/events.js";
-import { packRGBA, parseHex, toHex8 } from "../core/pixel.js";
-import { samplePixel } from "../render/composite.js";
-import { Tool } from "./tool_base.js";
+import { brushFootprint, strokePoint, strokeSegment } from "./brush.js";
+import { EVENTS } from "../../core/events.js";
+import { packRGBA, parseHex, toHex8 } from "../../core/pixel.js";
+import { samplePixel } from "../../render/composite.js";
+import { Tool } from "../../tools/tool_base.js";
 
 const PEN_CURSOR =
   "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='7' fill='none' stroke='white' stroke-width='3'/%3E%3Ccircle cx='12' cy='12' r='7' fill='none' stroke='black' stroke-width='1.5'/%3E%3Ccircle cx='12' cy='12' r='1.6' fill='black' stroke='white' stroke-width='0.6'/%3E%3C/svg%3E\") 12 12, crosshair";
