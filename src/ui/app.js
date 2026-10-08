@@ -12,7 +12,7 @@ import { FillTool } from "../features/fill/fill.js";
 import { HandTool } from "../features/hand/hand.js";
 import { ShapeTool } from "../features/shape/shape.js";
 import { AutosaveStore } from "../io/store_idb.js";
-import { mountColor } from "./color/panel_color.js";
+import { mountColor } from "../features/color/panel_color.js";
 import { mountBrush } from "../features/pen/panel_brush.js";
 import { mountLayers } from "./layers/panel_layers.js";
 import { mountCollapsibleSections, mountOptions } from "./optionbar/panel_options.js";

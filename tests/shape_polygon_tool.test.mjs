@@ -5,7 +5,7 @@ import { packRGBA, unpackRGBA } from "../src/core/pixel.js";
 import { applyShape } from "../src/core/raster/shape_raster.js";
 import { validateSetting } from "../src/model/settings_validator.js";
 import { packOf } from "../src/features/shape/shape_overlay.js";
-import { normHex } from "../src/ui/color/panel_color_fields.js";
+import { normHex } from "../src/features/color/panel_color_fields.js";
 import { assertDrawError } from "./helpers/model.js";
 import { setup, ev, key, drag, pixel } from "./helpers/shape_tool.js";
 

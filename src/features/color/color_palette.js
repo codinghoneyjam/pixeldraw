@@ -1,5 +1,5 @@
 // <META - FILE SUMMARY - Palette data: default 32 colours, swatch mount, active markers>
-import { makeSwatchButton, normHex } from "./panel_color_fields.js";
+import { makeSwatchButton, normHex } from "../../features/color/panel_color_fields.js";
 
 export const DEFAULT_PALETTE = Object.freeze([
   "#000000", "#1d2b53", "#7e2553", "#008751", "#ab5236", "#5f574f", "#c2c3c7", "#fff1e8",
