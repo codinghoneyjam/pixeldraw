@@ -378,26 +378,30 @@ src/core/
 3. **점진적 분리** — 원칙적으로 준수됨. **단 검증 게이트 없이 6개 슬라이스가 착지되어 회귀 4건 발생**
 4. ~~**M2 워크플로우 적용**~~ — 실제 작업은 M3 규모(6계층·DAG 경계 변경)였으므로 M3가 맞았음
 
-### 실제로 남은 개선 과제 (2026-10-01)
+### 실제로 남은 개선 과제 (2026-10-01) — 해소 상태 갱신 (2026-10-09)
 
-| # | 과제 | 근거 |
+| # | 과제 | 상태 |
 |:---:|:---|:---|
-| 1 | `input_controller.js` 432줄 분리 | 최우선. 6개 하위 계획이 미구현 |
-| 2 | `shape.js` 333줄 분리 | 2순위 |
-| 3 | `core/raster/raster_brush.js` 제거 | 죽은 중복 모듈. `core/brush.js`와 심볼 중복 (`docs/core.md` §13) |
-| 4 | `rnd` 단일화 | `core/blend.js`와 `core/raster/raster_snap.js`에 중복 정의 |
-| 5 | ~~테스트 4건 실패 해소~~ | ✅ **해소.** 186/186 통과. `docs/io.md` §11, `docs/tools.md` §11-1 |
-| 6 | 250줄 초과 파일 2차 분리 | `commands.js` 287·`panel_layers.js` 264·`pen.js` 261 |
-| 7 | CSS 60KB 분석 | 본 보고서가 아예 다루지 않은 영역 |
-| 8 | `package.json`의 `test` 스크립트 수정 | `node --test tests/`가 Node 24에서 실패. `node --test "tests/*.test.mjs"`로 변경 필요 |
+| 1 | `input_controller.js` 432줄 분리 | ✅ **해소.** 118줄. `wheel_accumulator.js`·`pointer_event.js`·`cursor_state.js`·`pointer_bindings.js`·`keyboard_bindings.js`로 분리 |
+| 2 | `shape.js` 333줄 분리 | ✅ **해소.** `shape.js` 274 + `shape_pending.js`·`shape_keys.js`·`shape_render.js`·`shape_geom.js`·`shape_overlay.js` |
+| 3 | `core/raster/raster_brush.js` 제거 | ⚠️ **부분.** 파일은 죽지 않았다 — `assertBrushSize`를 `segment.js`·`shape_raster.js`가 import한다. 죽은 건 `brushFootprint`·`forEachBresenham` 복제뿐이며 삭제 대상은 **심볼**이지 파일이 아니다(SSOT는 `features/pen/brush.js`) |
+| 4 | `rnd` 단일화 | ✅ **해소.** `core/blend.js`에 단 한 개만 남았다 |
+| 5 | ~~테스트 4건 실패 해소~~ | ✅ **해소.** 현재 **347/347** 통과 |
+| 6 | 250줄 초과 파일 2차 분리 | ✅ **해소.** `commands.js` 287 → `features/layers/commands.js` 140. 남은 250줄+ 6개 파일은 전부 300줄 게이트 내부 |
+| 7 | CSS 60KB 분석 | ✅ **해소.** 분석 결과 피처 분할은 부적판정 — 156규칙 중 34%만 피처 전용이고 전부 4티어에 흩어져 있어 캐스캐이드가 깨진다. 대신 티어별 소유권 헤더를 달고 루트 `style.css`(1033줄, 아무것도 로드하지 않는 중복)를 삭제했다 |
+| 8 | `package.json`의 `test` 스크립트 수정 | ✅ **해소.** `node --test "tests/*.test.mjs"`로 이미 고쳐져 있다 |
+
+`src/`는 이제 **104개 `.js`**(2026-10-01 당시 85개), 문서는 `docs/features.md`에 정리돼 있다.
 
 ### 검증 명령 (이 문서가 존재하는 동안 반드시 실행)
 
 ```bash
-node --test "tests/*.test.mjs"   # 152건 (npm test는 Node 24에서 실패)
-node tools/parity_check.mjs      # 115 골든 검사
-node tools/png_cases_check.mjs
-node tools/view_check.mjs
+node --test "tests/*.test.mjs"   # 347건 (npm test는 Node 24에서 실패)
+node tools/parity_check.mjs      # 201 골든 검사
+node tools/png_cases_check.mjs   # 5/5
+node tools/view_check.mjs        # OK
+node tools/recipe_parity_check.mjs  # 39/39
+node tests/tool_integrity_check.mjs # 34/34
 python schema/schema_selfcheck.py
 ```
 
