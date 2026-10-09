@@ -4,8 +4,10 @@
 // Bboxes accept [x, y, w, h] arrays or { x, y, w, h } objects.
 // All functions return [x, y(, w, h)] arrays, matching reference/raster_ref.mjs.
 
-/** Round-half-up used for every float->int decision. */
-export const rnd = (v) => Math.floor(v + 0.5);
+// rnd lives in core/blend.js and is re-exported here so existing importers of
+// this module's rnd keep working. It used to be a second, identical definition.
+import { rnd } from "../blend.js";
+export { rnd };
 
 const toXY = (p) => (Array.isArray(p) ? [p[0], p[1]] : [p.x, p.y]);
 

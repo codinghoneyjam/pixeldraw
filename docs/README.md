@@ -73,14 +73,18 @@ node tools/view_check.mjs
 python schema/schema_selfcheck.py
 ```
 
-### 알려진 상태 (2026-10-08)
+### 알려진 상태 (2026-10-09)
 
 - `npm test`의 `node --test tests/`는 Node 24에서 디렉터리 인자를 받지 않아 실패한다.
   `package.json`의 스크립트 수정이 남아 있다. 현재는 `node --test "tests/*.test.mjs"`를
   직접 실행할 것.
-- 그 명령 기준 **324건 전부 통과**한다.
+- 그 명령 기준 **366건 전부 통과**한다. 블렌드 모드 6종 구현로 19건이 늘었다
+  (`tests/blend_modes.test.mjs`).
 - 나머지 게이트도 모두 통과한다: parity 201건·png_cases 5/5·view OK·schema selfcheck OK·
-  recipe parity 39/39·layer gallery 34/34·tool integrity check 31건.
+  recipe parity 39/39·layer gallery 34/34·tool integrity check 34건.
+- 레이어 블렌드 모드(`multiply`·`screen`·`overlay`·`darken`·`lighten`)는 2026-10-09에
+  실제로 구현됐다. 수식·알파 모델은 `contract.md` §1-1, 합성기 통일과 동치 불변은
+  `features.md` §6. 이전에는 스키마만 6종을 약속하고 JS는 전부 `normal`로 강당했다.
 - `node tests/tool_integrity_check.mjs`는 2026-10-08부터 300줄 초과 검사 범위를 `src/`로
   좁혔다. 이전에는 리포지토리 전체를 훑어 `asset_work/`·`tools/`·`viewer/`의
   생성물·오라클·빌드 스캐폴드가 줄 수 기준을 넘어 **항상 실패**하고 있었다.

@@ -108,28 +108,23 @@ undo, no-AA PNG check, locked/hidden reject, small-budget history eviction).
 - `npm test` fails on Node 24: `node --test tests/` is not accepted as a directory
   argument. The `package.json` script is still unfixed. Run
   `node --test "tests/*.test.mjs"` instead.
-- Open code issues (test suite itself is green):
-  - `src/core/raster/raster_brush.js` keeps a **duplicate** `brushFootprint` and
-    `forEachBresenham` that nothing imports. The module itself is no longer fully dead:
-    `assertBrushSize` is imported by `core/raster/shape_raster.js` and
-    `core/raster/segment.js`. The duplicates should be deleted, not the file.
-    (`brush.js` moved to `features/pen/brush.js` in the 2026-10-08 reorg; the
-    canonical `brushFootprint` now lives there.)
-  - `rnd` is defined twice: `src/core/blend.js` and `src/core/raster/raster_snap.js`.
+- Open code issue:
   - `src/core/raster/*` throws `RangeError`, but `docs/contract.md` section 2-7
-    allows `DrawToolError` only.
+    allows `DrawToolError` only. The remaining site is
+    `core/raster/raster_brush.js`'s `assertBrushSize`; every other raster path
+    already throws `DrawToolError`.
 
-## Verification status (2026-10-08)
+## Verification status (2026-10-09)
 
 All gates pass:
 
 | Gate | Result |
 |:---|:---|
-| `node --test "tests/*.test.mjs"` | 324/324 |
+| `node --test "tests/*.test.mjs"` | 366/366 |
 | `node tools/parity_check.mjs` | 201 golden checks |
 | `node tools/recipe_parity_check.mjs` | 39/39 legacy renders |
 | `node tools/build_layer_gallery.mjs` | 34/34 assets layered, min parity 0.990131 |
 | `node tools/png_cases_check.mjs` | 5/5 |
 | `node tools/view_check.mjs` | OK |
 | `python schema/schema_selfcheck.py` | OK |
-| `node tests/tool_integrity_check.mjs` | 31/31 |
+| `node tests/tool_integrity_check.mjs` | 34/34 |

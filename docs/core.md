@@ -76,11 +76,21 @@ Session 메서드 호출과 이벤트 구독만 하고 모델을 직접 변조�
 
 ## 7. blend.js — 합성 수학
 
-합성은 source-over 한 가지며 연산 순서를 바꾸면 결과가 달라지므로 순서를 고정한다.
-반올림은 전역 규칙 `rnd` 하나로 통일한다(`contract.md` §2).
+합성의 **유일한 구현**이다. source-over의 알파 처리가 기준이며 연산 순서를 바꾸면 결과가
+달라지므로 순서를 고정한다. 반올림은 전역 규칙 `rnd` 하나로 통일한다(`contract.md` §2).
+레이어 블렌드 모드의 수식·알파 모델은 `contract.md` §1-1.
 
 - `rnd(v) -> number` — `Math.floor(v + 0.5)`이며 포인터→픽셀의 `Math.floor`와 짝을 이룬다. 예: `rnd(1.5) === 2`.
-- `over(dst, src, opacity) -> [r, g, b, a]` — `dst/src`는 `[r,g,b,a]` 배열이며 `opacity`는 0~1 실수다. 소스 알파가 0이면 dst를 그대로 돌려주고, 결과 알파가 0이면 `[0,0,0,0]`으로 정규화한다. 예: `over([0,0,0,0],[255,0,0,255],1)`.
+- `over(dst, src, opacity) -> [r, g, b, a]` — `normal` 모드의 별칭이다. `dst/src`는
+  `[r,g,b,a]` 배열이며 `opacity`는 0~1 실수다. 소스 알파가 0이면 dst를 그대로 돌려주고,
+  결과 알파가 0이면 `[0,0,0,0]`으로 정규화한다. 예: `over([0,0,0,0],[255,0,0,255],1)`.
+- `overBlend(dst, src, opacity, mode) -> [r, g, b, a]` — **모드 인자 구현.** 화면
+  (`render/composite.js`)·PNG(`io/export_png.js`)·스포이트(`samplePixel`)·병합
+  (`commands_pixel.js`) 네 경로가 전부 이것만 호출한다. 배경 알파가 0이면 혼합을
+  건너뛰고, `normal`은 `over()`와 바이트 단위로 동일하다.
+- `BLEND_MODES -> readonly string[]` — 여섯 종의 정의처. `features/layers/layer.js`와
+  `io/validate_structural.js`는 이를 import 만 한다.
+- `isBlendMode(mode) -> boolean` — 멤버십 검사.
 
 ## 8. chunkstore.js — 희소 저장과 기록기
 
@@ -180,19 +190,24 @@ Session 메서드 호출과 이벤트 구독만 하고 모델을 직접 변조�
 `errors.js`와 동일해야 하며, §4의 DOM 금지 구역에 `src/core/**` 전부가 속한다.
 `chunkKey` 공식과 `CHUNK_LEN` 정의도 계약과 코드가 한 글자도 어긋나면 안 된다.
 
-## 13. 미해결 사항 (2026-10-01 확인)
+## 13. 미해결 사항 (2026-10-01 확인, 2026-10-09 갱신)
 
-- **`raster_brush.js`는 죽은 모듈이다.** 동일 심볼을 가진 `core/brush.js`가 생존 버전이고
-  실제 소비자는 `pen.js`·`panel_brush.js`가 `core/brush.js`를 import 한다. 분리 작업
-  (커밋 `62f6d0ae`)에서 잔류한 중복 구현이며, `contract.md` §1 "값 복사 금지" 및
-  저장소 헌법의 Anti-Duplication SSOT에 저촉된다. 정리 대상.
-- **`rnd`가 두 곳에 정의된다.** `core/blend.js`와 `core/raster/raster_snap.js`에 같은
-  수학의 `rnd`가 각각 존재한다. §1 단일 정의처 원칙의 예외로 취급 필요.
-- `shape_raster.js`의 `assertMaskSize`/`assertBrushSize`는 `RangeError`를 던지는데,
-  `contract.md` §2-7은 `DrawToolError` 하나만 허용한다. 위반 여부 판단 필요.
+- ~~**`raster_brush.js`는 죽은 모듈이다.**~~ ✅ **정리됨.** `brushFootprint`·`forEachBresenham`
+  복제를 삭제했다. SSOT는 `features/pen/brush.js`(2026-10-08 피처 재편에서 이감)이고
+  실제 소비자는 `pen.js`·`panel_brush.js`다. 파일 자체는 남는다 —
+  `assertBrushSize`를 `shape_raster.js`·`segment.js`가 import 하기 때문이다. 두 복제의
+  마스크 수학·오프셋·Bresenham은 동일했고 유일한 차이는 에러 타입이었다.
+- ~~**`rnd`가 두 곳에 정의된다.**~~ ✅ **정리됨.** `core/blend.js`만 남기고
+  `raster_snap.js`가 이를 import 해 재수출한다. 기존 `raster_snap.js`의 `rnd`
+  import 하는 쪽은 경로 변경 없이 그대로 동작한다.
+- `shape_raster.js`의 `assertMaskSize`는 `DrawToolError`로 통일됐고, 남은 `RangeError`
+  투하는 `core/raster/raster_brush.js`의 `assertBrushSize` 한 곳이다.
+  `contract.md` §2-7 위반으로 남은 정리 대상.
 
 ## Handoff
 
 - Wrote: `draw_tool_v2/core.md`
 - Result: `core/` 11개 파일(raster/ 4개 포함) 전 심볼 커버리지, 미해결 중복 3건 명시
 - Next: Orchestrator — `raster_brush.js` 제거 및 `rnd` 단일화 판단
+
+

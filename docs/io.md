@@ -42,8 +42,8 @@ io 모듈은 문서의 바깥 경계를 담당한다. 메모리 안의 Document�
 
 `documentToJson(doc, {onProgress})`는 전체 문서를 스키마 키 순서대로 만든다. 스키마 버전·포맷·문서 id·이름·캔버스·활성층·층 배열 순서다. 각 층에서는 비어 있는 청크를 제외하고 cy 우선 cx 차선으로 정렬한 뒤, 64개씩 묶어 병렬로 PNG 인코딩한다. 진행 콜백은 누적 완료 수와 전체 청크 수를 받는다. 층 순서는 문서의 아래층부터 위층 순서를 그대로 유지한다.
 `layerToJson(doc, layerId)`는 단일 층을 `draw_tool.layer` 포맷으로 감싼다. 원본 캔버스 정보를 함께 넣어 나중에 크기가 달라졌는지 비교할 수 있게 한다.
-`jsonToDocument(obj, {onProgress})`는 먼저 전체 검증을 수행하고 실패하면 첫 오류 코드로 throw한다. vector층이 하나라도 있으면 `UNSUPPORTED_LAYER_TYPE`으로 중단한다. normal이 아닌 블렌드는 normal로 강등하고 경고 배열에 남긴다. 각 청크는 base64와 PNG를 풀고 투명 픽셀 RGB를 0으로 정규화한 뒤, 완전히 비어 있으면 버린다. 64개 배치마다 진행 콜백을 호출한다. 활성층이 없으면 마지막 층을 활성층으로 삼고, 층 id들을 IdGen에 심어서 이후 발급과 충돌하지 않게 한다. 반환은 문서와 경고 묶음이다.
-`importLayerJson(doc, obj)`는 원본 문서를 바꾸지 않고 새 층 객체를 만든다. 검증 뒤 원본 캔버스 크기가 다르면 경고를 남기고, 블렌드 강등 규칙은 동일하다. vector층은 `UNSUPPORTED_LAYER_TYPE`으로 거절한다. 현재 문서 캔버스를 벗어난 청크는 저장하지 않고 버린 개수를 `dropped`으로 돌려준다. 새 층 id는 문서의 IdGen에서 발급받아 중복을 피한다.
+`jsonToDocument(obj, {onProgress})`는 먼저 전체 검증을 수행하고 실패하면 첫 오류 코드로 throw한다. vector층이 하나라도 있으면 `UNSUPPORTED_LAYER_TYPE`으로 중단한다. 블렌드는 그대로 통과시킨다 — 여섯 종 모두 실제로 합성되므로(`contract.md` §1-1) 강등할 이유가 없고, 알 수 없는 이름은 구조 검증 단계에서 이미 `SCHEMA`로 거절된다. 각 청크는 base64와 PNG를 풀고 투명 픽셀 RGB를 0으로 정규화한 뒤, 완전히 비어 있으면 버린다. 64개 배치마다 진행 콜백을 호출한다. 활성층이 없으면 마지막 층을 활성층으로 삼고, 층 id들을 IdGen에 심어서 이후 발생과 충돌하지 않게 한다. 반환은 문서와 경고 묶음이다.
+`importLayerJson(doc, obj)`는 원본 문서를 바꾸지 않고 새 층 객체를 만든다. 검증 뒤 원본 캔버스 크기가 다르면 경고를 남긴다. vector층은 `UNSUPPORTED_LAYER_TYPE`으로 거절한다. 현재 문서 캔버스를 벗어난 청크는 저장하지 않고 버린 개수를 `dropped`으로 돌려준다. 새 층 id는 문서의 IdGen에서 발급받아 중복을 피한다.
 
 ### 5.1 serialize_vector.js — 벡터 명령 변환
 
