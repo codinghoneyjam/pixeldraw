@@ -37,9 +37,10 @@ core → shape_raster → features/shape 도구 ─┘
 - `core`: 상수·에러·이벤트·픽셀·합성·청크저장·도형 래스터(`core/raster/`). DOM 금지.
 - `features/`: **툴 기능 단위 피처 패키지**. 각 피처가 자기 도구·패널·모델을 함께 가진다.
   `document`(문서·히스토리·세션·설정검증), `layers`(레이어·Command·편집세션·패널),
-  `color`(색상 패널 7파일), `pen`(펜·지우개·브러시·브러시 패널),
-  `shape`(shape 도구 6파일), `fill`·`eyedropper`·`hand`(단일 도구),
-  `viewport`(view 수학 + view_store).
+  `color`(색상 패널 8파일), `pen`(펜·지우개·브러시·브러시 패널),
+  `shape`(shape 도구 6파일+옵션바), `fill`·`eyedropper`·`hand`(단일 도구),
+  `viewport`(view 수학 + view_store + 뷰 옵션 + 뷰 액션).
+  패키지별 공개 API와 DOM 규칙은 **`docs/features.md`**.
 - `io`: PNG·검증·직렬화·파일·IndexedDB. `file_io`·`store_idb`만 브라우저 API 접촉(지연 접근).
   `serialize.js`는 래스터 JSON 절반 + 배럴, `serialize_vector.js`·`serialize_recipe.js`가 형제.
 - `render`: `composite`는 DOM-free(Node import 가능), `renderer`·`grid`·`background`는 캔버스 표시용.
@@ -54,6 +55,7 @@ core → shape_raster → features/shape 도구 ─┘
 | 파일 | 범위 |
 |---|---|
 | `contract.md` | 고정 상수·전역 불변 조건·에러 코드 카탈로그·DOM 금지 구역·의존 DAG |
+| `features.md` | 피처 패키지 지도·공개 API 표·DOM 규칙·새 도구 추가 체크리스트 |
 | `core.md` | 상수·에러·이벤트·픽셀·합성·청크·도형 래스터(`raster/`) |
 | `model.md` | 문서·히스토리·세션·레이어·Command (`features/document/`·`features/layers/`) |
 | `io.md` | base64·PNG·검증·직렬화·내보내기·파일·자동저장 |

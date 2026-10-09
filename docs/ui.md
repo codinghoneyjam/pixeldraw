@@ -185,4 +185,6 @@
   `menubar_wiring.js`·`toolbar_wiring.js`·`shared/storage.js`·`shared/toast.js`는
   `app.js`에서 분리 신설된 파일이고, color 패널 7·layers 패널·panel_brush·view_store·
   app.js 자체도 `src/features/*`로 옮겨갔다.
-- Next: 문서화 범위 밖 — `src/features/*` 피처 문서(`features.md`)는 아직 없다.
+- Next: ~~`src/features/*` 피처 문서(`features.md`)는 아직 없다~~ → **완료.**
+  `docs/features.md`에 9개 피처의 공개 API·DOM 규칙·새 도구 추가 체크리스트가 있다.
+  이후 `docs/README.md` 문서 목록에도 등록했다.
