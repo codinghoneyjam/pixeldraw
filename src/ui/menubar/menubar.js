@@ -23,8 +23,12 @@ export function createMenubar(root) {
   function setOpen(wrap, open) {
     const panel = wrap ? wrap.querySelector("div[role='menu']") : null;
     const trigger = wrap ? wrap.querySelector("button[data-menu]") : null;
-    if (panel) panel.hidden = open !== true;
-    if (trigger) trigger.setAttribute("aria-expanded", open === true ? "true" : "false");
+    const hidden = open !== true;
+    const expanded = open === true ? "true" : "false";
+    if (panel && panel.hidden !== hidden) panel.hidden = hidden;
+    if (trigger && trigger.getAttribute("aria-expanded") !== expanded) {
+      trigger.setAttribute("aria-expanded", expanded);
+    }
   }
   function closeAll() {
     cancelClose();

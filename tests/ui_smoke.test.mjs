@@ -18,6 +18,7 @@ import {
 } from "../src/ui/shared/dialogs.js";
 import { createShortcuts, isEditableTarget, resolveShortcut } from "../src/ui/toolbar/shortcuts.js";
 import { RECENT_MAX, loadRecentColors } from "../src/ui/shared/storage.js";
+import { createMenubar } from "../src/ui/menubar/menubar.js";
 
 describe("strings", () => {
   it("has Korean catalog", () => {
@@ -86,6 +87,49 @@ describe("panel modules import without DOM", () => {
   it("paint helpers null-safe", () => {
     assert.equal(paintPreview(null, 3, "#000000"), false);
     assert.equal(paintThumb(null, null), false);
+  });
+});
+
+describe("menubar close idempotence", () => {
+  it("does not rewrite an already closed menu on outside pointerdown", () => {
+    const listeners = new Map();
+    const attrs = new Map([["aria-expanded", "false"]]);
+    let hiddenValue = true;
+    let hiddenWrites = 0;
+    let attrWrites = 0;
+    const panel = {
+      get hidden() { return hiddenValue; },
+      set hidden(value) { hiddenValue = value; hiddenWrites += 1; },
+    };
+    const trigger = {
+      addEventListener(type, fn) { listeners.set(type, fn); },
+      getAttribute(name) { return attrs.get(name) ?? null; },
+      setAttribute(name, value) { attrs.set(name, value); attrWrites += 1; },
+    };
+    const wrap = {
+      addEventListener() {},
+      querySelector: (selector) => selector.includes("role='menu'") ? panel : trigger,
+    };
+    const root = { querySelectorAll: () => [wrap], contains: () => false };
+    const previousDocument = globalThis.document;
+    globalThis.document = {
+      addEventListener(type, fn) { listeners.set(`document:${type}`, fn); },
+      removeEventListener() {},
+    };
+    try {
+      const menu = createMenubar(root);
+      listeners.get("click")();
+      listeners.get("document:pointerdown")({ target: {} });
+      hiddenWrites = 0;
+      attrWrites = 0;
+      listeners.get("document:pointerdown")({ target: {} });
+      assert.equal(hiddenWrites, 0);
+      assert.equal(attrWrites, 0);
+      menu.dispose();
+    } finally {
+      if (previousDocument === undefined) delete globalThis.document;
+      else globalThis.document = previousDocument;
+    }
   });
 });
 
