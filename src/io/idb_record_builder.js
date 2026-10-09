@@ -15,7 +15,13 @@ export function buildMetaRecord(doc) {
     documentId: doc.id,
     name: doc.name,
     canvas: { widthPx: doc.canvas.widthPx, heightPx: doc.canvas.heightPx, background: doc.canvas.background },
-    layers: doc.layers.map((l) => ({ id: l.id, name: l.name, visible: l.visible, locked: l.locked, opacity: l.opacity })),
+    // `blend` must be written: it is a Layer constructor argument, so dropping it
+    // here silently demotes a multiply layer to normal after a reload. Keep this
+    // list in step with the Layer fields that are not pixel data.
+    layers: doc.layers.map((l) => ({
+      id: l.id, name: l.name, visible: l.visible, locked: l.locked,
+      opacity: l.opacity, blend: l.blend ?? "normal",
+    })),
     activeLayerId: doc.activeLayerId,
     updatedAt: Date.now(),
   };

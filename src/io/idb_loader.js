@@ -40,7 +40,10 @@ export async function load(db) {
   ids.seed(meta.layers.map((l) => l.id));
   for (const ml of meta.layers) {
     const store = new ChunkStore(meta.canvas.widthPx, meta.canvas.heightPx);
-    const layer = new Layer(ml.id, ml.name, ml.visible, ml.locked, ml.opacity, "normal", store);
+    // A meta row written before blend modes carried no `blend` key; those restore
+    // as normal. Anything unrecognised is rejected loudly rather than stored.
+    const blend = ml.blend ?? "normal";
+    const layer = new Layer(ml.id, ml.name, ml.visible, ml.locked, ml.opacity, blend, store);
     layers.push(layer);
   }
   const byId = new Map(layers.map((l) => [l.id, l]));
