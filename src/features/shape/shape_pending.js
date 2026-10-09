@@ -68,6 +68,8 @@ export function writePending(tool, v) {
   tool._pending = { layerId, color, ...geom };
   tool._draw = null;
   tool._op = null;
+  tool._place = null;
+  tool._hoverPt = null;
   tool._mode = "pending";
   tool._emitChanged();
   tool._render();

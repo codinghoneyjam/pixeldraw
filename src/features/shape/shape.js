@@ -145,10 +145,12 @@ export class ShapeTool {
     } catch {}
   }
   _emitChanged() {
-    const cur = JSON.stringify(this.getPending());
+    const pending = this.getPending();
+    const vertices = this.getVertices();
+    const cur = JSON.stringify({ pending, vertices });
     if (cur === this._emitted) return;
     this._emitted = cur;
-    this._session.emitToolState(this._kind, this.getPending());
+    this._session.emitToolState(this._kind, pending);
   }
   _flags(ev) {
     const s = this._session.settings;
@@ -266,6 +268,14 @@ export class ShapeTool {
   // <META - ROLE : numeric pending accessors for the option bar | L249-273>
   getPending() {
     return readPending(this);
+  }
+  getVertices() {
+    if (this._kind !== "polygon") return null;
+    const points = this._place?.points ?? this._pending?.points;
+    return Array.isArray(points) ? points.map((point) => ({ ...point })) : null;
+  }
+  isPlacing() {
+    return this._mode === "placing";
   }
   setPending(v) {
     writePending(this, v);

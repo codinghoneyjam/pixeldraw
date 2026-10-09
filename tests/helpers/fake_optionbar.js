@@ -105,6 +105,7 @@ export function makeOptionbar() {
     mk("dt-shape-fill-toggle", "button"), mk("dt-shape-radius"),
     mk("dt-shape-lock"), mk("dt-snap-unit"),
     mk("dt-shape-x"), mk("dt-shape-y"), mk("dt-shape-w"), mk("dt-shape-h"),
+    mk("dt-polygon-vertices", "div"), mk("dt-polygon-add", "button"),
     mk("dt-shape-commit", "button"), mk("dt-shape-cancel", "button"),
   ];
   // Named aliases: the array order is index.html's markup order, but tests read
@@ -113,7 +114,8 @@ export function makeOptionbar() {
     fillToggle: shapeControls[0], radius: shapeControls[1],
     lock: shapeControls[2], snap: shapeControls[3],
     x: shapeControls[4], y: shapeControls[5], w: shapeControls[6], h: shapeControls[7],
-    commit: shapeControls[8], cancel: shapeControls[9],
+    vertexHost: shapeControls[8], vertexAdd: shapeControls[9],
+    commit: shapeControls[10], cancel: shapeControls[11],
   };
   add(["line", "rect", "rrect", "ellipse", "polygon"], "shape", shapeControls);
   add(["fill"], null, []);

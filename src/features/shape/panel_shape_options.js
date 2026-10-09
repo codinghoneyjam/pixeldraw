@@ -16,6 +16,8 @@ export function mountShapeOptions(root, deps = {}) {
   const lock = q("#dt-shape-lock");
   const snap = q("#dt-snap-unit");
   const boxInputs = { x: q("#dt-shape-x"), y: q("#dt-shape-y"), w: q("#dt-shape-w"), h: q("#dt-shape-h") };
+  const vertexHost = q("#dt-polygon-vertices");
+  const vertexAdd = q("#dt-polygon-add");
   const commitBtn = q("#dt-shape-commit");
   const cancelBtn = q("#dt-shape-cancel");
   if (!fillToggle && !radius && !lock && !snap && !commitBtn) return null;
@@ -40,6 +42,85 @@ export function mountShapeOptions(root, deps = {}) {
     if (!tool || typeof tool.hasPending !== "function" || !tool.hasPending()) return null;
     return typeof tool.getPending === "function" ? tool.getPending() : null;
   };
+  let vertexRows = [];
+  let vertexOffs = [];
+
+  function clearVertexRows() {
+    for (const off of vertexOffs) off();
+    vertexOffs = [];
+    vertexRows = [];
+    vertexHost?.replaceChildren();
+  }
+
+  function writePoints(points) {
+    const tool = shapeTool();
+    if (!tool || typeof tool.setPending !== "function") return;
+    tool.setPending({ points });
+  }
+
+  function buildVertexRows(points) {
+    clearVertexRows();
+    if (!vertexHost || typeof document === "undefined") return;
+    for (let i = 0; i < points.length; i++) {
+      const row = document.createElement("div");
+      row.className = "dt-polygon-vertex";
+      const number = document.createElement("span");
+      number.textContent = String(i + 1);
+      const x = document.createElement("input");
+      x.type = "number";
+      x.setAttribute("aria-label", `정점 ${i + 1} X`);
+      const y = document.createElement("input");
+      y.type = "number";
+      y.setAttribute("aria-label", `정점 ${i + 1} Y`);
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.textContent = "−";
+      remove.setAttribute("aria-label", `정점 ${i + 1} 삭제`);
+      const change = () => {
+        const next = vertexRows.map((entry) => ({ x: Number(entry.x.value), y: Number(entry.y.value) }));
+        if (!next.every((point) => Number.isInteger(point.x) && Number.isInteger(point.y))) {
+          fill(pendingOf());
+          return;
+        }
+        safe(() => writePoints(next));
+      };
+      const drop = () => {
+        const current = vertexRows.map((entry) => ({ x: Number(entry.x.value), y: Number(entry.y.value) }));
+        if (current.length <= 3) return;
+        current.splice(i, 1);
+        safe(() => writePoints(current));
+      };
+      for (const input of [x, y]) {
+        input.addEventListener("change", change);
+        vertexOffs.push(() => input.removeEventListener("change", change));
+      }
+      remove.addEventListener("click", drop);
+      vertexOffs.push(() => remove.removeEventListener("click", drop));
+      row.append(number, x, y, remove);
+      vertexHost.append(row);
+      vertexRows.push({ x, y, remove });
+    }
+  }
+
+  function paintVertices(points, editable) {
+    if (!vertexHost) return;
+    vertexHost.hidden = !Array.isArray(points) || points.length === 0;
+    if (vertexAdd) vertexAdd.hidden = !Array.isArray(points) || points.length === 0;
+    if (!Array.isArray(points) || points.length === 0) {
+      clearVertexRows();
+      return;
+    }
+    if (vertexRows.length !== points.length) buildVertexRows(points);
+    for (let i = 0; i < points.length; i++) {
+      const row = vertexRows[i];
+      row.x.disabled = !editable;
+      row.y.disabled = !editable;
+      row.remove.disabled = !editable || points.length <= 3;
+      if (document.activeElement !== row.x) row.x.value = String(points[i].x);
+      if (document.activeElement !== row.y) row.y.value = String(points[i].y);
+    }
+    if (vertexAdd) vertexAdd.disabled = !editable;
+  }
 
   // <META - ROLE : Enable/disable from the active tool and its pending state | L41-57>
   function sync() {
@@ -56,12 +137,21 @@ export function mountShapeOptions(root, deps = {}) {
     }
     if (commitBtn) commitBtn.disabled = !pending;
     if (cancelBtn) cancelBtn.disabled = !pending;
+    const polyTool = id === "polygon" ? shapeTool() : null;
+    paintVertices(polyTool?.getVertices?.() ?? null, !!pending && !polyTool?.isPlacing?.());
   }
 
   // <META - ROLE : Write the pending geometry into the bbox fields | L59-82>
   function fill(pending) {
+    const polyTool = activeToolId() === "polygon" ? shapeTool() : null;
+    const points = Array.isArray(pending?.points) ? pending.points : polyTool?.getVertices?.();
+    if (Array.isArray(points)) {
+      clearBox();
+      paintVertices(points, !!pending && !polyTool?.isPlacing?.());
+      return;
+    }
+    paintVertices(null, false);
     if (!pending || typeof pending !== "object") return clearBox();
-    if (Array.isArray(pending.points)) return clearBox();
     if ("x0" in pending) {
       if (boxInputs.x) boxInputs.x.value = String(pending.x0);
       if (boxInputs.y) boxInputs.y.value = String(pending.y0);
@@ -137,6 +227,15 @@ export function mountShapeOptions(root, deps = {}) {
   if (cancelBtn) cancelBtn.addEventListener("click", () => safe(() => {
     const tool = shapeTool();
     if (tool && typeof tool.discardPending === "function") tool.discardPending();
+  }));
+  if (vertexAdd) vertexAdd.addEventListener("click", () => safe(() => {
+    const tool = shapeTool();
+    const points = tool?.getVertices?.();
+    if (!Array.isArray(points) || !tool.hasPending()) return;
+    const last = points[points.length - 1];
+    const first = points[0];
+    points.push({ x: Math.round((last.x + first.x) / 2), y: Math.round((last.y + first.y) / 2) });
+    writePoints(points);
   }));
 
   if (session) {

@@ -138,6 +138,33 @@ describe("optionbar shape block enable matrix", () => {
     session.emitToolState("polygon", poly.getPending());
     assert.equal(bar.shape.x.value, "", "polygon keeps the bbox fields blank");
     assert.equal(bar.shape.commit.disabled, false, "polygon pending is still committable");
+    assert.equal(bar.shape.vertexHost.hidden, false, "polygon vertices are listed");
+    assert.equal(bar.shape.vertexHost.children.length, 3);
+    assert.equal(bar.shape.vertexAdd.disabled, false);
+    bar.shape.vertexHost.children[0].children[1].value = "3";
+    bar.shape.vertexHost.children[0].children[1].emit("change");
+    assert.equal(poly.getPending().points[0].x, 3);
+    bar.shape.vertexAdd.emit("click");
+    assert.equal(poly.getPending().points.length, 4);
+    bar.shape.vertexHost.children[3].children[3].emit("click");
+    assert.equal(poly.getPending().points.length, 3);
+    dispose();
+  });
+
+  it("lists polygon vertices while placing and enables editing after Enter", () => {
+    const { session, toolManager, bar, dispose } = mount();
+    session.setSetting("activeTool", "polygon");
+    const tool = toolManager.get("polygon");
+    tool.pointerDown({ x: 2, y: 3, button: 0 });
+    tool.pointerDown({ x: 14, y: 3, button: 0 });
+    assert.equal(bar.shape.vertexHost.children.length, 2);
+    assert.equal(bar.shape.vertexHost.children[1].children[1].value, "14");
+    assert.equal(bar.shape.vertexHost.children[1].children[1].disabled, true);
+    tool.pointerDown({ x: 8, y: 15, button: 0 });
+    assert.equal(bar.shape.vertexHost.children.length, 3);
+    tool.keyDown({ key: "Enter" });
+    assert.equal(bar.shape.vertexHost.children[0].children[1].disabled, false);
+    assert.equal(bar.shape.vertexAdd.disabled, false);
     dispose();
   });
 
