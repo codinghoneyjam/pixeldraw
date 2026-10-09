@@ -16,9 +16,9 @@
 | `UNIT_PX` = `CHUNK_PX` | 32 | 0.5타일 = 최소 수정 단위 = 청크 한 변 |
 | `CHUNK_LEN` | 4096 | `32*32*4` 바이트 |
 | `MIN_SIZE_PX` | 32 | 캔버스 최소 크기 |
-| `MAX_W_PX` | 1920 | 32의 배수 상한 |
+| `MAX_W_PX` | 2048 | 32의 배수 상한. = `MAX_CHUNKS_X * CHUNK_PX` |
 | `MAX_H_PX` | 1088 | 32의 배수 상한 (1080은 32의 배수가 아님) |
-| `MAX_CHUNKS_X` / `MAX_CHUNKS_Y` | 60 / 34 | 청크 좌표 `cx∈[0,59]`, `cy∈[0,33]` |
+| `MAX_CHUNKS_X` / `MAX_CHUNKS_Y` | 64 / 34 | 청크 좌표 `cx∈[0,63]`, `cy∈[0,33]`. 한 레이어 청크 항목 상한 = 64*34 = 2176 |
 | `PEN_MIN` / `PEN_MAX` / `PEN_DEFAULT` | 1 / 64 / 1 | 정수 |
 | `MAX_LAYERS` | 64 | |
 | `UNDO_MAX_STEPS` | 200 | |

@@ -109,10 +109,10 @@
 - `openModal`·`addButton`·`numberField`·`confirmDiscardChanges`·`showRestoreDialog`·`showProgress`(+`showNewDocumentDialog`+`showResizeCanvasDialog`). app·액션은 이 파일만 import 하므로 실제 파일 구조가 바뀌어도 이 한 곳만 고치면 된다.
 
 ### dialog_new_doc.js — `showNewDocumentDialog()→Promise<desc|null>`
-- 타일 단위 w/h(0.5–30/17)+프리셋 4종(2×2/8×8/16×16/30×17)+배경(transparent/흰/검)+이름. 32px 배수 검증, 무효시 에러문+생성 비활성.
+- 타일 단위 w/h(`TILE_MIN`=0.5 – `MAX_W_PX/TILE_PX`=32 / `MAX_H_PX/TILE_PX`=17)+프리셋 4종(2×2/8×8/16×16/30×17)+배경(transparent/흰/검)+이름. px 상한은 `core/constants.js`에서 파생하므로 문서 계층이 거부할 크기를 다이얼로그가 받을 수 없다. 32px 배수 검증, 무효시 에러문+생성 비활성.
 
 ### dialog_resize.js — `showResizeCanvasDialog(current)→Promise<{widthPx,heightPx}|null>`
-- 32–1920×32–1088·32배수·정수 검증. input 이벤트마다 ok버튼+에러문 동기화.
+- 32–2048×32–1088·32배수·정수 검증(`MIN_SIZE_PX`/`MAX_W_PX`/`MAX_H_PX`/`UNIT_PX`). input 이벤트마다 ok버튼+에러문 동기화.
 
 ## 5. chrome (10종) — dom·문구·아이콘·메뉴·배선·히스토리·상태·단축키·툴팁
 

@@ -1,7 +1,12 @@
 // <META - FILE SUMMARY - Canvas resize dialog>
+// Bounds come from core/constants.js so the dialog can never accept a size the
+// document layer would then reject (isValidCanvasSize reads the same numbers).
 import { openModal, addButton, numberField } from "./dialog_core.js";
+import { MIN_SIZE_PX, MAX_W_PX, MAX_H_PX, UNIT_PX } from "../../core/constants.js";
 
-// <META - ROLE : Canvas resize dialog | L1-32>
+const RANGE_TEXT = `${MIN_SIZE_PX}–${MAX_W_PX} × ${MIN_SIZE_PX}–${MAX_H_PX}, ${UNIT_PX}의 배수여야 합니다`;
+
+// <META - ROLE : Canvas resize dialog | L10-38>
 export function showResizeCanvasDialog(current = { widthPx: 512, heightPx: 512 }) {
   if (typeof document === "undefined" || !document.getElementById("dt-dialog-root")) return Promise.resolve(null);
   return new Promise((resolve) => {
@@ -9,8 +14,8 @@ export function showResizeCanvasDialog(current = { widthPx: 512, heightPx: 512 }
       title: "캔버스 크기",
       onAction: (v) => resolve(v),
       build(body, bar, close) {
-        const w = numberField(body, "dt-resize-w", "너비(px, 32px 배수)", current.widthPx, 32);
-        const h = numberField(body, "dt-resize-h", "높이(px, 32px 배수)", current.heightPx, 32);
+        const w = numberField(body, "dt-resize-w", "너비(px, 32px 배수)", current.widthPx, UNIT_PX);
+        const h = numberField(body, "dt-resize-h", "높이(px, 32px 배수)", current.heightPx, UNIT_PX);
         const err = document.createElement("p");
         err.className = "dt-form-error";
         err.hidden = true;
@@ -20,10 +25,12 @@ export function showResizeCanvasDialog(current = { widthPx: 512, heightPx: 512 }
           const wv = Number(w.value);
           const hv = Number(h.value);
           const ok = Number.isInteger(wv) && Number.isInteger(hv)
-            && wv >= 32 && wv <= 1920 && hv >= 32 && hv <= 1088 && wv % 32 === 0 && hv % 32 === 0;
+            && wv >= MIN_SIZE_PX && wv <= MAX_W_PX
+            && hv >= MIN_SIZE_PX && hv <= MAX_H_PX
+            && wv % UNIT_PX === 0 && hv % UNIT_PX === 0;
           if (okBtn) okBtn.disabled = !ok;
           err.hidden = ok;
-          if (!ok) err.textContent = "32–1920 × 32–1088, 32의 배수여야 합니다";
+          if (!ok) err.textContent = RANGE_TEXT;
         };
         w.addEventListener("input", sync);
         h.addEventListener("input", sync);

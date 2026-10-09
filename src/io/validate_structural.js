@@ -1,4 +1,21 @@
 // <META - FILE SUMMARY - Structural validation for canvas, chunk, raster, layer>
+// Every bound below comes from core/constants.js (docs/contract.md §1): the
+// schema JSON, the Python oracle and the test suite all already read 2048x1088
+// with 64x34 chunk cells, so this module must not restate a number.
+
+import {
+  MIN_SIZE_PX,
+  MAX_W_PX,
+  MAX_H_PX,
+  MAX_CHUNKS_X,
+  MAX_CHUNKS_Y,
+  CHUNK_PX,
+  TILE_PX,
+  UNIT_PX,
+} from "../core/constants.js";
+
+// Derived, never restated: one chunk cell can hold at most one chunk entry.
+const MAX_CHUNK_CELLS = MAX_CHUNKS_X * MAX_CHUNKS_Y;
 
 const CANVAS_KEYS = ["tile_px", "unit_px", "width_px", "height_px", "background", "viewport"];
 const VIEWPORT_KEYS = ["x", "y", "w", "h"];
@@ -28,15 +45,15 @@ export function checkCanvas(c, base, push) {
     return null;
   }
   checkNoExtra(c, CANVAS_KEYS, base, push);
-  if (c.tile_px !== 64) push("SCHEMA", `${base}/tile_px`, "tile_px must be 64");
-  if (c.unit_px !== 32) push("SCHEMA", `${base}/unit_px`, "unit_px must be 32");
+  if (c.tile_px !== TILE_PX) push("SCHEMA", `${base}/tile_px`, "tile_px must be 64");
+  if (c.unit_px !== UNIT_PX) push("SCHEMA", `${base}/unit_px`, "unit_px must be 32");
   let w = null;
   let h = null;
-  if (!Number.isInteger(c.width_px) || c.width_px < 32 || c.width_px > 1920 || c.width_px % 32 !== 0) {
-    push("SCHEMA", `${base}/width_px`, "width_px must be a multiple of 32 in [32,1920]");
+  if (!Number.isInteger(c.width_px) || c.width_px < MIN_SIZE_PX || c.width_px > MAX_W_PX || c.width_px % UNIT_PX !== 0) {
+    push("SCHEMA", `${base}/width_px`, `width_px must be a multiple of ${UNIT_PX} in [${MIN_SIZE_PX},${MAX_W_PX}]`);
   } else w = c.width_px;
-  if (!Number.isInteger(c.height_px) || c.height_px < 32 || c.height_px > 1088 || c.height_px % 32 !== 0) {
-    push("SCHEMA", `${base}/height_px`, "height_px must be a multiple of 32 in [32,1088]");
+  if (!Number.isInteger(c.height_px) || c.height_px < MIN_SIZE_PX || c.height_px > MAX_H_PX || c.height_px % UNIT_PX !== 0) {
+    push("SCHEMA", `${base}/height_px`, `height_px must be a multiple of ${UNIT_PX} in [${MIN_SIZE_PX},${MAX_H_PX}]`);
   } else h = c.height_px;
   if (c.background !== undefined && (typeof c.background !== "string" || !BG_RE.test(c.background))) {
     push("SCHEMA", `${base}/background`, "background must be transparent or #rrggbb[#aa]");
@@ -74,12 +91,12 @@ export function checkChunk(ch, base, push) {
   }
   checkNoExtra(ch, CHUNK_KEYS, base, push);
   let ok = true;
-  if (!Number.isInteger(ch.cx) || ch.cx < 0 || ch.cx > 59) {
-    push("SCHEMA", `${base}/cx`, "cx must be an integer in [0,59]");
+  if (!Number.isInteger(ch.cx) || ch.cx < 0 || ch.cx > MAX_CHUNKS_X - 1) {
+    push("SCHEMA", `${base}/cx`, `cx must be an integer in [0,${MAX_CHUNKS_X - 1}]`);
     ok = false;
   }
-  if (!Number.isInteger(ch.cy) || ch.cy < 0 || ch.cy > 33) {
-    push("SCHEMA", `${base}/cy`, "cy must be an integer in [0,33]");
+  if (!Number.isInteger(ch.cy) || ch.cy < 0 || ch.cy > MAX_CHUNKS_Y - 1) {
+    push("SCHEMA", `${base}/cy`, `cy must be an integer in [0,${MAX_CHUNKS_Y - 1}]`);
     ok = false;
   }
   if (typeof ch.png !== "string" || !PNG_RE.test(ch.png)) {
@@ -96,13 +113,15 @@ export function checkRaster(r, base, push) {
     return [];
   }
   checkNoExtra(r, RASTER_KEYS, base, push);
-  if (r.chunk_px !== 32) push("SCHEMA", `${base}/chunk_px`, "chunk_px must be 32");
+  if (r.chunk_px !== CHUNK_PX) push("SCHEMA", `${base}/chunk_px`, `chunk_px must be ${CHUNK_PX}`);
   if (r.encoding !== "png_base64") push("SCHEMA", `${base}/encoding`, "encoding must be png_base64");
   if (!Array.isArray(r.chunks)) {
     push("SCHEMA", `${base}/chunks`, "chunks must be an array");
     return [];
   }
-  if (r.chunks.length > 2040) push("SCHEMA", `${base}/chunks`, "chunks must hold at most 2040 entries");
+  if (r.chunks.length > MAX_CHUNK_CELLS) {
+    push("SCHEMA", `${base}/chunks`, `chunks must hold at most ${MAX_CHUNK_CELLS} entries`);
+  }
   const structuralOk = [];
   for (let j = 0; j < r.chunks.length; j++) {
     structuralOk.push(checkChunk(r.chunks[j], `${base}/chunks/${j}`, push));

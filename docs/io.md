@@ -24,9 +24,9 @@ io 모듈은 문서의 바깥 경계를 담당한다. 메모리 안의 Document�
 
 ### 4.2 validate_structural.js — 값 모양 검사
 
-`checkCanvas`는 타일 64와 유닛 32 고정, 너비 32부터 1920까지와 높이 32부터 1088까지를 32배수 조건으로 검사한다. 배경은 transparent 또는 6자리·8자리 16진 색상만 허용한다. 너비·높이가 모두 유효할 때만 치수 객체를 돌려줘서 이후 의미 검사가 캔버스 밖 청크를 판단할 수 있게 한다.
-`checkChunk`는 cx가 0부터 59까지, cy가 0부터 33까지 정수인지 보고, png 문자열이 `iVBORw0KGgo`로 시작하는 base64인지 정규식으로 검사한다. 하나라도 어긋나면 `SCHEMA`를 남기고 false를 돌려준다.
-`checkRaster`는 청크 픽셀 32 고정과 인코딩 `png_base64` 고정을 검사하고, 청크 배열 상한 2040개를 넘기면 `SCHEMA`로 기록한다. 각 청크 결과를 불리언 배열로 돌려줘서 의미 단계가 구조적으로 통과한 항목만 실제로 디코드하게 한다.
+`checkCanvas`는 타일 64와 유닛 32 고정, 너비 32부터 2048까지와 높이 32부터 1088까지를 32배수 조건으로 검사한다. 배경은 transparent 또는 6자리·8자리 16진 색상만 허용한다. 너비·높이가 모두 유효할 때만 치수 객체를 돌려줘서 이후 의미 검사가 캔버스 밖 청크를 판단할 수 있게 한다. 상한은 전부 `core/constants.js`에서 import하며 값을 다시 적지 않는다(스키마 JSON·Python 오라클·테스트가 같은 수를 읽는다).
+`checkChunk`는 cx가 0부터 63까지, cy가 0부터 33까지 정수인지 보고, png 문자열이 `iVBORw0KGgo`로 시작하는 base64인지 정규식으로 검사한다. 하나라도 어긋나면 `SCHEMA`를 남기고 false를 돌려준다.
+`checkRaster`는 청크 픽셀 32 고정과 인코딩 `png_base64` 고정을 검사하고, 청크 배열 상한 `MAX_CHUNKS_X * MAX_CHUNKS_Y`(2176)개를 넘기면 `SCHEMA`로 기록한다. 각 청크 결과를 불리언 배열로 돌려줘서 의미 단계가 구조적으로 통과한 항목만 실제로 디코드하게 한다.
 `checkLayer`는 id 길이 1부터 64까지, 이름 최대 128자, 타입 raster 또는 vector, 가시·잠금 불리언, 불투명도 0부터 1까지, 블렌드 여섯 가지 중 하나를 검사한다. raster층이 shapes를 가지거나 raster가 없으면 `SCHEMA`이며, vector층이 raster를 가지거나 shapes 배열이 없으면 역시 `SCHEMA`다.
 
 ### 4.3 validate_semantic.js — 실제 디코드 검사

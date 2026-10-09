@@ -1,9 +1,12 @@
 // <META - FILE SUMMARY - New-document dialog with tile-step inputs>
+// The tile upper bounds are derived from the canvas ceilings (MAX_W_PX / TILE_PX)
+// so a preset can never exceed what the document layer accepts.
 import { openModal, addButton, numberField } from "./dialog_core.js";
+import { MIN_SIZE_PX, MAX_W_PX, MAX_H_PX, TILE_PX, UNIT_PX } from "../../core/constants.js";
 
 const TILE_MIN = 0.5;
-const TILE_MAX_W = 30;
-const TILE_MAX_H = 17;
+const TILE_MAX_W = MAX_W_PX / TILE_PX;
+const TILE_MAX_H = MAX_H_PX / TILE_PX;
 
 // <META - ROLE : New-document dialog with tile-step inputs | L1-88>
 export function showNewDocumentDialog() {
@@ -58,7 +61,7 @@ export function showNewDocumentDialog() {
           pxInfo.textContent = `${wPx} × ${hPx} px`;
           const okW = w >= TILE_MIN && w <= TILE_MAX_W && Number.isFinite(w);
           const okH = h >= TILE_MIN && h <= TILE_MAX_H && Number.isFinite(h);
-          const okPx = wPx >= 32 && wPx <= 1920 && hPx >= 32 && hPx <= 1088 && wPx % 32 === 0 && hPx % 32 === 0;
+          const okPx = wPx >= MIN_SIZE_PX && wPx <= MAX_W_PX && hPx >= MIN_SIZE_PX && hPx <= MAX_H_PX && wPx % UNIT_PX === 0 && hPx % UNIT_PX === 0;
           const ok = okW && okH && okPx;
           if (createBtn) createBtn.disabled = !ok;
           if (reason) {

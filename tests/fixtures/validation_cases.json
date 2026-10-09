@@ -287,7 +287,7 @@
    }
   },
   {
-   "name": "width_above_1920",
+   "name": "width_above_2048",
    "expect_valid": false,
    "expect_code": "SCHEMA",
    "expect_import_error": null,
@@ -299,7 +299,7 @@
     "canvas": {
      "tile_px": 64,
      "unit_px": 32,
-     "width_px": 1952,
+     "width_px": 2080,
      "height_px": 96,
      "background": "transparent"
     },
@@ -827,7 +827,7 @@
    }
   },
   {
-   "name": "cx_above_59",
+   "name": "cx_above_63",
    "expect_valid": false,
    "expect_code": "SCHEMA",
    "expect_import_error": null,
@@ -858,7 +858,7 @@
        "encoding": "png_base64",
        "chunks": [
         {
-         "cx": 60,
+         "cx": 64,
          "cy": 0,
          "png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAMklEQVR4nO3OQQEAMAjEsGP6UI0xJoNPaqCpnt0c9i7nAAAAAAAAAAAAAAAAAAAASfIBL9QDTBrlx8YAAAAASUVORK5CYII="
         },
