@@ -16,6 +16,7 @@ import { Document, IdGen } from "../src/features/document/document.js";
 import { Layer } from "../src/features/layers/layer.js";
 import { SetLayerPropCommand } from "../src/features/layers/commands.js";
 import { MergeDownCommand } from "../src/features/layers/commands_pixel.js";
+import { Session } from "../src/features/document/session.js";
 
 const CHUNK = 32;
 
@@ -246,6 +247,55 @@ describe("layer blend model", () => {  it("setProp accepts every mode and reject
 });
 
 describe("merge-down and blend", () => {
+  // The UI's actual write path is session.setLayerBlend(), which used to throw
+  // ReferenceError because layer_operations.js called validateLayerBlend without
+  // importing it. The tests only ever touched layer.setProp() and the command
+  // directly, so the gap went unnoticed - the panel's safe() wrapper swallowed
+  // it and the dropdown just failed silently. This block pins the entry point
+  // the panel really uses.
+  it("session.setLayerBlend() writes through to the layer and the composite", () => {
+    const session = new Session();
+    session.newDocument({ widthPx: CHUNK, heightPx: CHUNK, background: "transparent" });
+    const doc = session.doc;
+    session.addLayer("upper");
+    const [lower, upper] = doc.layers;
+
+    for (const layer of [lower, upper]) {
+      const wr = new PixelWriter(layer.store, layer.id);
+      for (let y = 0; y < CHUNK; y++) {
+        for (let x = 0; x < CHUNK; x++) {
+          const c = layer.id === upper.id ? 128 : 200;
+          wr.set(x, y, (255 << 24) | (c << 16) | (c << 8) | c);
+        }
+      }
+      wr.finish();
+    }
+
+    const read = () => {
+      const out = new Uint8ClampedArray(CHUNK * CHUNK * 4);
+      compositeChunk(doc, 0, 0, out);
+      return out[0];
+    };
+
+    const before = read();
+    assert.equal(before, 128, "normal replaces");
+
+    session.setLayerBlend(upper.id, "multiply");
+    assert.equal(upper.blend, "multiply", "the layer really changed");
+    assert.equal(read(), rnd(128 * (200 / 255)), "and the composite followed");
+
+    session.setLayerBlend(upper.id, "screen");
+    assert.equal(upper.blend, "screen");
+    assert.notEqual(read(), before, "a different mode gives a different result");
+
+    // A rejected value must throw the coded error, not a ReferenceError.
+    assert.throws(() => session.setLayerBlend(upper.id, "dissolve"), (e) => e.code === "INVALID_STATE");
+
+    // No-op writes are refused rather than pushed onto the history.
+    const steps = session.history.canUndo();
+    session.setLayerBlend(upper.id, "screen");
+    assert.equal(session.history.canUndo(), steps, "an unchanged blend is not a history entry");
+  });
   // Two separate facts, both worth pinning:
   //   1. UNDO IS COMPLETE. do() snapshots every lower chunk, the lower opacity
   //      and the removed upper Layer OBJECT (blend included), so undo restores

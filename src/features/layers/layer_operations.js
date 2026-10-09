@@ -2,7 +2,7 @@ import { isValidCanvasSize } from "../../core/constants.js";
 import { DrawToolError } from "../../core/errors.js";
 import { EVENTS } from "../../core/events.js";
 import { Layer } from "./layer.js";
-import { validateLayerName, validateLayerOpacity } from "./layer.js";
+import { validateLayerName, validateLayerOpacity, validateLayerBlend } from "./layer.js";
 import {
   AddLayerCommand,
   MergeDownCommand,
