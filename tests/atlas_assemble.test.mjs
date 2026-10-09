@@ -5,6 +5,7 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 
 import { assembleSheet, pasteChannel, pastePixel } from "../src/core/raster/atlas.js";
+import { DrawToolError } from "../src/core/errors.js";
 
 // The legacy baker's paste law, derived by brute force over all 256 alpha
 // values in the Python oracle and cross-checked on 2000 random RGBA inputs.
@@ -92,19 +93,31 @@ test("assembleSheet produces the 2048x128 enemy sheet geometry", () => {
 });
 
 // Tiles carry packed RGBA in a Uint32Array (one word per pixel).
+// The guards throw DrawToolError (contract §2-7), not a bare RangeError, so the
+// predicate checks the code - the same shape every other raster error test uses.
 // <META - ROLE : reject empty, mismatched and short tiles | L138-154>
 test("assembleSheet rejects empty, mismatched and short tiles", () => {
-  assert.throws(() => assembleSheet([]), RangeError);
-  assert.throws(() => assembleSheet(null), RangeError);
-  assert.throws(
-    () => assembleSheet([
+  const codeOf = (fn) => {
+    try {
+      fn();
+      return null;
+    } catch (e) {
+      return e instanceof DrawToolError ? e.code : e.constructor.name;
+    }
+  };
+  assert.equal(codeOf(() => assembleSheet([])), "INVALID_STATE");
+  assert.equal(codeOf(() => assembleSheet(null)), "INVALID_STATE");
+  assert.equal(
+    codeOf(() => assembleSheet([
       { w: 4, h: 4, data: new Uint32Array(16) },
       { w: 8, h: 4, data: new Uint32Array(32) },
-    ]),
-    RangeError,
+    ])),
+    "INVALID_STATE",
   );
-  assert.throws(() => assembleSheet([{ w: 1, h: 1, data: new Uint32Array(4) }]), RangeError);
-  assert.throws(() => assembleSheet([{ w: 0, h: 4, data: new Uint32Array(0) }]), RangeError);
+  // A 1x1 tile is a legal size, so it fails the data-length check instead.
+  assert.equal(codeOf(() => assembleSheet([{ w: 1, h: 1, data: new Uint32Array(4) }])), "INVALID_STATE");
+  // A 0x4 tile is an illegal size, caught by assertMaskSize before the length check.
+  assert.equal(codeOf(() => assembleSheet([{ w: 0, h: 4, data: new Uint32Array(0) }])), "OUT_OF_RANGE");
 });
 
 // The PIL oracle lives in tools/gen_fixtures.py (group "paste"); this pins the

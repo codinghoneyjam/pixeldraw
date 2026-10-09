@@ -5,6 +5,7 @@
 // Points accept [x, y] arrays or { x, y } objects.
 
 import { assertMaskSize } from "./raster_masks.js";
+import { DrawToolError } from "../errors.js";
 
 const toXY = (p) => (Array.isArray(p) ? [p[0], p[1]] : [p.x, p.y]);
 
@@ -16,7 +17,7 @@ const toXY = (p) => (Array.isArray(p) ? [p[0], p[1]] : [p.x, p.y]);
  */
 export function polygonBBox(pts) {
   if (!Array.isArray(pts) || pts.length === 0) {
-    throw new RangeError("polygonBBox needs a non-empty points array");
+    throw new DrawToolError("INVALID_STATE", "polygonBBox needs a non-empty points array");
   }
   let minX = Infinity;
   let minY = Infinity;

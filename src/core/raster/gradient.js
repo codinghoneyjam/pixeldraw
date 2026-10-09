@@ -6,6 +6,7 @@
 
 import { assertMaskSize } from "./raster_masks.js";
 import { packRGBA } from "../pixel.js";
+import { DrawToolError } from "../errors.js";
 
 // Truncation (floor). The legacy shockwave baker uses int() truncation for
 // alpha/luminance, and the T-5 gate is alpha parity vs that baker: round-half-up
@@ -47,7 +48,7 @@ function sampleStops(sorted, t) {
 export function radialGradientMask({ cx, cy, r0, r1, stops, w, h }) {
   assertMaskSize(w, h);
   if (!Array.isArray(stops) || stops.length === 0) {
-    throw new RangeError("radialGradientMask needs at least one stop");
+    throw new DrawToolError("INVALID_STATE", "radialGradientMask needs at least one stop");
   }
   const sorted = stops.map((s) => [s[0], s[1], s[2], s[3], s[4]]);
   sorted.sort((a, b) => a[0] - b[0]);

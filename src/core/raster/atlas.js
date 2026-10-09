@@ -14,6 +14,7 @@
 // loop honours the general form anyway.
 
 import { assertMaskSize } from "./raster_masks.js";
+import { DrawToolError } from "../errors.js";
 
 /** PIL's integer blend rounding: (value * mask + 127) / 255 */
 function blend255(value, mask) {
@@ -60,16 +61,18 @@ export function pastePixel(dst, src) {
  */
 export function assembleSheet(tiles) {
   if (!Array.isArray(tiles) || tiles.length === 0) {
-    throw new RangeError("assembleSheet needs at least one tile");
+    throw new DrawToolError("INVALID_STATE", "assembleSheet needs at least one tile");
   }
   const { w: tw, h: th } = tiles[0];
+  // assertMaskSize already rejects w/h < 1 as DrawToolError(OUT_OF_RANGE), so the
+  // zero-size tile below is caught by the length check, not here.
   assertMaskSize(tw, th);
   for (const t of tiles) {
     if (t.w !== tw || t.h !== th) {
-      throw new RangeError(`tile size mismatch: expected ${tw}x${th}, got ${t.w}x${t.h}`);
+      throw new DrawToolError("INVALID_STATE", `tile size mismatch: expected ${tw}x${th}, got ${t.w}x${t.h}`);
     }
     if (t.data.length !== tw * th) {
-      throw new RangeError(`tile ${t.w}x${t.h} data length ${t.data.length} != ${tw * th}`);
+      throw new DrawToolError("INVALID_STATE", `tile ${t.w}x${t.h} data length ${t.data.length} != ${tw * th}`);
     }
   }
   const out = new Uint8ClampedArray(tw * tiles.length * th * 4);

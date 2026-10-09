@@ -200,9 +200,11 @@ Session 메서드 호출과 이벤트 구독만 하고 모델을 직접 변조�
 - ~~**`rnd`가 두 곳에 정의된다.**~~ ✅ **정리됨.** `core/blend.js`만 남기고
   `raster_snap.js`가 이를 import 해 재수출한다. 기존 `raster_snap.js`의 `rnd`
   import 하는 쪽은 경로 변경 없이 그대로 동작한다.
-- `shape_raster.js`의 `assertMaskSize`는 `DrawToolError`로 통일됐고, 남은 `RangeError`
-  투하는 `core/raster/raster_brush.js`의 `assertBrushSize` 한 곳이다.
-  `contract.md` §2-7 위반으로 남은 정리 대상.
+- ~~**가드들이 `RangeError`를 던진다.**~~ ✅ **정리됨.** `src/core/raster/**`에서
+  `new RangeError`가 전부 사라졌다. `assertBrushSize`·`assertMaskSize`와
+  `assembleSheet`·`polygonBBox`·`radialGradientMask`·`placeText`의 투하는 이제
+  `DrawToolError`며 코드는 `OUT_OF_RANGE`(값 범위) 또는 `INVALID_STATE`(불변 조건
+  위반)다. `tests/raster_guards.test.mjs`가 디렉터리를 스캔해 재발을 막는다.
 
 ## Handoff
 

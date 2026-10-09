@@ -7,15 +7,22 @@
 // No line mask here: a PIL-exact segment stroke needs the polygon scanline
 // engine, so it lives in segment.js next to polygonOutlineMask.
 
+import { DrawToolError } from "../errors.js";
+
 /**
  * Canonical mask-size guard. Every mask entry asserts at entry (Slice D boundary).
+ *
+ * DrawToolError rather than RangeError: contract §2-7 allows a single error
+ * type, and this guard is reachable from user data (imported raster geometry)
+ * so it must carry a code the caller can branch on.
+ *
  * @param {number} w mask width
  * @param {number} h mask height
  * @returns {void}
  */
 export function assertMaskSize(w, h) {
   if (!Number.isInteger(w) || !Number.isInteger(h) || w < 1 || h < 1) {
-    throw new RangeError(`mask size must be integers >= 1, got ${w}x${h}`);
+    throw new DrawToolError("OUT_OF_RANGE", `mask size must be integers >= 1, got ${w}x${h}`);
   }
 }
 

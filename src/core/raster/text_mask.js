@@ -9,6 +9,7 @@
 import { assertMaskSize } from "./raster_masks.js";
 import { over } from "../blend.js";
 import { packRGBA, unpackRGBA } from "../pixel.js";
+import { DrawToolError } from "../errors.js";
 
 // <META - ROLE : Blend one glyph stamp over the canvas with src-over | L14-34>
 function stampGlyph(data, W, H, glyph, atX, atY, color) {
@@ -68,7 +69,8 @@ export function placeText(glyphs, text, penX, penY) {
   let pen = penX;
   for (const ch of text) {
     const g = glyphs[ch];
-    if (!g) throw new RangeError(`glyph missing for ${JSON.stringify(ch)}`);
+    // Coded, not a bare RangeError: contract §2-7 allows a single error type.
+    if (!g) throw new DrawToolError("UNSUPPORTED_LAYER_TYPE", `glyph missing for ${JSON.stringify(ch)}`);
     out.push({ ch, x: Math.round(pen + g.dx), y: Math.round(penY + g.dy), glyph: g });
     pen += g.advance;
   }

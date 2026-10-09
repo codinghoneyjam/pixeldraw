@@ -108,11 +108,6 @@ undo, no-AA PNG check, locked/hidden reject, small-budget history eviction).
 - `npm test` fails on Node 24: `node --test tests/` is not accepted as a directory
   argument. The `package.json` script is still unfixed. Run
   `node --test "tests/*.test.mjs"` instead.
-- Open code issue:
-  - `src/core/raster/*` throws `RangeError`, but `docs/contract.md` section 2-7
-    allows `DrawToolError` only. The remaining site is
-    `core/raster/raster_brush.js`'s `assertBrushSize`; every other raster path
-    already throws `DrawToolError`.
 
 ## Verification status (2026-10-09)
 
@@ -120,7 +115,7 @@ All gates pass:
 
 | Gate | Result |
 |:---|:---|
-| `node --test "tests/*.test.mjs"` | 366/366 |
+| `node --test "tests/*.test.mjs"` | 372/372 |
 | `node tools/parity_check.mjs` | 201 golden checks |
 | `node tools/recipe_parity_check.mjs` | 39/39 legacy renders |
 | `node tools/build_layer_gallery.mjs` | 34/34 assets layered, min parity 0.990131 |
