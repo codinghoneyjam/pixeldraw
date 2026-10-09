@@ -34,6 +34,7 @@ const VECTOR_SLOTS = [
   ["face", "face_dead"],
 ];
 const WHEEL_SLOTS = [10, 11, 12];
+const JSON_LINE_WIDTH = 100;
 
 const JOBS = [
   {
@@ -58,6 +59,32 @@ function shiftBox(cmd, dx) {
   if (out.box) out.box = shift(out.box);
   if (out.shape?.box) out.shape = { ...out.shape, box: shift(out.shape.box) };
   return out;
+}
+
+function formatJson(value, depth = 0) {
+  const indent = "  ".repeat(depth);
+  if (Array.isArray(value)) {
+    if (value.length === 0) return "[]";
+    const inlineable = value.every((item) => {
+      if (!Array.isArray(item)) return item === null || typeof item !== "object";
+      return item.every((part) => part === null || typeof part !== "object");
+    });
+    if (inlineable) {
+      const inline = `[${value.map((item) => Array.isArray(item)
+        ? `[${item.map((part) => JSON.stringify(part)).join(", ")}]`
+        : JSON.stringify(item)).join(", ")}]`;
+      if (indent.length + inline.length <= JSON_LINE_WIDTH) return inline;
+    }
+    const childIndent = "  ".repeat(depth + 1);
+    return `[\n${value.map((item) => `${childIndent}${formatJson(item, depth + 1)}`).join(",\n")}\n${indent}]`;
+  }
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value);
+    if (entries.length === 0) return "{}";
+    const childIndent = "  ".repeat(depth + 1);
+    return `{\n${entries.map(([key, item]) => `${childIndent}${JSON.stringify(key)}: ${formatJson(item, depth + 1)}`).join(",\n")}\n${indent}}`;
+  }
+  return JSON.stringify(value);
 }
 
 async function main() {
@@ -99,7 +126,7 @@ async function main() {
       layers: { sheet: all },
     };
     if (JSON.stringify(all).includes("$")) throw new Error("unresolved $token in baked sheet");
-    fs.writeFileSync(path.join(PLAYER_DIR, job.out), JSON.stringify(recipe, null, 2) + "\n", "utf-8");
+    fs.writeFileSync(path.join(PLAYER_DIR, job.out), formatJson(recipe) + "\n", "utf-8");
     console.log(`baked ${all.length} commands -> assetdb/entity/player/${job.out}`);
   }
 }

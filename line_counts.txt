@@ -1,0 +1,1044 @@
+PixelDraw domain line-count and size report
+============================================
+Root: C:\Users\ksj20\Your wor(l)d\pixeldraw
+Files measured (all formats): 907
+Text files with line counts: 556
+Total text lines: 166,299
+Total size: 5.98 MiB (6,267,239 bytes)
+Line counts: UTF-8 files with listed extensions; physical lines via splitlines().
+Sizes: actual file bytes for all formats, including images and other binary assets.
+Line-count extensions: .bat, .cjs, .cmd, .css, .html, .ini, .js, .json, .jsx, .md, .mjs, .ps1, .py, .sh, .sql, .toml, .ts, .tsx, .txt, .xml, .yaml, .yml
+Excluded directories: .git, .pytest_cache, .venv, __pycache__, node_modules, venv
+
+TOP-LEVEL DOMAINS (recursive totals)
+Parent and child folder rows overlap; do not sum both sections together.
+| Domain       | Files |   Lines |       Size |     Bytes |
+| ------------ | ----- | ------- | ---------- | --------- |
+| (root files) |    10 |   2,141 |  84.90 KiB |    86,937 |
+| asset_work   |   673 | 114,261 |   4.05 MiB | 4,242,292 |
+| docs         |    11 |   2,471 | 160.91 KiB |   164,774 |
+| reference    |     3 |     599 |  26.45 KiB |    27,087 |
+| schema       |     4 |     507 |  21.88 KiB |    22,401 |
+| src          |   106 |  11,373 | 417.68 KiB |   427,706 |
+| tests        |    66 |  25,777 | 812.19 KiB |   831,684 |
+| tools        |    28 |   3,795 | 296.28 KiB |   303,394 |
+| viewer       |     6 |   5,375 | 157.19 KiB |   160,964 |
+
+ALL FOLDERS (recursive totals)
+| Domain / folder                               | Files |   Lines |       Size |     Bytes |
+| --------------------------------------------- | ----- | ------- | ---------- | --------- |
+| .                                             |   907 | 166,299 |   5.98 MiB | 6,267,239 |
+| asset_work                                    |   673 | 114,261 |   4.05 MiB | 4,242,292 |
+| docs                                          |    11 |   2,471 | 160.91 KiB |   164,774 |
+| reference                                     |     3 |     599 |  26.45 KiB |    27,087 |
+| schema                                        |     4 |     507 |  21.88 KiB |    22,401 |
+| src                                           |   106 |  11,373 | 417.68 KiB |   427,706 |
+| tests                                         |    66 |  25,777 | 812.19 KiB |   831,684 |
+| tools                                         |    28 |   3,795 | 296.28 KiB |   303,394 |
+| viewer                                        |     6 |   5,375 | 157.19 KiB |   160,964 |
+| asset_work/layers                             |   364 |  25,915 |   1.65 MiB | 1,730,445 |
+| asset_work/pygate                             |     5 |     854 |  38.69 KiB |    39,617 |
+| asset_work/scratch                            |    10 |     500 |  22.99 KiB |    23,543 |
+| asset_work/target                             |    89 |  76,019 |   1.73 MiB | 1,812,933 |
+| asset_work/tidy                               |   202 |  10,498 | 597.38 KiB |   611,718 |
+| src/core                                      |    17 |   1,833 |  70.67 KiB |    72,367 |
+| src/features                                  |    37 |   4,427 | 155.62 KiB |   159,355 |
+| src/io                                        |    15 |   1,778 |  70.98 KiB |    72,681 |
+| src/render                                    |     6 |     637 |  23.05 KiB |    23,605 |
+| src/tools                                     |     8 |     754 |  22.73 KiB |    23,278 |
+| src/ui                                        |    23 |   1,944 |  74.63 KiB |    76,420 |
+| tests/fixtures                                |    23 |  19,792 | 560.15 KiB |   573,590 |
+| tests/helpers                                 |     5 |     338 |  11.99 KiB |    12,279 |
+| tools/recipe                                  |    12 |   1,889 | 202.43 KiB |   207,287 |
+| viewer/css                                    |     1 |     564 |   9.82 KiB |    10,053 |
+| viewer/js                                     |     3 |   4,190 | 132.31 KiB |   135,489 |
+| asset_work/layers/base_chassis_gem__pal       |     6 |     203 |   8.86 KiB |     9,071 |
+| asset_work/layers/base_chassis_trackball__pal |     6 |     193 |   8.10 KiB |     8,295 |
+| asset_work/layers/base_debris                 |     2 |      51 |   2.09 KiB |     2,138 |
+| asset_work/layers/emoticons_cyber_neon__pal   |     6 |     123 |   3.75 KiB |     3,843 |
+| asset_work/layers/enemy_B-001_sheet           |    32 |   1,256 |  73.78 KiB |    75,553 |
+| asset_work/layers/enemy_C-001_sheet           |    32 |   1,256 |  73.78 KiB |    75,553 |
+| asset_work/layers/enemy_R-003_sheet           |    32 |   1,256 |  74.34 KiB |    76,122 |
+| asset_work/layers/enemy_T-002_sheet           |    32 |   1,256 |  74.31 KiB |    76,090 |
+| asset_work/layers/gallery                     |   137 |  13,300 | 917.49 KiB |   939,509 |
+| asset_work/layers/hero_trackball_cyber_sheet  |     2 |     361 |  27.63 KiB |    28,293 |
+| asset_work/layers/hud_composite_surfaces      |    10 |     885 |  42.05 KiB |    43,055 |
+| asset_work/layers/hud_icons_128_atlas         |     2 |     666 |  41.48 KiB |    42,471 |
+| asset_work/layers/lobby_tileset               |     2 |      91 |   3.80 KiB |     3,890 |
+| asset_work/layers/mouse_hero_sheet            |     2 |     371 |  28.39 KiB |    29,073 |
+| asset_work/layers/pantograph_keycap_profile   |     8 |   1,004 |  56.24 KiB |    57,587 |
+| asset_work/layers/player_mouse__pal           |    18 |     564 |  23.33 KiB |    23,888 |
+| asset_work/layers/portal_keycap_master        |     8 |     444 |  22.87 KiB |    23,420 |
+| asset_work/layers/room_tileset                |     2 |     111 |   4.92 KiB |     5,034 |
+| asset_work/layers/shockwave_ring_recipe       |     2 |     311 | 108.36 KiB |   110,956 |
+| asset_work/layers/title_diorama_sword_body    |     2 |     407 |  23.97 KiB |    24,548 |
+| asset_work/layers/title_logo_text_d_recipe    |     2 |     122 |   5.38 KiB |     5,505 |
+| asset_work/layers/title_logo_text_or_recipe   |     2 |     157 |   7.54 KiB |     7,718 |
+| asset_work/layers/title_logo_text_our_recipe  |     2 |     207 |  10.26 KiB |    10,505 |
+| asset_work/layers/title_weapons_atlas         |     2 |     121 |   6.62 KiB |     6,781 |
+| asset_work/layers/weapon_bow                  |     4 |     122 |   5.43 KiB |     5,565 |
+| asset_work/layers/weapon_spear                |     4 |     132 |   5.55 KiB |     5,683 |
+| asset_work/layers/weapon_sword                |     4 |     122 |   4.92 KiB |     5,039 |
+| asset_work/target/assetdb                     |    69 |  55,130 |   1.14 MiB | 1,194,165 |
+| asset_work/target/oracle                      |     8 |  12,312 | 416.25 KiB |   426,235 |
+| asset_work/target/tests                       |    12 |   8,577 | 188.02 KiB |   192,533 |
+| asset_work/tidy/mapping                       |    34 |     211 |   8.46 KiB |     8,661 |
+| asset_work/tidy/numbered                      |    44 |     932 | 113.68 KiB |   116,407 |
+| asset_work/tidy/target                        |    85 |   4,933 | 218.62 KiB |   223,870 |
+| asset_work/tidy/tools                         |    22 |   4,013 | 177.75 KiB |   182,020 |
+| asset_work/tidy/unused                        |    14 |       0 |  44.02 KiB |    45,080 |
+| src/core/raster                               |    11 |   1,361 |  55.39 KiB |    56,718 |
+| src/features/color                            |     8 |     768 |  27.93 KiB |    28,598 |
+| src/features/document                         |     4 |     640 |  19.63 KiB |    20,098 |
+| src/features/eyedropper                       |     1 |     142 |   4.58 KiB |     4,692 |
+| src/features/fill                             |     1 |      82 |   2.53 KiB |     2,592 |
+| src/features/hand                             |     1 |      11 |   177.00 B |       177 |
+| src/features/layers                           |     7 |     948 |  32.40 KiB |    33,174 |
+| src/features/pen                              |     4 |     537 |  18.24 KiB |    18,679 |
+| src/features/shape                            |     7 |   1,032 |  41.28 KiB |    42,270 |
+| src/features/viewport                         |     4 |     267 |   8.86 KiB |     9,075 |
+| src/ui/actions                                |     3 |     259 |  10.86 KiB |    11,123 |
+| src/ui/dialogs                                |     3 |     320 |  12.56 KiB |    12,858 |
+| src/ui/menubar                                |     3 |     146 |   4.93 KiB |     5,046 |
+| src/ui/optionbar                              |     1 |     109 |   4.24 KiB |     4,343 |
+| src/ui/shared                                 |     8 |     560 |  19.35 KiB |    19,813 |
+| src/ui/statusbar                              |     1 |     158 |   5.35 KiB |     5,474 |
+| src/ui/toolbar                                |     3 |     215 |   9.52 KiB |     9,753 |
+| tests/fixtures/player_arc                     |    15 |      51 |  12.08 KiB |    12,367 |
+| asset_work/layers/gallery/diff                |    34 |       0 |  40.16 KiB |    41,128 |
+| asset_work/layers/gallery/from_layers         |    34 |       0 | 110.55 KiB |   113,204 |
+| asset_work/layers/gallery/render              |    68 |   9,593 | 650.90 KiB |   666,520 |
+| asset_work/target/assetdb/entity              |    30 |  47,268 | 995.80 KiB | 1,019,695 |
+| asset_work/target/assetdb/ui                  |    32 |   7,107 | 154.52 KiB |   158,227 |
+| asset_work/target/assetdb/world               |     7 |     755 |  15.86 KiB |    16,243 |
+| asset_work/target/oracle/reference            |     1 |     514 |  20.83 KiB |    21,333 |
+| asset_work/target/oracle/tests                |     4 |  11,215 | 363.99 KiB |   372,723 |
+| asset_work/target/oracle/tools                |     3 |     583 |  31.42 KiB |    32,179 |
+| asset_work/target/tests/fixtures              |    12 |   8,577 | 188.02 KiB |   192,533 |
+| asset_work/target/assetdb/entity/enemy        |    10 |  12,705 | 252.22 KiB |   258,277 |
+| asset_work/target/assetdb/entity/player       |    11 |  34,356 | 735.97 KiB |   753,632 |
+| asset_work/target/assetdb/entity/weapon       |     9 |     207 |   7.60 KiB |     7,786 |
+| asset_work/target/assetdb/ui/data             |     2 |     130 |   6.12 KiB |     6,262 |
+| asset_work/target/assetdb/ui/hud              |    24 |   2,972 |  80.69 KiB |    82,626 |
+| asset_work/target/assetdb/ui/title            |     6 |   4,005 |  67.71 KiB |    69,339 |
+| asset_work/target/assetdb/world/img           |     2 |       0 |   1.42 KiB |     1,452 |
+| asset_work/target/assetdb/world/lobby         |     2 |     239 |   3.90 KiB |     3,991 |
+| asset_work/target/assetdb/world/object        |     1 |     179 |   5.17 KiB |     5,298 |
+| asset_work/target/assetdb/world/stage         |     2 |     337 |   5.37 KiB |     5,502 |
+| asset_work/target/oracle/tests/fixtures       |     4 |  11,215 | 363.99 KiB |   372,723 |
+| asset_work/target/tests/fixtures/player_arc   |     8 |      51 |   3.94 KiB |     4,033 |
+| asset_work/target/assetdb/ui/hud/icons        |    11 |     629 |  14.16 KiB |    14,501 |
+| asset_work/target/assetdb/world/img/portal    |     2 |       0 |   1.42 KiB |     1,452 |
+
+ALL FILES ('-' line count means binary or unlisted extension)
+| File                                                                                     |  Lines |       Size |   Bytes |
+| ---------------------------------------------------------------------------------------- | ------ | ---------- | ------- |
+| README.md                                                                                |    125 |   6.31 KiB |   6,457 |
+| asset_work/GOAL.md                                                                       |    116 |  10.82 KiB |  11,075 |
+| asset_work/README.md                                                                     |     18 |   1.43 KiB |   1,469 |
+| asset_work/layers/base_chassis_gem__pal/body.png                                         |      - |   796.00 B |     796 |
+| asset_work/layers/base_chassis_gem__pal/body_drawtool.json                               |    111 |   4.89 KiB |   5,011 |
+| asset_work/layers/base_chassis_gem__pal/shadow.png                                       |      - |   233.00 B |     233 |
+| asset_work/layers/base_chassis_gem__pal/shadow_drawtool.json                             |     41 |   1.15 KiB |   1,177 |
+| asset_work/layers/base_chassis_gem__pal/spine_stream.png                                 |      - |   319.00 B |     319 |
+| asset_work/layers/base_chassis_gem__pal/spine_stream_drawtool.json                       |     51 |   1.50 KiB |   1,535 |
+| asset_work/layers/base_chassis_trackball__pal/body.png                                   |      - |   641.00 B |     641 |
+| asset_work/layers/base_chassis_trackball__pal/body_drawtool.json                         |    101 |   4.30 KiB |   4,401 |
+| asset_work/layers/base_chassis_trackball__pal/shadow.png                                 |      - |   233.00 B |     233 |
+| asset_work/layers/base_chassis_trackball__pal/shadow_drawtool.json                       |     41 |   1.15 KiB |   1,177 |
+| asset_work/layers/base_chassis_trackball__pal/spine_stream.png                           |      - |   312.00 B |     312 |
+| asset_work/layers/base_chassis_trackball__pal/spine_stream_drawtool.json                 |     51 |   1.50 KiB |   1,531 |
+| asset_work/layers/base_debris/debris.png                                                 |      - |   369.00 B |     369 |
+| asset_work/layers/base_debris/debris_drawtool.json                                       |     51 |   1.73 KiB |   1,769 |
+| asset_work/layers/emoticons_cyber_neon__pal/face_dead.png                                |      - |   171.00 B |     171 |
+| asset_work/layers/emoticons_cyber_neon__pal/face_dead_drawtool.json                      |     41 |   1.02 KiB |   1,041 |
+| asset_work/layers/emoticons_cyber_neon__pal/face_hurt.png                                |      - |   233.00 B |     233 |
+| asset_work/layers/emoticons_cyber_neon__pal/face_hurt_drawtool.json                      |     41 |   1.09 KiB |   1,113 |
+| asset_work/layers/emoticons_cyber_neon__pal/face_normal.png                              |      - |   196.00 B |     196 |
+| asset_work/layers/emoticons_cyber_neon__pal/face_normal_drawtool.json                    |     41 |   1.06 KiB |   1,089 |
+| asset_work/layers/enemy_B-001_sheet/body_100.png                                         |      - |   1.77 KiB |   1,811 |
+| asset_work/layers/enemy_B-001_sheet/body_100_drawtool.json                               |    111 |   4.79 KiB |   4,900 |
+| asset_work/layers/enemy_B-001_sheet/body_25.png                                          |      - |   2.11 KiB |   2,156 |
+| asset_work/layers/enemy_B-001_sheet/body_25_drawtool.json                                |    111 |   5.17 KiB |   5,296 |
+| asset_work/layers/enemy_B-001_sheet/body_50.png                                          |      - |   1.94 KiB |   1,982 |
+| asset_work/layers/enemy_B-001_sheet/body_50_drawtool.json                                |    111 |   4.99 KiB |   5,108 |
+| asset_work/layers/enemy_B-001_sheet/face_alert.png                                       |      - |   1.30 KiB |   1,336 |
+| asset_work/layers/enemy_B-001_sheet/face_alert_drawtool.json                             |     61 |   2.07 KiB |   2,122 |
+| asset_work/layers/enemy_B-001_sheet/face_damaged.png                                     |      - |   1.26 KiB |   1,289 |
+| asset_work/layers/enemy_B-001_sheet/face_damaged_drawtool.json                           |     61 |   1.99 KiB |   2,038 |
+| asset_work/layers/enemy_B-001_sheet/face_dead.png                                        |      - |   1.18 KiB |   1,212 |
+| asset_work/layers/enemy_B-001_sheet/face_dead_drawtool.json                              |     61 |   1.94 KiB |   1,982 |
+| asset_work/layers/enemy_B-001_sheet/face_idle_100.png                                    |      - |   1.27 KiB |   1,296 |
+| asset_work/layers/enemy_B-001_sheet/face_idle_100_drawtool.json                          |     61 |   2.03 KiB |   2,082 |
+| asset_work/layers/enemy_B-001_sheet/face_idle_25.png                                     |      - |   1.25 KiB |   1,276 |
+| asset_work/layers/enemy_B-001_sheet/face_idle_25_drawtool.json                           |     61 |   2.03 KiB |   2,074 |
+| asset_work/layers/enemy_B-001_sheet/face_idle_50.png                                     |      - |   1.26 KiB |   1,295 |
+| asset_work/layers/enemy_B-001_sheet/face_idle_50_drawtool.json                           |     61 |   2.03 KiB |   2,082 |
+| asset_work/layers/enemy_B-001_sheet/shadow.png                                           |      - |   1.31 KiB |   1,344 |
+| asset_work/layers/enemy_B-001_sheet/shadow_drawtool.json                                 |     51 |   1.70 KiB |   1,744 |
+| asset_work/layers/enemy_B-001_sheet/slot_keycap_body.png                                 |      - |   1.91 KiB |   1,959 |
+| asset_work/layers/enemy_B-001_sheet/slot_keycap_body_drawtool.json                       |    111 |   5.02 KiB |   5,144 |
+| asset_work/layers/enemy_B-001_sheet/slot_keycap_pressed.png                              |      - |   1.92 KiB |   1,963 |
+| asset_work/layers/enemy_B-001_sheet/slot_keycap_pressed_drawtool.json                    |    111 |   5.02 KiB |   5,144 |
+| asset_work/layers/enemy_B-001_sheet/visor_100.png                                        |      - |   1.40 KiB |   1,437 |
+| asset_work/layers/enemy_B-001_sheet/visor_100_drawtool.json                              |     71 |   2.70 KiB |   2,764 |
+| asset_work/layers/enemy_B-001_sheet/visor_25.png                                         |      - |   1.55 KiB |   1,591 |
+| asset_work/layers/enemy_B-001_sheet/visor_25_drawtool.json                               |     71 |   2.88 KiB |   2,952 |
+| asset_work/layers/enemy_B-001_sheet/visor_50.png                                         |      - |   1.42 KiB |   1,457 |
+| asset_work/layers/enemy_B-001_sheet/visor_50_drawtool.json                               |     71 |   2.72 KiB |   2,788 |
+| asset_work/layers/enemy_B-001_sheet/visor_flipped.png                                    |      - |   1.27 KiB |   1,305 |
+| asset_work/layers/enemy_B-001_sheet/visor_flipped_drawtool.json                          |     71 |   2.56 KiB |   2,624 |
+| asset_work/layers/enemy_C-001_sheet/body_100.png                                         |      - |   1.77 KiB |   1,811 |
+| asset_work/layers/enemy_C-001_sheet/body_100_drawtool.json                               |    111 |   4.79 KiB |   4,900 |
+| asset_work/layers/enemy_C-001_sheet/body_25.png                                          |      - |   2.11 KiB |   2,156 |
+| asset_work/layers/enemy_C-001_sheet/body_25_drawtool.json                                |    111 |   5.17 KiB |   5,296 |
+| asset_work/layers/enemy_C-001_sheet/body_50.png                                          |      - |   1.94 KiB |   1,982 |
+| asset_work/layers/enemy_C-001_sheet/body_50_drawtool.json                                |    111 |   4.99 KiB |   5,108 |
+| asset_work/layers/enemy_C-001_sheet/face_alert.png                                       |      - |   1.30 KiB |   1,336 |
+| asset_work/layers/enemy_C-001_sheet/face_alert_drawtool.json                             |     61 |   2.07 KiB |   2,122 |
+| asset_work/layers/enemy_C-001_sheet/face_damaged.png                                     |      - |   1.26 KiB |   1,289 |
+| asset_work/layers/enemy_C-001_sheet/face_damaged_drawtool.json                           |     61 |   1.99 KiB |   2,038 |
+| asset_work/layers/enemy_C-001_sheet/face_dead.png                                        |      - |   1.18 KiB |   1,212 |
+| asset_work/layers/enemy_C-001_sheet/face_dead_drawtool.json                              |     61 |   1.94 KiB |   1,982 |
+| asset_work/layers/enemy_C-001_sheet/face_idle_100.png                                    |      - |   1.27 KiB |   1,296 |
+| asset_work/layers/enemy_C-001_sheet/face_idle_100_drawtool.json                          |     61 |   2.03 KiB |   2,082 |
+| asset_work/layers/enemy_C-001_sheet/face_idle_25.png                                     |      - |   1.25 KiB |   1,276 |
+| asset_work/layers/enemy_C-001_sheet/face_idle_25_drawtool.json                           |     61 |   2.03 KiB |   2,074 |
+| asset_work/layers/enemy_C-001_sheet/face_idle_50.png                                     |      - |   1.26 KiB |   1,295 |
+| asset_work/layers/enemy_C-001_sheet/face_idle_50_drawtool.json                           |     61 |   2.03 KiB |   2,082 |
+| asset_work/layers/enemy_C-001_sheet/shadow.png                                           |      - |   1.31 KiB |   1,344 |
+| asset_work/layers/enemy_C-001_sheet/shadow_drawtool.json                                 |     51 |   1.70 KiB |   1,744 |
+| asset_work/layers/enemy_C-001_sheet/slot_keycap_body.png                                 |      - |   1.91 KiB |   1,959 |
+| asset_work/layers/enemy_C-001_sheet/slot_keycap_body_drawtool.json                       |    111 |   5.02 KiB |   5,144 |
+| asset_work/layers/enemy_C-001_sheet/slot_keycap_pressed.png                              |      - |   1.92 KiB |   1,963 |
+| asset_work/layers/enemy_C-001_sheet/slot_keycap_pressed_drawtool.json                    |    111 |   5.02 KiB |   5,144 |
+| asset_work/layers/enemy_C-001_sheet/visor_100.png                                        |      - |   1.40 KiB |   1,437 |
+| asset_work/layers/enemy_C-001_sheet/visor_100_drawtool.json                              |     71 |   2.70 KiB |   2,764 |
+| asset_work/layers/enemy_C-001_sheet/visor_25.png                                         |      - |   1.55 KiB |   1,591 |
+| asset_work/layers/enemy_C-001_sheet/visor_25_drawtool.json                               |     71 |   2.88 KiB |   2,952 |
+| asset_work/layers/enemy_C-001_sheet/visor_50.png                                         |      - |   1.42 KiB |   1,457 |
+| asset_work/layers/enemy_C-001_sheet/visor_50_drawtool.json                               |     71 |   2.72 KiB |   2,788 |
+| asset_work/layers/enemy_C-001_sheet/visor_flipped.png                                    |      - |   1.27 KiB |   1,305 |
+| asset_work/layers/enemy_C-001_sheet/visor_flipped_drawtool.json                          |     71 |   2.56 KiB |   2,624 |
+| asset_work/layers/enemy_R-003_sheet/body_100.png                                         |      - |   1.78 KiB |   1,820 |
+| asset_work/layers/enemy_R-003_sheet/body_100_drawtool.json                               |    111 |   4.87 KiB |   4,984 |
+| asset_work/layers/enemy_R-003_sheet/body_25.png                                          |      - |   2.11 KiB |   2,165 |
+| asset_work/layers/enemy_R-003_sheet/body_25_drawtool.json                                |    111 |   5.26 KiB |   5,388 |
+| asset_work/layers/enemy_R-003_sheet/body_50.png                                          |      - |   1.94 KiB |   1,990 |
+| asset_work/layers/enemy_R-003_sheet/body_50_drawtool.json                                |    111 |   5.07 KiB |   5,192 |
+| asset_work/layers/enemy_R-003_sheet/face_alert.png                                       |      - |   1.30 KiB |   1,327 |
+| asset_work/layers/enemy_R-003_sheet/face_alert_drawtool.json                             |     61 |   2.04 KiB |   2,090 |
+| asset_work/layers/enemy_R-003_sheet/face_damaged.png                                     |      - |   1.30 KiB |   1,334 |
+| asset_work/layers/enemy_R-003_sheet/face_damaged_drawtool.json                           |     61 |   2.09 KiB |   2,138 |
+| asset_work/layers/enemy_R-003_sheet/face_dead.png                                        |      - |   1.19 KiB |   1,217 |
+| asset_work/layers/enemy_R-003_sheet/face_dead_drawtool.json                              |     61 |   1.94 KiB |   1,982 |
+| asset_work/layers/enemy_R-003_sheet/face_idle_100.png                                    |      - |   1.28 KiB |   1,306 |
+| asset_work/layers/enemy_R-003_sheet/face_idle_100_drawtool.json                          |     61 |   2.03 KiB |   2,074 |
+| asset_work/layers/enemy_R-003_sheet/face_idle_25.png                                     |      - |   1.26 KiB |   1,290 |
+| asset_work/layers/enemy_R-003_sheet/face_idle_25_drawtool.json                           |     61 |   2.01 KiB |   2,058 |
+| asset_work/layers/enemy_R-003_sheet/face_idle_50.png                                     |      - |   1.28 KiB |   1,309 |
+| asset_work/layers/enemy_R-003_sheet/face_idle_50_drawtool.json                           |     61 |   2.01 KiB |   2,062 |
+| asset_work/layers/enemy_R-003_sheet/shadow.png                                           |      - |   1.31 KiB |   1,346 |
+| asset_work/layers/enemy_R-003_sheet/shadow_drawtool.json                                 |     51 |   1.70 KiB |   1,744 |
+| asset_work/layers/enemy_R-003_sheet/slot_keycap_body.png                                 |      - |   1.92 KiB |   1,963 |
+| asset_work/layers/enemy_R-003_sheet/slot_keycap_body_drawtool.json                       |    111 |   5.05 KiB |   5,176 |
+| asset_work/layers/enemy_R-003_sheet/slot_keycap_pressed.png                              |      - |   1.92 KiB |   1,966 |
+| asset_work/layers/enemy_R-003_sheet/slot_keycap_pressed_drawtool.json                    |    111 |   5.05 KiB |   5,176 |
+| asset_work/layers/enemy_R-003_sheet/visor_100.png                                        |      - |   1.41 KiB |   1,441 |
+| asset_work/layers/enemy_R-003_sheet/visor_100_drawtool.json                              |     71 |   2.73 KiB |   2,792 |
+| asset_work/layers/enemy_R-003_sheet/visor_25.png                                         |      - |   1.56 KiB |   1,596 |
+| asset_work/layers/enemy_R-003_sheet/visor_25_drawtool.json                               |     71 |   2.91 KiB |   2,984 |
+| asset_work/layers/enemy_R-003_sheet/visor_50.png                                         |      - |   1.43 KiB |   1,462 |
+| asset_work/layers/enemy_R-003_sheet/visor_50_drawtool.json                               |     71 |   2.75 KiB |   2,816 |
+| asset_work/layers/enemy_R-003_sheet/visor_flipped.png                                    |      - |   1.28 KiB |   1,306 |
+| asset_work/layers/enemy_R-003_sheet/visor_flipped_drawtool.json                          |     71 |   2.57 KiB |   2,628 |
+| asset_work/layers/enemy_T-002_sheet/body_100.png                                         |      - |   1.78 KiB |   1,821 |
+| asset_work/layers/enemy_T-002_sheet/body_100_drawtool.json                               |    111 |   4.82 KiB |   4,940 |
+| asset_work/layers/enemy_T-002_sheet/body_25.png                                          |      - |   2.12 KiB |   2,167 |
+| asset_work/layers/enemy_T-002_sheet/body_25_drawtool.json                                |    111 |   5.22 KiB |   5,344 |
+| asset_work/layers/enemy_T-002_sheet/body_50.png                                          |      - |   1.95 KiB |   1,992 |
+| asset_work/layers/enemy_T-002_sheet/body_50_drawtool.json                                |    111 |   5.03 KiB |   5,152 |
+| asset_work/layers/enemy_T-002_sheet/face_alert.png                                       |      - |   1.32 KiB |   1,353 |
+| asset_work/layers/enemy_T-002_sheet/face_alert_drawtool.json                             |     61 |   2.09 KiB |   2,138 |
+| asset_work/layers/enemy_T-002_sheet/face_damaged.png                                     |      - |   1.25 KiB |   1,283 |
+| asset_work/layers/enemy_T-002_sheet/face_damaged_drawtool.json                           |     61 |   2.00 KiB |   2,046 |
+| asset_work/layers/enemy_T-002_sheet/face_dead.png                                        |      - |   1.23 KiB |   1,264 |
+| asset_work/layers/enemy_T-002_sheet/face_dead_drawtool.json                              |     61 |   2.03 KiB |   2,074 |
+| asset_work/layers/enemy_T-002_sheet/face_idle_100.png                                    |      - |   1.27 KiB |   1,302 |
+| asset_work/layers/enemy_T-002_sheet/face_idle_100_drawtool.json                          |     61 |   2.06 KiB |   2,106 |
+| asset_work/layers/enemy_T-002_sheet/face_idle_25.png                                     |      - |   1.24 KiB |   1,268 |
+| asset_work/layers/enemy_T-002_sheet/face_idle_25_drawtool.json                           |     61 |   2.01 KiB |   2,058 |
+| asset_work/layers/enemy_T-002_sheet/face_idle_50.png                                     |      - |   1.28 KiB |   1,306 |
+| asset_work/layers/enemy_T-002_sheet/face_idle_50_drawtool.json                           |     61 |   2.05 KiB |   2,098 |
+| asset_work/layers/enemy_T-002_sheet/shadow.png                                           |      - |   1.28 KiB |   1,312 |
+| asset_work/layers/enemy_T-002_sheet/shadow_drawtool.json                                 |     51 |   1.71 KiB |   1,748 |
+| asset_work/layers/enemy_T-002_sheet/slot_keycap_body.png                                 |      - |   1.91 KiB |   1,959 |
+| asset_work/layers/enemy_T-002_sheet/slot_keycap_body_drawtool.json                       |    111 |   5.04 KiB |   5,160 |
+| asset_work/layers/enemy_T-002_sheet/slot_keycap_pressed.png                              |      - |   1.92 KiB |   1,966 |
+| asset_work/layers/enemy_T-002_sheet/slot_keycap_pressed_drawtool.json                    |    111 |   5.05 KiB |   5,176 |
+| asset_work/layers/enemy_T-002_sheet/visor_100.png                                        |      - |   1.41 KiB |   1,442 |
+| asset_work/layers/enemy_T-002_sheet/visor_100_drawtool.json                              |     71 |   2.73 KiB |   2,796 |
+| asset_work/layers/enemy_T-002_sheet/visor_25.png                                         |      - |   1.56 KiB |   1,597 |
+| asset_work/layers/enemy_T-002_sheet/visor_25_drawtool.json                               |     71 |   2.92 KiB |   2,988 |
+| asset_work/layers/enemy_T-002_sheet/visor_50.png                                         |      - |   1.43 KiB |   1,463 |
+| asset_work/layers/enemy_T-002_sheet/visor_50_drawtool.json                               |     71 |   2.75 KiB |   2,820 |
+| asset_work/layers/enemy_T-002_sheet/visor_flipped.png                                    |      - |   1.28 KiB |   1,307 |
+| asset_work/layers/enemy_T-002_sheet/visor_flipped_drawtool.json                          |     71 |   2.58 KiB |   2,644 |
+| asset_work/layers/gallery/data.json                                                      |  3,707 | 115.88 KiB | 118,657 |
+| asset_work/layers/gallery/diff/U11_kb_z_amber_t1.png                                     |      - |   3.04 KiB |   3,118 |
+| asset_work/layers/gallery/diff/U12_kb_f_crimson_t2.png                                   |      - |   3.09 KiB |   3,162 |
+| asset_work/layers/gallery/diff/U13_kb_q_cobalt_t3.png                                    |      - |   3.04 KiB |   3,117 |
+| asset_work/layers/gallery/diff/U14_kb_b_obsidian_t4.png                                  |      - |   3.04 KiB |   3,118 |
+| asset_work/layers/gallery/diff/U15_keycap_debris.png                                     |      - |   210.00 B |     210 |
+| asset_work/layers/gallery/diff/U16_mouse_hero_sheet.png                                  |      - |   2.07 KiB |   2,116 |
+| asset_work/layers/gallery/diff/U17_hero_classic_gem_sheet.png                            |      - |   2.07 KiB |   2,116 |
+| asset_work/layers/gallery/diff/U18_hero_trackball_cyber_sheet.png                        |      - |   1.92 KiB |   1,967 |
+| asset_work/layers/gallery/diff/U19_shockwave_ring.png                                    |      - |   2.53 KiB |   2,592 |
+| asset_work/layers/gallery/diff/U20_sword_albedo.png                                      |      - |   361.00 B |     361 |
+| asset_work/layers/gallery/diff/U21_sword_mask.png                                        |      - |   361.00 B |     361 |
+| asset_work/layers/gallery/diff/U22_bow_albedo.png                                        |      - |   361.00 B |     361 |
+| asset_work/layers/gallery/diff/U23_bow_mask.png                                          |      - |   361.00 B |     361 |
+| asset_work/layers/gallery/diff/U24_spear_albedo.png                                      |      - |   361.00 B |     361 |
+| asset_work/layers/gallery/diff/U25_spear_mask.png                                        |      - |   361.00 B |     361 |
+| asset_work/layers/gallery/diff/U26_room_tileset.png                                      |      - |   282.00 B |     282 |
+| asset_work/layers/gallery/diff/U27_lobby_tileset.png                                     |      - |   258.00 B |     258 |
+| asset_work/layers/gallery/diff/U28_portal_keycap_unpressed.png                           |      - |   414.00 B |     414 |
+| asset_work/layers/gallery/diff/U29_portal_keycap_pressed.png                             |      - |   473.00 B |     473 |
+| asset_work/layers/gallery/diff/U30_keycap_sheet.png                                      |      - |   1.61 KiB |   1,644 |
+| asset_work/layers/gallery/diff/U31_fused_keycap_9slice.png                               |      - |   589.00 B |     589 |
+| asset_work/layers/gallery/diff/U32_fused_keycap_hover_9slice.png                         |      - |   589.00 B |     589 |
+| asset_work/layers/gallery/diff/U33_fused_keycap_pressed_9slice.png                       |      - |   588.00 B |     588 |
+| asset_work/layers/gallery/diff/U34_pantograph_sheet.png                                  |      - |   1.61 KiB |   1,644 |
+| asset_work/layers/gallery/diff/U35_hud_icons_128_atlas.png                               |      - |   4.09 KiB |   4,193 |
+| asset_work/layers/gallery/diff/U36_keycap_screen_9slice.png                              |      - |   327.00 B |     327 |
+| asset_work/layers/gallery/diff/U37_scanline_tile_fine.png                                |      - |   105.00 B |     105 |
+| asset_work/layers/gallery/diff/U38_keyboard_plate_block.png                              |      - |   1.02 KiB |   1,048 |
+| asset_work/layers/gallery/diff/U39_floating_visor_window.png                             |      - |  1013.00 B |   1,013 |
+| asset_work/layers/gallery/diff/U40_title_weapons_atlas.png                               |      - |   389.00 B |     389 |
+| asset_work/layers/gallery/diff/U41_title_diorama_sword_body.png                          |      - |   1.87 KiB |   1,917 |
+| asset_work/layers/gallery/diff/U42_title_logo_text_our.png                               |      - |   740.00 B |     740 |
+| asset_work/layers/gallery/diff/U43_title_logo_text_or.png                                |      - |   665.00 B |     665 |
+| asset_work/layers/gallery/diff/U44_title_logo_text_d.png                                 |      - |   568.00 B |     568 |
+| asset_work/layers/gallery/from_layers/U11_kb_z_amber_t1.png                              |      - |   6.63 KiB |   6,792 |
+| asset_work/layers/gallery/from_layers/U12_kb_f_crimson_t2.png                            |      - |   6.69 KiB |   6,846 |
+| asset_work/layers/gallery/from_layers/U13_kb_q_cobalt_t3.png                             |      - |   6.75 KiB |   6,914 |
+| asset_work/layers/gallery/from_layers/U14_kb_b_obsidian_t4.png                           |      - |   6.63 KiB |   6,792 |
+| asset_work/layers/gallery/from_layers/U15_keycap_debris.png                              |      - |   369.00 B |     369 |
+| asset_work/layers/gallery/from_layers/U16_mouse_hero_sheet.png                           |      - |   5.61 KiB |   5,743 |
+| asset_work/layers/gallery/from_layers/U17_hero_classic_gem_sheet.png                     |      - |   5.61 KiB |   5,743 |
+| asset_work/layers/gallery/from_layers/U18_hero_trackball_cyber_sheet.png                 |      - |   5.27 KiB |   5,393 |
+| asset_work/layers/gallery/from_layers/U19_shockwave_ring.png                             |      - |  31.55 KiB |  32,309 |
+| asset_work/layers/gallery/from_layers/U20_sword_albedo.png                               |      - |   489.00 B |     489 |
+| asset_work/layers/gallery/from_layers/U21_sword_mask.png                                 |      - |   276.00 B |     276 |
+| asset_work/layers/gallery/from_layers/U22_bow_albedo.png                                 |      - |   573.00 B |     573 |
+| asset_work/layers/gallery/from_layers/U23_bow_mask.png                                   |      - |   314.00 B |     314 |
+| asset_work/layers/gallery/from_layers/U24_spear_albedo.png                               |      - |   511.00 B |     511 |
+| asset_work/layers/gallery/from_layers/U25_spear_mask.png                                 |      - |   348.00 B |     348 |
+| asset_work/layers/gallery/from_layers/U26_room_tileset.png                               |      - |   552.00 B |     552 |
+| asset_work/layers/gallery/from_layers/U27_lobby_tileset.png                              |      - |   380.00 B |     380 |
+| asset_work/layers/gallery/from_layers/U28_portal_keycap_unpressed.png                    |      - |   634.00 B |     634 |
+| asset_work/layers/gallery/from_layers/U29_portal_keycap_pressed.png                      |      - |   508.00 B |     508 |
+| asset_work/layers/gallery/from_layers/U30_keycap_sheet.png                               |      - |   5.40 KiB |   5,534 |
+| asset_work/layers/gallery/from_layers/U31_fused_keycap_9slice.png                        |      - |   678.00 B |     678 |
+| asset_work/layers/gallery/from_layers/U32_fused_keycap_hover_9slice.png                  |      - |   668.00 B |     668 |
+| asset_work/layers/gallery/from_layers/U33_fused_keycap_pressed_9slice.png                |      - |   670.00 B |     670 |
+| asset_work/layers/gallery/from_layers/U34_pantograph_sheet.png                           |      - |   5.40 KiB |   5,534 |
+| asset_work/layers/gallery/from_layers/U35_hud_icons_128_atlas.png                        |      - |   7.10 KiB |   7,268 |
+| asset_work/layers/gallery/from_layers/U36_keycap_screen_9slice.png                       |      - |   440.00 B |     440 |
+| asset_work/layers/gallery/from_layers/U37_scanline_tile_fine.png                         |      - |   116.00 B |     116 |
+| asset_work/layers/gallery/from_layers/U38_keyboard_plate_block.png                       |      - |   1.04 KiB |   1,070 |
+| asset_work/layers/gallery/from_layers/U39_floating_visor_window.png                      |      - |   1.17 KiB |   1,202 |
+| asset_work/layers/gallery/from_layers/U40_title_weapons_atlas.png                        |      - |   1.09 KiB |   1,117 |
+| asset_work/layers/gallery/from_layers/U41_title_diorama_sword_body.png                   |      - |   3.90 KiB |   3,997 |
+| asset_work/layers/gallery/from_layers/U42_title_logo_text_our.png                        |      - |   1.50 KiB |   1,532 |
+| asset_work/layers/gallery/from_layers/U43_title_logo_text_or.png                         |      - |   1.10 KiB |   1,131 |
+| asset_work/layers/gallery/from_layers/U44_title_logo_text_d.png                          |      - |   761.00 B |     761 |
+| asset_work/layers/gallery/render/U11_kb_z_amber_t1.png                                   |      - |   6.64 KiB |   6,798 |
+| asset_work/layers/gallery/render/U11_kb_z_amber_t1_drawtool.json                         |    791 |  41.07 KiB |  42,056 |
+| asset_work/layers/gallery/render/U12_kb_f_crimson_t2.png                                 |      - |   6.69 KiB |   6,853 |
+| asset_work/layers/gallery/render/U12_kb_f_crimson_t2_drawtool.json                       |    791 |  41.46 KiB |  42,456 |
+| asset_work/layers/gallery/render/U13_kb_q_cobalt_t3.png                                  |      - |   6.77 KiB |   6,928 |
+| asset_work/layers/gallery/render/U13_kb_q_cobalt_t3_drawtool.json                        |    791 |  41.51 KiB |  42,504 |
+| asset_work/layers/gallery/render/U14_kb_b_obsidian_t4.png                                |      - |   6.64 KiB |   6,798 |
+| asset_work/layers/gallery/render/U14_kb_b_obsidian_t4_drawtool.json                      |    791 |  41.07 KiB |  42,056 |
+| asset_work/layers/gallery/render/U15_keycap_debris.png                                   |      - |   369.00 B |     369 |
+| asset_work/layers/gallery/render/U15_keycap_debris_drawtool.json                         |     51 |   1.73 KiB |   1,769 |
+| asset_work/layers/gallery/render/U16_mouse_hero_sheet.png                                |      - |   5.61 KiB |   5,743 |
+| asset_work/layers/gallery/render/U16_mouse_hero_sheet_drawtool.json                      |    371 |  22.78 KiB |  23,330 |
+| asset_work/layers/gallery/render/U17_hero_classic_gem_sheet.png                          |      - |   5.61 KiB |   5,743 |
+| asset_work/layers/gallery/render/U17_hero_classic_gem_sheet_drawtool.json                |    371 |  22.78 KiB |  23,330 |
+| asset_work/layers/gallery/render/U18_hero_trackball_cyber_sheet.png                      |      - |   5.27 KiB |   5,393 |
+| asset_work/layers/gallery/render/U18_hero_trackball_cyber_sheet_drawtool.json            |    361 |  22.36 KiB |  22,900 |
+| asset_work/layers/gallery/render/U19_shockwave_ring.png                                  |      - |  31.55 KiB |  32,309 |
+| asset_work/layers/gallery/render/U19_shockwave_ring_drawtool.json                        |    311 |  76.80 KiB |  78,647 |
+| asset_work/layers/gallery/render/U20_sword_albedo.png                                    |      - |   489.00 B |     489 |
+| asset_work/layers/gallery/render/U20_sword_albedo_drawtool.json                          |     71 |   2.72 KiB |   2,783 |
+| asset_work/layers/gallery/render/U21_sword_mask.png                                      |      - |   276.00 B |     276 |
+| asset_work/layers/gallery/render/U21_sword_mask_drawtool.json                            |     51 |   1.46 KiB |   1,491 |
+| asset_work/layers/gallery/render/U22_bow_albedo.png                                      |      - |   573.00 B |     573 |
+| asset_work/layers/gallery/render/U22_bow_albedo_drawtool.json                            |     61 |   2.53 KiB |   2,589 |
+| asset_work/layers/gallery/render/U23_bow_mask.png                                        |      - |   314.00 B |     314 |
+| asset_work/layers/gallery/render/U23_bow_mask_drawtool.json                              |     61 |   2.04 KiB |   2,089 |
+| asset_work/layers/gallery/render/U24_spear_albedo.png                                    |      - |   511.00 B |     511 |
+| asset_work/layers/gallery/render/U24_spear_albedo_drawtool.json                          |     71 |   2.75 KiB |   2,815 |
+| asset_work/layers/gallery/render/U25_spear_mask.png                                      |      - |   348.00 B |     348 |
+| asset_work/layers/gallery/render/U25_spear_mask_drawtool.json                            |     61 |   1.96 KiB |   2,009 |
+| asset_work/layers/gallery/render/U26_room_tileset.png                                    |      - |   552.00 B |     552 |
+| asset_work/layers/gallery/render/U26_room_tileset_drawtool.json                          |    111 |   4.38 KiB |   4,482 |
+| asset_work/layers/gallery/render/U27_lobby_tileset.png                                   |      - |   380.00 B |     380 |
+| asset_work/layers/gallery/render/U27_lobby_tileset_drawtool.json                         |     91 |   3.43 KiB |   3,510 |
+| asset_work/layers/gallery/render/U28_portal_keycap_unpressed.png                         |      - |   634.00 B |     634 |
+| asset_work/layers/gallery/render/U28_portal_keycap_unpressed_drawtool.json               |    111 |   4.80 KiB |   4,915 |
+| asset_work/layers/gallery/render/U29_portal_keycap_pressed.png                           |      - |   508.00 B |     508 |
+| asset_work/layers/gallery/render/U29_portal_keycap_pressed_drawtool.json                 |    111 |   4.64 KiB |   4,747 |
+| asset_work/layers/gallery/render/U30_keycap_sheet.png                                    |      - |   5.40 KiB |   5,534 |
+| asset_work/layers/gallery/render/U30_keycap_sheet_drawtool.json                          |    671 |  33.44 KiB |  34,240 |
+| asset_work/layers/gallery/render/U31_fused_keycap_9slice.png                             |      - |   678.00 B |     678 |
+| asset_work/layers/gallery/render/U31_fused_keycap_9slice_drawtool.json                   |    111 |   5.18 KiB |   5,307 |
+| asset_work/layers/gallery/render/U32_fused_keycap_hover_9slice.png                       |      - |   668.00 B |     668 |
+| asset_work/layers/gallery/render/U32_fused_keycap_hover_9slice_drawtool.json             |    111 |   5.08 KiB |   5,203 |
+| asset_work/layers/gallery/render/U33_fused_keycap_pressed_9slice.png                     |      - |   670.00 B |     670 |
+| asset_work/layers/gallery/render/U33_fused_keycap_pressed_9slice_drawtool.json           |    111 |   5.16 KiB |   5,287 |
+| asset_work/layers/gallery/render/U34_pantograph_sheet.png                                |      - |   5.40 KiB |   5,534 |
+| asset_work/layers/gallery/render/U34_pantograph_sheet_drawtool.json                      |    671 |  33.44 KiB |  34,240 |
+| asset_work/layers/gallery/render/U35_hud_icons_128_atlas.png                             |      - |   7.10 KiB |   7,268 |
+| asset_work/layers/gallery/render/U35_hud_icons_128_atlas_drawtool.json                   |    666 |  34.38 KiB |  35,203 |
+| asset_work/layers/gallery/render/U36_keycap_screen_9slice.png                            |      - |   440.00 B |     440 |
+| asset_work/layers/gallery/render/U36_keycap_screen_9slice_drawtool.json                  |     71 |   3.01 KiB |   3,082 |
+| asset_work/layers/gallery/render/U37_scanline_tile_fine.png                              |      - |   116.00 B |     116 |
+| asset_work/layers/gallery/render/U37_scanline_tile_fine_drawtool.json                    |     36 |   842.00 B |     842 |
+| asset_work/layers/gallery/render/U38_keyboard_plate_block.png                            |      - |   1.04 KiB |   1,070 |
+| asset_work/layers/gallery/render/U38_keyboard_plate_block_drawtool.json                  |    351 |  16.00 KiB |  16,387 |
+| asset_work/layers/gallery/render/U39_floating_visor_window.png                           |      - |   1.17 KiB |   1,202 |
+| asset_work/layers/gallery/render/U39_floating_visor_window_drawtool.json                 |    351 |  16.11 KiB |  16,495 |
+| asset_work/layers/gallery/render/U40_title_weapons_atlas.png                             |      - |   1.09 KiB |   1,117 |
+| asset_work/layers/gallery/render/U40_title_weapons_atlas_drawtool.json                   |    121 |   5.53 KiB |   5,664 |
+| asset_work/layers/gallery/render/U41_title_diorama_sword_body.png                        |      - |   3.90 KiB |   3,997 |
+| asset_work/layers/gallery/render/U41_title_diorama_sword_body_drawtool.json              |    407 |  20.07 KiB |  20,551 |
+| asset_work/layers/gallery/render/U42_title_logo_text_our.png                             |      - |   1.50 KiB |   1,532 |
+| asset_work/layers/gallery/render/U42_title_logo_text_our_drawtool.json                   |    207 |   8.76 KiB |   8,973 |
+| asset_work/layers/gallery/render/U43_title_logo_text_or.png                              |      - |   1.10 KiB |   1,131 |
+| asset_work/layers/gallery/render/U43_title_logo_text_or_drawtool.json                    |    157 |   6.43 KiB |   6,587 |
+| asset_work/layers/gallery/render/U44_title_logo_text_d.png                               |      - |   761.00 B |     761 |
+| asset_work/layers/gallery/render/U44_title_logo_text_d_drawtool.json                     |    122 |   4.63 KiB |   4,744 |
+| asset_work/layers/hero_trackball_cyber_sheet/sheet.png                                   |      - |   5.27 KiB |   5,393 |
+| asset_work/layers/hero_trackball_cyber_sheet/sheet_drawtool.json                         |    361 |  22.36 KiB |  22,900 |
+| asset_work/layers/hud_composite_surfaces/floating_visor_window.png                       |      - |   1.17 KiB |   1,202 |
+| asset_work/layers/hud_composite_surfaces/floating_visor_window_drawtool.json             |    351 |  16.11 KiB |  16,495 |
+| asset_work/layers/hud_composite_surfaces/keyboard_plate_block.png                        |      - |   1.04 KiB |   1,070 |
+| asset_work/layers/hud_composite_surfaces/keyboard_plate_block_drawtool.json              |    351 |  16.00 KiB |  16,387 |
+| asset_work/layers/hud_composite_surfaces/keycap_screen_9slice.png                        |      - |   440.00 B |     440 |
+| asset_work/layers/hud_composite_surfaces/keycap_screen_9slice_drawtool.json              |     71 |   3.01 KiB |   3,082 |
+| asset_work/layers/hud_composite_surfaces/scanline_tile_fine.png                          |      - |   116.00 B |     116 |
+| asset_work/layers/hud_composite_surfaces/scanline_tile_fine_drawtool.json                |     36 |   842.00 B |     842 |
+| asset_work/layers/hud_composite_surfaces/switch_socket_well.png                          |      - |   355.00 B |     355 |
+| asset_work/layers/hud_composite_surfaces/switch_socket_well_drawtool.json                |     76 |   2.99 KiB |   3,066 |
+| asset_work/layers/hud_icons_128_atlas/atlas.png                                          |      - |   7.10 KiB |   7,268 |
+| asset_work/layers/hud_icons_128_atlas/atlas_drawtool.json                                |    666 |  34.38 KiB |  35,203 |
+| asset_work/layers/index.json                                                             |    823 |  24.67 KiB |  25,260 |
+| asset_work/layers/lobby_tileset/tiles.png                                                |      - |   380.00 B |     380 |
+| asset_work/layers/lobby_tileset/tiles_drawtool.json                                      |     91 |   3.43 KiB |   3,510 |
+| asset_work/layers/mouse_hero_sheet/sheet.png                                             |      - |   5.61 KiB |   5,743 |
+| asset_work/layers/mouse_hero_sheet/sheet_drawtool.json                                   |    371 |  22.78 KiB |  23,330 |
+| asset_work/layers/pantograph_keycap_profile/fused_keycap.png                             |      - |   678.00 B |     678 |
+| asset_work/layers/pantograph_keycap_profile/fused_keycap_drawtool.json                   |    111 |   5.18 KiB |   5,307 |
+| asset_work/layers/pantograph_keycap_profile/fused_keycap_hover.png                       |      - |   668.00 B |     668 |
+| asset_work/layers/pantograph_keycap_profile/fused_keycap_hover_drawtool.json             |    111 |   5.08 KiB |   5,203 |
+| asset_work/layers/pantograph_keycap_profile/fused_keycap_pressed.png                     |      - |   670.00 B |     670 |
+| asset_work/layers/pantograph_keycap_profile/fused_keycap_pressed_drawtool.json           |    111 |   5.16 KiB |   5,287 |
+| asset_work/layers/pantograph_keycap_profile/sheet.png                                    |      - |   5.40 KiB |   5,534 |
+| asset_work/layers/pantograph_keycap_profile/sheet_drawtool.json                          |    671 |  33.44 KiB |  34,240 |
+| asset_work/layers/player_mouse__pal/body.png                                             |      - |   786.00 B |     786 |
+| asset_work/layers/player_mouse__pal/body_drawtool.json                                   |    111 |   4.89 KiB |   5,003 |
+| asset_work/layers/player_mouse__pal/shadow.png                                           |      - |   250.00 B |     250 |
+| asset_work/layers/player_mouse__pal/shadow_drawtool.json                                 |     51 |   1.58 KiB |   1,619 |
+| asset_work/layers/player_mouse__pal/spine_stream.png                                     |      - |   319.00 B |     319 |
+| asset_work/layers/player_mouse__pal/spine_stream_drawtool.json                           |     51 |   1.50 KiB |   1,535 |
+| asset_work/layers/player_mouse__pal/visor_left.png                                       |      - |   367.00 B |     367 |
+| asset_work/layers/player_mouse__pal/visor_left_dead.png                                  |      - |   350.00 B |     350 |
+| asset_work/layers/player_mouse__pal/visor_left_dead_drawtool.json                        |     61 |   2.06 KiB |   2,109 |
+| asset_work/layers/player_mouse__pal/visor_left_drawtool.json                             |     61 |   2.08 KiB |   2,125 |
+| asset_work/layers/player_mouse__pal/visor_left_hurt.png                                  |      - |   383.00 B |     383 |
+| asset_work/layers/player_mouse__pal/visor_left_hurt_drawtool.json                        |     61 |   2.10 KiB |   2,149 |
+| asset_work/layers/player_mouse__pal/visor_right.png                                      |      - |   385.00 B |     385 |
+| asset_work/layers/player_mouse__pal/visor_right_dead.png                                 |      - |   360.00 B |     360 |
+| asset_work/layers/player_mouse__pal/visor_right_dead_drawtool.json                       |     56 |   1.86 KiB |   1,900 |
+| asset_work/layers/player_mouse__pal/visor_right_drawtool.json                            |     56 |   1.87 KiB |   1,916 |
+| asset_work/layers/player_mouse__pal/visor_right_hurt.png                                 |      - |   392.00 B |     392 |
+| asset_work/layers/player_mouse__pal/visor_right_hurt_drawtool.json                       |     56 |   1.89 KiB |   1,940 |
+| asset_work/layers/portal_keycap_master/keycap_pressed.png                                |      - |   508.00 B |     508 |
+| asset_work/layers/portal_keycap_master/keycap_pressed_drawtool.json                      |    111 |   4.64 KiB |   4,747 |
+| asset_work/layers/portal_keycap_master/keycap_unpressed.png                              |      - |   634.00 B |     634 |
+| asset_work/layers/portal_keycap_master/keycap_unpressed_drawtool.json                    |    111 |   4.80 KiB |   4,915 |
+| asset_work/layers/portal_keycap_master/sky_gate.png                                      |      - |   1.16 KiB |   1,184 |
+| asset_work/layers/portal_keycap_master/sky_gate_drawtool.json                            |    111 |   5.52 KiB |   5,655 |
+| asset_work/layers/portal_keycap_master/socket.png                                        |      - |   646.00 B |     646 |
+| asset_work/layers/portal_keycap_master/socket_drawtool.json                              |    111 |   5.01 KiB |   5,131 |
+| asset_work/layers/room_tileset/tiles.png                                                 |      - |   552.00 B |     552 |
+| asset_work/layers/room_tileset/tiles_drawtool.json                                       |    111 |   4.38 KiB |   4,482 |
+| asset_work/layers/shockwave_ring_recipe/ring.png                                         |      - |  31.55 KiB |  32,309 |
+| asset_work/layers/shockwave_ring_recipe/ring_drawtool.json                               |    311 |  76.80 KiB |  78,647 |
+| asset_work/layers/title_diorama_sword_body/body.png                                      |      - |   3.90 KiB |   3,997 |
+| asset_work/layers/title_diorama_sword_body/body_drawtool.json                            |    407 |  20.07 KiB |  20,551 |
+| asset_work/layers/title_logo_text_d_recipe/text.png                                      |      - |   761.00 B |     761 |
+| asset_work/layers/title_logo_text_d_recipe/text_drawtool.json                            |    122 |   4.63 KiB |   4,744 |
+| asset_work/layers/title_logo_text_or_recipe/text.png                                     |      - |   1.10 KiB |   1,131 |
+| asset_work/layers/title_logo_text_or_recipe/text_drawtool.json                           |    157 |   6.43 KiB |   6,587 |
+| asset_work/layers/title_logo_text_our_recipe/text.png                                    |      - |   1.50 KiB |   1,532 |
+| asset_work/layers/title_logo_text_our_recipe/text_drawtool.json                          |    207 |   8.76 KiB |   8,973 |
+| asset_work/layers/title_weapons_atlas/atlas.png                                          |      - |   1.09 KiB |   1,117 |
+| asset_work/layers/title_weapons_atlas/atlas_drawtool.json                                |    121 |   5.53 KiB |   5,664 |
+| asset_work/layers/weapon_bow/albedo.png                                                  |      - |   573.00 B |     573 |
+| asset_work/layers/weapon_bow/albedo_drawtool.json                                        |     61 |   2.53 KiB |   2,589 |
+| asset_work/layers/weapon_bow/mask.png                                                    |      - |   314.00 B |     314 |
+| asset_work/layers/weapon_bow/mask_drawtool.json                                          |     61 |   2.04 KiB |   2,089 |
+| asset_work/layers/weapon_spear/albedo.png                                                |      - |   511.00 B |     511 |
+| asset_work/layers/weapon_spear/albedo_drawtool.json                                      |     71 |   2.75 KiB |   2,815 |
+| asset_work/layers/weapon_spear/mask.png                                                  |      - |   348.00 B |     348 |
+| asset_work/layers/weapon_spear/mask_drawtool.json                                        |     61 |   1.96 KiB |   2,009 |
+| asset_work/layers/weapon_sword/albedo.png                                                |      - |   489.00 B |     489 |
+| asset_work/layers/weapon_sword/albedo_drawtool.json                                      |     71 |   2.72 KiB |   2,783 |
+| asset_work/layers/weapon_sword/mask.png                                                  |      - |   276.00 B |     276 |
+| asset_work/layers/weapon_sword/mask_drawtool.json                                        |     51 |   1.46 KiB |   1,491 |
+| asset_work/progress.json                                                                 |    341 |  11.22 KiB |  11,492 |
+| asset_work/pygate/compare.py                                                             |    399 |  18.32 KiB |  18,762 |
+| asset_work/pygate/diag_pil_vs_js.py                                                      |    161 |   7.41 KiB |   7,589 |
+| asset_work/pygate/diag_pil_vs_js2.py                                                     |     65 |   2.19 KiB |   2,242 |
+| asset_work/pygate/legacy_vs_drawtool.py                                                  |    174 |   8.39 KiB |   8,596 |
+| asset_work/pygate/version.py                                                             |     55 |   2.37 KiB |   2,428 |
+| asset_work/scratch/diag2.mjs                                                             |     76 |   3.70 KiB |   3,792 |
+| asset_work/scratch/diag_bow_albedo.json                                                  |     61 |   2.53 KiB |   2,589 |
+| asset_work/scratch/diag_colors.mjs                                                       |     98 |   4.59 KiB |   4,696 |
+| asset_work/scratch/diam_diag.mjs                                                         |     47 |   2.38 KiB |   2,436 |
+| asset_work/scratch/probe_both.mjs                                                        |     45 |   2.22 KiB |   2,272 |
+| asset_work/scratch/probe_sword.mjs                                                       |      7 |   366.00 B |     366 |
+| asset_work/scratch/probe_sword_bbox.mjs                                                  |      8 |   468.00 B |     468 |
+| asset_work/scratch/probe_sword_cmds.mjs                                                  |      7 |   534.00 B |     534 |
+| asset_work/scratch/probe_u20_diff.mjs                                                    |     65 |   2.80 KiB |   2,869 |
+| asset_work/scratch/probe_u20_replay.mjs                                                  |     86 |   3.44 KiB |   3,521 |
+| asset_work/target/assetdb/entity/enemy/base_debris.json                                  |  1,303 |  18.73 KiB |  19,182 |
+| asset_work/target/assetdb/entity/enemy/enemy_B-001_sheet.json                            |  2,820 |  51.72 KiB |  52,958 |
+| asset_work/target/assetdb/entity/enemy/enemy_C-001_sheet.json                            |  2,820 |  51.72 KiB |  52,958 |
+| asset_work/target/assetdb/entity/enemy/enemy_R-003_sheet.json                            |  2,808 |  51.37 KiB |  52,607 |
+| asset_work/target/assetdb/entity/enemy/enemy_T-002_sheet.json                            |  2,954 |  53.41 KiB |  54,694 |
+| asset_work/target/assetdb/entity/enemy/enemy_keybot_b001_sheet.png                       |      - |   6.08 KiB |   6,223 |
+| asset_work/target/assetdb/entity/enemy/enemy_keybot_c001_sheet.png                       |      - |   6.08 KiB |   6,223 |
+| asset_work/target/assetdb/entity/enemy/enemy_keybot_r003_sheet.png                       |      - |   6.32 KiB |   6,469 |
+| asset_work/target/assetdb/entity/enemy/enemy_keybot_t002_sheet.png                       |      - |   6.30 KiB |   6,455 |
+| asset_work/target/assetdb/entity/enemy/keycap_debris.png                                 |      - |   508.00 B |     508 |
+| asset_work/target/assetdb/entity/player/base_chassis_gem.json                            |    101 |   2.81 KiB |   2,877 |
+| asset_work/target/assetdb/entity/player/base_chassis_trackball.json                      |     62 |   1.43 KiB |   1,465 |
+| asset_work/target/assetdb/entity/player/base_visor_shield.json                           |    130 |   3.72 KiB |   3,810 |
+| asset_work/target/assetdb/entity/player/emoticons_cyber_neon.json                        |     67 |   1.53 KiB |   1,571 |
+| asset_work/target/assetdb/entity/player/hero_trackball_cyber_sheet.json                  | 16,674 | 342.00 KiB | 350,208 |
+| asset_work/target/assetdb/entity/player/hero_trackball_cyber_sheet.png                   |      - |   5.12 KiB |   5,247 |
+| asset_work/target/assetdb/entity/player/mouse_hero_sheet.json                            | 16,713 | 343.41 KiB | 351,649 |
+| asset_work/target/assetdb/entity/player/mouse_hero_sheet.png                             |      - |   5.28 KiB |   5,402 |
+| asset_work/target/assetdb/entity/player/player_mouse.json                                |    582 |   9.29 KiB |   9,516 |
+| asset_work/target/assetdb/entity/player/player_profile_specs.json                        |     27 |   1.01 KiB |   1,030 |
+| asset_work/target/assetdb/entity/player/shockwave_ring.png                               |      - |  20.37 KiB |  20,857 |
+| asset_work/target/assetdb/entity/weapon/bow_albedo.png                                   |      - |   919.00 B |     919 |
+| asset_work/target/assetdb/entity/weapon/bow_mask.png                                     |      - |   480.00 B |     480 |
+| asset_work/target/assetdb/entity/weapon/spear_albedo.png                                 |      - |   625.00 B |     625 |
+| asset_work/target/assetdb/entity/weapon/spear_mask.png                                   |      - |   363.00 B |     363 |
+| asset_work/target/assetdb/entity/weapon/sword_albedo.png                                 |      - |   580.00 B |     580 |
+| asset_work/target/assetdb/entity/weapon/sword_mask.png                                   |      - |   288.00 B |     288 |
+| asset_work/target/assetdb/entity/weapon/weapon_bow.json                                  |     75 |   1.67 KiB |   1,711 |
+| asset_work/target/assetdb/entity/weapon/weapon_spear.json                                |     65 |   1.34 KiB |   1,368 |
+| asset_work/target/assetdb/entity/weapon/weapon_sword.json                                |     67 |   1.42 KiB |   1,452 |
+| asset_work/target/assetdb/ui/data/diamond_gem.json                                       |     66 |   1.62 KiB |   1,660 |
+| asset_work/target/assetdb/ui/data/title_diorama_sword_body.json                          |     64 |   4.49 KiB |   4,602 |
+| asset_work/target/assetdb/ui/hud/floating_visor_window.png                               |      - |   1.24 KiB |   1,269 |
+| asset_work/target/assetdb/ui/hud/fused_keycap_9slice.png                                 |      - |  1008.00 B |   1,008 |
+| asset_work/target/assetdb/ui/hud/fused_keycap_hover_9slice.png                           |      - |   996.00 B |     996 |
+| asset_work/target/assetdb/ui/hud/fused_keycap_pressed_9slice.png                         |      - |   1.00 KiB |   1,024 |
+| asset_work/target/assetdb/ui/hud/hud_composite_surfaces.json                             |    866 |  16.20 KiB |  16,584 |
+| asset_work/target/assetdb/ui/hud/hud_icons_128_atlas.json                                |  1,390 |  23.69 KiB |  24,255 |
+| asset_work/target/assetdb/ui/hud/hud_icons_128_atlas.png                                 |      - |   7.48 KiB |   7,660 |
+| asset_work/target/assetdb/ui/hud/hud_icons_128_mask.png                                  |      - |   7.26 KiB |   7,430 |
+| asset_work/target/assetdb/ui/hud/icons/book.json                                         |     57 |   1.26 KiB |   1,293 |
+| asset_work/target/assetdb/ui/hud/icons/chest.json                                        |     57 |   1.25 KiB |   1,275 |
+| asset_work/target/assetdb/ui/hud/icons/cross_mount.json                                  |     41 |   944.00 B |     944 |
+| asset_work/target/assetdb/ui/hud/icons/diamond_gem.json                                  |     66 |   1.62 KiB |   1,660 |
+| asset_work/target/assetdb/ui/hud/icons/gear.json                                         |    184 |   3.82 KiB |   3,915 |
+| asset_work/target/assetdb/ui/hud/icons/heart.json                                        |     22 |   624.00 B |     624 |
+| asset_work/target/assetdb/ui/hud/icons/kill_skull.json                                   |     54 |   1.23 KiB |   1,256 |
+| asset_work/target/assetdb/ui/hud/icons/lightning.json                                    |     22 |   582.00 B |     582 |
+| asset_work/target/assetdb/ui/hud/icons/shield.json                                       |     22 |   563.00 B |     563 |
+| asset_work/target/assetdb/ui/hud/icons/speaker.json                                      |     56 |   1.27 KiB |   1,296 |
+| asset_work/target/assetdb/ui/hud/icons/stopwatch.json                                    |     48 |   1.07 KiB |   1,093 |
+| asset_work/target/assetdb/ui/hud/keyboard_plate_block.png                                |      - |   1.17 KiB |   1,203 |
+| asset_work/target/assetdb/ui/hud/keycap_screen_9slice.png                                |      - |   596.00 B |     596 |
+| asset_work/target/assetdb/ui/hud/pantograph_keycap_profile.json                          |     87 |   2.79 KiB |   2,862 |
+| asset_work/target/assetdb/ui/hud/pantograph_sheet.png                                    |      - |   3.05 KiB |   3,120 |
+| asset_work/target/assetdb/ui/hud/scanline_tile_fine.png                                  |      - |   118.00 B |     118 |
+| asset_work/target/assetdb/ui/title/title_diorama_sword_body.png                          |      - |   3.75 KiB |   3,840 |
+| asset_work/target/assetdb/ui/title/title_logo_text_d.png                                 |      - |   636.00 B |     636 |
+| asset_work/target/assetdb/ui/title/title_logo_text_or.png                                |      - |   816.00 B |     816 |
+| asset_work/target/assetdb/ui/title/title_logo_text_our.png                               |      - |   968.00 B |     968 |
+| asset_work/target/assetdb/ui/title/title_weapons_atlas.json                              |  4,005 |  60.33 KiB |  61,778 |
+| asset_work/target/assetdb/ui/title/title_weapons_atlas.png                               |      - |   1.27 KiB |   1,301 |
+| asset_work/target/assetdb/world/img/portal/portal_keycap_pressed.png                     |      - |   644.00 B |     644 |
+| asset_work/target/assetdb/world/img/portal/portal_keycap_unpressed.png                   |      - |   808.00 B |     808 |
+| asset_work/target/assetdb/world/lobby/lobby_tileset.json                                 |    239 |   3.56 KiB |   3,644 |
+| asset_work/target/assetdb/world/lobby/lobby_tileset.png                                  |      - |   347.00 B |     347 |
+| asset_work/target/assetdb/world/object/portal_keycap_master.json                         |    179 |   5.17 KiB |   5,298 |
+| asset_work/target/assetdb/world/stage/room_tileset.json                                  |    337 |   4.96 KiB |   5,083 |
+| asset_work/target/assetdb/world/stage/room_tileset.png                                   |      - |   419.00 B |     419 |
+| asset_work/target/oracle/reference/raster_ref.mjs                                        |    514 |  20.83 KiB |  21,333 |
+| asset_work/target/oracle/tests/fixtures/png_cases.json                                   |     32 |   1.42 KiB |   1,453 |
+| asset_work/target/oracle/tests/fixtures/raster_golden.json                               |  9,481 | 314.81 KiB | 322,364 |
+| asset_work/target/oracle/tests/fixtures/sample_raster_only.json                          |     71 |   1.85 KiB |   1,896 |
+| asset_work/target/oracle/tests/fixtures/validation_cases.json                            |  1,631 |  45.91 KiB |  47,010 |
+| asset_work/target/oracle/tools/gen_fixtures.py                                           |    465 |  25.00 KiB |  25,601 |
+| asset_work/target/oracle/tools/gen_png_cases.py                                          |     57 |   2.93 KiB |   3,005 |
+| asset_work/target/oracle/tools/gen_validation_cases.py                                   |     61 |   3.49 KiB |   3,573 |
+| asset_work/target/tests/fixtures/player_arc/base_chassis_gem__shadow_legacy.png          |      - |   325.00 B |     325 |
+| asset_work/target/tests/fixtures/player_arc/base_chassis_trackball__body_legacy.png      |      - |   759.00 B |     759 |
+| asset_work/target/tests/fixtures/player_arc/base_chassis_trackball__shadow_legacy.png    |      - |   325.00 B |     325 |
+| asset_work/target/tests/fixtures/player_arc/emoticons_cyber_neon__face_normal_legacy.png |      - |   229.00 B |     229 |
+| asset_work/target/tests/fixtures/player_arc/manifest.json                                |     51 |   1.24 KiB |   1,274 |
+| asset_work/target/tests/fixtures/player_arc/player_mouse__shadow_legacy.png              |      - |   311.00 B |     311 |
+| asset_work/target/tests/fixtures/player_arc/player_mouse__visor_left_legacy.png          |      - |   403.00 B |     403 |
+| asset_work/target/tests/fixtures/player_arc/player_mouse__visor_right_legacy.png         |      - |   407.00 B |     407 |
+| asset_work/target/tests/fixtures/shockwave_ring_recipe.json                              |  8,433 | 182.89 KiB | 187,279 |
+| asset_work/target/tests/fixtures/title_logo_text_d_recipe.json                           |     31 |   405.00 B |     405 |
+| asset_work/target/tests/fixtures/title_logo_text_or_recipe.json                          |     31 |   407.00 B |     407 |
+| asset_work/target/tests/fixtures/title_logo_text_our_recipe.json                         |     31 |   409.00 B |     409 |
+| asset_work/tidy/ACTIVE_ASSET_LIST.md                                                     |    187 |  14.10 KiB |  14,439 |
+| asset_work/tidy/RECIPE_MAP.md                                                            |     79 |   5.87 KiB |   6,007 |
+| asset_work/tidy/gallery.html                                                             |    143 |  14.88 KiB |  15,234 |
+| asset_work/tidy/mapping/U11.txt                                                          |      6 |   229.00 B |     229 |
+| asset_work/tidy/mapping/U12.txt                                                          |      6 |   231.00 B |     231 |
+| asset_work/tidy/mapping/U13.txt                                                          |      6 |   230.00 B |     230 |
+| asset_work/tidy/mapping/U14.txt                                                          |      7 |   350.00 B |     350 |
+| asset_work/tidy/mapping/U15.txt                                                          |      7 |   311.00 B |     311 |
+| asset_work/tidy/mapping/U16.txt                                                          |      6 |   285.00 B |     285 |
+| asset_work/tidy/mapping/U17.txt                                                          |      6 |   291.00 B |     291 |
+| asset_work/tidy/mapping/U18.txt                                                          |      6 |   301.00 B |     301 |
+| asset_work/tidy/mapping/U19.txt                                                          |      6 |   235.00 B |     235 |
+| asset_work/tidy/mapping/U20.txt                                                          |      6 |   259.00 B |     259 |
+| asset_work/tidy/mapping/U21.txt                                                          |      6 |   199.00 B |     199 |
+| asset_work/tidy/mapping/U22.txt                                                          |      6 |   190.00 B |     190 |
+| asset_work/tidy/mapping/U23.txt                                                          |      6 |   195.00 B |     195 |
+| asset_work/tidy/mapping/U24.txt                                                          |      6 |   196.00 B |     196 |
+| asset_work/tidy/mapping/U25.txt                                                          |      6 |   199.00 B |     199 |
+| asset_work/tidy/mapping/U26.txt                                                          |      6 |   206.00 B |     206 |
+| asset_work/tidy/mapping/U27.txt                                                          |      6 |   207.00 B |     207 |
+| asset_work/tidy/mapping/U28.txt                                                          |      6 |   246.00 B |     246 |
+| asset_work/tidy/mapping/U29.txt                                                          |      6 |   216.00 B |     216 |
+| asset_work/tidy/mapping/U30.txt                                                          |      7 |   325.00 B |     325 |
+| asset_work/tidy/mapping/U31.txt                                                          |      7 |   310.00 B |     310 |
+| asset_work/tidy/mapping/U32.txt                                                          |      7 |   322.00 B |     322 |
+| asset_work/tidy/mapping/U33.txt                                                          |      7 |   326.00 B |     326 |
+| asset_work/tidy/mapping/U34.txt                                                          |      7 |   289.00 B |     289 |
+| asset_work/tidy/mapping/U35.txt                                                          |      6 |   366.00 B |     366 |
+| asset_work/tidy/mapping/U36.txt                                                          |      6 |   240.00 B |     240 |
+| asset_work/tidy/mapping/U37.txt                                                          |      6 |   239.00 B |     239 |
+| asset_work/tidy/mapping/U38.txt                                                          |      6 |   228.00 B |     228 |
+| asset_work/tidy/mapping/U39.txt                                                          |      6 |   238.00 B |     238 |
+| asset_work/tidy/mapping/U40.txt                                                          |      6 |   238.00 B |     238 |
+| asset_work/tidy/mapping/U41.txt                                                          |      6 |   286.00 B |     286 |
+| asset_work/tidy/mapping/U42.txt                                                          |      6 |   227.00 B |     227 |
+| asset_work/tidy/mapping/U43.txt                                                          |      6 |   226.00 B |     226 |
+| asset_work/tidy/mapping/U44.txt                                                          |      6 |   225.00 B |     225 |
+| asset_work/tidy/numbered/01_enemy.json                                                   |     58 |   1.46 KiB |   1,490 |
+| asset_work/tidy/numbered/02_player.json                                                  |     41 |   1.00 KiB |   1,027 |
+| asset_work/tidy/numbered/03_weapon.json                                                  |     32 |   714.00 B |     714 |
+| asset_work/tidy/numbered/04_modular_weapons_manifest.json                                |     65 |  1021.00 B |   1,021 |
+| asset_work/tidy/numbered/05_layouts.json                                                 |    144 |   2.14 KiB |   2,196 |
+| asset_work/tidy/numbered/06_encounter_pools.json                                         |     56 |  1011.00 B |   1,011 |
+| asset_work/tidy/numbered/07_room_profiles.json                                           |    300 |   7.00 KiB |   7,169 |
+| asset_work/tidy/numbered/08_room_archetypes.json                                         |     63 |   1.16 KiB |   1,185 |
+| asset_work/tidy/numbered/09_ui_panels.json                                               |     86 |   1.76 KiB |   1,798 |
+| asset_work/tidy/numbered/10_pantograph_keycap_profile.json                               |     87 |   2.79 KiB |   2,862 |
+| asset_work/tidy/numbered/11_kb_z_amber_t1.png                                            |      - |   6.08 KiB |   6,223 |
+| asset_work/tidy/numbered/12_kb_f_crimson_t2.png                                          |      - |   6.30 KiB |   6,455 |
+| asset_work/tidy/numbered/13_kb_q_cobalt_t3.png                                           |      - |   6.32 KiB |   6,469 |
+| asset_work/tidy/numbered/14_kb_b_obsidian_t4.png                                         |      - |   6.08 KiB |   6,223 |
+| asset_work/tidy/numbered/15_keycap_debris.png                                            |      - |   508.00 B |     508 |
+| asset_work/tidy/numbered/16_mouse_hero_sheet.png                                         |      - |   5.28 KiB |   5,402 |
+| asset_work/tidy/numbered/17_hero_classic_gem_sheet.png                                   |      - |   5.28 KiB |   5,402 |
+| asset_work/tidy/numbered/18_hero_trackball_cyber_sheet.png                               |      - |   5.12 KiB |   5,247 |
+| asset_work/tidy/numbered/19_shockwave_ring.png                                           |      - |  20.37 KiB |  20,857 |
+| asset_work/tidy/numbered/20_sword_albedo.png                                             |      - |   580.00 B |     580 |
+| asset_work/tidy/numbered/21_sword_mask.png                                               |      - |   288.00 B |     288 |
+| asset_work/tidy/numbered/22_bow_albedo.png                                               |      - |   919.00 B |     919 |
+| asset_work/tidy/numbered/23_bow_mask.png                                                 |      - |   480.00 B |     480 |
+| asset_work/tidy/numbered/24_spear_albedo.png                                             |      - |   625.00 B |     625 |
+| asset_work/tidy/numbered/25_spear_mask.png                                               |      - |   363.00 B |     363 |
+| asset_work/tidy/numbered/26_room_tileset.png                                             |      - |   419.00 B |     419 |
+| asset_work/tidy/numbered/27_lobby_tileset.png                                            |      - |   347.00 B |     347 |
+| asset_work/tidy/numbered/28_portal_keycap_unpressed.png                                  |      - |   808.00 B |     808 |
+| asset_work/tidy/numbered/29_portal_keycap_pressed.png                                    |      - |   644.00 B |     644 |
+| asset_work/tidy/numbered/30_keycap_sheet.png                                             |      - |   3.05 KiB |   3,120 |
+| asset_work/tidy/numbered/31_fused_keycap_9slice.png                                      |      - |  1008.00 B |   1,008 |
+| asset_work/tidy/numbered/32_fused_keycap_hover_9slice.png                                |      - |   996.00 B |     996 |
+| asset_work/tidy/numbered/33_fused_keycap_pressed_9slice.png                              |      - |   1.00 KiB |   1,024 |
+| asset_work/tidy/numbered/34_pantograph_sheet.png                                         |      - |   3.05 KiB |   3,120 |
+| asset_work/tidy/numbered/35_hud_icons_128_atlas.png                                      |      - |   7.48 KiB |   7,660 |
+| asset_work/tidy/numbered/36_keycap_screen_9slice.png                                     |      - |   596.00 B |     596 |
+| asset_work/tidy/numbered/37_scanline_tile_fine.png                                       |      - |   118.00 B |     118 |
+| asset_work/tidy/numbered/38_keyboard_plate_block.png                                     |      - |   1.17 KiB |   1,203 |
+| asset_work/tidy/numbered/39_floating_visor_window.png                                    |      - |   1.24 KiB |   1,269 |
+| asset_work/tidy/numbered/40_title_weapons_atlas.png                                      |      - |   1.27 KiB |   1,301 |
+| asset_work/tidy/numbered/41_title_diorama_sword_body.png                                 |      - |   3.75 KiB |   3,840 |
+| asset_work/tidy/numbered/42_title_logo_text_our.png                                      |      - |   968.00 B |     968 |
+| asset_work/tidy/numbered/43_title_logo_text_or.png                                       |      - |   816.00 B |     816 |
+| asset_work/tidy/numbered/44_title_logo_text_d.png                                        |      - |   636.00 B |     636 |
+| asset_work/tidy/target/U11_png_kb_z_amber_t1.png                                         |      - |   6.08 KiB |   6,223 |
+| asset_work/tidy/target/U11_recipe_C-001.json                                             |    249 |   5.68 KiB |   5,816 |
+| asset_work/tidy/target/U12_png_kb_f_crimson_t2.png                                       |      - |   6.30 KiB |   6,455 |
+| asset_work/tidy/target/U12_recipe_T-002.json                                             |    245 |   5.90 KiB |   6,044 |
+| asset_work/tidy/target/U13_png_kb_q_cobalt_t3.png                                        |      - |   6.32 KiB |   6,469 |
+| asset_work/tidy/target/U13_recipe_R-003.json                                             |    253 |   5.61 KiB |   5,748 |
+| asset_work/tidy/target/U14_png_kb_b_obsidian_t4.png                                      |      - |   6.08 KiB |   6,223 |
+| asset_work/tidy/target/U14_recipe_C-001.json                                             |    249 |   5.68 KiB |   5,816 |
+| asset_work/tidy/target/U15_note_UNWIRED.txt                                              |      5 |   298.00 B |     298 |
+| asset_work/tidy/target/U15_png_keycap_debris.png                                         |      - |   508.00 B |     508 |
+| asset_work/tidy/target/U15_recipe_base_debris.json                                       |    106 |   1.57 KiB |   1,611 |
+| asset_work/tidy/target/U16_png_mouse_hero_sheet.png                                      |      - |   5.28 KiB |   5,402 |
+| asset_work/tidy/target/U16_recipe_base_chassis_gem.json                                  |    101 |   2.81 KiB |   2,877 |
+| asset_work/tidy/target/U16_recipe_base_visor_shield.json                                 |    130 |   3.72 KiB |   3,810 |
+| asset_work/tidy/target/U16_recipe_emoticons_cyber_neon.json                              |     67 |   1.53 KiB |   1,571 |
+| asset_work/tidy/target/U17_png_hero_classic_gem_sheet.png                                |      - |   5.28 KiB |   5,402 |
+| asset_work/tidy/target/U17_recipe_base_chassis_gem.json                                  |    101 |   2.81 KiB |   2,877 |
+| asset_work/tidy/target/U17_recipe_base_visor_shield.json                                 |    130 |   3.72 KiB |   3,810 |
+| asset_work/tidy/target/U17_recipe_emoticons_cyber_neon.json                              |     67 |   1.53 KiB |   1,571 |
+| asset_work/tidy/target/U18_png_hero_trackball_cyber_sheet.png                            |      - |   5.12 KiB |   5,247 |
+| asset_work/tidy/target/U18_recipe_base_chassis_trackball.json                            |     62 |   1.43 KiB |   1,465 |
+| asset_work/tidy/target/U18_recipe_base_visor_shield.json                                 |    130 |   3.72 KiB |   3,810 |
+| asset_work/tidy/target/U18_recipe_emoticons_cyber_neon.json                              |     67 |   1.53 KiB |   1,571 |
+| asset_work/tidy/target/U19_note_CODE_ONLY.txt                                            |      4 |   253.00 B |     253 |
+| asset_work/tidy/target/U19_png_shockwave_ring.png                                        |      - |  20.37 KiB |  20,857 |
+| asset_work/tidy/target/U20_png_sword_albedo.png                                          |      - |   580.00 B |     580 |
+| asset_work/tidy/target/U20_recipe_weapon_sword.json                                      |     67 |   1.42 KiB |   1,452 |
+| asset_work/tidy/target/U21_png_sword_mask.png                                            |      - |   288.00 B |     288 |
+| asset_work/tidy/target/U21_recipe_weapon_sword.json                                      |     67 |   1.42 KiB |   1,452 |
+| asset_work/tidy/target/U22_png_bow_albedo.png                                            |      - |   919.00 B |     919 |
+| asset_work/tidy/target/U22_recipe_weapon_bow.json                                        |     75 |   1.67 KiB |   1,711 |
+| asset_work/tidy/target/U23_png_bow_mask.png                                              |      - |   480.00 B |     480 |
+| asset_work/tidy/target/U23_recipe_weapon_bow.json                                        |     75 |   1.67 KiB |   1,711 |
+| asset_work/tidy/target/U24_png_spear_albedo.png                                          |      - |   625.00 B |     625 |
+| asset_work/tidy/target/U24_recipe_weapon_spear.json                                      |     65 |   1.34 KiB |   1,368 |
+| asset_work/tidy/target/U25_png_spear_mask.png                                            |      - |   363.00 B |     363 |
+| asset_work/tidy/target/U25_recipe_weapon_spear.json                                      |     65 |   1.34 KiB |   1,368 |
+| asset_work/tidy/target/U26_note_TRES_EXTRACTED.txt                                       |      4 |   223.00 B |     223 |
+| asset_work/tidy/target/U26_png_room_tileset.png                                          |      - |   419.00 B |     419 |
+| asset_work/tidy/target/U27_note_TRES_EXTRACTED.txt                                       |      4 |   223.00 B |     223 |
+| asset_work/tidy/target/U27_png_lobby_tileset.png                                         |      - |   347.00 B |     347 |
+| asset_work/tidy/target/U28_png_portal_keycap_unpressed.png                               |      - |   808.00 B |     808 |
+| asset_work/tidy/target/U28_recipe_portal_keycap_master.json                              |    179 |   5.17 KiB |   5,298 |
+| asset_work/tidy/target/U29_png_portal_keycap_pressed.png                                 |      - |   644.00 B |     644 |
+| asset_work/tidy/target/U29_recipe_portal_keycap_master.json                              |    179 |   5.17 KiB |   5,298 |
+| asset_work/tidy/target/U30_png_keycap_sheet.png                                          |      - |   3.05 KiB |   3,120 |
+| asset_work/tidy/target/U30_recipe_pantograph_keycap_profile.json                         |     87 |   2.79 KiB |   2,862 |
+| asset_work/tidy/target/U31_png_fused_keycap_9slice.png                                   |      - |  1008.00 B |   1,008 |
+| asset_work/tidy/target/U31_recipe_pantograph_keycap_profile.json                         |     87 |   2.79 KiB |   2,862 |
+| asset_work/tidy/target/U32_png_fused_keycap_hover_9slice.png                             |      - |   996.00 B |     996 |
+| asset_work/tidy/target/U32_recipe_pantograph_keycap_profile.json                         |     87 |   2.79 KiB |   2,862 |
+| asset_work/tidy/target/U33_png_fused_keycap_pressed_9slice.png                           |      - |   1.00 KiB |   1,024 |
+| asset_work/tidy/target/U33_recipe_pantograph_keycap_profile.json                         |     87 |   2.79 KiB |   2,862 |
+| asset_work/tidy/target/U34_png_pantograph_sheet.png                                      |      - |   3.05 KiB |   3,120 |
+| asset_work/tidy/target/U34_recipe_pantograph_keycap_profile.json                         |     87 |   2.79 KiB |   2,862 |
+| asset_work/tidy/target/U35_png_hud_icons_128_atlas.png                                   |      - |   7.48 KiB |   7,660 |
+| asset_work/tidy/target/U35_recipe_book.json                                              |     57 |   1.26 KiB |   1,293 |
+| asset_work/tidy/target/U35_recipe_chest.json                                             |     57 |   1.25 KiB |   1,275 |
+| asset_work/tidy/target/U35_recipe_cross_mount.json                                       |     41 |   944.00 B |     944 |
+| asset_work/tidy/target/U35_recipe_diamond_gem.json                                       |     66 |   1.62 KiB |   1,660 |
+| asset_work/tidy/target/U35_recipe_gear.json                                              |    184 |   3.82 KiB |   3,915 |
+| asset_work/tidy/target/U35_recipe_heart.json                                             |     22 |   624.00 B |     624 |
+| asset_work/tidy/target/U35_recipe_kill_skull.json                                        |     54 |   1.23 KiB |   1,256 |
+| asset_work/tidy/target/U35_recipe_lightning.json                                         |     22 |   582.00 B |     582 |
+| asset_work/tidy/target/U35_recipe_shield.json                                            |     22 |   563.00 B |     563 |
+| asset_work/tidy/target/U35_recipe_speaker.json                                           |     56 |   1.27 KiB |   1,296 |
+| asset_work/tidy/target/U35_recipe_stopwatch.json                                         |     48 |   1.07 KiB |   1,093 |
+| asset_work/tidy/target/U36_png_keycap_screen_9slice.png                                  |      - |   596.00 B |     596 |
+| asset_work/tidy/target/U36_recipe_hud_composite_surfaces.json                            |    346 |   7.86 KiB |   8,049 |
+| asset_work/tidy/target/U37_note_NO_MANIFEST.txt                                          |      4 |   292.00 B |     292 |
+| asset_work/tidy/target/U37_png_scanline_tile_fine.png                                    |      - |   118.00 B |     118 |
+| asset_work/tidy/target/U38_png_keyboard_plate_block.png                                  |      - |   1.17 KiB |   1,203 |
+| asset_work/tidy/target/U38_recipe_hud_composite_surfaces.json                            |    346 |   7.86 KiB |   8,049 |
+| asset_work/tidy/target/U39_png_floating_visor_window.png                                 |      - |   1.24 KiB |   1,269 |
+| asset_work/tidy/target/U39_recipe_hud_composite_surfaces.json                            |    346 |   7.86 KiB |   8,049 |
+| asset_work/tidy/target/U40_note_NO_PROFILE.txt                                           |      5 |   321.00 B |     321 |
+| asset_work/tidy/target/U40_png_title_weapons_atlas.png                                   |      - |   1.27 KiB |   1,301 |
+| asset_work/tidy/target/U41_png_title_diorama_sword_body.png                              |      - |   3.75 KiB |   3,840 |
+| asset_work/tidy/target/U41_recipe_title_diorama_sword_body.json                          |     64 |   4.49 KiB |   4,602 |
+| asset_work/tidy/target/U42_note_FONT_ONLY.txt                                            |      4 |   237.00 B |     237 |
+| asset_work/tidy/target/U42_png_title_logo_text_our.png                                   |      - |   968.00 B |     968 |
+| asset_work/tidy/target/U43_note_FONT_ONLY.txt                                            |      4 |   237.00 B |     237 |
+| asset_work/tidy/target/U43_png_title_logo_text_or.png                                    |      - |   816.00 B |     816 |
+| asset_work/tidy/target/U44_note_FONT_ONLY.txt                                            |      4 |   237.00 B |     237 |
+| asset_work/tidy/target/U44_png_title_logo_text_d.png                                     |      - |   636.00 B |     636 |
+| asset_work/tidy/tools/atlas.py                                                           |     28 |   1.45 KiB |   1,488 |
+| asset_work/tidy/tools/canvas.py                                                          |    392 |  16.66 KiB |  17,057 |
+| asset_work/tidy/tools/drawing.py                                                         |    142 |   5.71 KiB |   5,843 |
+| asset_work/tidy/tools/engine.py                                                          |    810 |  42.93 KiB |  43,965 |
+| asset_work/tidy/tools/gen_craft_weapons.py                                               |    122 |   5.58 KiB |   5,716 |
+| asset_work/tidy/tools/gen_enemy_assets.py                                                |    226 |   9.01 KiB |   9,228 |
+| asset_work/tidy/tools/gen_hud_icons_128.py                                               |    116 |   4.57 KiB |   4,678 |
+| asset_work/tidy/tools/gen_hud_surfaces.py                                                |    146 |   6.82 KiB |   6,982 |
+| asset_work/tidy/tools/gen_keycap_assets.py                                               |    152 |   6.18 KiB |   6,324 |
+| asset_work/tidy/tools/gen_modular_weapons.py                                             |    115 |   5.55 KiB |   5,684 |
+| asset_work/tidy/tools/gen_pantograph_atlas.py                                            |    135 |   7.14 KiB |   7,316 |
+| asset_work/tidy/tools/gen_player_assets.py                                               |    208 |   8.47 KiB |   8,676 |
+| asset_work/tidy/tools/gen_portal_assets.py                                               |    150 |   5.70 KiB |   5,834 |
+| asset_work/tidy/tools/gen_speedster_assets.py                                            |     77 |   2.46 KiB |   2,522 |
+| asset_work/tidy/tools/gen_title_assets.py                                                |    282 |  11.93 KiB |  12,218 |
+| asset_work/tidy/tools/gen_ui_surfaces.py                                                 |    210 |   9.10 KiB |   9,319 |
+| asset_work/tidy/tools/gen_weapon_visuals.py                                              |     87 |   3.48 KiB |   3,568 |
+| asset_work/tidy/tools/geometry.py                                                        |    235 |   9.40 KiB |   9,630 |
+| asset_work/tidy/tools/masks.py                                                           |     85 |   3.64 KiB |   3,725 |
+| asset_work/tidy/tools/migrate_assets.py                                                  |    101 |   4.70 KiB |   4,815 |
+| asset_work/tidy/tools/nine_slice.py                                                      |     37 |   1.49 KiB |   1,526 |
+| asset_work/tidy/tools/paths.py                                                           |    157 |   5.77 KiB |   5,906 |
+| asset_work/tidy/unused/U01_debris_1.png                                                  |      - |   508.00 B |     508 |
+| asset_work/tidy/unused/U04_enemy_keybot_b001_sheet.png                                   |      - |   6.08 KiB |   6,223 |
+| asset_work/tidy/unused/U05_enemy_keybot_c001_sheet.png                                   |      - |   6.08 KiB |   6,223 |
+| asset_work/tidy/unused/U06_enemy_keybot_r003_sheet.png                                   |      - |   6.32 KiB |   6,469 |
+| asset_work/tidy/unused/U07_enemy_keybot_t002_sheet.png                                   |      - |   6.30 KiB |   6,455 |
+| asset_work/tidy/unused/U08_hero_classic_gem.png                                          |      - |   5.28 KiB |   5,402 |
+| asset_work/tidy/unused/U09_hero_trackball_cyber.png                                      |      - |   5.12 KiB |   5,247 |
+| asset_work/tidy/unused/U10_mouse_hero.png                                                |      - |   5.28 KiB |   5,402 |
+| asset_work/tidy/unused/U11_bow.png                                                       |      - |   919.00 B |     919 |
+| asset_work/tidy/unused/U12_spear.png                                                     |      - |   625.00 B |     625 |
+| asset_work/tidy/unused/U13_sword.png                                                     |      - |   580.00 B |     580 |
+| asset_work/tidy/unused/U14_chapter_title_well.png                                        |      - |   299.00 B |     299 |
+| asset_work/tidy/unused/U15_chip_particle_atlas.png                                       |      - |   234.00 B |     234 |
+| asset_work/tidy/unused/U17_switch_socket_well.png                                        |      - |   494.00 B |     494 |
+| docs/README.md                                                                           |    117 |   6.72 KiB |   6,885 |
+| docs/compare.html                                                                        |    818 |  22.47 KiB |  23,013 |
+| docs/contract.md                                                                         |    155 |   9.02 KiB |   9,238 |
+| docs/core.md                                                                             |    215 |  18.18 KiB |  18,618 |
+| docs/features.md                                                                         |    243 |  15.55 KiB |  15,928 |
+| docs/io.md                                                                               |    149 |  20.56 KiB |  21,054 |
+| docs/model.md                                                                            |    137 |  13.89 KiB |  14,228 |
+| docs/render.md                                                                           |    139 |  10.65 KiB |  10,908 |
+| docs/tools.md                                                                            |    165 |  14.06 KiB |  14,398 |
+| docs/ui-grouping-map.md                                                                  |    143 |   7.99 KiB |   8,177 |
+| docs/ui.md                                                                               |    190 |  21.80 KiB |  22,327 |
+| index.html                                                                               |    221 |  13.18 KiB |  13,501 |
+| package.json                                                                             |      1 |   266.00 B |     266 |
+| reference/png_ref.mjs                                                                    |     58 |   3.57 KiB |   3,652 |
+| reference/raster_ref.mjs                                                                 |    514 |  20.83 KiB |  21,333 |
+| reference/view_ref.mjs                                                                   |     27 |   2.05 KiB |   2,102 |
+| report.md                                                                                |    409 |  20.01 KiB |  20,486 |
+| run.py                                                                                   |    121 |   4.58 KiB |   4,695 |
+| schema/document_schema.v2.json                                                           |     23 |   991.00 B |     991 |
+| schema/layer_schema.v2.json                                                              |    122 |   5.99 KiB |   6,131 |
+| schema/sample_document.json                                                              |    126 |   3.29 KiB |   3,367 |
+| schema/schema_selfcheck.py                                                               |    236 |  11.63 KiB |  11,912 |
+| split_serialize.py                                                                       |    132 |   6.70 KiB |   6,857 |
+| src/core/blend.js                                                                        |     81 |   3.87 KiB |   3,959 |
+| src/core/chunkstore.js                                                                   |    242 |   6.78 KiB |   6,945 |
+| src/core/constants.js                                                                    |     37 |   1.34 KiB |   1,374 |
+| src/core/errors.js                                                                       |     34 |   1.09 KiB |   1,119 |
+| src/core/events.js                                                                       |     23 |   583.00 B |     583 |
+| src/core/pixel.js                                                                        |     55 |   1.63 KiB |   1,669 |
+| src/core/raster/arc.js                                                                   |    117 |   4.92 KiB |   5,038 |
+| src/core/raster/atlas.js                                                                 |     99 |   4.02 KiB |   4,114 |
+| src/core/raster/composite_ops.js                                                         |    294 |  11.76 KiB |  12,038 |
+| src/core/raster/gradient.js                                                              |     66 |   2.83 KiB |   2,893 |
+| src/core/raster/polygon.js                                                               |    301 |  12.57 KiB |  12,875 |
+| src/core/raster/raster_brush.js                                                          |     29 |   1.20 KiB |   1,225 |
+| src/core/raster/raster_masks.js                                                          |    106 |   3.79 KiB |   3,877 |
+| src/core/raster/raster_snap.js                                                           |     97 |   3.54 KiB |   3,628 |
+| src/core/raster/segment.js                                                               |     58 |   2.42 KiB |   2,481 |
+| src/core/raster/shape_raster.js                                                          |     92 |   3.95 KiB |   4,043 |
+| src/core/raster/text_mask.js                                                             |    102 |   4.40 KiB |   4,506 |
+| src/features/color/color_actions.js                                                      |     22 |   931.00 B |     931 |
+| src/features/color/color_events.js                                                       |     33 |   1.32 KiB |   1,349 |
+| src/features/color/color_palette.js                                                      |     40 |   1.69 KiB |   1,732 |
+| src/features/color/color_recent.js                                                       |     55 |   1.82 KiB |   1,866 |
+| src/features/color/color_slots.js                                                        |     30 |   908.00 B |     908 |
+| src/features/color/panel_color.js                                                        |    144 |   5.01 KiB |   5,127 |
+| src/features/color/panel_color_fields.js                                                 |    148 |   5.83 KiB |   5,972 |
+| src/features/color/panel_color_wheel.js                                                  |    296 |  10.46 KiB |  10,713 |
+| src/features/document/document.js                                                        |    242 |   8.28 KiB |   8,482 |
+| src/features/document/history.js                                                         |    156 |   3.82 KiB |   3,913 |
+| src/features/document/session.js                                                         |    180 |   5.30 KiB |   5,428 |
+| src/features/document/settings_validator.js                                              |     62 |   2.22 KiB |   2,275 |
+| src/features/eyedropper/eyedropper.js                                                    |    142 |   4.58 KiB |   4,692 |
+| src/features/fill/fill.js                                                                |     82 |   2.53 KiB |   2,592 |
+| src/features/hand/hand.js                                                                |     11 |   177.00 B |     177 |
+| src/features/layers/commands.js                                                          |    169 |   4.42 KiB |   4,523 |
+| src/features/layers/commands_pixel.js                                                    |    189 |   6.96 KiB |   7,131 |
+| src/features/layers/edit_session.js                                                      |     60 |   2.13 KiB |   2,181 |
+| src/features/layers/layer.js                                                             |     76 |   2.73 KiB |   2,798 |
+| src/features/layers/layer_actions.js                                                     |     26 |   776.00 B |     776 |
+| src/features/layers/layer_operations.js                                                  |    131 |   4.50 KiB |   4,610 |
+| src/features/layers/panel_layers.js                                                      |    297 |  10.89 KiB |  11,155 |
+| src/features/pen/brush.js                                                                |     61 |   1.70 KiB |   1,743 |
+| src/features/pen/brush_actions.js                                                        |     10 |   516.00 B |     516 |
+| src/features/pen/panel_brush.js                                                          |    188 |   7.17 KiB |   7,338 |
+| src/features/pen/pen.js                                                                  |    278 |   8.87 KiB |   9,082 |
+| src/features/shape/panel_shape_options.js                                                |    158 |   6.26 KiB |   6,413 |
+| src/features/shape/shape.js                                                              |    287 |  10.01 KiB |  10,249 |
+| src/features/shape/shape_geom.js                                                         |    209 |   9.04 KiB |   9,254 |
+| src/features/shape/shape_keys.js                                                         |     59 |   2.31 KiB |   2,370 |
+| src/features/shape/shape_overlay.js                                                      |    121 |   5.38 KiB |   5,509 |
+| src/features/shape/shape_pending.js                                                      |     74 |   2.76 KiB |   2,830 |
+| src/features/shape/shape_render.js                                                       |    124 |   5.51 KiB |   5,645 |
+| src/features/viewport/panel_view_options.js                                              |     71 |   2.50 KiB |   2,561 |
+| src/features/viewport/view.js                                                            |    100 |   3.36 KiB |   3,436 |
+| src/features/viewport/view_actions.js                                                    |     24 |   1.06 KiB |   1,090 |
+| src/features/viewport/view_store.js                                                      |     72 |   1.94 KiB |   1,988 |
+| src/io/base64.js                                                                         |     40 |   1.52 KiB |   1,555 |
+| src/io/export_png.js                                                                     |    112 |   4.20 KiB |   4,303 |
+| src/io/file_io.js                                                                        |    104 |   3.58 KiB |   3,669 |
+| src/io/idb_loader.js                                                                     |     80 |   3.36 KiB |   3,445 |
+| src/io/idb_record_builder.js                                                             |     48 |   1.53 KiB |   1,567 |
+| src/io/idb_scheduler.js                                                                  |     48 |   1.12 KiB |   1,143 |
+| src/io/idb_schema.js                                                                     |     37 |   1.20 KiB |   1,225 |
+| src/io/png.js                                                                            |    147 |   5.77 KiB |   5,904 |
+| src/io/serialize.js                                                                      |    249 |   9.24 KiB |   9,464 |
+| src/io/serialize_recipe.js                                                               |    178 |   9.43 KiB |   9,659 |
+| src/io/serialize_vector.js                                                               |    166 |   6.73 KiB |   6,890 |
+| src/io/store_idb.js                                                                      |    260 |   9.20 KiB |   9,419 |
+| src/io/validate.js                                                                       |    102 |   5.08 KiB |   5,205 |
+| src/io/validate_semantic.js                                                              |     41 |   1.53 KiB |   1,568 |
+| src/io/validate_structural.js                                                            |    166 |   7.49 KiB |   7,665 |
+| src/render/background.js                                                                 |     50 |   1.95 KiB |   1,998 |
+| src/render/composite.js                                                                  |    113 |   3.69 KiB |   3,778 |
+| src/render/grid.js                                                                       |    134 |   5.87 KiB |   6,009 |
+| src/render/renderer.js                                                                   |    224 |   7.62 KiB |   7,800 |
+| src/render/renderer_composite.js                                                         |     62 |   1.82 KiB |   1,861 |
+| src/render/renderer_display.js                                                           |     54 |   2.11 KiB |   2,159 |
+| src/tools/cursor_state.js                                                                |     58 |   2.19 KiB |   2,238 |
+| src/tools/input_controller.js                                                            |    131 |   4.18 KiB |   4,282 |
+| src/tools/keyboard_bindings.js                                                           |     91 |   2.43 KiB |   2,488 |
+| src/tools/pointer_bindings.js                                                            |    185 |   6.40 KiB |   6,558 |
+| src/tools/pointer_event.js                                                               |     60 |   2.17 KiB |   2,218 |
+| src/tools/tool_base.js                                                                   |     42 |   598.00 B |     598 |
+| src/tools/tool_manager.js                                                                |    135 |   2.99 KiB |   3,064 |
+| src/tools/wheel_accumulator.js                                                           |     52 |   1.79 KiB |   1,832 |
+| src/ui/actions/action_map.js                                                             |     39 |   2.51 KiB |   2,567 |
+| src/ui/actions/edit_actions.js                                                           |     35 |   1.43 KiB |   1,469 |
+| src/ui/actions/file_actions.js                                                           |    185 |   6.92 KiB |   7,087 |
+| src/ui/app.js                                                                            |    177 |   7.82 KiB |   8,010 |
+| src/ui/dialogs/dialog_core.js                                                            |    180 |   6.34 KiB |   6,489 |
+| src/ui/dialogs/dialog_new_doc.js                                                         |     97 |   4.25 KiB |   4,352 |
+| src/ui/dialogs/dialog_resize.js                                                          |     43 |   1.97 KiB |   2,017 |
+| src/ui/menubar/history_buttons.js                                                        |     53 |   1.93 KiB |   1,973 |
+| src/ui/menubar/menubar.js                                                                |     75 |   2.22 KiB |   2,272 |
+| src/ui/menubar/menubar_wiring.js                                                         |     18 |   801.00 B |     801 |
+| src/ui/optionbar/panel_options.js                                                        |    109 |   4.24 KiB |   4,343 |
+| src/ui/shared/collapsible_sections.js                                                    |     76 |   2.87 KiB |   2,943 |
+| src/ui/shared/dialogs.js                                                                 |      4 |   365.00 B |     365 |
+| src/ui/shared/dom.js                                                                     |     58 |   2.12 KiB |   2,169 |
+| src/ui/shared/panel_refresh.js                                                           |     17 |   867.00 B |     867 |
+| src/ui/shared/storage.js                                                                 |     57 |   1.84 KiB |   1,882 |
+| src/ui/shared/strings.js                                                                 |    142 |   4.42 KiB |   4,521 |
+| src/ui/shared/toast.js                                                                   |     13 |   512.00 B |     512 |
+| src/ui/shared/tooltip.js                                                                 |    193 |   6.40 KiB |   6,554 |
+| src/ui/statusbar/statusbar.js                                                            |    158 |   5.35 KiB |   5,474 |
+| src/ui/toolbar/icons.js                                                                  |     45 |   2.25 KiB |   2,308 |
+| src/ui/toolbar/shortcuts.js                                                              |    147 |   6.30 KiB |   6,449 |
+| src/ui/toolbar/toolbar_wiring.js                                                         |     23 |   996.00 B |     996 |
+| style_base.css                                                                           |    428 |  10.02 KiB |  10,263 |
+| style_juicy.css                                                                          |    350 |  12.10 KiB |  12,393 |
+| style_picker.css                                                                         |    102 |   3.47 KiB |   3,554 |
+| style_polish.css                                                                         |    252 |   8.27 KiB |   8,465 |
+| tests/arc.test.mjs                                                                       |    120 |   4.91 KiB |   5,023 |
+| tests/atlas_assemble.test.mjs                                                            |    164 |   7.22 KiB |   7,394 |
+| tests/autosave_blend.test.mjs                                                            |     53 |   2.47 KiB |   2,527 |
+| tests/blend_modes.test.mjs                                                               |    384 |  16.41 KiB |  16,807 |
+| tests/canvas_viewport.test.mjs                                                           |    168 |   8.86 KiB |   9,068 |
+| tests/core_basic.test.mjs                                                                |    243 |   8.30 KiB |   8,496 |
+| tests/e2e_session.test.mjs                                                               |    254 |  10.46 KiB |  10,713 |
+| tests/extract_layers.test.mjs                                                            |     69 |   2.95 KiB |   3,017 |
+| tests/fillet.test.mjs                                                                    |     56 |   1.89 KiB |   1,936 |
+| tests/fixtures/player_arc/base_chassis_gem__shadow_legacy.png                            |      - |   325.00 B |     325 |
+| tests/fixtures/player_arc/base_chassis_gem__shadow_legacy.png.import                     |      - |   1.16 KiB |   1,184 |
+| tests/fixtures/player_arc/base_chassis_trackball__body_legacy.png                        |      - |   759.00 B |     759 |
+| tests/fixtures/player_arc/base_chassis_trackball__body_legacy.png.import                 |      - |   1.17 KiB |   1,196 |
+| tests/fixtures/player_arc/base_chassis_trackball__shadow_legacy.png                      |      - |   325.00 B |     325 |
+| tests/fixtures/player_arc/base_chassis_trackball__shadow_legacy.png.import               |      - |   1.17 KiB |   1,201 |
+| tests/fixtures/player_arc/emoticons_cyber_neon__face_normal_legacy.png                   |      - |   229.00 B |     229 |
+| tests/fixtures/player_arc/emoticons_cyber_neon__face_normal_legacy.png.import            |      - |   1.18 KiB |   1,211 |
+| tests/fixtures/player_arc/manifest.json                                                  |     51 |   1.24 KiB |   1,274 |
+| tests/fixtures/player_arc/player_mouse__shadow_legacy.png                                |      - |   311.00 B |     311 |
+| tests/fixtures/player_arc/player_mouse__shadow_legacy.png.import                         |      - |   1.14 KiB |   1,172 |
+| tests/fixtures/player_arc/player_mouse__visor_left_legacy.png                            |      - |   403.00 B |     403 |
+| tests/fixtures/player_arc/player_mouse__visor_left_legacy.png.import                     |      - |   1.16 KiB |   1,184 |
+| tests/fixtures/player_arc/player_mouse__visor_right_legacy.png                           |      - |   407.00 B |     407 |
+| tests/fixtures/player_arc/player_mouse__visor_right_legacy.png.import                    |      - |   1.16 KiB |   1,186 |
+| tests/fixtures/png_cases.json                                                            |     32 |   1.42 KiB |   1,453 |
+| tests/fixtures/raster_golden.json                                                        |  9,481 | 314.81 KiB | 322,364 |
+| tests/fixtures/sample_raster_only.json                                                   |     71 |   1.85 KiB |   1,896 |
+| tests/fixtures/shockwave_ring_recipe.json                                                |  8,433 | 182.89 KiB | 187,279 |
+| tests/fixtures/title_logo_text_d_recipe.json                                             |     31 |   405.00 B |     405 |
+| tests/fixtures/title_logo_text_or_recipe.json                                            |     31 |   407.00 B |     407 |
+| tests/fixtures/title_logo_text_our_recipe.json                                           |     31 |   409.00 B |     409 |
+| tests/fixtures/validation_cases.json                                                     |  1,631 |  45.91 KiB |  47,010 |
+| tests/gradient.test.mjs                                                                  |     85 |   3.85 KiB |   3,940 |
+| tests/helpers/fake_optionbar.js                                                          |    157 |   5.47 KiB |   5,598 |
+| tests/helpers/model.js                                                                   |     45 |   1.65 KiB |   1,685 |
+| tests/helpers/shape_tool.js                                                              |     69 |   2.58 KiB |   2,637 |
+| tests/helpers/tool_event.js                                                              |     20 |   623.00 B |     623 |
+| tests/helpers/tool_session.js                                                            |     47 |   1.70 KiB |   1,736 |
+| tests/io_basic.test.mjs                                                                  |    251 |  11.21 KiB |  11,476 |
+| tests/model_basic.test.mjs                                                               |    240 |  10.06 KiB |  10,301 |
+| tests/model_history.test.mjs                                                             |    200 |   7.99 KiB |   8,182 |
+| tests/oob_drawing.test.mjs                                                               |    100 |   4.88 KiB |   4,993 |
+| tests/optionbar_sections.test.mjs                                                        |    172 |   7.30 KiB |   7,471 |
+| tests/raster_guards.test.mjs                                                             |     93 |   4.32 KiB |   4,422 |
+| tests/recipe_enemy_sheets.test.mjs                                                       |     32 |   1.54 KiB |   1,578 |
+| tests/recipe_hud.test.mjs                                                                |    130 |   5.12 KiB |   5,241 |
+| tests/recipe_import.test.mjs                                                             |     64 |   2.98 KiB |   3,051 |
+| tests/recipe_pantograph.test.mjs                                                         |    139 |   5.41 KiB |   5,541 |
+| tests/recipe_parity.test.mjs                                                             |     52 |   2.15 KiB |   2,202 |
+| tests/recipe_player.test.mjs                                                             |    104 |   4.42 KiB |   4,529 |
+| tests/recipe_surfaces.test.mjs                                                           |    107 |   4.08 KiB |   4,176 |
+| tests/recipe_sword.test.mjs                                                              |    158 |   7.11 KiB |   7,280 |
+| tests/recipe_tileset.test.mjs                                                            |    128 |   5.94 KiB |   6,083 |
+| tests/render_grid.test.mjs                                                               |    104 |   4.52 KiB |   4,624 |
+| tests/shape_polygon.test.mjs                                                             |    168 |   7.08 KiB |   7,248 |
+| tests/shape_polygon_tool.test.mjs                                                        |    167 |   6.88 KiB |   7,045 |
+| tests/shape_preview.test.mjs                                                             |     94 |   4.06 KiB |   4,154 |
+| tests/shape_raster_basic.test.mjs                                                        |    249 |   8.69 KiB |   8,899 |
+| tests/shape_tool_basic.test.mjs                                                          |    164 |   6.83 KiB |   6,990 |
+| tests/spec_consistency.test.mjs                                                          |     83 |   4.22 KiB |   4,318 |
+| tests/text_mask.test.mjs                                                                 |    112 |   5.04 KiB |   5,166 |
+| tests/tool_integrity_check.mjs                                                           |    133 |   6.33 KiB |   6,484 |
+| tests/tools_basic.test.mjs                                                               |    247 |  10.76 KiB |  11,015 |
+| tests/tools_manager.test.mjs                                                             |    194 |   9.11 KiB |   9,327 |
+| tests/ui_smoke.test.mjs                                                                  |    137 |   6.27 KiB |   6,417 |
+| tests/view_basic.test.mjs                                                                |    229 |   8.48 KiB |   8,681 |
+| tools/build_layer_gallery.mjs                                                            |    495 |  20.56 KiB |  21,057 |
+| tools/count_lines.py                                                                     |    194 |   7.15 KiB |   7,321 |
+| tools/decomp.mjs                                                                         |     16 |   689.00 B |     689 |
+| tools/extract_layers.mjs                                                                 |    130 |   5.13 KiB |   5,258 |
+| tools/gen_fixtures.py                                                                    |    465 |  25.00 KiB |  25,601 |
+| tools/gen_png_cases.py                                                                   |     57 |   2.93 KiB |   3,005 |
+| tools/gen_validation_cases.py                                                            |     61 |   3.49 KiB |   3,573 |
+| tools/parity_check.mjs                                                                   |    102 |   5.94 KiB |   6,080 |
+| tools/png_cases_check.mjs                                                                |     17 |   831.00 B |     831 |
+| tools/png_cross_check.mjs                                                                |     16 |   1.12 KiB |   1,150 |
+| tools/png_unique_colors.mjs                                                              |     15 |   1.16 KiB |   1,191 |
+| tools/recipe/bake_hud_atlas.mjs                                                          |     62 |   2.57 KiB |   2,628 |
+| tools/recipe/bake_lib.mjs                                                                |     58 |   2.33 KiB |   2,388 |
+| tools/recipe/bake_player_atlas.mjs                                                       |    136 |   5.63 KiB |   5,766 |
+| tools/recipe/bake_tileset.mjs                                                            |    117 |   4.94 KiB |   5,054 |
+| tools/recipe/color_tokens.js                                                             |     78 |   3.34 KiB |   3,425 |
+| tools/recipe/recipe_converter.mjs                                                        |    338 |  12.33 KiB |  12,631 |
+| tools/recipe/render_tile.js                                                              |    307 |  14.57 KiB |  14,918 |
+| tools/recipe/schema.mjs                                                                  |     76 |   3.32 KiB |   3,399 |
+| tools/recipe/text_glyphs.json                                                            |    153 | 132.36 KiB | 135,538 |
+| tools/recipe/text_glyphs.mjs                                                             |     44 |   1.42 KiB |   1,453 |
+| tools/recipe/transpile.mjs                                                               |    275 |  11.76 KiB |  12,039 |
+| tools/recipe/vector_converter.mjs                                                        |    245 |   7.86 KiB |   8,048 |
+| tools/recipe_cases.mjs                                                                   |    101 |   9.46 KiB |   9,685 |
+| tools/recipe_parity_check.mjs                                                            |    157 |   6.07 KiB |   6,215 |
+| tools/text_iso.mjs                                                                       |     29 |   1.23 KiB |   1,264 |
+| tools/text_iso2.mjs                                                                      |     32 |   1.39 KiB |   1,427 |
+| tools/view_check.mjs                                                                     |     19 |   1.72 KiB |   1,760 |
+| viewer/css/style.css                                                                     |    564 |   9.82 KiB |  10,053 |
+| viewer/index.html                                                                        |     45 |   1.52 KiB |   1,552 |
+| viewer/js/app.js                                                                         |    317 |  11.87 KiB |  12,159 |
+| viewer/js/comparator.js                                                                  |    164 |   4.42 KiB |   4,529 |
+| viewer/js/gallery_data.js                                                                |  3,709 | 116.02 KiB | 118,801 |
+| viewer/recipe_viewer.html                                                                |    576 |  13.54 KiB |  13,870 |
+
+The output report itself is excluded from its own measurement.
