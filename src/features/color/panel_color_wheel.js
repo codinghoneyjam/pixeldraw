@@ -177,10 +177,26 @@ function createSvRenderer(canvas) {
 }
 
 // <META - ROLE : Pointer offset -> SV in 0..1, corners reachable and clamped | L170-175>
-function pointerToSv(rect, e) {
-  const s = rect.width > 0 ? Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width)) : 0;
-  const v = rect.height > 0 ? 1 - Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height)) : 0;
+export function pointerToSv(rect, e, border = {}) {
+  const left = Number(border.left) || 0;
+  const right = Number(border.right) || 0;
+  const top = Number(border.top) || 0;
+  const bottom = Number(border.bottom) || 0;
+  const width = Math.max(0, rect.width - left - right);
+  const height = Math.max(0, rect.height - top - bottom);
+  const s = width > 0 ? Math.min(1, Math.max(0, (e.clientX - rect.left - left) / width)) : 0;
+  const v = height > 0 ? 1 - Math.min(1, Math.max(0, (e.clientY - rect.top - top) / height)) : 0;
   return { s, v };
+}
+
+function canvasBorder(canvas) {
+  const style = getComputedStyle(canvas);
+  return {
+    left: parseFloat(style.borderLeftWidth) || 0,
+    right: parseFloat(style.borderRightWidth) || 0,
+    top: parseFloat(style.borderTopWidth) || 0,
+    bottom: parseFloat(style.borderBottomWidth) || 0,
+  };
 }
 
 // <META - ROLE : Pointer offset from the ring centre in canvas pixels (pure) | L177-184>
@@ -217,7 +233,7 @@ function createPainter(c) {
   }
 
   function pickSatVal(e, canvas) {
-    const { s, v } = pointerToSv(canvas.getBoundingClientRect(), e);
+    const { s, v } = pointerToSv(canvas.getBoundingClientRect(), e, canvasBorder(canvas));
     setHueSV(state.h, s, v);
     return hsvToHex(state.h, state.s, state.v);
   }
