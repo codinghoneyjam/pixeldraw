@@ -35,9 +35,11 @@ function persistCollapsed(id, collapsed) {
 }
 
 // <META - ROLE : Apply collapsed state to a section, syncing data attr + aria | L34-39>
-function applyCollapsed(section, head, collapsed) {
+function applyCollapsed(section, head, body, collapsed) {
   section.dataset.collapsed = collapsed ? "true" : "false";
   head.setAttribute("aria-expanded", collapsed ? "false" : "true");
+  body.toggleAttribute("inert", collapsed);
+  body.setAttribute("aria-hidden", collapsed ? "true" : "false");
 }
 
 // <META - ROLE : Wire collapsible panel sections, persist state, return dispose | L41-73>
@@ -56,7 +58,7 @@ export function mountCollapsibleSections(roots, deps = {}) {
       const id = section.id || "";
       const onClick = () => {
         const collapsed = section.dataset.collapsed !== "true";
-        applyCollapsed(section, head, collapsed);
+        applyCollapsed(section, head, body, collapsed);
         if (id) persistCollapsed(id, collapsed);
         if (!collapsed && typeof onExpand === "function") {
           try { onExpand(id, section); } catch { /* ignore */ }
@@ -64,7 +66,7 @@ export function mountCollapsibleSections(roots, deps = {}) {
       };
       head.addEventListener("click", onClick);
       disposers.push(() => head.removeEventListener("click", onClick));
-      applyCollapsed(section, head, stored[id] === true);
+      applyCollapsed(section, head, body, stored[id] === true);
     }
   }
   return () => {

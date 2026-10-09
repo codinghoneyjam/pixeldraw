@@ -52,8 +52,8 @@
   --dt-arm-l: 11px;
   --dt-arm-d: 11px;
   --toolbar-w: 44px;
-  --panel-w: 240px;
-  --right-w: 260px;
+  --panel-w: clamp(180px, 20vw, 260px);
+  --right-w: clamp(200px, 22vw, 320px);
 }
 html, body {
   height: 100%;
@@ -65,7 +65,7 @@ html, body {
 }
 #dt-app {
   display: grid;
-  grid-template-columns: 44px 240px minmax(0, 1fr) 260px;
+  grid-template-columns: 44px minmax(180px, var(--panel-w)) minmax(0, 1fr) minmax(200px, var(--right-w));
   grid-template-rows: auto auto minmax(0, 1fr) auto;
   height: 100dvh;
 }
@@ -103,6 +103,10 @@ html, body {
   background: var(--panel);
   border-right: 1px solid var(--border);
   overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  min-width: 0;
   padding: var(--gap);
   display: flex;
   flex-direction: column;
@@ -127,6 +131,10 @@ html, body {
   background: var(--panel);
   border-left: 1px solid var(--border);
   overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  min-width: 0;
   padding: var(--gap);
 }
 #dt-statusbar {

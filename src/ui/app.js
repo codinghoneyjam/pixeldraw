@@ -120,7 +120,7 @@ async function boot() {
 
   // Panels mount last: they read settings and the view store established above.
   statusApi = mountStatus(document.getElementById("dt-statusbar"), { session, view: viewStore });
-  panelDisposers.push(mountColor(document.getElementById("dt-color-panel"), {
+  panelDisposers.push(mountColor(document.getElementById("dt-left-panels"), {
     session,
     getRecent: () => recentColors.slice(),
     saveRecent: (list) => { recentColors = list.slice(0, RECENT_MAX); storeJson(RECENT_KEY, recentColors); },

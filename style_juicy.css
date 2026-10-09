@@ -271,10 +271,13 @@ li.dt-layer[aria-selected="true"] {
   pointer-events: none;
 }
 .dt-tooltip[hidden] { display: none; }
-/* --- J7. Collapsible panel sections.
-       A panel section carries `data-collapsed="true"|"false"`. The header is a
-       real <button> so it is keyboard reachable and keeps focus-visible; the body is
-       a plain wrapper we simply hide, so nothing inside needs to know about this. --- */
+/* --- J7. Collapsible panel sections. --- */
+.dt-panel-body {
+  max-height: 1600px;
+  overflow: hidden;
+  opacity: 1;
+  transition: max-height 180ms ease, opacity 140ms ease;
+}
 .dt-panel-head {
   display: flex;
   align-items: center;
@@ -313,7 +316,7 @@ li.dt-layer[aria-selected="true"] {
 .dt-panel-head:focus-visible { outline-offset: 2px; }
 [data-collapsed="true"] .dt-panel-head { margin-bottom: 0; }
 [data-collapsed="true"] .dt-panel-head::before { transform: rotate(-90deg) translateX(-2px); }
-[data-collapsed="true"] .dt-panel-body { display: none; }
+[data-collapsed="true"] .dt-panel-body { max-height: 0; opacity: 0; }
 
 /* --- J8. Menubar action row (undo / redo).
        These are primary actions, so they get first-class buttons in the top bar

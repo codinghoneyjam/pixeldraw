@@ -159,10 +159,18 @@
           </div>
         </div>
       </div>
-      <h3>팔레트</h3>
-      <div id="dt-palette"></div>
-      <h3>최근 색</h3>
-      <div id="dt-recent"></div>
+      </div>
+    </section>
+    <section id="dt-palette-panel" aria-label="팔레트" data-collapsed="false">
+      <button type="button" class="dt-panel-head" aria-expanded="true" aria-controls="dt-palette-body">팔레트</button>
+      <div class="dt-panel-body" id="dt-palette-body">
+        <div id="dt-palette"></div>
+      </div>
+    </section>
+    <section id="dt-recent-panel" aria-label="최근 색" data-collapsed="false">
+      <button type="button" class="dt-panel-head" aria-expanded="true" aria-controls="dt-recent-body">최근 색</button>
+      <div class="dt-panel-body" id="dt-recent-body">
+        <div id="dt-recent"></div>
       </div>
     </section>
     <section id="dt-brush-panel" aria-label="브러시" data-collapsed="false">

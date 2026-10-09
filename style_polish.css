@@ -243,6 +243,7 @@
   #dt-toolbar button[aria-pressed="true"],
   #dt-toast .dt-toast-item,
   #dt-layer-list li.dt-layer,
+  .dt-panel-body,
   #dt-optionbar section[data-for-tools] label:has(input[name="dt-shape-fill"]) {
     transition: none;
     animation: none;
