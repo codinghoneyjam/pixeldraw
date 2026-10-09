@@ -1,10 +1,11 @@
 // <META - FILE SUMMARY - localStorage JSON helpers + settings/recent-colors persistence>
 import { EVENTS } from "../../core/events.js";
+import { RECENT_COLOR_LIMIT } from "../../features/color/color_constants.js";
 
 export const SETTINGS_KEY = "dt.settings.v1";
 export const RECENT_KEY = "dt.recentColors";
 export const PERSIST_KEYS = ["primaryColor", "secondaryColor", "penSize", "gridMode", "snapUnit", "shapeFill", "shapeRadius", "shapeLockAspect", "activeTool"];
-export const RECENT_MAX = 32;
+export const RECENT_MAX = RECENT_COLOR_LIMIT;
 
 export function loadJson(key) {
   try {

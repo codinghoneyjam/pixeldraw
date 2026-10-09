@@ -1,11 +1,12 @@
-// <META - FILE SUMMARY - Palette data: default 32 colours, swatch mount, active markers>
+// <META - FILE SUMMARY - Palette data: default 40 colours, swatch mount, active markers>
 import { makeSwatchButton, normHex } from "../../features/color/panel_color_fields.js";
 
 export const DEFAULT_PALETTE = Object.freeze([
-  "#000000", "#1d2b53", "#7e2553", "#008751", "#ab5236", "#5f574f", "#c2c3c7", "#fff1e8",
-  "#ff004d", "#ffa300", "#ffec27", "#00e436", "#29adff", "#83769c", "#ff77a8", "#ffccaa",
-  "#ffffff", "#e0e0e0", "#c0c0c0", "#a0a0a0", "#808080", "#606060", "#404040", "#202020",
-  "#4cc2ff", "#123a52", "#8affff", "#ff8800", "#a4ff5c", "#b04cff", "#ff4c9a", "#3a2a1a",
+  "#ffffff", "#ffcdd2", "#ffe0b2", "#fff9c4", "#c8e6c9", "#b2ebf2", "#bbdefb", "#e1bee7",
+  "#dedede", "#ef5350", "#ffb74d", "#fff176", "#81c784", "#4dd0e1", "#64b5f6", "#ba68c8",
+  "#9e9e9e", "#e53935", "#fb8c00", "#fdd835", "#43a047", "#00acc1", "#1e88e5", "#8e24aa",
+  "#616161", "#b71c1c", "#e65100", "#f9a825", "#1b5e20", "#006064", "#0d47a1", "#4a148c",
+  "#000000", "#5f0a15", "#6d2f00", "#6e5b00", "#103516", "#0f3c45", "#08214d", "#230a32",
 ]);
 
 const PRIMARY = "primaryColor";

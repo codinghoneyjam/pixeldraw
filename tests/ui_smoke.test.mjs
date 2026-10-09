@@ -17,6 +17,7 @@ import {
   showRestoreDialog,
 } from "../src/ui/shared/dialogs.js";
 import { createShortcuts, isEditableTarget, resolveShortcut } from "../src/ui/toolbar/shortcuts.js";
+import { RECENT_MAX, loadRecentColors } from "../src/ui/shared/storage.js";
 
 describe("strings", () => {
   it("has Korean catalog", () => {
@@ -65,10 +66,22 @@ describe("panel modules import without DOM", () => {
     }
   });
   it("palette + presets exact", () => {
-    assert.equal(DEFAULT_PALETTE.length, 32);
-    assert.equal(DEFAULT_PALETTE[0], "#000000");
-    assert.equal(DEFAULT_PALETTE[31], "#3a2a1a");
+    assert.equal(DEFAULT_PALETTE.length, 40);
+    assert.equal(DEFAULT_PALETTE[0], "#ffffff");
+    assert.equal(DEFAULT_PALETTE[39], "#230a32");
+    assert.equal(new Set(DEFAULT_PALETTE).size, 40);
+    assert.equal(RECENT_MAX, 8);
     assert.deepEqual([...SIZE_PRESETS], [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48, 64]);
+  });
+  it("caps restored recent colors at eight without changing the storage key", () => {
+    const previous = globalThis.localStorage;
+    globalThis.localStorage = { getItem: () => JSON.stringify(Array.from({ length: 12 }, (_, i) => `#00000${i}`)) };
+    try {
+      assert.equal(loadRecentColors().length, 8);
+    } finally {
+      if (previous === undefined) delete globalThis.localStorage;
+      else globalThis.localStorage = previous;
+    }
   });
   it("paint helpers null-safe", () => {
     assert.equal(paintPreview(null, 3, "#000000"), false);

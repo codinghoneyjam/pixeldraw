@@ -7,7 +7,7 @@
 ## 1. boot (1종) — 조립만. 뷰 소유는 `features/viewport/view_store.js`로 이동
 
 ### app.js (159줄) — `boot()` (export) + `refreshPanelCanvases` 재수출
-- 9단계: 1 설정(`dt.settings.v1`→PERSIST_KEYS 9종)+최근색(`dt.recentColors`,RECENT_MAX=32) 로드
+- 9단계: 1 설정(`dt.settings.v1`→PERSIST_KEYS 9종)+최근색(`dt.recentColors`,RECENT_MAX=8) 로드
 - 2 AutosaveStore.open→peek→`showRestoreDialog`→restore(loadDocument)/discard(clear), 미복원시 newDocument(DEFAULT_DOC)
 - 3 ToolManager 등록(pen/erase/fill/eyedropper/shape×4/hand)+CanvasRenderer.attach+InputController.attach+`viewStore.fit()`, fit후 `viewStore.subscribe(render)`
 - 4 `mountStatus/mountColor/mountBrush/mountLayers/mountOptions/mountCollapsibleSections`+panelDisposers 수집
@@ -55,13 +55,13 @@
 - 브러시 preview+`li[data-layer-id]`별 `paintThumb` 재도색. 접힘→펼침시 캔버스 백킹스토어 유실 복구용.
 - 주의: doc 없으면 레이어 순회 생략. mount 아님(dispose 없음).
 
-## 3. color (7종) — 파사드+파이프라인+휠+32색 (`src/features/color/`)
+## 3. color (8종) — 파사드+파이프라인+휠+40색/최근색 8칸 (`src/features/color/`)
 
 ### panel_color.js (파사드) — `mountColor(root,{session,palette,getRecent,saveRecent})` + `DEFAULT_PALETTE` 재수출
-- ui 객체: `{session,slot(PRIMARY),lock,wheel,fields,recentCells,recentCount=PALETTE.length,els,canonical/paint/apply/applyColor/pickSwatch/pushRecent/safe}` 조립 후 buildRecentGrid→paintRecent→mountPalette→mountColorFields→mountSlotButtons→mountWheel+mountSessionEvents→paint(force).
+- ui 객체: `{session,slot(PRIMARY),lock,wheel,fields,recentCells,recentCount=min(8,PALETTE.length),els,canonical/paint/apply/applyColor/pickSwatch/pushRecent/safe}` 조립 후 buildRecentGrid→paintRecent→mountPalette→mountColorFields→mountSlotButtons→mountWheel+mountSessionEvents→paint(force).
 - SSOT: `canonicalHex(ui)` 유일 읽기(활성슬롯→normHex, 실패시 #000000). `applyColor(ui,key,hex,{record})` 유일 쓰기(normHex 무효시 paint후 false, lock+1→setSetting→lock-1→paint→record시 pushRecent). `paint(ui,force)`: lock>0이면 읽기만, 슬롯버튼 배경+aria-pressed→paintColorFields→wheel.setFromRgb→syncActiveSwatches. `pickSwatch(e,hex)`: Shift=반대슬롯, 그외 활성슬롯, record:true. `setSlot` 전환후 강제 paint.
 - dispose: `makeDispose`가 그리드 셀 리스너(offs)+5 mount dispose 일괄 해제.
-- 주의: recentCount는 palette 길이와 동기(기본 32). `deps.palette` 주입시 RECENT_CELLS도 연동.
+- 주의: recentCount는 최대 8. 사용자 정의 팔레트가 8색 미만일 때만 그 길이로 줄어든다.
 
 ### panel_color_fields.js — `normHex(v)/isFocused/makeSwatchButton/resolveColorFields/paintColorFields/mountColorFields` + `CHANNELS=[r,g,b]`
 - `normHex=parseHex→a==255 검증→toHex`, 무효시 null. `paintColorFields(fields,hex,force)`: 포커스 가드(force면 덮어씀) 후 HEX+RGB 반영.
@@ -73,10 +73,10 @@
 - SETTINGS_CHANGED(primary/secondary만)→`ui.paint(false)`+lock==0이면 pushRecent. HISTORY_CHANGED→undoLabel이 7종(연필·지우개·페인트통·직선·사각형·둥근사각형·타원)이면 primary pushRecent.
 - 주의: 색 외 key는 무시. dispose는 removeEventListener 2종.
 
-### color_palette.js — `mountPalette(ui,palette,offs)/syncActiveSwatches(ui)` + `DEFAULT_PALETTE` 32색 frozen (PICO-8 16+회색 8+채도 8)
+### color_palette.js — `mountPalette(ui,palette,offs)/syncActiveSwatches(ui)` + `DEFAULT_PALETTE` 40색 frozen (무지개 hue 계열+중성색 밝기 단계)
 - mount 1회 `replaceChildren`, 좌클릭→pickSwatch, 우클릭→보조슬롯 record. sync는 양 슬롯 색 집합과 `data-color` 비교 후 `data-active` 토글(타깃마커용).
 - 주의: 매번 재생성 금지(클릭 대상 소실 원인). paint 경로에서만 sync 호출.
-- 주의: 팔레트 데이터는 원래 `color_palette_data.js`였으나 `color_palette.js`로 합쳐졌다. recent 고정칸 수도 이 length에서 파생하므로 순서 변경시 스냅샷 테스트 갱신.
+- 주의: 팔레트는 8열×5행의 hue/명도 배열이다. 최근색은 팔레트 길이와 독립적으로 최대 8칸이다.
 
 ### color_recent.js — `buildRecentGrid(ui,offs)/paintRecent(ui)/pushRecent(ui,hex)`
 - build 1회 N셀 생성, 클릭→pickSwatch(disabled 가드). paint는 제자리 재칠, 미사용은 `.is-empty`+disabled+`빈 칸`. push는 dedup+앞삽입+`recentCount` cap→saveRecent→paint.

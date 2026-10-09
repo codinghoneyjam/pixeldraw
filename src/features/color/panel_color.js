@@ -13,6 +13,7 @@ import { mountPalette, syncActiveSwatches } from "./color_palette.js";
 import { mountWheel } from "./panel_color_wheel.js";
 import { mountSlotButtons } from "./color_slots.js";
 import { mountSessionEvents } from "./color_events.js";
+import { RECENT_COLOR_LIMIT } from "./color_constants.js";
 
 export { DEFAULT_PALETTE } from "./color_palette.js";
 import { DEFAULT_PALETTE } from "./color_palette.js";
@@ -111,7 +112,7 @@ export function mountColor(root, deps = {}) {
   const { session = null } = deps;
   const disposers = [];
   const PALETTE = deps.palette ?? DEFAULT_PALETTE;
-  const RECENT_CELLS = PALETTE.length;
+  const RECENT_CELLS = Math.min(RECENT_COLOR_LIMIT, PALETTE.length);
   const ui = {
     session,
     slot: PRIMARY,

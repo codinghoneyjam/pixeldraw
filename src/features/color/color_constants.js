@@ -1,0 +1,1 @@
+export const RECENT_COLOR_LIMIT = 8;

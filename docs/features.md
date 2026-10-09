@@ -196,7 +196,8 @@ src/features/
 | `panel_color.js` | 133 | `mountColor(root,{session,palette,getRecent,saveRecent})` (+`DEFAULT_PALETTE` 재수출) |
 | `panel_color_fields.js` | 135 | `normHex`·`isFocused`·`resolveColorFields`·`paintColorFields`·`makeSwatchButton`·`mountColorFields`·`CHANNELS` |
 | `panel_color_wheel.js` | 275 | `createColorWheel`·`mountWheel`·`rgbToHsv`·`hsvToRgb`·`angleToHue`·`hsvToHex`·`WHEEL_PX`/`RING_OUT`/`RING_IN`/`RING_MID`/`RING_CLEARANCE`/`SV_PX` |
-| `color_palette.js` | 36 | `mountPalette`·`syncActiveSwatches`·`DEFAULT_PALETTE`(32색 frozen) |
+| `color_palette.js` | 37 | `mountPalette`·`syncActiveSwatches`·`DEFAULT_PALETTE`(40색 frozen) |
+| `color_constants.js` | 1 | `RECENT_COLOR_LIMIT`(8) |
 | `color_recent.js` | 51 | `buildRecentGrid`·`paintRecent`·`pushRecent` |
 | `color_slots.js` | 28 | `mountSlotButtons(ui)` |
 | `color_events.js` | 31 | `mountSessionEvents(ui)` |
@@ -208,10 +209,9 @@ src/features/
 - 읽기 SSOT는 `canonicalHex(ui)` (활성 슬롯 → `normHex`, 실패시 `#000000`).
 - `color_actions.js`(키보드)와 `color_slots.js`(버튼)는 같은 `setSetting` 경로를 쓰므로
   재칠·최근색 기록이 양쪽에 동일하게 걸린다(`color_events.js`).
-- `DEFAULT_PALETTE` 32색의 **순서는 불변** — `color_recent`의 고정칸 수가 이 길이에서
-  파생되므로 바꾸면 스냅샷 테스트가 깨진다.
-- 휠 크기 상수는 `style_picker.css`의 176/98과 맞물린다. 한쪽을 고치면 다른 쪽도.
-- **`WHEEL_PX=176`, `SV_PX=floor(2·(RING_IN−CLEARANCE)/√2)`=98.** 하드코딩하면
+- `DEFAULT_PALETTE`는 8열×5행의 40색이며, 최근색 고정칸은 독립 상수 8이다.
+- 휠 크기 상수는 `style_picker.css`의 132/74와 맞물린다. 한쪽을 고치면 다른 쪽도.
+- **`WHEEL_PX=132`, `SV_PX=floor(2·(RING_IN−CLEARANCE)/√2)`=74.** 하드코딩하면
   모서리가 잘린다.
 
 ## 12. 피처별 한 줄 요약
