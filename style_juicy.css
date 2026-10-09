@@ -210,8 +210,11 @@
    purpose — a full red outline would read as the very "red rectangle" emphasis the
    corner marker exists to replace. */
 li.dt-layer[aria-selected="true"] {
-  background-color: rgba(255, 59, 48, 0.10);
+  background-color: rgba(76, 194, 255, 0.10);
   border-color: var(--box-line-hi);
+}
+li.dt-layer[aria-selected="true"]::before {
+  border-color: var(--accent);
 }
 
 /* --- J5. Brush size presets: strict 4x4 grid.
