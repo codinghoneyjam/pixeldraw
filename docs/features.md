@@ -104,16 +104,20 @@ src/features/
 
 | 파일 | 줄 | 공개 API |
 |---|---:|---|
-| `layer.js` | 60 | `Layer` 클래스·`BLEND_MODES`·`LAYER_PROP_FIELDS`·`validateLayer{Name,Opacity,Blend}` |
-| `layer_operations.js` | 110 | `addLayer`·`duplicateLayer`·`removeLayer`·`moveLayer`·`mergeDown`·`insertLayer`·`resizeCanvas`·`renameLayer`·`setLayer{Visible,Locked,Opacity}`·`setActiveLayer` |
+| `layer.js` | 60 | `Layer` 클래스·`BLEND_MODES`(core에서 재수출)·`LAYER_PROP_FIELDS`·`validateLayer{Name,Opacity,Blend}` |
+| `layer_operations.js` | 110 | `addLayer`·`duplicateLayer`·`removeLayer`·`moveLayer`·`mergeDown`·`insertLayer`·`resizeCanvas`·`renameLayer`·`setLayer{Visible,Locked,Opacity,Blend}`·`setActiveLayer` |
 | `commands.js` | 140 | `PaintCommand`·`AddLayerCommand`·`RemoveLayerCommand`·`MoveLayerCommand`·`SetLayerPropCommand` (+`MergeDownCommand`·`ResizeCanvasCommand` 재수출) |
 | `commands_pixel.js` | 159 | `MergeDownCommand`·`ResizeCanvasCommand` |
 | `edit_session.js` | 59 | `beginEdit(session,{layerId,label})` → `{writer,label,flush,commit,cancel}` |
 | `layer_actions.js` | 20 | `layerAdd`·`layerDuplicate`·`layerRemove`·`layerMergeDown`·`layerUp`·`layerDown` |
 | `panel_layers.js` | 264 | `mountLayers(root,{session})`·`paintThumb(canvas,layer)` |
 
-- **`BLEND_MODES`는 `["normal"]` 하나.** 스키마가 여섯 가지를 허용하지만 실제 합성은
-  normal 뿐이다. 새 블렌드를 추가하려면 여기 + `core/blend.js` + 합성 fast path를 함께.
+- **`BLEND_MODES` 여섯 종 모두 실제로 합성된다.** 정의처는 `core/blend.js` 하나이며
+  `layer.js`는 재수출만 한다. 수식·알파 모델·반올림은 `docs/contract.md` §1-1.
+  화면(`render/composite.js`)·PNG(`io/export_png.js`)·스포이트(`samplePixel`)가
+  **같은 `overBlend()`**를 읽으므로 세 결과가 어긠날 수 없고,
+  `tests/blend_modes.test.mjs`가 모드별로 그 동치를 단언한다.
+  불투명 fast path는 `mode === "normal"`일 때만 유효하므로 세 경로 모두 게이팅했다.
 - 위 규칙: `moveLayer`에서 위로 = index+1 (뒤가 위). 패널은 이 불변을 그대로 쓴다.
 - `beginEdit`는 잠금·숨김·없는 층이면 `DrawToolError`. 도구는 그 예외를 조용히 무시한다.
   `commit()`은 실제로 바뀐 픽셀이 있어야 `PaintCommand`를 남기고 `true`를 돌린다.

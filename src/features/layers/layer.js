@@ -1,9 +1,12 @@
 import { ChunkStore } from "../../core/chunkstore.js";
 import { isValidCanvasSize } from "../../core/constants.js";
 import { DrawToolError } from "../../core/errors.js";
+import { BLEND_MODES } from "../../core/blend.js";
 
-export const BLEND_MODES = Object.freeze(["normal"]);
-export const LAYER_PROP_FIELDS = Object.freeze(["name", "visible", "locked", "opacity"]);
+// The canonical list lives in core/blend.js (contract §1-1); re-exported here so
+// `features/layers` consumers keep one import site.
+export { BLEND_MODES };
+export const LAYER_PROP_FIELDS = Object.freeze(["name", "visible", "locked", "opacity", "blend"]);
 
 export function validateLayerName(name) {
   if (typeof name !== "string" || name.length === 0 || name.length > 128 || name.trim().length === 0) {
@@ -18,8 +21,10 @@ export function validateLayerOpacity(opacity) {
 }
 
 export function validateLayerBlend(blend) {
-  if (blend !== "normal") {
-    throw new DrawToolError("INVALID_STATE", "only 'normal' blend is supported");
+  // Membership, not just a non-empty string: schema/vector import also lands here,
+  // and "dissolve" must be rejected rather than silently demoted.
+  if (!BLEND_MODES.includes(blend)) {
+    throw new DrawToolError("INVALID_STATE", `unknown layer blend ${String(blend)}`);
   }
 }
 
@@ -61,6 +66,9 @@ export class Layer {
     } else if (field === "opacity") {
       validateLayerOpacity(value);
       this.opacity = value;
+    } else if (field === "blend") {
+      validateLayerBlend(value);
+      this.blend = value;
     } else {
       throw new DrawToolError("INVALID_STATE", `unknown layer field ${String(field)}`);
     }

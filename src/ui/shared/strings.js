@@ -56,6 +56,16 @@ export const STRINGS = Object.freeze({
     polygon: "P",
     hand: "H",
   }),
+  // Layer blend modes, keyed by BLEND_MODES (core/blend.js). The panel builds its
+  // select from these keys, so a new mode needs one entry here and nowhere else.
+  blends: Object.freeze({
+    normal: "보통",
+    multiply: "곱하기",
+    screen: "스크린",
+    overlay: "오버레이",
+    darken: "어둡게",
+    lighten: "밝게",
+  }),
   hints: Object.freeze({
     penEraser: "Shift+클릭 = 직선, Alt+클릭 = 스포이트(펜)",
     fill: "클릭한 영역을 주색으로 채웁니다 (4방향, 허용오차 0)",

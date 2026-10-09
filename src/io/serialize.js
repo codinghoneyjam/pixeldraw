@@ -184,13 +184,10 @@ export async function jsonToDocument(obj, { onProgress } = {}) {
   let done = 0;
   const total = jobs.length;
   for (const lj of obj.layers) {
-    let blend = lj.blend;
-    if (blend !== "normal") {
-      warnings.push(`layer "${lj.name}" blend ${blend} demoted to normal`);
-      blend = "normal";
-    }
+    // blend passes straight through: BLEND_MODES is real now, so there is nothing
+    // to demote. validate_structural.js has already rejected unknown names.
     const store = new ChunkStore(widthPx, heightPx);
-    const layer = new Layer(lj.layer_id, lj.name, lj.visible, lj.locked, lj.opacity, blend, store);
+    const layer = new Layer(lj.layer_id, lj.name, lj.visible, lj.locked, lj.opacity, lj.blend, store);
     const decoded = [];
     for (let s = 0; s < lj.raster.chunks.length; s += ENCODE_BATCH) {
       const slice = lj.raster.chunks.slice(s, s + ENCODE_BATCH);
@@ -230,13 +227,8 @@ export async function importLayerJson(doc, obj) {
   if (obj.source_canvas.width_px !== doc.canvas.widthPx || obj.source_canvas.height_px !== doc.canvas.heightPx) {
     warnings.push(`source canvas ${obj.source_canvas.width_px}x${obj.source_canvas.height_px} differs from document ${doc.canvas.widthPx}x${doc.canvas.heightPx}`);
   }
-  let blend = lj.blend;
-  if (blend !== "normal") {
-    warnings.push(`layer "${lj.name}" blend ${blend} demoted to normal`);
-    blend = "normal";
-  }
   const store = new ChunkStore(doc.canvas.widthPx, doc.canvas.heightPx);
-  const layer = new Layer(doc.ids.next(), lj.name, lj.visible, lj.locked, lj.opacity, blend, store);
+  const layer = new Layer(doc.ids.next(), lj.name, lj.visible, lj.locked, lj.opacity, lj.blend, store);
   let dropped = 0;
   if (lj.type === "vector") {
     throw new DrawToolError("UNSUPPORTED_LAYER_TYPE", "vector layers are not supported", { layerNames: [lj.name] });

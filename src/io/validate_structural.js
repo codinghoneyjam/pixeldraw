@@ -13,6 +13,7 @@ import {
   TILE_PX,
   UNIT_PX,
 } from "../core/constants.js";
+import { BLEND_MODES } from "../core/blend.js";
 
 // Derived, never restated: one chunk cell can hold at most one chunk entry.
 const MAX_CHUNK_CELLS = MAX_CHUNKS_X * MAX_CHUNKS_Y;
@@ -22,7 +23,6 @@ const VIEWPORT_KEYS = ["x", "y", "w", "h"];
 const LAYER_KEYS = ["layer_id", "name", "type", "visible", "locked", "opacity", "blend", "raster", "shapes"];
 const RASTER_KEYS = ["chunk_px", "encoding", "chunks"];
 const CHUNK_KEYS = ["cx", "cy", "png"];
-const BLENDS = ["normal", "multiply", "screen", "overlay", "darken", "lighten"];
 const PNG_RE = /^iVBORw0KGgo[A-Za-z0-9+/]*={0,2}$/;
 const BG_RE = /^(transparent|#([0-9a-fA-F]{6}|[0-9a-fA-F]{8}))$/;
 
@@ -150,7 +150,7 @@ export function checkLayer(ly, base, push) {
   if (typeof ly.opacity !== "number" || !Number.isFinite(ly.opacity) || ly.opacity < 0 || ly.opacity > 1) {
     push("SCHEMA", `${base}/opacity`, "opacity must be a number in [0,1]");
   }
-  if (!BLENDS.includes(ly.blend)) push("SCHEMA", `${base}/blend`, "blend must be a known blend mode");
+  if (!BLEND_MODES.includes(ly.blend)) push("SCHEMA", `${base}/blend`, `blend must be one of: ${BLEND_MODES.join(", ")}`);
   let structuralChunks = [];
   if (ly.type === "raster") {
     if (ly.shapes !== undefined) push("SCHEMA", `${base}/shapes`, "raster layer must not have shapes");
@@ -163,4 +163,4 @@ export function checkLayer(ly, base, push) {
   return { structuralChunks, type: ly.type };
 }
 
-export const _INTERNALS = { CANVAS_KEYS, LAYER_KEYS, RASTER_KEYS, CHUNK_KEYS, BLENDS, PNG_RE, BG_RE };
+export const _INTERNALS = { CANVAS_KEYS, LAYER_KEYS, RASTER_KEYS, CHUNK_KEYS, BLEND_MODES, PNG_RE, BG_RE };

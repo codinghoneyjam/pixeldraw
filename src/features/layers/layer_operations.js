@@ -97,6 +97,15 @@ export function setLayerLocked(session, id, b) {
   return true;
 }
 
+export function setLayerBlend(session, id, value) {
+  const doc = session._requireDoc();
+  validateLayerBlend(value);
+  const layer = doc.getLayer(id);
+  if (layer.blend === value) return false;
+  session.execute(new SetLayerPropCommand(id, "blend", layer.blend, value, "레이어 블렌드 변경"));
+  return true;
+}
+
 export function setLayerOpacity(session, id, value, { final = false } = {}) {
   const doc = session._requireDoc();
   validateLayerOpacity(value);

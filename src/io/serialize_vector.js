@@ -7,6 +7,7 @@
 import { SCHEMA_VERSION, CHUNK_PX } from "../core/constants.js";
 import { ChunkStore, PixelWriter } from "../core/chunkstore.js";
 import { DrawToolError } from "../core/errors.js";
+import { BLEND_MODES } from "../core/blend.js";
 import { Document, IdGen } from "../features/document/document.js";
 import { Layer } from "../features/layers/layer.js";
 import { applyCommand } from "../../tools/recipe/render_tile.js";
@@ -131,7 +132,9 @@ export async function vectorJsonToDocument(obj) {
       layerData.visible !== false,
       layerData.locked === true,
       Number.isFinite(layerData.opacity) ? layerData.opacity : 1.0,
-      typeof layerData.blend === "string" ? layerData.blend : "normal",
+      // Any string would have been accepted here before; the Layer constructor
+      // now validates membership, so an unknown mode throws instead of lurking.
+      typeof layerData.blend === "string" && BLEND_MODES.includes(layerData.blend) ? layerData.blend : "normal",
       store,
     );
     const writer = new PixelWriter(store, layer.id);

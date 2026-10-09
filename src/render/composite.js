@@ -2,7 +2,7 @@
 // Contract: docs/render.md (composite.js). Background is NOT handled here.
 
 import { CHUNK_PX, CHUNK_LEN } from "../core/constants.js";
-import { over } from "../core/blend.js";
+import { overBlend } from "../core/blend.js";
 import { DrawToolError } from "../core/errors.js";
 
 function assertDoc(doc) {
@@ -26,7 +26,9 @@ function visibleSources(doc, cx, cy) {
     if (!(opacity > 0)) continue;
     const data = layer.store ? layer.store.getChunk(cx, cy) : null;
     if (!data) continue;
-    srcs.push({ data, opacity });
+    // Read through the same entry point export_png.js and merge-down use, so a
+    // pixel cannot differ between screen, file and eyedropper (contract §1-1).
+    srcs.push({ data, opacity, mode: layer.blend ?? "normal" });
   }
   return srcs;
 }
@@ -49,16 +51,19 @@ export function compositeChunk(doc, cx, cy, out) {
     for (let l = 0; l < srcs.length; l++) {
       const data = srcs[l].data;
       const opacity = srcs[l].opacity;
+      const mode = srcs[l].mode;
       const sa8 = data[o + 3];
       if (sa8 === 0) continue;
-      if (sa8 === 255 && opacity === 1) {
+      // The direct-replace shortcut is only valid for source-over: every other
+      // mode has to run the math even when the source is fully opaque.
+      if (mode === "normal" && sa8 === 255 && opacity === 1) {
         dr = data[o];
         dg = data[o + 1];
         db = data[o + 2];
         da = 255;
         continue;
       }
-      const mixed = over([dr, dg, db, da], [data[o], data[o + 1], data[o + 2], sa8], opacity);
+      const mixed = overBlend([dr, dg, db, da], [data[o], data[o + 1], data[o + 2], sa8], opacity, mode);
       dr = mixed[0];
       dg = mixed[1];
       db = mixed[2];
@@ -98,11 +103,11 @@ export function samplePixel(doc, x, y) {
     if (!data) continue;
     const sa8 = data[o + 3];
     if (sa8 === 0) continue;
-    if (sa8 === 255 && opacity === 1) {
+    if ((layer.blend ?? "normal") === "normal" && sa8 === 255 && opacity === 1) {
       acc = [data[o], data[o + 1], data[o + 2], 255];
       continue;
     }
-    acc = over(acc, [data[o], data[o + 1], data[o + 2], sa8], opacity);
+    acc = overBlend(acc, [data[o], data[o + 1], data[o + 2], sa8], opacity, layer.blend ?? "normal");
   }
   return acc;
 }

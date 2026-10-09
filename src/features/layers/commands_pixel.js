@@ -6,13 +6,13 @@
 import { CHUNK_LEN, isValidCanvasSize } from "../../core/constants.js";
 import { DrawToolError } from "../../core/errors.js";
 import { isAllZero } from "../../core/chunkstore.js";
-import { over } from "../../core/blend.js";
+import { overBlend } from "../../core/blend.js";
 import { packRGBA, unpackRGBA } from "../../core/pixel.js";
 
-// <META - ROLE : composite lower under upper through both opacities | L15-18>
-function mergePixel(lowerArr, lowerOpacity, upperArr, upperOpacity) {
-  const mid = over([0, 0, 0, 0], lowerArr, lowerOpacity);
-  return over(mid, upperArr, upperOpacity);
+// <META - ROLE : composite lower under upper through both opacities and the upper's blend mode | L15-19>
+function mergePixel(lowerArr, lowerOpacity, upperArr, upperOpacity, upperBlend) {
+  const mid = overBlend([0, 0, 0, 0], lowerArr, lowerOpacity, "normal");
+  return overBlend(mid, upperArr, upperOpacity, upperBlend);
 }
 
 export class MergeDownCommand {
@@ -68,7 +68,7 @@ export class MergeDownCommand {
           const lr = ld ? [ld[i * 4], ld[i * 4 + 1], ld[i * 4 + 2], ld[i * 4 + 3]] : [0, 0, 0, 0];
           const ur = ud ? [ud[i * 4], ud[i * 4 + 1], ud[i * 4 + 2], ud[i * 4 + 3]] : [0, 0, 0, 0];
           if (lr[3] === 0 && ur[3] === 0) continue;
-          const [r, g, b, a] = mergePixel(lr, lower.opacity, ur, upper.opacity);
+          const [r, g, b, a] = mergePixel(lr, lower.opacity, ur, upper.opacity, upper.blend ?? "normal");
           if (a === 0) continue;
           const p = packRGBA(r, g, b, a);
           const [br, bg, bb, ba] = unpackRGBA(p);

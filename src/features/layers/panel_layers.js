@@ -1,7 +1,9 @@
-// <META - FILE SUMMARY - Layer panel: opacity, top-first listbox, thumbs, reorder>
+// <META - FILE SUMMARY - Layer panel: opacity, blend, top-first listbox, thumbs, reorder>
 import { EVENTS } from "../../core/events.js";
 import { DrawToolError } from "../../core/errors.js";
 import { unpackRGBA } from "../../core/pixel.js";
+import { BLEND_MODES } from "../../core/blend.js";
+import { STRINGS } from "../../ui/shared/strings.js";
 
 const THUMB = 32;
 const THUMB_THROTTLE_MS = 250;
@@ -47,6 +49,7 @@ export function mountLayers(root, deps = {}) {
   const q = (sel) => root.querySelector(sel);
   const opacity = q("#dt-layer-opacity");
   const opacityNum = q("#dt-layer-opacity-number");
+  const blendSel = q("#dt-layer-blend");
   const list = q("#dt-layer-list");
   const btnAdd = q("#dt-layer-add");
   const btnDup = q("#dt-layer-duplicate");
@@ -85,6 +88,13 @@ export function mountLayers(root, deps = {}) {
     if (opacityNum && document.activeElement !== opacityNum) opacityNum.value = String(pct);
     if (opacity) opacity.disabled = !layer;
     if (opacityNum) opacityNum.disabled = !layer;
+  }
+  function syncBlend() {
+    const layer = activeLayer();
+    if (blendSel && document.activeElement !== blendSel) {
+      blendSel.value = layer ? (layer.blend ?? "normal") : "normal";
+    }
+    if (blendSel) blendSel.disabled = !layer;
   }
   function syncButtons() {
     const d = doc();
@@ -198,6 +208,7 @@ export function mountLayers(root, deps = {}) {
   function refresh() {
     renderList();
     syncOpacity();
+    syncBlend();
   }
   if (opacity) {
     opacity.addEventListener("input", () => safe(() => {
@@ -225,6 +236,22 @@ export function mountLayers(root, deps = {}) {
       session.setLayerOpacity(layer.id, Math.max(0, Math.min(100, n)) / 100, { final: true });
     }));
   }
+  if (blendSel) {
+    // Fill once from BLEND_MODES so the select and the model can never disagree.
+    for (const mode of BLEND_MODES) {
+      const o = document.createElement("option");
+      o.value = mode;
+      o.textContent = STRINGS.blends[mode] ?? mode;
+      blendSel.append(o);
+    }
+    blendSel.addEventListener("change", () => safe(() => {
+      const layer = activeLayer();
+      if (!layer) return;
+      // An unknown value keeps the previous mode rather than writing a bad one.
+      if (!BLEND_MODES.includes(blendSel.value)) { syncBlend(); return; }
+      session.setLayerBlend(layer.id, blendSel.value);
+    }));
+  }
   if (btnAdd) btnAdd.addEventListener("click", () => safe(() => session.addLayer()));
   if (btnDup) btnDup.addEventListener("click", () => safe(() => {
     const l = activeLayer();
@@ -250,8 +277,10 @@ export function mountLayers(root, deps = {}) {
   }));
   if (session) {
     listen(session, EVENTS.DOCUMENT_REPLACED, refresh);
-    listen(session, EVENTS.LAYERS_CHANGED, () => { renderList(); syncOpacity(); });
-    listen(session, EVENTS.HISTORY_CHANGED, () => { renderList(); syncOpacity(); });
+    // blend is a layer property, so the prop reason reaches it through LAYERS_CHANGED;
+    // HISTORY_CHANGED covers undo/redo of a SetLayerPropCommand("blend").
+    listen(session, EVENTS.LAYERS_CHANGED, () => { renderList(); syncOpacity(); syncBlend(); });
+    listen(session, EVENTS.HISTORY_CHANGED, () => { renderList(); syncOpacity(); syncBlend(); });
     listen(session, EVENTS.PIXELS_CHANGED, (e) => {
       const id = e.detail?.layerId;
       if (typeof id === "string") scheduleThumb(id);

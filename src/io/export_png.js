@@ -1,7 +1,9 @@
-// <META - FILE SUMMARY - Flatten document to RGBA + PNG export via shared over()>
+// <META - FILE SUMMARY - Flatten document to RGBA + PNG export via shared overBlend()>
 // Base = background (or transparent), then visible layers bottom-to-top with opacity.
+// Reads core/blend.js through the same entry point the display compositor and
+// merge-down use, so the file can never disagree with the screen (contract §1-1).
 import { DrawToolError } from "../core/errors.js";
-import { over } from "../core/blend.js";
+import { overBlend } from "../core/blend.js";
 import { parseHex } from "../core/pixel.js";
 import { encodePng } from "./png.js";
 
@@ -27,7 +29,7 @@ export function flattenToRgba(doc, { includeBackground = true } = {}) {
     const opacity = layer.opacity ?? 1;
     if (!(opacity > 0)) continue;
     if (!layer.store) continue;
-    srcs.push({ store: layer.store, opacity });
+    srcs.push({ store: layer.store, opacity, mode: layer.blend ?? "normal" });
   }
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
@@ -43,14 +45,16 @@ export function flattenToRgba(doc, { includeBackground = true } = {}) {
         const sg = (px >>> 8) & 255;
         const sb = (px >>> 16) & 255;
         const op = srcs[l].opacity;
-        if (sa8 === 255 && op === 1) {
+        const mode = srcs[l].mode;
+        // Same normal-mode-only shortcut the display compositor uses.
+        if (mode === "normal" && sa8 === 255 && op === 1) {
           dr = sr;
           dg = sg;
           db = sb;
           da = 255;
           continue;
         }
-        const mixed = over([dr, dg, db, da], [sr, sg, sb, sa8], op);
+        const mixed = overBlend([dr, dg, db, da], [sr, sg, sb, sa8], op, mode);
         dr = mixed[0];
         dg = mixed[1];
         db = mixed[2];

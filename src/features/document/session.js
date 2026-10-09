@@ -15,6 +15,7 @@ import {
   setLayerVisible,
   setLayerLocked,
   setLayerOpacity,
+  setLayerBlend,
   setActiveLayer,
 } from "../layers/layer_operations.js";
 import { beginEdit } from "../layers/edit_session.js";
@@ -165,6 +166,7 @@ export class Session extends EventTarget {
   setLayerVisible(id, b) { return setLayerVisible(this, id, b); }
   setLayerLocked(id, b) { return setLayerLocked(this, id, b); }
   setLayerOpacity(id, value, opts) { return setLayerOpacity(this, id, value, opts); }
+  setLayerBlend(id, value) { return setLayerBlend(this, id, value); }
   setActiveLayer(id) { return setActiveLayer(this, id); }
   beginEdit(opts) { return beginEdit(this, opts); }
 

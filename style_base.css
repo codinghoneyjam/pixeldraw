@@ -297,6 +297,20 @@ input, select {
   flex-direction: column;
   gap: 4px;
 }
+/* Blend row sits under the opacity row in the layer panel. It gets the same
+   spacing the opacity row relies on from the default flow, plus a full-width
+   select so a mode label never truncates. */
+.dt-blend-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  margin-bottom: 8px;
+}
+
+.dt-blend-row select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
 li.dt-layer {
   display: flex;
   align-items: center;
