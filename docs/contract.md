@@ -73,8 +73,8 @@
 |---|---|
 | `src/core/**` (incl. `src/core/raster/**`) | 없음 (전부 DOM-free) |
 | `src/features/document/**` | 없음 (전부 DOM-free) |
-| `src/features/layers/**` | 없음 (전부 DOM-free) |
-| `src/features/color/**` | 없음 (전부 DOM-free) |
+| `src/features/layers/**` | `panel_layers.js` 등 **패널 모듈만** DOM 허용 |
+| `src/features/color/**` | `panel_color*.js` 등 **패널 모듈만** DOM 허용 |
 | `src/io/**` | `file_io.js`, `store_idb.js` 만 브라우저 API 접촉(지연 접근) |
 | `src/features/viewport/view.js`, `src/render/composite.js` | 없음 |
 | `src/tools/**` | 순수 로직 전부 DOM-free |
@@ -82,9 +82,11 @@
 
 `src/render/renderer.js`·`grid.js`·`background.js`는 캔버스 표시용이라 DOM이 허용된다.
 `src/features/**`의 패널·오버레이 모듈(`panel_color*.js`·`panel_layers.js`·
-`panel_brush.js`·`shape_overlay.js`)은 DOM을 만지므로 `src/ui/**`와 같은 예외를 적용받는다.
-반면 각 피처의 도구 본체(`pen.js`·`fill.js`·`eyedropper.js`·`shape.js`·`shape_geom.js`)는
-DOM-free 규칙을 그대로 지킨다.
+`panel_brush.js`·`panel_view_options.js`·`panel_shape_options.js`·`shape_overlay.js`)은
+DOM을 만지므로 `src/ui/**`와 같은 예외를 적용받는다. 반면 각 피처의 도구 본체와
+순수 모듈(`pen.js`·`fill.js`·`eyedropper.js`·`shape.js`·`shape_geom.js`·`view.js`)은
+DOM-free 규칙을 그대로 지킨다. 구분선은 파일 접미사다: `panel_*`는 마운트·DOM,
+그 외는 판단·상태.
 
 ## 5. 모듈 규약
 

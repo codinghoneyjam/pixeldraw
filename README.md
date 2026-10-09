@@ -81,6 +81,8 @@ src/
             dialogs/ dialog_core.js dialog_new_doc.js dialog_resize.js
             shared/  dom.js strings.js tooltip.js collapsible_sections.js
                      panel_refresh.js dialogs.js storage.js toast.js
+            (도구별 액션은 피처로 이감: viewport/view_actions.js·
+             color/color_actions.js·pen/brush_actions.js·layers/layer_actions.js)
 tests/     *.test.mjs  helpers/  fixtures/   (fixtures are normative)
 schema/    layer_schema.v2.json document_schema.v2.json
 tools/     parity_check.mjs png_cases_check.mjs view_check.mjs png_unique_colors.mjs + gen_*.py
@@ -92,7 +94,7 @@ reference/ raster_ref.mjs png_ref.mjs view_ref.mjs (non-normative)
 `features/layers/`로 갈라졌다. 도구 구현체(`pen`·`shape`·`fill`·`eyedropper`·`hand`)와
 패널(`panel_color*`·`panel_brush`·`panel_layers`), 뷰(`view.js`·`view_store.js`)도 각 피처로
 옮겨갔으므로 `src/tools/`에는 입력 플럼빙만, `src/render/`에는 합성·표시만 남았다.
-`src/`는 계층당 6~32개 파일, 총 **100개 `.js`**다. 상세 구성과 라인 수는 각 계층 문서
+`src/`는 계층당 6~36개 파일, 총 **104개 `.js`**다. 상세 구성과 라인 수는 각 계층 문서
 (`docs/core.md`·`model.md`·`io.md`·`render.md`·`tools.md`·`ui.md`)를 따른다.
 
 Headless integration: `tests/e2e_session.test.mjs` drives `Session` via

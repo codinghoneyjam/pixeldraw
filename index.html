@@ -62,7 +62,7 @@
     </div>
   </header>
   <div id="dt-optionbar" aria-label="도구 옵션">
-    <section data-for-tools="pen eraser fill eyedropper line rect rrect ellipse polygon hand">
+    <section data-section="view" data-for-tools="pen eraser fill eyedropper line rect rrect ellipse polygon hand">
       <label for="dt-grid-mode">그리드</label>
       <select id="dt-grid-mode">
         <option value="off">끔</option>
@@ -79,7 +79,7 @@
       <span>굵기 <span id="dt-option-pen-size">1px</span></span>
       <button type="button" class="dt-tip-trigger" data-tip="Shift+클릭 = 직선, Alt+클릭 = 스포이트(펜)" aria-label="도움말" aria-expanded="false">?</button>
     </section>
-    <section data-for-tools="line rect rrect ellipse polygon">
+    <section data-section="shape" data-for-tools="line rect rrect ellipse polygon">
       <label><input type="radio" name="dt-shape-fill" id="dt-shape-fill-outline" value="outline" checked>테두리</label>
       <label><input type="radio" name="dt-shape-fill" id="dt-shape-fill-fill" value="fill">채움</label>
       <label for="dt-shape-radius">반경</label>
