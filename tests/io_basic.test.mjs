@@ -15,6 +15,7 @@ import { flattenToRgba, exportPngBytes } from "../src/io/export_png.js";
 import { sanitizeFileName } from "../src/io/file_io.js";
 import { buildMetaRecord, buildChunkRecords, chunkRecordKey } from "../src/io/idb_record_builder.js";
 import { compositeChunk, samplePixel } from "../src/render/composite.js";
+import { stringifyReadableJson } from "../src/io/stringify_readable.js";
 
 const pngCases = JSON.parse(readFileSync(new URL("./fixtures/png_cases.json", import.meta.url)));
 const validationCases = JSON.parse(readFileSync(new URL("./fixtures/validation_cases.json", import.meta.url)));
@@ -79,6 +80,20 @@ describe("C8.1 png_cases + roundtrip", () => {
     assert.equal(dec.width, w);
     assert.equal(dec.height, h);
     assert.deepEqual(Array.from(dec.rgba), Array.from(rgba));
+  });
+});
+
+describe("readable JSON output", () => {
+  it("keeps layers structured and puts each command on one line", () => {
+    const input = {
+      format: "draw_tool.vector",
+      layers: [{ name: "Layer 1", commands: [{ cmd: "rect", box: [[1, 2], [3, 4]], fill: "#ffffff" }, { cmd: "pixel", x: 8, y: 9, color: "#000000" }] }],
+    };
+    const output = stringifyReadableJson(input);
+    assert.deepEqual(JSON.parse(output), input);
+    assert.match(output, /"layers": \[\n/);
+    assert.match(output, /"cmd":"rect"/);
+    assert.equal(output.split("\n").filter((line) => line.includes('"cmd"')).length, 2);
   });
 });
 

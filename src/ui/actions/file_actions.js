@@ -3,6 +3,7 @@ import { DrawToolError } from "../../core/errors.js";
 import { EVENTS } from "../../core/events.js";
 import { documentToJson, importLayerJson, jsonToDocument, layerToJson, documentToVectorJson, vectorJsonToDocument, recipeJsonToDocument } from "../../io/serialize.js";
 import { exportPngBytes } from "../../io/export_png.js";
+import { stringifyReadableJson } from "../../io/stringify_readable.js";
 import { pickFile, readJsonFile, saveBinaryFile, saveTextFile } from "../../io/file_io.js";
 import { confirmDiscardChanges, showNewDocumentDialog, showProgress } from "../shared/dialogs.js";
 import { STRINGS } from "../shared/strings.js";
@@ -14,7 +15,7 @@ export async function doSave(session, toast) {
   const prog = showProgress("저장 중");
   try {
     const obj = await documentToJson(doc, { onProgress: (d, t) => prog.update(t ? d / t : 0) });
-    const ok = await saveTextFile(`${doc.name || "untitled"}.draw.json`, JSON.stringify(obj));
+    const ok = await saveTextFile(`${doc.name || "untitled"}.draw.json`, `${stringifyReadableJson(obj)}\n`);
     if (ok) {
       session.history.markSaved();
       session.dispatchEvent(new CustomEvent(EVENTS.HISTORY_CHANGED, {
@@ -61,7 +62,7 @@ export async function doExportLayer(session, toast) {
   try {
     const obj = await layerToJson(doc, doc.activeLayerId);
     const layer = doc.getLayer(doc.activeLayerId);
-    const ok = await saveTextFile(`${layer.name || "layer"}.drawlayer.json`, JSON.stringify(obj));
+    const ok = await saveTextFile(`${layer.name || "layer"}.drawlayer.json`, `${stringifyReadableJson(obj)}\n`);
     if (ok) toast(STRINGS.toast.exportedLayer);
   } finally {
     prog.close();
@@ -154,7 +155,7 @@ export async function doExportVector(session, toast) {
   const prog = showProgress("벡터 내보내기");
   try {
     const obj = documentToVectorJson(doc);
-    const ok = await saveTextFile(`${doc.name || "untitled"}.vector.json`, JSON.stringify(obj));
+    const ok = await saveTextFile(`${doc.name || "untitled"}.vector.json`, `${stringifyReadableJson(obj)}\n`);
     if (ok) toast(STRINGS.toast.exportedVector);
   } finally {
     prog.close();
