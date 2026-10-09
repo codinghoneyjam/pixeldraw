@@ -1,4 +1,17 @@
-/* Split from style.css lines 397-634; cascade order: base-polish-juicy-picker. */
+/* Split from style.css lines 397-634; cascade order: base-polish-juicy-picker.
+ *
+ * TIER 2 of 4 - INTERACTION + MOTION.
+ *   Applies to controls in EVERY region, so it is deliberately not a feature
+ *   slice: select arrows, range/number input chrome, hover fade, press scale,
+ *   the toolbar 300ms selection pulse, toast slide, layer-row fade, plus the
+ *   optionbar single-row/no-wrap fix and the shape-fill segmented radio group.
+ *   Compositor-only properties (transform/opacity) and a reduced-motion escape
+ *   hatch at the bottom.
+ *
+ * Owns motion of: #dt-app button, #dt-toolbar button[aria-pressed],
+ * #dt-menubar menu items, #dt-toast, #dt-layer-list li, #dt-optionbar sections,
+ * .dt-dialog.
+ */
 /* === UI POLISH (controls polish + optionbar anti-shift + juicy; compositor-only motion) === */
 
 /* --- 1a. Selects: custom dropdown arrow (appearance:none + SVG data-URI) --- */

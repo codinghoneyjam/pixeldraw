@@ -1,4 +1,15 @@
-/* Split from style.css lines 973-1062; cascade order: base-polish-juicy-picker. */
+/* Split from style.css lines 973-1062; cascade order: base-polish-juicy-picker.
+ *
+ * TIER 4 of 4 - COLOUR PICKER PRECISION.
+ *   The only tier close to a single feature (features/color/), because the picker
+ *   is a pointing instrument rather than a panel: a 176px hue ring with a 98px SV
+ *   square centred inside it, square corners so no colour is unreachable, and
+ *   percentage swatch radii. WHEEL_PX / RING_OUT / SV_PX in
+ *   features/color/panel_color_wheel.js are kept in step with the numbers here.
+ *
+ * Owns: .dt-picker, .dt-picker-head, .dt-wheel-wrap, #dt-hue-wheel, #dt-sv-square,
+ * #dt-palette, #dt-recent, .dt-swatch, .dt-swatch.is-empty.
+ */
 /* === COLOR PICKER ===
    Layout mirrors the reference: head (slots + native input) -> hue wheel with the
    SV square centred INSIDE the ring -> stacked R/G/B -> hex. panel_color.js supplies

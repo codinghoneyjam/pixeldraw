@@ -1,4 +1,17 @@
-/* Split from style.css lines 636-971; cascade order: base-polish-juicy-picker. */
+/* Split from style.css lines 636-971; cascade order: base-polish-juicy-picker.
+ *
+ * TIER 3 of 4 - CONTAINER DESIGN LANGUAGE.
+ *   The shared visual vocabulary every panel reuses: thin rounded container
+ *   boxes (J1), recessed wells (J2), the selection target marker (J4), panel
+ *   heads with hairline rules and collapse chevrons (J7), the presets grid (J5),
+ *   tooltips (J6), the menubar undo/redo row (J8), brush row (J9), panel titles
+ *   and the RGB colour fields (J3).
+ *
+ * The J-numbers below are the original pass labels; keep them so the comments
+ * stay traceable. Owns design of: #dt-right-panels > section, #dt-color-panel h3,
+ * .dt-color-fields/.dt-color-field, [data-collapsed]/.dt-panel-*, .dt-preset-grid,
+ * .dt-tip-trigger/.dt-tooltip, .dt-menubar-actions, .dt-brush-row, li.dt-layer[aria-selected].
+ */
 /* === JUICY PIXEL PASS (containers + pixel numerals + selection brackets) === */
 
 /* --- J0. Cursor baseline: shell stays default, only the canvas host owns a tool cursor.

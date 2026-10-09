@@ -1,4 +1,21 @@
-/* Split from style.css lines 1-396; cascade order: base-polish-juicy-picker. */
+/* Split from style.css lines 1-396; cascade order: base-polish-juicy-picker.
+ *
+ * TIER 1 of 4 - STRUCTURE + TOKENS.
+ *   :root custom properties, the #dt-app grid, control resets, and the static
+ *   shape of every region (menubar / optionbar / toolbar / panels / canvas host
+ *   / statusbar / dialog shell / toast / size presets).
+ *
+ * These four files are NOT feature slices - they are cross-cutting DESIGN
+ * LAYERS, and the order is load-bearing. Nearly every region has rules in three
+ * or four of them (color 34 rules across all four, layers/menubar/optionbar
+ * across three), so splitting them per feature would shred each layer and leave
+ * the cascade dependent on <link> order. Keep the tiers; use these headers to
+ * navigate.
+ *
+ * Owns layout of: #dt-app (grid), .dt-menu, #dt-toolbar, .dt-slots/.dt-fgbg,
+ * #dt-palette/#dt-recent/.dt-swatch, #dt-layer-list/li.dt-layer, .dt-dialog*,
+ * .dt-progress*, #dt-toast*, #dt-size-presets.
+ */
 :root {
   --bg: #1e1f22;
   --panel: #2b2d31;

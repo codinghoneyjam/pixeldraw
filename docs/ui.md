@@ -90,7 +90,7 @@
 - `mountWheel(ui)`는 `createColorWheel({container:els.wheelWrap,onChange:활성슬롯 record:false,onCommit:canonical pushRecent})`를 연결하고 `wheel.dispose`를 돌려준다. 예전의 얇은 어댑터 `color_wheel.js`는 구현에 합쳐져 파일이 없다.
 - `WHEEL_PX=176/RING_OUT=88/RING_IN=74/RING_MID=81/RING_CLEARANCE=4/SV_PX=floor(2·(74−4)/√2)` + `rgbToHsv/hsvToRgb/angleToHue/hsvToHex`
 - hue링+중앙 SV사각 캔버스 2개 생성(없으면 생성, `resolveCanvas`), 래스터 캐시+포인터 드래그 pickHue/pickSatVal. 반환 `{wheelCanvas,svCanvas,setHueSV,setFromRgb,dispose}`. DOM 없으면 null.
-- 주의: SV 크기는 계산값 고정. 하드코딩시 모서리 잘림. style.css 176/98과 어긋나면 링 이탈. SV는 `border-radius:0` 정사각, 전(s,v) 선택 가능.
+- 주의: SV 크기는 계산값 고정. 하드코딩시 모서리 잘림. style_picker.css 176/98과 어긋나면 링 이탈. SV는 `border-radius:0` 정사각, 전(s,v) 선택 가능.
 - 주의: 휠은 paint()가 먹이는 순수 뷰. 드래그 중 onChange는 기록 없이 칠하고, 해제시 1회 기록.
 
 ## 4. dialog (4파일 8함수) — openModal 셸+재수출 파사드 (`src/ui/dialogs/` + `src/ui/shared/dialogs.js`)

@@ -78,8 +78,9 @@ function paintPixels(ctx, size, fn) {
 }
 
 // <META - ROLE : Find or create a canvas inside the wrap, track created nodes | L80-94>
-// Sizes are set as canvas ATTRIBUTES only. No inline CSS is written here: style.css
-// owns position/size/centring so there is a single owner of the picker layout.
+// Sizes are set as canvas ATTRIBUTES only. No inline CSS is written here: the
+// color-picker tier (style_picker.css) owns position/size/centring so there is
+// a single owner of the picker layout.
 function resolveCanvas(container, id, size, label, created) {
   const found = container.querySelector(`#${id}`);
   if (found) return found;
@@ -234,7 +235,7 @@ function createPainter(c) {
   };
 }
 
-// <META - ROLE : Factory: canvases, drags, dispose. Layout belongs to style.css | L229-260>
+// <META - ROLE : Factory: canvases, drags, dispose. Layout belongs to style_picker.css | L229-260>
 export function createColorWheel(options = {}) {
   const container = options.container ?? null;
   if (!container || typeof document === "undefined") return null;

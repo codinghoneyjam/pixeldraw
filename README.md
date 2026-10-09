@@ -45,7 +45,8 @@ if any of the 34 lacks layers or scores below 0.99. Serve it with
 ## Layout
 
 ```text
-index.html  style.css  package.json  run.py  split_serialize.py
+index.html  package.json  run.py  split_serialize.py
+style_base.css  style_polish.css  style_juicy.css  style_picker.css
 src/
   core/     constants.js errors.js events.js pixel.js blend.js chunkstore.js
             raster/  (arc atlas composite_ops gradient polygon raster_brush
