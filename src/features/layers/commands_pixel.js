@@ -16,18 +16,22 @@ function mergePixel(lowerArr, lowerOpacity, upperArr, upperOpacity, upperBlend) 
 }
 
 export class MergeDownCommand {
-  // Merging flattens the upper layer's pixels into the lower one, so the upper's
-  // BLEND MODE IS CONSUMED, not carried. Once merged, changing the lower layer's
-  // blend cannot recover how the two composites looked: the blended result is
-  // baked into normal pixels. That is inherent to a destructive merge (there is
-  // no partial-canvas mode yet) and is recorded in docs/features.md §6.
+  // Undo is complete: `do` snapshots every lower-layer chunk, the lower opacity,
+  // and the removed upper Layer OBJECT (blend included), so `undo` restores both
+  // layers exactly as they were. Nothing is lost by undoing.
   //
-  // Consequences worth knowing:
-  //   - the pixels written are exactly what the active blend produced, so the
-  //     merge is correct at the moment it happens (tests/blend_modes.test.mjs
-  //     pins the three-compositor equivalence);
-  //   - only the *reversibility* is lost, which undo restores for this command
-  //     but a later re-merge cannot reproduce from a different blend setting.
+  // What IS permanent is the merge itself: the upper's blend is applied to the
+  // pixels at merge time and those pixels become ordinary ones in the lower
+  // layer. The BLEND RELATION is gone - not the data. Concretely, if the upper
+  // was `screen` and you later set the lower layer's blend to `multiply`, that
+  // later change re-blends EVERYTHING below, including the region that was
+  // merged as `screen`, so you cannot get the original two-layer look back by
+  // adjusting the lower layer. You must undo the merge instead.
+  //
+  // That is inherent to a destructive merge (no partial-canvas mode exists yet).
+  // The merged pixels are correct - tests/blend_modes.test.mjs pins both that
+  // they equal what the blend produced and that flipping the lower's blend
+  // afterwards cannot change them.
   constructor(upperId, label = "아래로 병합") {
     this.upperId = upperId;
     this.label = label;

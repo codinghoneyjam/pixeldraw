@@ -245,10 +245,15 @@ describe("layer blend model", () => {  it("setProp accepts every mode and reject
   });
 });
 
-describe("merge-down consumes the upper layer's blend", () => {
-  // A merge is destructive: the upper's blend is applied at merge time, then baked
-  // into normal pixels. The operation is correct, but the blend is not
-  // recoverable afterwards (docs/features.md §6).
+describe("merge-down and blend", () => {
+  // Two separate facts, both worth pinning:
+  //   1. UNDO IS COMPLETE. do() snapshots every lower chunk, the lower opacity
+  //      and the removed upper Layer OBJECT (blend included), so undo restores
+  //      both layers exactly - pixels, blend, opacity and stack position.
+  //   2. The BLEND RELATION is what ends. After merging, the upper's blended
+  //      pixels are ordinary pixels in the lower layer, so re-blending the lower
+  //      later re-blends that region too and cannot reproduce the original
+  //      two-layer look. Only undoing the merge recovers it.
   it("the merged pixels equal what the blend produced", () => {
     const layers = makeLayers(2, 5);
     for (const layer of layers) {
@@ -277,11 +282,53 @@ describe("merge-down consumes the upper layer's blend", () => {
     assert.equal(after[0], expected, "merge must bake the blended result");
     assert.equal(before[0], expected, "pre-merge composite must already be that value");
 
-    // And the baked pixels are now plain normal: flipping the lower's blend away
-    // from normal cannot change them.
+    // The baked pixels are now plain: flipping the lower's blend away from
+    // normal cannot change them, because the relation was already flattened.
     layers[0].blend = "screen";
     const flipped = new Uint8ClampedArray(CHUNK * CHUNK * 4);
     compositeChunk(doc, 0, 0, flipped);
-    assert.equal(flipped[0], after[0], "blend was consumed by the merge, not retained");
+    assert.equal(flipped[0], after[0], "the merge already flattened the relation");
+  });
+
+  it("undo restores both layers exactly, blend included", () => {
+    const layers = makeLayers(2, 5);
+    for (const layer of layers) {
+      const wr = new PixelWriter(layer.store, layer.id);
+      for (let y = 0; y < CHUNK; y++) {
+        for (let x = 0; x < CHUNK; x++) {
+          const c = layer.id === "L1" ? 128 : 200;
+          wr.set(x, y, (255 << 24) | (c << 16) | (c << 8) | c);
+        }
+      }
+      wr.finish();
+    }
+    layers[0].opacity = 0.5;
+    layers[1].blend = "screen";
+    const doc = makeDoc(layers);
+
+    const pixelsBefore = layers.map((l) => Array.from(l.store.getChunk(0, 0) ?? []));
+    const screenBefore = new Uint8ClampedArray(CHUNK * CHUNK * 4);
+    compositeChunk(doc, 0, 0, screenBefore);
+
+    const cmd = new MergeDownCommand(layers[1].id);
+    cmd.do(doc);
+    assert.equal(doc.layers.length, 1, "merge removes the upper layer");
+
+    cmd.undo(doc);
+    assert.equal(doc.layers.length, 2, "undo puts the upper layer back");
+
+    // Every observable property must be back, not just the pixels.
+    assert.equal(doc.layers[0].blend, "normal");
+    assert.equal(doc.layers[1].blend, "screen", "upper blend is restored");
+    assert.equal(doc.layers[0].opacity, 0.5, "lower opacity is restored");
+    // undo restores the state from BEFORE the command, so the active layer is
+    // the one that was selected when the merge happened (L1 here), not the lower
+    // layer that `do` had switched to.
+    assert.equal(doc.activeLayerId, layers[1].id, "pre-merge active layer is restored");
+    assert.deepEqual(Array.from(doc.layers[0].store.getChunk(0, 0) ?? []), pixelsBefore[0], "lower pixels");
+    assert.deepEqual(Array.from(doc.layers[1].store.getChunk(0, 0) ?? []), pixelsBefore[1], "upper pixels");
+    const screenAfter = new Uint8ClampedArray(CHUNK * CHUNK * 4);
+    compositeChunk(doc, 0, 0, screenAfter);
+    assert.deepEqual([...screenAfter], [...screenBefore], "the composite is byte-identical after undo");
   });
 });
