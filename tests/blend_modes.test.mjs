@@ -15,6 +15,7 @@ import { PixelWriter } from "../src/core/chunkstore.js";
 import { Document, IdGen } from "../src/features/document/document.js";
 import { Layer } from "../src/features/layers/layer.js";
 import { SetLayerPropCommand } from "../src/features/layers/commands.js";
+import { MergeDownCommand } from "../src/features/layers/commands_pixel.js";
 
 const CHUNK = 32;
 
@@ -219,8 +220,7 @@ describe("display == export == eyedropper (contract §1-1)", () => {
   });
 });
 
-describe("layer blend model", () => {
-  it("setProp accepts every mode and rejects an unknown one", () => {
+describe("layer blend model", () => {  it("setProp accepts every mode and rejects an unknown one", () => {
     const [layer] = makeLayers(1);
     for (const mode of BLEND_MODES) {
       layer.setProp("blend", mode);
@@ -242,5 +242,46 @@ describe("layer blend model", () => {
 
   it("BLEND_MODES is the single list, re-exported by the layer module", () => {
     assert.deepEqual([...BLEND_MODES], ["normal", "multiply", "screen", "overlay", "darken", "lighten"]);
+  });
+});
+
+describe("merge-down consumes the upper layer's blend", () => {
+  // A merge is destructive: the upper's blend is applied at merge time, then baked
+  // into normal pixels. The operation is correct, but the blend is not
+  // recoverable afterwards (docs/features.md §6).
+  it("the merged pixels equal what the blend produced", () => {
+    const layers = makeLayers(2, 5);
+    for (const layer of layers) {
+      const wr = new PixelWriter(layer.store, layer.id);
+      for (let y = 0; y < CHUNK; y++) {
+        for (let x = 0; x < CHUNK; x++) {
+          const c = layer.id === "L1" ? 128 : 200;
+          wr.set(x, y, (255 << 24) | (c << 16) | (c << 8) | c);
+        }
+      }
+      wr.finish();
+    }
+    const doc = makeDoc(layers);
+
+    // What the screen shows BEFORE merging, with the upper in multiply.
+    layers[1].blend = "multiply";
+    const before = new Uint8ClampedArray(CHUNK * CHUNK * 4);
+    compositeChunk(doc, 0, 0, before);
+    const expected = rnd(128 * (200 / 255));
+
+    // The command must bake exactly those pixels into the lower layer.
+    const cmd = new MergeDownCommand(layers[1].id);
+    cmd.do(doc);
+    const after = new Uint8ClampedArray(CHUNK * CHUNK * 4);
+    compositeChunk(doc, 0, 0, after);
+    assert.equal(after[0], expected, "merge must bake the blended result");
+    assert.equal(before[0], expected, "pre-merge composite must already be that value");
+
+    // And the baked pixels are now plain normal: flipping the lower's blend away
+    // from normal cannot change them.
+    layers[0].blend = "screen";
+    const flipped = new Uint8ClampedArray(CHUNK * CHUNK * 4);
+    compositeChunk(doc, 0, 0, flipped);
+    assert.equal(flipped[0], after[0], "blend was consumed by the merge, not retained");
   });
 });

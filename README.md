@@ -105,9 +105,9 @@ undo, no-AA PNG check, locked/hidden reject, small-budget history eviction).
 
 ## Known issues
 
-- `npm test` fails on Node 24: `node --test tests/` is not accepted as a directory
-  argument. The `package.json` script is still unfixed. Run
-  `node --test "tests/*.test.mjs"` instead.
+None open. Two that this file used to list are closed: the `test` script already
+runs the glob form Node 24 requires (`node --test "tests/*.test.mjs"`, so
+`npm test` works), and `src/core/raster/**` no longer throws `RangeError`.
 
 ## Verification status (2026-10-09)
 

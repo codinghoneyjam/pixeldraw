@@ -16,6 +16,18 @@ function mergePixel(lowerArr, lowerOpacity, upperArr, upperOpacity, upperBlend) 
 }
 
 export class MergeDownCommand {
+  // Merging flattens the upper layer's pixels into the lower one, so the upper's
+  // BLEND MODE IS CONSUMED, not carried. Once merged, changing the lower layer's
+  // blend cannot recover how the two composites looked: the blended result is
+  // baked into normal pixels. That is inherent to a destructive merge (there is
+  // no partial-canvas mode yet) and is recorded in docs/features.md §6.
+  //
+  // Consequences worth knowing:
+  //   - the pixels written are exactly what the active blend produced, so the
+  //     merge is correct at the moment it happens (tests/blend_modes.test.mjs
+  //     pins the three-compositor equivalence);
+  //   - only the *reversibility* is lost, which undo restores for this command
+  //     but a later re-merge cannot reproduce from a different blend setting.
   constructor(upperId, label = "아래로 병합") {
     this.upperId = upperId;
     this.label = label;

@@ -78,8 +78,13 @@ python schema/schema_selfcheck.py
 - `npm test`의 `node --test tests/`는 Node 24에서 디렉터리 인자를 받지 않아 실패한다.
   `package.json`의 스크립트 수정이 남아 있다. 현재는 `node --test "tests/*.test.mjs"`를
   직접 실행할 것.
-- 그 명령 기준 **366건 전부 통과**한다. 블렌드 모드 6종 구현로 19건이 늘었다
-  (`tests/blend_modes.test.mjs`).
+- 그 명령 기준 **372건 전부 통과**한다. 블렌드 모드 6종 구현로 19건이 늘었고,
+  래스터 가드의 에러 타입 교체로 6건이 늘었다(`tests/blend_modes.test.mjs`·
+  `tests/raster_guards.test.mjs`).
+- `npm test`는 정상 동작한다. `package.json`의 스크립트가 이미 Node 24가 요구하는
+  glob 형태(`node --test "tests/*.test.mjs"`)다. 이 문서와 README가 오랫동안
+  "수정이 남아 있다"고 적었으나 실제로는 고쳐져 있었다 — 검증 없이 문구를
+  반복한 오류였다.
 - 나머지 게이트도 모두 통과한다: parity 201건·png_cases 5/5·view OK·schema selfcheck OK·
   recipe parity 39/39·layer gallery 34/34·tool integrity check 34건.
 - 레이어 블렌드 모드(`multiply`·`screen`·`overlay`·`darken`·`lighten`)는 2026-10-09에
