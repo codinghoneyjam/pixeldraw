@@ -2,7 +2,7 @@
  *
  * TIER 4 of 4 - COLOUR PICKER PRECISION.
  *   The only tier close to a single feature (features/color/), because the picker
- *   is a pointing instrument rather than a panel: a 176px hue ring with a 98px SV
+ *   is a pointing instrument rather than a panel: a 132px hue ring with a 74px SV
  *   square centred inside it, square corners so no colour is unreachable, and
  *   percentage swatch radii. WHEEL_PX / RING_OUT / SV_PX in
  *   features/color/panel_color_wheel.js are kept in step with the numbers here.
@@ -12,10 +12,9 @@
  */
 /* === COLOR PICKER ===
    Layout mirrors the reference: head (slots + native input) -> hue wheel with the
-   SV square centred INSIDE the ring -> stacked R/G/B -> hex. panel_color.js supplies
+  SV square centred INSIDE the ring -> five stacked colour fields. panel_color.js supplies
    the canvas pixel sizes and the centring transform inline; everything structural
-   lives here. The old `.dt-wheel-row` side-by-side layout is gone: 140px + 112px
-   could not fit the 240px panel and was the source of the RGB overflow. */
+  lives here. The compact wheel sits beside the foreground/background slots. */
 .dt-picker {
   display: flex;
   flex-direction: column;
@@ -32,6 +31,7 @@
   flex-wrap: wrap;
 }
 .dt-picker-head .dt-slots { flex: none; }
+.dt-picker-head .dt-wheel-wrap { margin: 0; }
 #dt-color-panel input[type="color"] {
   flex: none;
   width: 40px;
@@ -47,8 +47,9 @@
    in that module must stay in sync with the numbers here. */
 .dt-wheel-wrap {
   position: relative;
-  width: 176px;
-  height: 176px;
+  width: 132px;
+  height: 132px;
+  flex: 0 0 132px;
   align-self: center;
   margin: 2px 0;
 }
@@ -60,8 +61,8 @@
 }
 #dt-hue-wheel {
   display: block;
-  width: 176px;
-  height: 176px;
+  width: 132px;
+  height: 132px;
   touch-action: none;
   border-radius: 50%;
 }
@@ -72,8 +73,8 @@
   transform: translate(-50%, -50%);
   z-index: 1;
   display: block;
-  width: 98px;
-  height: 98px;
+  width: 74px;
+  height: 74px;
   touch-action: none;
   border: 1px solid var(--border);
   /* Square corners: the rounded clipping made some colours unreachable.

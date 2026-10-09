@@ -93,32 +93,27 @@
        cell produced a 61px input (47.5 content + 12 padding + 2 border) that spilled
        3px past the panel edge and pushed the HEX value out of view. This sheet has
        no global border-box reset.
-       Columns are weighted so the three 0-255 channels get only what a 3-digit number
-       needs and the HEX field (7 glyphs) gets the rest. --- */
+       Each channel and HEX value gets one compact, full-width row. --- */
 .dt-color-fields {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 0.72fr)) minmax(0, 1.84fr);
-  grid-template-rows: auto auto;
-  gap: 4px;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: repeat(5, auto);
+  gap: 3px;
   align-items: center;
-  margin-top: 6px;
+  margin-top: 0;
 }
 .dt-color-field {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
-  /* The grid is declared 2 rows x 4 columns and EVERY field spans both rows, so the
-     four render as one aligned strip (R G B | HEX) instead of R/G/B sitting in row 1
-     with a dead row 2 underneath. This is the "2행 4열" intent from the request. */
-  grid-row: 1 / span 2;
+  min-height: 24px;
 }
 .dt-color-field--hex {
-  grid-column: 4;
-  align-self: stretch;
+  grid-column: 1;
 }
 .dt-color-field > label {
-  flex: none;
+  flex: 0 0 34px;
   font-size: 9px;
   font-weight: 700;
   line-height: 1;
@@ -130,6 +125,7 @@
 .dt-color-field[data-ch="b"] > label { color: #5c9bff; }
 .dt-color-field input {
   box-sizing: border-box;
+  flex: 1 1 auto;
   min-width: 0;
   width: 100%;
   min-height: 24px;

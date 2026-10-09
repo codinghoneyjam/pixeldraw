@@ -1,12 +1,12 @@
 // <META - FILE SUMMARY - Hue ring + centered SV square: HSV math, raster cache, pointer pick, mount>
 import { parseHex, toHex } from "../../core/pixel.js";
 
-export const WHEEL_PX = 176;
-export const RING_OUT = 88;
-export const RING_IN = 74;
-export const RING_MID = 81;
+export const WHEEL_PX = 132;
+export const RING_OUT = 66;
+export const RING_IN = 55.5;
+export const RING_MID = 60.75;
 /** Minimum px of bare ring between the SV square's corner and RING_IN. */
-export const RING_CLEARANCE = 4;
+export const RING_CLEARANCE = 3;
 /** Largest square that fits inside the ring hole with RING_CLEARANCE on every side. */
 export const SV_PX = Math.floor((2 * (RING_IN - RING_CLEARANCE)) / Math.SQRT2);
 
