@@ -1,5 +1,6 @@
 import { DrawToolError } from "../../core/errors.js";
 import { SETTING_KEYS } from "../../core/events.js";
+import { GRID_MODES } from "../../core/constants.js";
 import { parseHex, toHex, toHex8 } from "../../core/pixel.js";
 
 export const TOOL_IDS = Object.freeze([
@@ -15,7 +16,6 @@ export const TOOL_IDS = Object.freeze([
   "hand",
 ]);
 
-const GRID_MODES = Object.freeze(["off", "unit", "tile", "pixel"]);
 const SHAPE_FILLS = Object.freeze(["outline", "fill"]);
 
 function validateColor(value) {

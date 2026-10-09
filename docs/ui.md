@@ -137,26 +137,28 @@
 ### tooltip.js (`src/ui/shared/tooltip.js`) — `createTooltips(root)→{dispose,close,closeWithin,isOpen}` + `TIP_AUTO_HIDE_MS=2500`
 - `.dt-tip-trigger(data-tip)` hover/focus/클릭(pin)→`document.body`에 `.dt-tooltip` 1개 표시, left/top만 인라인, clampBox로 뷰포트 고정. mouseleave/focusout/Esc/바깥클릭/유휴 2500ms로 닫힘+`aria-expanded` 갱신.
 - 주의: 옵션바 `overflow:hidden`이라 body 부착 필수. `hidden` 섹션은 `closeWithin(sec)`로 함께 닫기. 텍스트 400자 cap.
-## 6. actions/ (3종) — 액션 핸들러
+## 6. actions/ — 횡단 액션 2종 (도구별 액션은 피처로 이감)
 
 `app.js`의 `runAction`이 `data-action` 문자열로 호출하는 핸들러 묶음. 전부 Session
 메서드 호출만 하며 모델을 직접 변조하지 않는다. `actions/action_map.js`가 id→핸들러
-표 하나로 모으고, 실제 동작은 아래 세 모듈과 `features/layers/layer_actions.js`에 있다.
-`view_actions.js`·`tool_actions.js`는 `edit_actions.js`로 합쳐졌다.
+표 하나로 유일한 조립점이고, 실제 동작은 도구별 모듈에 흩어져 있다. `ui/actions/`에는
+**피처에 귀속되지 않는** 명령만 남는다(되돌리기는 도구 보류 상태를 건드리고, 캔버스
+크기는 다이얼로그를 연다).
 
 ### file_actions.js (176줄) — 파일 I/O 9종
 - `doSave` / `doOpen` / `doExportLayer` / `doImportLayer` / `doExportPng` / `doImportRecipe` / `doExportVector` / `doImportVector` — 모두 `async`. `io`(`serialize.js` 배럴·`file_io`·`export_png`)와 `core`만 참조한다.
 - `doNew(session)` — `async`. 변경 버리기 확인 후 `newDocument(DEFAULT_DOC)`로 교체한다.
 
-### edit_actions.js (53줄) — 되돌리기·도구·색·보기 11종
-- `requestUndo(session, toolManager)` / `requestRedo(session, toolManager)` — 편집 중(`isEditing`)이면 무시한다.
-- `brushStep(session, delta)` / `colorSwap(session)` / `colorReset(session)` — `setSetting` 경유만 한다.
-- `zoomIn(viewStore)` / `zoomOut(viewStore)` / `fit(viewStore)` / `actual(viewStore)` — `viewStore`에만 위임하며 Session을 받지 않는다.
-- `gridCycle(session)` — `gridMode`를 `off→unit→tile→pixel` 순환한다.
+### edit_actions.js (35줄) — 횡단 3종
+- `requestUndo(session, toolManager)` / `requestRedo(session, toolManager)` — 활성 도구가 보류 도형을 쥐고 있으면 undo는 그것을 먼저 파기하고 종료, redo는 무시한다. 편집 중(`isEditing`)이면 Session이 거부한다.
 - `canvasResize(session)` — `async`. `showResizeCanvasDialog` 결과로 `session.resizeCanvas(w,h)`를 호출한다.
 
-### layer_actions.js (`src/features/layers/layer_actions.js`) — 레이어 6종
-- `layerAdd` / `layerDuplicate` / `layerRemove` / `layerMergeDown` / `layerUp` / `layerDown` — `session`만 받아 `layer_operations`에 대응하는 Session 메서드를 호출한다. 피처 재편으로 `ui/actions/`를 떠나 `features/layers/`에 정착했다.
+### 피처로 이감된 액션 (2026-10-09, slice-12)
+- `features/viewport/view_actions.js` — `zoomIn/zoomOut/fit/actual`(viewStore 위임) + `gridCycle`(`GRID_MODES` 순환, `core/constants.js`가 SSOT).
+- `features/color/color_actions.js` — `colorSwap/colorReset`. 버튼(`color_slots.js`)과 키보드가 같은 `setSetting` 경로를 쓰므로 `color_events.js`의 재칠·최근색 기록이 양쪽에 동일하게 걸린다.
+- `features/pen/brush_actions.js` — `brushStep`. `PEN_MIN/PEN_MAX` 클램프.
+- `features/layers/layer_actions.js` — 레이어 6종(`layerAdd`/`layerDuplicate`/`layerRemove`/`layerMergeDown`/`layerUp`/`layerDown`). `session`만 받아 `layer_operations`에 대응하는 Session 메서드를 호출한다.
+- 주의: `session.settings`는 호출마다 frozen 복사본이라 한 번 읽은 `s`는 스냅샷이다. 두 번 쓰는 swap이 안전한 이유다.
 
 ### storage.js (`src/ui/shared/storage.js`) — 영속 헬퍼 (액션은 아니지만 boot가 쓴다)
 - `SETTINGS_KEY`/`RECENT_KEY`/`PERSIST_KEYS`(9종)/`RECENT_MAX`(32)+`loadJson`/`storeJson`/`restoreSettings(session)`/`loadRecentColors()`/`attachSettingsPersist(session)`(250ms 디바운스). `app.js` boot에서 분리됐다.

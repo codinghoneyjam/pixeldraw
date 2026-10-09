@@ -16,6 +16,8 @@ export const MAX_LAYERS = 64;
 export const UNDO_MAX_STEPS = 200;
 export const UNDO_MAX_BYTES = 96 * 1024 * 1024;
 export const ZOOM_LEVELS = Object.freeze([0.25, 0.5, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32]);
+// Cycle order for Ctrl+' : the grid overlay steps off -> unit -> tile -> pixel.
+export const GRID_MODES = Object.freeze(["off", "unit", "tile", "pixel"]);
 export const DEFAULT_DOC = Object.freeze({ widthPx: 512, heightPx: 512, background: "transparent" });
 export const SCHEMA_VERSION = "2.0.0";
 

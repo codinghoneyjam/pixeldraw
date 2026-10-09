@@ -1,7 +1,9 @@
 // <META - FILE SUMMARY - Action id -> handler table built from domain action modules>
 import { doSave, doOpen, doExportLayer, doImportLayer, doExportPng, doNew, doImportRecipe, doExportVector, doImportVector } from "./file_actions.js";
-import { requestUndo, requestRedo, brushStep, colorSwap, colorReset } from "./edit_actions.js";
-import { zoomIn, zoomOut, fit, actual, gridCycle, canvasResize } from "./edit_actions.js";
+import { requestUndo, requestRedo, canvasResize } from "./edit_actions.js";
+import { zoomIn, zoomOut, fit, actual, gridCycle } from "../../features/viewport/view_actions.js";
+import { colorSwap, colorReset } from "../../features/color/color_actions.js";
+import { brushStep } from "../../features/pen/brush_actions.js";
 import { layerAdd, layerDuplicate, layerRemove, layerMergeDown, layerUp, layerDown } from "../../features/layers/layer_actions.js";
 
 // <META - ROLE : Build the menubar/shortcut action table for a live session | L8-38>
