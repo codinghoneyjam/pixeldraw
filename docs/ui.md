@@ -42,7 +42,7 @@
 - syncSections: 가시성은 제네릭, 블록 내부 활성/비활성 규칙은 **해당 모듈의 `sync()`**다. `sync()`는 보임 여부와 무관하게 항상 돌아간다(disabled 상태를 "마지막으로 보인 상태"가 아닌 세션 상태의 순수함수로 유지).
 - TOOL_STATE 라우팅: `fill` 훅을 가진 섹션 중 활성 도구를 servicing하는 곳. view 섹션은 전 도구를 serving하므로 `fill` 유무가 곧 구분자다.
 - 주의: `safe`는 주입하지 않고 import하면 `features→ui` 역의존이 된다. 셸이 내려준다.
-- **블록 소유권**: `data-section="view"` → `features/viewport/panel_view_options.js`(그리드 셀렉트·줌 셀렉트·fit/actual), `data-section="shape"` → `features/shape/panel_shape_options.js`(fill 라디오·radius·lock·snap·bbox·commit/cancel). `data-section` 없는 섹션은 도움말 팁 전용이라 로직이 없다.
+- **블록 소유권**: `data-section="view"` → `features/viewport/panel_view_options.js`(그리드 셀렉트·줌 셀렉트·fit/actual), `data-section="shape"` → `features/shape/panel_shape_options.js`(fill 토글·radius·lock·snap·bbox·commit/cancel). `data-section` 없는 섹션은 도움말 팁 전용이라 로직이 없다.
 - `data-section` 속성은 `index.html` 옵션바 섹션에 명시돼 있고, `tests/optionbar_sections.test.mjs`가 fake DOM으로 가시성·disabled 행렬·TOOL_STATE 라우팅·dispose를 검증한다.
 - 주의: 줌 셀렉트는 view에 위임. 옵션바 `overflow:hidden`이라 툴팁은 body 부착.
 

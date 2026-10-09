@@ -122,48 +122,22 @@
   accent-color: var(--accent);
 }
 
-/* --- 1d. Shape-fill radios as segmented buttons (native input kept focusable) --- */
-#dt-optionbar section[data-for-tools] label:has(input[name="dt-shape-fill"]) {
-  display: inline-flex;
-  align-items: center;
-  min-height: 32px;
+/* --- 1d. Binary shape-fill mode button. --- */
+#dt-optionbar .dt-option-flip {
+  min-width: 78px;
   padding: 0 10px;
-  border: 1px solid var(--border);
-  border-radius: 0;
-  background: var(--panel-2);
-  cursor: pointer;
+  min-height: 32px;
+  font-weight: 700;
   transition: background-color 120ms ease-out, border-color 120ms ease-out, color 120ms ease-out;
 }
-#dt-optionbar label:has(#dt-shape-fill-outline) {
-  border-radius: var(--radius) 0 0 var(--radius);
-}
-#dt-optionbar label:has(#dt-shape-fill-fill) {
-  margin-left: -1px;
-  border-radius: 0 var(--radius) var(--radius) 0;
-}
-#dt-optionbar label:has(input[name="dt-shape-fill"]:checked) {
-  background: var(--accent-strong);
+#dt-optionbar .dt-option-flip[aria-pressed="true"] {
+  background: #ffffff;
   border-color: var(--accent);
-  color: #fff;
+  color: #17689a;
 }
-#dt-optionbar label:has(input[name="dt-shape-fill"]:focus-visible) {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-#dt-optionbar label:has(input[name="dt-shape-fill"]:disabled) {
+#dt-optionbar .dt-option-flip:disabled {
   opacity: 0.4;
   cursor: default;
-}
-#dt-optionbar label:has(input[name="dt-shape-fill"]) input[name="dt-shape-fill"] {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 0;
-  height: 0;
-  min-height: 0;
-  margin: 0;
-  padding: 0;
-  border: none;
-  background: transparent;
 }
 
 /* --- 2. Optionbar: single row, sections never wrap.
@@ -255,7 +229,7 @@
   #dt-toast .dt-toast-item,
   #dt-layer-list li.dt-layer,
   .dt-panel-body,
-  #dt-optionbar section[data-for-tools] label:has(input[name="dt-shape-fill"]) {
+  #dt-optionbar .dt-option-flip {
     transition: none;
     animation: none;
   }

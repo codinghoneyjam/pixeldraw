@@ -84,12 +84,11 @@ describe("optionbar section visibility", () => {
 });
 
 describe("optionbar shape block enable matrix", () => {
-  it("line disables the fill radios, rrect is the only tool with a radius", () => {
+  it("line disables the fill toggle, rrect is the only tool with a radius", () => {
     const { session, bar, dispose } = mount();
     session.setSetting("activeTool", "line");
-    const { outline, fill, radius, lock, snap, x, commit, cancel } = bar.shape;
-    assert.equal(outline.disabled, true, "line cannot fill");
-    assert.equal(fill.disabled, true);
+    const { fillToggle, radius, lock, snap, x, commit, cancel } = bar.shape;
+    assert.equal(fillToggle.disabled, true, "line cannot fill");
     assert.equal(radius.disabled, true, "radius is rrect-only");
     assert.equal(lock.disabled, false);
     assert.equal(snap.disabled, false);
@@ -99,8 +98,23 @@ describe("optionbar shape block enable matrix", () => {
     assert.equal(cancel.disabled, true);
 
     session.setSetting("activeTool", "rrect");
-    assert.equal(outline.disabled, false, "rrect can fill");
+    assert.equal(fillToggle.disabled, false, "rrect can fill");
     assert.equal(radius.disabled, false, "rrect owns the radius");
+    dispose();
+  });
+
+  it("fill toggle flips the setting and its accessible state", () => {
+    const { session, bar, dispose } = mount();
+    const toggle = bar.shape.fillToggle;
+    assert.equal(toggle.textContent, "테두리");
+    assert.equal(toggle.getAttribute("aria-pressed"), "false");
+    toggle.emit("click");
+    assert.equal(session.settings.shapeFill, "fill");
+    assert.equal(toggle.textContent, "채움");
+    assert.equal(toggle.getAttribute("aria-pressed"), "true");
+    toggle.emit("click");
+    assert.equal(session.settings.shapeFill, "outline");
+    assert.equal(toggle.getAttribute("aria-pressed"), "false");
     dispose();
   });
 

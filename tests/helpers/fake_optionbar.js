@@ -102,7 +102,7 @@ export function makeOptionbar() {
   add(["pen", "eraser"], null, [penSizeLabel]);
 
   const shapeControls = [
-    mk("dt-shape-fill-outline"), mk("dt-shape-fill-fill"), mk("dt-shape-radius"),
+    mk("dt-shape-fill-toggle", "button"), mk("dt-shape-radius"),
     mk("dt-shape-lock"), mk("dt-snap-unit"),
     mk("dt-shape-x"), mk("dt-shape-y"), mk("dt-shape-w"), mk("dt-shape-h"),
     mk("dt-shape-commit", "button"), mk("dt-shape-cancel", "button"),
@@ -110,10 +110,10 @@ export function makeOptionbar() {
   // Named aliases: the array order is index.html's markup order, but tests read
   // far clearer through names than through five skipped slots.
   const shape = {
-    outline: shapeControls[0], fill: shapeControls[1], radius: shapeControls[2],
-    lock: shapeControls[3], snap: shapeControls[4],
-    x: shapeControls[5], y: shapeControls[6], w: shapeControls[7], h: shapeControls[8],
-    commit: shapeControls[9], cancel: shapeControls[10],
+    fillToggle: shapeControls[0], radius: shapeControls[1],
+    lock: shapeControls[2], snap: shapeControls[3],
+    x: shapeControls[4], y: shapeControls[5], w: shapeControls[6], h: shapeControls[7],
+    commit: shapeControls[8], cancel: shapeControls[9],
   };
   add(["line", "rect", "rrect", "ellipse", "polygon"], "shape", shapeControls);
   add(["fill"], null, []);
