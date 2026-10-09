@@ -1,11 +1,11 @@
 // <META - FILE SUMMARY - File actions: save, open, exportLayer, importLayer, exportPng, new>
 import { DrawToolError } from "../../core/errors.js";
 import { EVENTS } from "../../core/events.js";
-import { documentToJson, importLayerJson, jsonToDocument, layerToJson, documentToVectorJson, vectorJsonToDocument, recipeJsonToDocument } from "../../io/serialize.js";
+import { documentToJson, importLayerJson, jsonToDocument, layerToJson, layerToVectorJson, documentToVectorJson, vectorJsonToDocument, recipeJsonToDocument } from "../../io/serialize.js";
 import { exportPngBytes } from "../../io/export_png.js";
 import { stringifyReadableJson } from "../../io/stringify_readable.js";
 import { pickFile, readJsonFile, saveBinaryFile, saveTextFile } from "../../io/file_io.js";
-import { confirmDiscardChanges, showNewDocumentDialog, showProgress } from "../shared/dialogs.js";
+import { confirmDiscardChanges, showNewDocumentDialog, showProgress, showLayerExportFormatDialog } from "../shared/dialogs.js";
 import { STRINGS } from "../shared/strings.js";
 
 // <META - ROLE : Save document to JSON file | L1-18>
@@ -58,11 +58,17 @@ export async function doOpen(session, toast) {
 export async function doExportLayer(session, toast) {
   const doc = session.doc;
   if (!doc) return;
+  const format = await showLayerExportFormatDialog();
+  if (!format) return;
   const prog = showProgress("레이어 내보내기");
   try {
-    const obj = await layerToJson(doc, doc.activeLayerId);
     const layer = doc.getLayer(doc.activeLayerId);
-    const ok = await saveTextFile(`${layer.name || "layer"}.drawlayer.json`, `${stringifyReadableJson(obj)}\n`);
+    const commandMode = format === "commands";
+    const obj = commandMode
+      ? layerToVectorJson(doc, doc.activeLayerId)
+      : await layerToJson(doc, doc.activeLayerId);
+    const extension = commandMode ? "drawlayer.vector.json" : "drawlayer.json";
+    const ok = await saveTextFile(`${layer.name || "layer"}.${extension}`, `${stringifyReadableJson(obj)}\n`);
     if (ok) toast(STRINGS.toast.exportedLayer);
   } finally {
     prog.close();
@@ -76,7 +82,15 @@ export async function doImportLayer(session, toast) {
   const prog = showProgress("레이어 가져오기");
   try {
     const obj = await readJsonFile(file);
-    const { layer, dropped, warnings } = await importLayerJson(session.doc, obj);
+    let layerFile = obj;
+    if (obj?.format === "draw_tool.vector") {
+      if (!Array.isArray(obj.layers) || obj.layers.length !== 1) {
+        throw new DrawToolError("SCHEMA", "layer import needs exactly one vector layer");
+      }
+      const compiled = await vectorJsonToDocument(obj);
+      layerFile = await layerToJson(compiled, compiled.layers[0].id);
+    }
+    const { layer, dropped, warnings } = await importLayerJson(session.doc, layerFile);
     session.insertLayer(layer);
     for (const w of warnings) toast(w, "warn");
     if (dropped > 0) toast(`${STRINGS.toast.droppedChunks}: ${dropped}`, "warn");

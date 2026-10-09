@@ -11,7 +11,7 @@ import { validateDocument, validateLayerFile } from "./validate.js";
 
 // Barrel: the vector and recipe halves of import/export live in sibling modules.
 // Re-exported so src/ui/actions/file_actions.js and tools/recipe/* keep one import site.
-export { documentToVectorJson, vectorJsonToDocument } from "./serialize_vector.js";
+export { documentToVectorJson, layerToVectorJson, vectorJsonToDocument } from "./serialize_vector.js";
 export { recipeJsonToDocument, shiftCommand } from "./serialize_recipe.js";
 
 const ENCODE_BATCH = 64;

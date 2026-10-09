@@ -53,6 +53,15 @@ export function documentToVectorJson(doc) {
   return result;
 }
 
+export function layerToVectorJson(doc, layerId) {
+  const result = documentToVectorJson(doc);
+  const layer = doc.getLayer(layerId);
+  result.document_id = doc.id;
+  result.name = layer.name;
+  result.layers = result.layers.filter((entry) => entry.layer_id === layerId);
+  return result;
+}
+
 // <META - ROLE : Extract shapes from 32x32 chunk data | L56-102>
 function extractShapesFromChunk(data, offsetX, offsetY) {
   const commands = [];

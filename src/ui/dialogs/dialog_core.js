@@ -117,6 +117,24 @@ export function confirmDiscardChanges() {
   });
 }
 
+export function showLayerExportFormatDialog() {
+  if (typeof document === "undefined" || !dialogRoot()) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    openModal({
+      title: "레이어 저장 형식",
+      onAction: resolve,
+      build(body, bar, close) {
+        const p = document.createElement("p");
+        p.textContent = "픽셀 청크는 무손실이며, 명령 형식은 현재 픽셀을 rect/pixel 명령으로 근사합니다.";
+        body.append(p);
+        addButton(bar, "픽셀 청크 JSON", () => close("chunks"));
+        addButton(bar, "명령 레이어 JSON", () => close("commands"));
+        addButton(bar, "취소", () => close(null));
+      },
+    });
+  });
+}
+
 // <META - ROLE : Autosave restore choice dialog | L121-141>
 export function showRestoreDialog(info = {}) {
   if (typeof document === "undefined" || !document.getElementById("dt-dialog-root")) return Promise.resolve("discard");

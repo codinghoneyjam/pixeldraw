@@ -48,6 +48,7 @@ io 모듈은 문서의 바깥 경계를 담당한다. 메모리 안의 Document�
 ### 5.1 serialize_vector.js — 벡터 명령 변환
 
 `documentToVectorJson(doc)`는 모든 층의 비어 있지 않은 청크를 훑어 같은 색이 이어진 직사각형을 `rect`, 외로운 픽셀을 `pixel` 명령으로 바꾼다. 한 청크 안에서만 확장하므로 32 픽셀 경계를 넘는 도형은 여러 명령으로 쪼개진다.
+`layerToVectorJson(doc, layerId)`는 같은 변환 결과에서 지정한 층 하나만 남긴다. 레이어 내보내기 메뉴에서 청크 JSON 또는 명령 JSON을 고를 수 있으며, 명령 내보내기는 원래 도형 이력이 아닌 픽셀에서 추출한 rect/pixel 근사다. 명령 레이어는 벡터 가져오기에서 다시 청크로 컴파일되고, 한 층만 든 vector JSON은 레이어 가져오기도 지원한다.
 `vectorJsonToDocument(obj)`는 그 역방향이다. 캔버스와 층 배열을 검증한 뒤 명령을 `applyCommand`에 통과시키는데, `fill`·`color` 값이 `$`로 시작하면 팔레트에서 이름을 찾아 치환하고 없으면 검정으로 떨어진다. 층 id가 없거나 빈 문자열이면 위치에서 `layer_N`을 만들어 IdGen에 심는다.
 
 ### 5.2 serialize_recipe.js — 레시피 가져오기

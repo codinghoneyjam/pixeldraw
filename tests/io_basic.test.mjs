@@ -10,7 +10,7 @@ import { newDocument } from "../src/features/document/document.js";
 import { base64ToBytes, bytesToBase64 } from "../src/io/base64.js";
 import { decodePng, encodePng } from "../src/io/png.js";
 import { validateDocument } from "../src/io/validate.js";
-import { documentToJson, jsonToDocument, importLayerJson } from "../src/io/serialize.js";
+import { documentToJson, jsonToDocument, importLayerJson, layerToVectorJson, vectorJsonToDocument } from "../src/io/serialize.js";
 import { flattenToRgba, exportPngBytes } from "../src/io/export_png.js";
 import { sanitizeFileName } from "../src/io/file_io.js";
 import { buildMetaRecord, buildChunkRecords, chunkRecordKey } from "../src/io/idb_record_builder.js";
@@ -94,6 +94,26 @@ describe("readable JSON output", () => {
     assert.match(output, /"layers": \[\n/);
     assert.match(output, /"cmd":"rect"/);
     assert.equal(output.split("\n").filter((line) => line.includes('"cmd"')).length, 2);
+  });
+});
+
+describe("single-layer command format", () => {
+  it("exports one selected layer and compiles its commands back to pixels", async () => {
+    const doc = newDocument({ widthPx: 32, heightPx: 32 });
+    const layer = doc.getLayer(doc.activeLayerId);
+    const writer = new PixelWriter(layer.store, layer.id);
+    writer.set(3, 4, packRGBA(255, 0, 0, 255));
+    writer.set(4, 4, packRGBA(255, 0, 0, 255));
+    writer.finish();
+    const commandFile = layerToVectorJson(doc, layer.id);
+    assert.equal(commandFile.format, "draw_tool.vector");
+    assert.equal(commandFile.layers.length, 1);
+    assert.equal(commandFile.layers[0].name, layer.name);
+    const compiled = await vectorJsonToDocument(commandFile);
+    assert.deepEqual(
+      [...compiled.getLayer(compiled.activeLayerId).store.getChunk(0, 0)],
+      [...layer.store.getChunk(0, 0)],
+    );
   });
 });
 
