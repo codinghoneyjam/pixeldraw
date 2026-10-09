@@ -6,6 +6,8 @@ import { PenTool } from "../src/features/pen/pen.js";
 import { EyedropperTool } from "../src/features/eyedropper/eyedropper.js";
 import { HandTool } from "../src/features/hand/hand.js";
 import { WheelAccumulator } from "../src/tools/input_controller.js";
+import { DEFAULT_CURSOR, readCursorState, resolveCursor } from "../src/tools/cursor_state.js";
+import { InputController } from "../src/tools/input_controller.js";
 import { toolEvent } from "./helpers/tool_event.js";
 import { cursorFallback, envFor, makeSession } from "./helpers/tool_session.js";
 
@@ -68,6 +70,98 @@ describe("WheelAccumulator", () => {
     assert.equal(a.feed(-4, 1, 0), 1); // -64px => +1
     const b = new WheelAccumulator();
     assert.equal(b.feed(1, 2, 100), -1); // +100px => -1
+  });
+});
+
+describe("cursor state machine (cursor_state.js)", () => {
+  // The ladder is outside > panning > space > tool. Pure function, so the whole
+  // truth table is cheap; a fake host only has to record the CSS write.
+  const rows = [
+    { inside: true, panning: false, spaceDown: false, toolCursor: "crosshair", want: "crosshair", why: "tool wins when nothing else is active" },
+    { inside: true, panning: false, spaceDown: true, toolCursor: "crosshair", want: "grab", why: "space beats the tool" },
+    { inside: true, panning: true, spaceDown: true, toolCursor: "crosshair", want: "grabbing", why: "panning beats space" },
+    { inside: false, panning: true, spaceDown: true, toolCursor: "crosshair", want: DEFAULT_CURSOR, why: "outside beats everything" },
+    { inside: false, panning: false, spaceDown: false, toolCursor: "crosshair", want: DEFAULT_CURSOR, why: "outside alone" },
+    { inside: true, panning: false, spaceDown: false, toolCursor: null, want: DEFAULT_CURSOR, why: "missing tool cursor falls back" },
+    { inside: true, panning: false, spaceDown: false, toolCursor: "", want: DEFAULT_CURSOR, why: "empty tool cursor falls back" },
+    { inside: true, panning: false, spaceDown: false, toolCursor: 42, want: DEFAULT_CURSOR, why: "non-string tool cursor falls back" },
+    { want: DEFAULT_CURSOR, why: "an empty state object is all defaults" },
+  ];
+  for (const r of rows) {
+    it(r.why, () => {
+      assert.equal(resolveCursor(r), r.want);
+    });
+  }
+
+  // Tool cursors are inline SVG data URLs, so compare against the registered
+  // tool's own value rather than a hardcoded keyword.
+  const penCursor = () => new PenTool(envFor(makeSession()), { mode: "draw" }).cursor;
+
+  it("readCursorState reads the underscore fields off an InputController", () => {
+    const session = makeSession();
+    const mgr = new ToolManager({ session });
+    mgr.register(new PenTool(envFor(session), { mode: "draw" }));
+    const ctrl = new InputController({ host: null, session, toolManager: mgr });
+    assert.equal(readCursorState(ctrl).toolCursor, penCursor());
+    assert.equal(readCursorState(ctrl).inside, true);
+    ctrl._inside = false;
+    assert.equal(readCursorState(ctrl).inside, false);
+    mgr.dispose();
+  });
+
+  it("readCursorState falls back when the active tool is unregistered", () => {
+    const session = makeSession();
+    const mgr = new ToolManager({ session });
+    const ctrl = new InputController({ host: null, session, toolManager: mgr });
+    // ToolManager.cursor throws INVALID_STATE until something is registered.
+    assert.equal(readCursorState(ctrl).toolCursor, DEFAULT_CURSOR);
+    mgr.dispose();
+  });
+
+  it("applyCursor writes the ladder result and tolerates a missing host", () => {
+    const session = makeSession();
+    const mgr = new ToolManager({ session });
+    mgr.register(new PenTool(envFor(session), { mode: "draw" }));
+    const writes = [];
+    const ctrl = new InputController({ host: { style: {} }, session, toolManager: mgr });
+    // record the write through the same property the controller touches
+    Object.defineProperty(ctrl.host.style, "cursor", {
+      get: () => writes.at(-1) ?? "",
+      set: (v) => writes.push(v),
+    });
+    assert.equal(ctrl._applyCursor(), penCursor());
+    assert.deepEqual(writes, [penCursor()]);
+    ctrl._panning = true;
+    assert.equal(ctrl._applyCursor(), "grabbing");
+    assert.deepEqual(writes, [penCursor(), "grabbing"]);
+    ctrl._panning = false;
+    ctrl._spaceDown = true;
+    assert.equal(ctrl._applyCursor(), "grab");
+    ctrl._spaceDown = false;
+    ctrl._inside = false;
+    assert.equal(ctrl._applyCursor(), DEFAULT_CURSOR);
+    // no host at all must not throw
+    ctrl.host = null;
+    assert.equal(ctrl._applyCursor(), DEFAULT_CURSOR);
+    mgr.dispose();
+  });
+
+  it("_markInside sets the flag and re-applies the cursor", () => {
+    const session = makeSession();
+    const mgr = new ToolManager({ session });
+    mgr.register(new PenTool(envFor(session), { mode: "draw" }));
+    const writes = [];
+    const ctrl = new InputController({ host: { style: {} }, session, toolManager: mgr });
+    Object.defineProperty(ctrl.host.style, "cursor", {
+      get: () => writes.at(-1) ?? "",
+      set: (v) => writes.push(v),
+    });
+    ctrl._applyCursor();
+    assert.equal(ctrl._markInside(false), false);
+    assert.deepEqual(writes.at(-1), DEFAULT_CURSOR);
+    assert.equal(ctrl._markInside(), true);
+    assert.deepEqual(writes.at(-1), penCursor());
+    mgr.dispose();
   });
 });
 

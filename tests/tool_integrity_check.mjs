@@ -22,6 +22,7 @@ const mods = {
   "src/tools/pointer_event.js": ["buildToolEvent"],
   "src/tools/pointer_bindings.js": [],
   "src/tools/keyboard_bindings.js": [],
+  "src/tools/cursor_state.js": ["resolveCursor", "readCursorState", "applyCursor", "markInside"],
   "src/features/shape/shape_render.js": [],
   "src/features/layers/commands_pixel.js": ["MergeDownCommand", "ResizeCanvasCommand"],
 };

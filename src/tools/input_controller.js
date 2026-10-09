@@ -1,12 +1,16 @@
-// <META - FILE SUMMARY - InputController: pointer state machine (pan/zoom/cursor) + tool dispatch>
-// <META - SUMMARY CONT - Event registration lives in pointer_bindings.js / keyboard_bindings.js>
+// <META - FILE SUMMARY - InputController: pointer state machine (pan/zoom) + tool dispatch>
+// <META - SUMMARY CONT - Event registration lives in pointer_bindings.js / keyboard_bindings.js
+// <META - SUMMARY CONT - The cursor priority ladder lives in cursor_state.js (DOM-free)>
 
 import { bindKeyboardInput } from "./keyboard_bindings.js";
 import { bindPointerInput } from "./pointer_bindings.js";
 import { WheelAccumulator } from "./wheel_accumulator.js";
+import { applyCursor, markInside } from "./cursor_state.js";
 
-// Re-exported so the wheel-accumulator contract keeps one public import site.
+// Re-exported so the wheel-accumulator and cursor-state contracts keep one
+// public import site: callers import from input_controller.js, not the internals.
 export { WheelAccumulator };
+export { DEFAULT_CURSOR, PAN_CURSOR, SPACE_CURSOR, resolveCursor, readCursorState } from "./cursor_state.js";
 
 export class InputController {
   constructor({ host, session, toolManager, getView, setView, getViewportSize, onHover = () => {}, requestRender = () => {} } = {}) {
@@ -29,7 +33,7 @@ export class InputController {
     this._bindings = null;
   }
 
-  // <META - ROLE : pan gating: middle button, space-held, or the hand tool | L38-48>
+  // <META - ROLE : pan gating: middle button, space-held, or the hand tool | L35-45>
   _shouldPan(domEv) {
     if (domEv.button === 1) return true;
     if (this._spaceDown) return true;
@@ -41,7 +45,7 @@ export class InputController {
     return false;
   }
 
-  // <META - ROLE : ask the active tool which buttons it wants; left-only fallback | L51-64>
+  // <META - ROLE : ask the active tool which buttons it wants; left-only fallback | L47-61>
   _toolAcceptsButton(button) {
     let tool = null;
     try {
@@ -65,37 +69,17 @@ export class InputController {
     }
   }
 
-  _resolveToolCursor() {
-    try {
-      const c = this.toolManager?.cursor;
-      return typeof c === "string" && c.length > 0 ? c : "default";
-    } catch {
-      return "default";
-    }
-  }
-
-  // <META - ROLE : cursor state machine - outside wins over panning/space/tool | L85-98>
+  // <META - ROLE : cursor write-through; the ladder itself lives in cursor_state.js | L71-74>
   _applyCursor() {
-    if (!this.host) return;
-    let next;
-    if (!this._inside) next = "default";
-    else if (this._panning) next = "grabbing";
-    else if (this._spaceDown) next = "grab";
-    else next = this._resolveToolCursor();
-    try {
-      this.host.style.cursor = next;
-    } catch {
-      // ignore
-    }
+    return applyCursor(this);
   }
 
-  // <META - ROLE : pointer presence flag; every transition re-applies the cursor | L100-103>
+  // <META - ROLE : pointer presence flag; delegates to cursor_state.js | L77-80>
   _markInside(inside = true) {
-    this._inside = inside;
-    this._applyCursor();
+    return markInside(this, inside);
   }
 
-  // <META - ROLE : shared "no preview" path so leave/cancel never leave stale hover | L105-112>
+  // <META - ROLE : shared "no preview" path so leave/cancel never leave stale hover | L81-89>
   _clearHover() {
     this.toolManager.hover(null);
     try {
@@ -105,7 +89,7 @@ export class InputController {
     }
   }
 
-  // <META - ROLE : while outside, decide from the rect if a captured move came back | L108-118>
+  // <META - ROLE : while outside, decide from the rect if a captured move came back | L91-101>
   _syncInside(domEv, rect) {
     if (!this._panning && this._drawPointerId === null) {
       this._markInside();
@@ -117,7 +101,7 @@ export class InputController {
     else this._markInside();
   }
 
-  // <META - ROLE : drop all transient pointer state (blur / tab hidden) | L126-133>
+  // <META - ROLE : drop all transient pointer state (blur / tab hidden) | L103-110>
   _resetTransientState() {
     this._spaceDown = false;
     this._panning = false;
