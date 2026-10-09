@@ -72,13 +72,19 @@
 | 경로 | 예외 |
 |---|---|
 | `src/core/**` (incl. `src/core/raster/**`) | 없음 (전부 DOM-free) |
-| `src/model/**` | 없음 (전부 DOM-free) |
+| `src/features/document/**` | 없음 (전부 DOM-free) |
+| `src/features/layers/**` | 없음 (전부 DOM-free) |
+| `src/features/color/**` | 없음 (전부 DOM-free) |
 | `src/io/**` | `file_io.js`, `store_idb.js` 만 브라우저 API 접촉(지연 접근) |
-| `src/render/view.js`, `src/render/composite.js` | 없음 |
+| `src/features/viewport/view.js`, `src/render/composite.js` | 없음 |
 | `src/tools/**` | 순수 로직 전부 DOM-free |
 | `src/ui/**` | 전체가 DOM 허용 |
 
 `src/render/renderer.js`·`grid.js`·`background.js`는 캔버스 표시용이라 DOM이 허용된다.
+`src/features/**`의 패널·오버레이 모듈(`panel_color*.js`·`panel_layers.js`·
+`panel_brush.js`·`shape_overlay.js`)은 DOM을 만지므로 `src/ui/**`와 같은 예외를 적용받는다.
+반면 각 피처의 도구 본체(`pen.js`·`fill.js`·`eyedropper.js`·`shape.js`·`shape_geom.js`)는
+DOM-free 규칙을 그대로 지킨다.
 
 ## 5. 모듈 규약
 
@@ -90,14 +96,16 @@
 ## 6. 의존 DAG
 
 ```
-core → model → io ─┐
-core → model → render ─┤→ tools → ui
-core → shape_raster → shape 도구 ─┘
+core → features/document → io ─┐
+core → features/document → render ─┤→ tools → ui
+core → shape_raster → features/shape 도구 ─┘
 ```
 
 `core`는 어떤 모듈에도 의존하지 않는다. `ui`는 최상위 소비자로서 하위 모듈을 호출만 한다.
+`features/`는 툴 기능 단위로 묶인 피처 패키지며, 각 피처가 자기 도구·패널·모델을 함께 가진다.
 
 `shape_raster`는 `src/core/raster/` 서브패키지다. 진입점 `shape_raster.js`(`applyShape`만
 export)와 순수 하위 모듈 `raster_brush.js`·`raster_masks.js`·`raster_snap.js`로 구성되며,
 4개 모두 DOM-free이고 `src/core/**` 예외 없음 규칙(§4)을 그대로 따른다. 소비자는
-`shape.js`(적용)와 `shape_overlay.js`(프리뷰), `shape_geom.js`(`raster_snap.js`)다.
+`features/shape/shape.js`(적용)와 `features/shape/shape_overlay.js`(프리뷰),
+`features/shape/shape_geom.js`(`raster_snap.js`)다.

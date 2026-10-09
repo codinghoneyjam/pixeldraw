@@ -98,28 +98,40 @@
 - 에러코드: `LAYER_LOCKED/HIDDEN/NOT_FOUND`, `DUP_LAYER_ID`, `ACTIVE_LAYER_MISSING`, `LAYER_LIMIT`, `CANVAS_SIZE_INVALID`, `OUT_OF_RANGE`, `INVALID_STATE`.
 - 검증 우선순위: 존재(`NOT_FOUND`)→권한/상태(LOCKED/HIDDEN)→범위(`OUT_OF_RANGE`/SIZE)→정합(`INVALID_STATE`/LIMIT).
 
-## 5. 파일 구성과 잔여 리팩토링 대상 (2026-10-01 확인)
+## 5. 파일 구성과 잔여 리팩토링 대상
 
-`src/model/`는 8개 파일이다. 분리 커밋으로 `session.js`가 377줄에서 157줄로 줄었고
-`settings_validator.js`·`layer_operations.js`·`edit_session.js`가 신설되었다.
+`src/model/`은 더 이상 없다. 2026-10-08 피처 기반 재편에서 모듈이 둘로 갈라졌다.
+
+- `src/features/document/` — 문서 자체: `document.js`(220)·`history.js`(139)·`session.js`(157)·`settings_validator.js`(57)
+- `src/features/layers/` — 레이어와 Command: `commands.js`(140)·`commands_pixel.js`(159)·`edit_session.js`(59)·`layer.js`(60)·`layer_operations.js`(110)·`layer_actions.js`(20)·`panel_layers.js`(264)
+
+`commands.js`는 픽셀 Command를 `commands_pixel.js`로 분리한 뒤 배럴(재노출) 역할만
+한다. `session.js`는 `layer_operations.js`의 12개 함수를 Session 메서드로 재노출하고
+`edit_session.js`의 `beginEdit`를 감싸는 파사드 역할을 한다. 두 피처 모두 `core/`에만
+의존하며 역참조는 없다.
 
 | 파일 | 줄 | 비고 |
 |:---|:---:|:---|
-| `commands.js` | 287 | Command 7종이 한 파일에 집중. **250줄 권장선 초과 — 2차 분리 후보** |
-| `document.js` | 167 | 단일 책임 |
-| `session.js` | 157 | 분리 후 코어 |
-| `history.js` | 139 | 단일 책임 |
-| `layer_operations.js` | 110 | 분리됨 |
-| `layer.js` | 60 | 단일 책임 |
-| `edit_session.js` | 59 | 분리됨 |
-| `settings_validator.js` | 54 | 분리됨 |
+| `features/layers/panel_layers.js` | 264 | 레이어 패널 (DOM 허용) |
+| `features/document/document.js` | 220 | 단일 책임 |
+| `features/layers/commands_pixel.js` | 159 | `commands.js`에서 분리됨 |
+| `features/document/session.js` | 157 | 분리 후 코어 + 파사드 |
+| `features/layers/commands.js` | 140 | 7종 중 픽셀 외 Command 배럴 |
+| `features/document/history.js` | 139 | UndoManager, 단일 책임 |
+| `features/layers/layer_operations.js` | 110 | 분리됨 |
+| `features/layers/layer.js` | 60 | 단일 책임 |
+| `features/layers/edit_session.js` | 59 | 분리됨 |
+| `features/document/settings_validator.js` | 57 | 분리됨 |
+| `features/layers/layer_actions.js` | 20 | `ui/actions/`에서 이동 |
 
-`session.js`는 `layer_operations.js`의 12개 함수를 Session 메서드로 재노출하고
-`edit_session.js`의 `beginEdit`를 감싸는 파사드 역할을 한다. `model/` 전체가
-`core/`에만 의존하며 역참조는 없다.
+250줄 초과 파일은 `panel_layers.js` 264줄 하나뿐이다. `commands.js`는
+`commands_pixel.js`로 분리되어 더 이상 후보가 아니다.
+
 
 ## Handoff
 
 - **Wrote**: `draw_tool_v2/docs/model.md`
-- **Result**: 분리 후 8파일 라인 수 표와 `commands.js` 2차 분리 후보 명시
-- **Next**: Orchestrator — `commands.js` 7종 분리 판단
+- **Result**: `src/model/` 제거를 반영해 두 피처(`features/document/`·`features/layers/`)로
+  인벤토리 교정. `commands.js` 2차 분리는 이미 `commands_pixel.js`로 해소됨.
+- **Next**: `panel_layers.js` 264줄이 유일한 250줄 초과 파일 — 목록 렌더와 썸네일
+  스로틀 분리 검토.

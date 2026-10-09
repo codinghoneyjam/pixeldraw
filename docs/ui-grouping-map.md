@@ -1,8 +1,14 @@
 # UI Grouping Map — Draw Tool V2 (Slice A layout contract, frozen)
 
-> Status: FROZEN. Source-to-target contract for TL-CODE-03..13.
-> Later tasks execute moves/merges using only this table and MUST NOT invent new folders.
-> This task moves nothing. Docs only, zero source-code change.
+> **STATUS: SUPERSEDED (2026-10-08). 이 문서는 더 이상 실행 계약이 아니다.**
+> 원래는 "이 문서와 표만 보고 TL-CODE-03..13의 이동을 진행하라"는 Slice A 산출물이었다.
+> 그러나 실제로 진행된 재편은 **피처 기반**(`src/features/<피처>/`)으로 갔고, 아래 표의
+> `left-panels/`·`canvas-host/`·`right-panels/`·`dialog-root/` 폴더는 만들어지지 않았다.
+> 원문은 역사적 기록으로만 보존한다. 삭제하지 않는 이유는 "왜 이런 폴더가 없는가"를
+> 나중에 묻는 사람에게 답을 주기 위해서다.
+>
+> 현재의 규범 경로는 `docs/contract.md` §4(DOM 금지 구역)·§6(의존 DAG)과
+> `docs/README.md`의 아키텍처 DAG다.
 
 ## 0. Closed inventory (36 files, verified on disk)
 

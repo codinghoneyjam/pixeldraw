@@ -33,12 +33,27 @@ io 모듈은 문서의 바깥 경계를 담당한다. 메모리 안의 Document�
 
 `checkChunksSemantic(chunks, structuralOk, dims, base, push)`는 구조 검사를 통과한 청크만 base64 디코드 뒤 PNG 디코드까지 수행한다. 같은 좌표가 두 번 나오면 `CHUNK_DUPLICATE`를, 캔버스 치수를 넘어서면 `CHUNK_OUT_OF_CANVAS`를 기록한다. 디코드 결과가 32 곱하기 32가 아니거나 디코드 자체가 실패하면 `CHUNK_BAD_PNG`를 기록한다. 객체가 아닌 항목은 건너뛰어 수집기 폭주를 막는다. 이 단계가 끝까지 수행되는 이유는 정규식만으로는 깨진 PNG를 걸러낼 수 없기 때문이다.
 
-## 5. serialize.js — 네 가지 변환 함수
+## 5. serialize.js·serialize_vector.js·serialize_recipe.js — 여덟 가지 변환 함수
+
+원래 `serialize.js` 하나가 맡던 세 책임이 파일 세 개로 갈라져 있다. `serialize.js`는
+래스터 문서·층 JSON만 갖고, 벡터와 레시피 반대편은 형제 모듈로 나갔다. `serialize.js`
+하단에 두 모듈의 공개 함수를 다시 노출하는 배럴을 두어 `file_actions.js`와
+`tools/recipe/*`의 import 경로는 그대로 한 곳으로 유지한다.
 
 `documentToJson(doc, {onProgress})`는 전체 문서를 스키마 키 순서대로 만든다. 스키마 버전·포맷·문서 id·이름·캔버스·활성층·층 배열 순서다. 각 층에서는 비어 있는 청크를 제외하고 cy 우선 cx 차선으로 정렬한 뒤, 64개씩 묶어 병렬로 PNG 인코딩한다. 진행 콜백은 누적 완료 수와 전체 청크 수를 받는다. 층 순서는 문서의 아래층부터 위층 순서를 그대로 유지한다.
 `layerToJson(doc, layerId)`는 단일 층을 `draw_tool.layer` 포맷으로 감싼다. 원본 캔버스 정보를 함께 넣어 나중에 크기가 달라졌는지 비교할 수 있게 한다.
 `jsonToDocument(obj, {onProgress})`는 먼저 전체 검증을 수행하고 실패하면 첫 오류 코드로 throw한다. vector층이 하나라도 있으면 `UNSUPPORTED_LAYER_TYPE`으로 중단한다. normal이 아닌 블렌드는 normal로 강등하고 경고 배열에 남긴다. 각 청크는 base64와 PNG를 풀고 투명 픽셀 RGB를 0으로 정규화한 뒤, 완전히 비어 있으면 버린다. 64개 배치마다 진행 콜백을 호출한다. 활성층이 없으면 마지막 층을 활성층으로 삼고, 층 id들을 IdGen에 심어서 이후 발급과 충돌하지 않게 한다. 반환은 문서와 경고 묶음이다.
 `importLayerJson(doc, obj)`는 원본 문서를 바꾸지 않고 새 층 객체를 만든다. 검증 뒤 원본 캔버스 크기가 다르면 경고를 남기고, 블렌드 강등 규칙은 동일하다. vector층은 `UNSUPPORTED_LAYER_TYPE`으로 거절한다. 현재 문서 캔버스를 벗어난 청크는 저장하지 않고 버린 개수를 `dropped`으로 돌려준다. 새 층 id는 문서의 IdGen에서 발급받아 중복을 피한다.
+
+### 5.1 serialize_vector.js — 벡터 명령 변환
+
+`documentToVectorJson(doc)`는 모든 층의 비어 있지 않은 청크를 훑어 같은 색이 이어진 직사각형을 `rect`, 외로운 픽셀을 `pixel` 명령으로 바꾼다. 한 청크 안에서만 확장하므로 32 픽셀 경계를 넘는 도형은 여러 명령으로 쪼개진다.
+`vectorJsonToDocument(obj)`는 그 역방향이다. 캔버스와 층 배열을 검증한 뒤 명령을 `applyCommand`에 통과시키는데, `fill`·`color` 값이 `$`로 시작하면 팔레트에서 이름을 찾아 치환하고 없으면 검정으로 떨어진다. 층 id가 없거나 빈 문자열이면 위치에서 `layer_N`을 만들어 IdGen에 심는다.
+
+### 5.2 serialize_recipe.js — 레시피 가져오기
+
+`recipeJsonToDocument(obj, {layerKey, slotId, paletteOverrides})`는 브라우저에서 Node 트랜스파일러와 같은 결과를 내도록 네 가지로 분기한다. 순서는 표면 매니페스트 → 팬토그래프 프로파일 → 아틀라스 슬롯 → 표준 레시피다. 팬토그래프 시트는 슬롯 인덱스에 셀 너비를 곱한 만큼 `shiftCommand`로 명령을 밀어 한 장에 이어 붙인다.
+`shiftCommand(cmd, dx, dy)`는 명령 하나의 기하 필드(`box`·`bbox`·`center`·`points`·`pts`·`pen`·`xy`·`pos`·`segments`·`lines`·재귀 `shape`)를 모두 평행 이동한다. 이 두 함수가 `serialize.js`에 다시 노출되는 이유는 호출측이 한 경로만 알게 하려는 배럴 규칙 때문이다.
 
 ## 6. export_png.js — 평탄화와 PNG 내보내기
 
@@ -88,20 +103,23 @@ io 모듈은 문서의 바깥 경계를 담당한다. 메모리 안의 Document�
 
 브라우저 전용 접촉은 file_io와 자동저장, PNG 압축 경로에 모여 있다. file_io는 저장·열기 피커와 문서·URL 객체를 함수 안에서만 꺼내 쓰고, 모듈 최상위에서는 건드리지 않는다. 자동저장은 IndexedDB와 가시성·페이지 이벤트를 생성자와 구독 함수 안에서만 접근한다. PNG 압축은 WebStreams에 의존하므로 Node 테스트에서는 해당 경로를 모의하거나 건너뛰어야 한다. base64와 검증, 레코드 생성, 스케줄러는 양쪽에서 그대로 import할 수 있는 순수 계층이다. 이 분리의 목적은 Node에서 직렬화와 검증 단위 테스트를 브라우저 없이 돌리면서도, 브라우저에서는 같은 코드를 파일과 저장소에 그대로 붙이는 데 있다.
 
-## 11. 파일 구성과 회귀 사항 (2026-10-01 확인)
+## 11. 파일 구성과 회귀 사항
 
-`src/io/`는 13개 파일이다. 분리 커밋으로 `store_idb.js`가 417줄에서 245줄,
-`validate.js`가 241줄에서 96줄로 줄었다.
+`src/io/`는 15개 파일이다. 2026-10-08 `serialize.js`가 래스터·벡터·레시피 세 책임을
+한 파일에 들고 있어 573줄이었는데, `serialize_vector.js`와 `serialize_recipe.js`로
+갈라내고 `serialize.js`는 배럴 겸 래스터 절반만 남겼다. 호출측 import 경로는 그대로다.
 
 | 파일 | 줄 | 비고 |
 |:---|:---:|:---|
 | `store_idb.js` | 245 | 분리 후 코어. `AutosaveStore` + `_INTERNALS` 재export |
-| `serialize.js` | 233 | 단일 책임 |
+| `serialize.js` | 246 | 분리 후 래스터 절반 + 벡터/레시피 재export 배럴 |
+| `serialize_recipe.js` | 168 | 분리됨 (표면/팬토그래프/아틀라스/표준 레시피) |
+| `serialize_vector.js` | 156 | 분리됨 (청크→명령, 명령→문서) |
+| `validate_structural.js` | 139 | 분리됨 |
 | `png.js` | 138 | 단일 책임 |
-| `validate_structural.js` | 116 | 분리됨 |
+| `export_png.js` | 105 | 단일 책임 |
 | `file_io.js` | 96 | 단일 책임 |
 | `validate.js` | 96 | 분리 후 진입점 |
-| `export_png.js` | 75 | 단일 책임 |
 | `idb_loader.js` | 72 | 분리됨 |
 | `idb_scheduler.js` | 43 | 분리됨 |
 | `base64.js` | 38 | 단일 책임 |

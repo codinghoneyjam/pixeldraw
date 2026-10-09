@@ -1,13 +1,17 @@
-# render — 뷰·합성·표시
+# render — 합성·표시 (뷰 수학은 `features/viewport/`로 이동)
 
 ## 1. 개요·경계
 
-- `view.js`·`composite.js`·`grid.js(계산부)`는 DOM-free 순수 모듈. Node import 가능, 테스트 직접 대상.
-- `renderer.js`·`renderer_composite.js`·`renderer_display.js`·`background.js`·`grid.js(페인팅부)`는 브라우저 전용. `document`·`OffscreenCanvas`·`ResizeObserver`·`requestAnimationFrame` 접근 허용.
+- `composite.js`·`grid.js(계산부)`는 DOM-free 순수 모듈. Node import 가능, 테스트 직접 대상.
+  뷰 수학(`view.js`)은 예전 이 계층에 있었으나 2026-10-08 `src/features/viewport/view.js`로
+  옮겨갔다. DOM-free 규칙은 그대로다.
+- `renderer.js`·`renderer_composite.js`·`renderer_display.js`·`background.js`·`grid.js`의
+  캔버스 페인팅 부분은 브라우저 전용. `document`·`OffscreenCanvas`·`ResizeObserver`·
+  `requestAnimationFrame` 접근 허용.
 - 하위(`core/`)만 import. `model/`·상위 도메인·UI 역참조 금지. ESM 상대경로만, `export default`·동적`import()`·`import.meta` 금지.
-- `view`는 줌·팬 수학 SSOT, `composite`는 표시 합성 SSOT(배경 제외), `CanvasRenderer`는 구독→dirty→rAF 오케스트레이션만.
+- `view`는 줌·팬 수학 SSOT(`features/viewport/view.js`), `composite`는 표시 합성 SSOT(배경 제외), `CanvasRenderer`는 구독→dirty→rAF 오케스트레이션만.
 
-## 2. view.js — 12 exports
+## 2. view.js (`src/features/viewport/view.js`) — 12 exports
 
 좌표계: `View = { zoom, offsetX, offsetY }`. `zoom` = CSS px per canvas px. `offset` = 뷰포트 기준 캔버스 (0,0) 모서리의 CSS px 위치.
 
@@ -115,19 +119,21 @@ Session 이벤트 (pixels/layers/settings/document)
 - `paintChecker`·`paintGrid`는 뷰포트 교집합만 그려 고배율에서도 비용 상수. `paintDirty`는 가시 청크 우선 + 6ms 예산으로 프레임 드롭 방지.
 - `compositeChunk out`은 `Uint8ClampedArray(4096)` 고정. `attach`는 DOM 없으면 `INVALID_STATE`.
 
-## 11. 파일 구성 (2026-10-01 확인)
+## 11. 파일 구성
 
-`src/render/`는 7개 파일이다. 분리 커밋으로 `renderer.js`가 327줄에서 210줄로 줄었고
-`renderer_composite.js`(58줄)·`renderer_display.js`(51줄)가 신설되었다. 두 하위 모듈은
-모두 `CanvasRenderer` 인스턴스 `r`을 첫 인자로 받아 상태를 직접 접근하는 패턴이며,
-`renderer/` 안에서만 호출된다. 분리 대상 파일은 더 이상 없다.
+`src/render/`는 **6개** 파일이다. `view.js`(86줄)가 피처 재편으로
+`src/features/viewport/view.js`로 나갔고, 같은 피처의 `view_store.js`(71줄)가 캔버스
+호스트의 뷰 상태를 소유한다. 분리 커밋으로 `renderer.js`가 327줄에서 210줄로 줄었고
+`renderer_composite.js`·`renderer_display.js`가 신설되었다. 두 하위 모듈은 모두
+`CanvasRenderer` 인스턴스 `r`을 첫 인자로 받아 상태를 직접 접근하는 패턴이며,
+`render/` 안에서만 호출된다. 분리 대상 파일은 더 이상 없다.
 
 | 파일 | 줄 | DOM | 역할 |
 |:---|:---:|:---:|:---|
 | `renderer.js` | 210 | 허용 | 수명 주기·구독·dirty·rAF 오케스트레이션 |
-| `grid.js` | 123 | 계산부만 | 그리드 계산(DOM-free) + 페인팅 |
+| `grid.js` | 123 | 계산 + 페인팅 | 그리드 계산(DOM-free) + 캔버스 페인팅 |
 | `composite.js` | 102 | 금지 | 표시 합성 SSOT |
+| `view.js` (`features/viewport/`) | 86 | 금지 | 줌·팬 수학 SSOT |
 | `renderer_composite.js` | 58 | 허용 | 합성 캐시 |
 | `renderer_display.js` | 51 | 허용 | 화면 blit |
-| `view.js` | 86 | 금지 | 줌·팬 수학 SSOT |
 | `background.js` | 46 | 허용 | 체커·단색 배경 |
