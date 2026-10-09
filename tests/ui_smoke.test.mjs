@@ -93,6 +93,7 @@ describe("panel modules import without DOM", () => {
 describe("menubar close idempotence", () => {
   it("does not rewrite an already closed menu on outside pointerdown", () => {
     const listeners = new Map();
+    const wrapListeners = new Map();
     const attrs = new Map([["aria-expanded", "false"]]);
     let hiddenValue = true;
     let hiddenWrites = 0;
@@ -107,7 +108,7 @@ describe("menubar close idempotence", () => {
       setAttribute(name, value) { attrs.set(name, value); attrWrites += 1; },
     };
     const wrap = {
-      addEventListener() {},
+      addEventListener(type, fn) { wrapListeners.set(type, fn); },
       querySelector: (selector) => selector.includes("role='menu'") ? panel : trigger,
     };
     const root = { querySelectorAll: () => [wrap], contains: () => false };
@@ -118,7 +119,11 @@ describe("menubar close idempotence", () => {
     };
     try {
       const menu = createMenubar(root);
+      wrapListeners.get("pointerenter")();
       listeners.get("click")();
+      assert.equal(panel.hidden, false, "click keeps a menu opened by hover visible");
+      listeners.get("click")();
+      assert.equal(panel.hidden, true, "the next click closes the menu");
       listeners.get("document:pointerdown")({ target: {} });
       hiddenWrites = 0;
       attrWrites = 0;

@@ -13,6 +13,7 @@ export function createMenubar(root) {
   };
   const wraps = [...root.querySelectorAll(".dt-menu")];
   let openWrap = null;
+  let openedByHover = false;
   let closeTimer = null;
 
   function cancelClose() {
@@ -34,12 +35,14 @@ export function createMenubar(root) {
     cancelClose();
     for (const w of wraps) setOpen(w, false);
     openWrap = null;
+    openedByHover = false;
   }
-  function open(wrap) {
+  function open(wrap, source) {
     cancelClose();
     if (openWrap === wrap) return;
     closeAll();
     openWrap = wrap;
+    openedByHover = source === "hover";
     setOpen(wrap, true);
   }
   function scheduleClose() {
@@ -51,12 +54,13 @@ export function createMenubar(root) {
   }
   for (const wrap of wraps) {
     const trigger = wrap.querySelector("button[data-menu]");
-    listen(wrap, "pointerenter", () => open(wrap));
+    listen(wrap, "pointerenter", () => open(wrap, "hover"));
     listen(wrap, "pointerleave", scheduleClose);
     if (trigger) {
       listen(trigger, "click", () => {
-        if (openWrap === wrap) closeAll();
-        else open(wrap);
+        if (openWrap === wrap && openedByHover) openedByHover = false;
+        else if (openWrap === wrap) closeAll();
+        else open(wrap, "click");
       });
     }
   }
