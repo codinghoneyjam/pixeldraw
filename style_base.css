@@ -69,6 +69,16 @@ html, body {
   grid-template-rows: auto auto minmax(0, 1fr) auto;
   height: 100dvh;
 }
+@media (max-width: 720px) {
+  #dt-app {
+    grid-template-columns: 32px minmax(130px, 1fr) minmax(48px, 1.2fr) minmax(130px, 1fr);
+  }
+}
+@media (max-width: 360px) {
+  #dt-app {
+    grid-template-columns: 28px minmax(96px, 1fr) minmax(40px, 0.8fr) minmax(96px, 1fr);
+  }
+}
 #dt-menubar, #dt-optionbar, #dt-statusbar {
   grid-column: 1 / -1;
 }
@@ -280,6 +290,13 @@ input, select {
   grid-template-columns: repeat(8, 1fr);
   gap: 2px;
 }
+@media (max-width: 720px) {
+  #dt-palette { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  #dt-recent { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 360px) {
+  #dt-palette { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
 .dt-swatch {
   width: 100%;
   aspect-ratio: 1;
@@ -318,6 +335,12 @@ input, select {
 .dt-blend-row select {
   flex: 1 1 auto;
   min-width: 0;
+}
+@media (max-width: 720px) {
+  .dt-blend-row > label {
+    flex: none;
+    white-space: nowrap;
+  }
 }
 li.dt-layer {
   display: flex;

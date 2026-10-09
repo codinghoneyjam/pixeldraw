@@ -202,14 +202,14 @@
   pointer-events: none;
   z-index: 3;
 }
-/* Active layer row: faint red wash + the corner marker. The border stays neutral on
+/* Active layer row: faint blue wash + the corner marker. The border stays neutral on
    purpose — a full red outline would read as the very "red rectangle" emphasis the
    corner marker exists to replace. */
 li.dt-layer[aria-selected="true"] {
   background-color: rgba(76, 194, 255, 0.10);
   border-color: var(--box-line-hi);
 }
-li.dt-layer[aria-selected="true"]::before {
+#dt-layer-list li.dt-layer[aria-selected="true"]::before {
   border-color: var(--accent);
 }
 
