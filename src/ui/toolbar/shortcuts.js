@@ -41,6 +41,10 @@ export function resolveShortcut(desc = {}) {
   if (key === "u") return { kind: "tool", tool: "rrect" };
   if (key === "o") return { kind: "tool", tool: "ellipse" };
   if (key === "p") return { kind: "tool", tool: "polygon" };
+  if (key === "a") return { kind: "tool", tool: "arc" };
+  if (key === "c") return { kind: "tool", tool: "chord" };
+  if (key === "v") return { kind: "tool", tool: "radial_gradient" };
+  if (key === "t") return { kind: "tool", tool: "text" };
   if (key === "h") return { kind: "tool", tool: "hand" };
   if (key === "x") return { kind: "swapColors" };
   if (key === "d") return { kind: "resetColors" };

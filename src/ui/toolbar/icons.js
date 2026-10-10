@@ -11,6 +11,10 @@ export const ICONS = Object.freeze({
   rrect: svg('<rect x="4" y="6" width="16" height="12" rx="4"/>'),
   ellipse: svg('<ellipse cx="12" cy="12" rx="8" ry="6"/>'),
   polygon: svg('<path d="M12 3l8 16H4l8-16z"/>'),
+  arc: svg('<path d="M4 18a8 8 0 0 1 16 0"/>'),
+  chord: svg('<path d="M4 18a8 8 0 0 1 16 0z"/>'),
+  radial_gradient: svg('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/>'),
+  text: svg('<path d="M4 6V4h16v2M12 4v16M8 20h8"/>'),
   hand: svg('<path d="M8 12V5a1.5 1.5 0 0 1 3 0v6V4a1.5 1.5 0 0 1 3 0v7V6a1.5 1.5 0 0 1 3 0v8a7 7 0 0 1-7 7h-1a7 7 0 0 1-6-3l-2-4a1.5 1.5 0 0 1 2.5-1.5L8 14z"/>'),
   eye: svg('<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.5"/>'),
   eyeOff: svg('<path d="M3 3l18 18"/><path d="M10 6c.7-.1 1.3-.1 2-.1 6.5 0 10 6 10 6a17 17 0 0 1-3 3.5M6 7A16 16 0 0 0 2 12s3.5 6 10 6c1.5 0 2.8-.3 4-.8"/>'),
@@ -30,6 +34,10 @@ const FALLBACK_CHAR = Object.freeze({
   rrect: "둥",
   ellipse: "타",
   polygon: "다",
+  arc: "호",
+  chord: "현",
+  radial_gradient: "빛",
+  text: "문",
   hand: "손",
 });
 

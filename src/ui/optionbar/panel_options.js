@@ -8,6 +8,9 @@ import { EVENTS } from "../../core/events.js";
 import { createTooltips } from "../shared/tooltip.js";
 import { mountViewOptions } from "../../features/viewport/panel_view_options.js";
 import { mountShapeOptions } from "../../features/shape/panel_shape_options.js";
+import { mountArcOptions } from "../../features/arc/panel_arc_options.js";
+import { mountGradientOptions } from "../../features/gradient/panel_gradient_options.js";
+import { mountTextOptions } from "../../features/text/panel_text_options.js";
 export { mountCollapsibleSections } from "../shared/collapsible_sections.js";
 
 // `data-section` name -> the feature module that owns that block. A section
@@ -15,6 +18,9 @@ export { mountCollapsibleSections } from "../shared/collapsible_sections.js";
 const SECTIONS = Object.freeze({
   view: mountViewOptions,
   shape: mountShapeOptions,
+  arc: mountArcOptions,
+  gradient: mountGradientOptions,
+  text: mountTextOptions,
 });
 
 // <META - ROLE : Mount option bar, return dispose | L18-..>

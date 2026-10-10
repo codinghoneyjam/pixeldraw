@@ -11,6 +11,10 @@ import { EyedropperTool } from "../features/eyedropper/eyedropper.js";
 import { FillTool } from "../features/fill/fill.js";
 import { HandTool } from "../features/hand/hand.js";
 import { ShapeTool } from "../features/shape/shape.js";
+import { ArcTool } from "../features/arc/arc_tool.js";
+import { GradientTool } from "../features/gradient/gradient_tool.js";
+import { TextTool } from "../features/text/text_tool.js";
+import { decodeGlyphSets } from "../features/text/glyph_set.js";
 import { AutosaveStore } from "../io/store_idb.js";
 import { mountColor } from "../features/color/panel_color.js";
 import { mountBrush } from "../features/pen/panel_brush.js";
@@ -32,6 +36,17 @@ import { RECENT_KEY, RECENT_MAX, restoreSettings, loadRecentColors, storeJson, a
 import { toast } from "./shared/toast.js";
 
 // <META - ROLE : Boot sequence per G3 order 1-9 | L35-170>
+async function loadTextGlyphs() {
+  try {
+    const response = await fetch("./tools/recipe/text_glyphs.json");
+    if (!response.ok) throw new Error(`glyph data request failed: ${response.status}`);
+    return decodeGlyphSets(await response.json());
+  } catch (error) {
+    console.warn("Text glyphs are unavailable", error);
+    return {};
+  }
+}
+
 async function boot() {
   const app = document.getElementById("dt-app");
   const host = document.getElementById("dt-canvas-host");
@@ -99,6 +114,9 @@ async function boot() {
   toolManager.register(new EyedropperTool(env));
   for (const kind of ["line", "rect", "rrect", "ellipse", "polygon"]) toolManager.register(new ShapeTool(env, kind));
   toolManager.register(new HandTool(env));
+  for (const kind of ["arc", "chord"]) toolManager.register(new ArcTool(env, kind));
+  toolManager.register(new GradientTool(env));
+  toolManager.register(new TextTool(env, await loadTextGlyphs()));
   renderer = new CanvasRenderer({ host, session, getView: () => viewStore.get(), getOverlay: () => toolManager.overlay });
   renderer.attach();
   input = new InputController({

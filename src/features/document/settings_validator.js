@@ -13,6 +13,10 @@ export const TOOL_IDS = Object.freeze([
   "rrect",
   "ellipse",
   "polygon",
+  "arc",
+  "chord",
+  "radial_gradient",
+  "text",
   "hand",
 ]);
 

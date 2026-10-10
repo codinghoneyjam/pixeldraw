@@ -140,7 +140,7 @@ describe("menubar close idempotence", () => {
 
 describe("shortcuts pure map", () => {
   it("tool keys", () => {
-    const cases = { b: "pen", e: "eraser", g: "fill", i: "eyedropper", l: "line", r: "rect", u: "rrect", o: "ellipse", p: "polygon", h: "hand" };
+    const cases = { b: "pen", e: "eraser", g: "fill", i: "eyedropper", l: "line", r: "rect", u: "rrect", o: "ellipse", p: "polygon", a: "arc", c: "chord", v: "radial_gradient", t: "text", h: "hand" };
     for (const [key, tool] of Object.entries(cases)) {
       assert.deepEqual(resolveShortcut({ key }), { kind: "tool", tool }, key);
     }

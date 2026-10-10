@@ -62,7 +62,7 @@
     </div>
   </header>
   <div id="dt-optionbar" aria-label="도구 옵션">
-    <section data-section="view" data-for-tools="pen eraser fill eyedropper line rect rrect ellipse polygon hand">
+    <section data-section="view" data-for-tools="pen eraser fill eyedropper line rect rrect ellipse polygon arc chord radial_gradient text hand">
       <label for="dt-grid-mode">그리드</label>
       <select id="dt-grid-mode">
         <option value="off">끔</option>
@@ -94,6 +94,33 @@
       <button type="button" id="dt-shape-commit">확정</button>
       <button type="button" id="dt-shape-cancel">취소</button>
     </section>
+    <section data-section="text" data-for-tools="text">
+      <label for="dt-text-value">텍스트</label>
+      <input type="text" id="dt-text-value" aria-label="입력할 텍스트" placeholder="입력">
+      <label for="dt-text-font">글꼴</label>
+      <select id="dt-text-font">
+        <option value="default-42">기본 42px</option>
+        <option value="monogram-240">모노그램 240px</option>
+      </select>
+      <label for="dt-text-stroke-width">외곽선</label>
+      <input type="number" id="dt-text-stroke-width" min="0" max="16" value="0">
+    </section>
+    <section data-section="arc" data-for-tools="arc chord">
+      <label for="dt-arc-start">시작 각도</label><input type="number" id="dt-arc-start" value="0">
+      <label for="dt-arc-end">끝 각도</label><input type="number" id="dt-arc-end" value="180">
+      <label for="dt-arc-width">선폭</label><input type="number" id="dt-arc-width" min="1" max="64" value="2">
+      <label><input type="checkbox" id="dt-chord-fill" checked>현 채움</label>
+      <label><input type="checkbox" id="dt-chord-outline" checked>현 테두리</label>
+    </section>
+    <section data-section="gradient" data-for-tools="radial_gradient">
+      <label for="dt-gradient-inner-radius">안쪽 반경</label>
+      <input type="number" id="dt-gradient-inner-radius" min="0" value="0">
+      <label for="dt-gradient-edge-mode">바깥쪽</label>
+      <select id="dt-gradient-edge-mode">
+        <option value="transparent">투명</option>
+        <option value="solid">보조색 유지</option>
+      </select>
+    </section>
     <section data-for-tools="fill">
       <button type="button" class="dt-tip-trigger" data-tip="클릭한 영역을 주색으로 채웁니다 (4방향, 허용오차 0)" aria-label="도움말" aria-expanded="false">?</button>
     </section>
@@ -115,6 +142,10 @@
     <button type="button" data-tool="rrect" aria-label="둥근 사각형" title="둥근 사각형 (U)" aria-pressed="false"></button>
     <button type="button" data-tool="ellipse" aria-label="타원" title="타원 (O)" aria-pressed="false"></button>
     <button type="button" data-tool="polygon" aria-label="다각형" title="다각형 (P)" aria-pressed="false"></button>
+    <button type="button" data-tool="arc" aria-label="호" title="호 (A)" aria-pressed="false"></button>
+    <button type="button" data-tool="chord" aria-label="현" title="현 (C)" aria-pressed="false"></button>
+    <button type="button" data-tool="radial_gradient" aria-label="방사형 그라디언트" title="방사형 그라디언트 (V)" aria-pressed="false"></button>
+    <button type="button" data-tool="text" aria-label="텍스트" title="텍스트 (T)" aria-pressed="false"></button>
     <div class="dt-sep" role="separator"></div>
     <button type="button" data-tool="hand" aria-label="손" title="손 (H)" aria-pressed="false"></button>
   </aside>
