@@ -1,0 +1,19 @@
+[package]
+name = "pixeldraw"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+# The native UI shell. Phase 0.2 keeps it a stub so `cargo test` at the workspace
+# root stays dependency-free; eframe/egui land in Phase 2 (docs/native_plan.md).
+[dependencies]
+pixel-engine = { path = "../engine" }
+pixel-platform = { path = "../platform" }
+
+[[bin]]
+name = "pixeldraw"
+path = "src/main.rs"
+
+[lints]
+workspace = true

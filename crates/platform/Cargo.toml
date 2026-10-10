@@ -1,0 +1,13 @@
+[package]
+name = "pixel-platform"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+# What a browser used to hand the editor for free (docs/native_plan.md §3):
+# native file dialogs, an app data directory, settings + autosave files, logging.
+[dependencies]
+
+[lints]
+workspace = true

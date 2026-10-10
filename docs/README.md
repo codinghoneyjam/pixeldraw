@@ -1,4 +1,4 @@
-# draw_tool_v2 — 모듈 문서
+# pixeldraw — 모듈 문서
 
 픽셀펜 래스터 에디터. 32px 청크 레이어, 안티앨리어싱 없음, npm 의존성 0, 빌드 단계 없음.
 
@@ -10,8 +10,9 @@
 ## 실행
 
 ```bash
-cd draw_tool_v2
-python run.py
+cd pixeldraw
+python run.py          # 브라우저로 연다
+npm run app:build      # 네이티브 exe로 만든다 (docs/desktop.md)
 ```
 
 `run.py`가 빈 루프백 포트를 자동으로 잡고 서버를 띄운 뒤 기본 브라우저를 연다. `Ctrl+C`로 종료.
@@ -24,7 +25,10 @@ python run.py
 
 ESM이므로 `file://` 직접 열기는 미지원(Chromium CORS 차단). 그래서 로컬 서버가 반드시 필요하다.
 
-구버전의 `tools/bundle_single.py` 단일 HTML 번들러와 그 산출물은 **제거되었다**. 실행 진입점은 `run.py` 하나다.
+구버전의 `tools/bundle_single.py` 단일 HTML 번들러와 그 산출물은 **제거되었다**.
+브라우저 진입점은 `run.py`, 네이티브 진입점은 `src-tauri/`(Tauri 셸)다.
+둘은 같은 `src/`를 쓰고, 파일 저장 방식만 `src/io/file_io.js`가 갈라 낮춘다.
+자세한 구조는 `docs/desktop.md`.
 
 ## 아키텍처 DAG
 
@@ -59,6 +63,8 @@ core → shape_raster → features/shape 도구 ─┘
 | `core.md` | 상수·에러·이벤트·픽셀·합성·청크·도형 래스터(`raster/`) |
 | `model.md` | 문서·히스토리·세션·레이어·Command (`features/document/`·`features/layers/`) |
 | `io.md` | base64·PNG·검증·직렬화·내보내기·파일·자동저장 |
+| `native_plan.md` | 완전 오프라인 exe화 이전 계획(Rust)·Phase 0~6·패리티 게이트 |
+| `desktop.md` | 네이티브 셸(Tauri)·스테이징·네이티브 파일 브리지 |
 | `render.md` | view·composite·renderer·grid·background |
 | `tools.md` | 베이스·매니저·입력 + features/pen·shape·fill·eyedropper·hand |
 | `ui.md` | 부팅 순서·패널·단축키·다이얼로그·상태바·아이콘 |
@@ -66,25 +72,29 @@ core → shape_raster → features/shape 도구 ─┘
 ## 테스트·검증
 
 ```bash
-npm test                          # node --test tests/ (Node ≥ 20)
-npm run parity                     # node tools/parity_check.mjs (115 골든 검사)
+npm test                          # node --test "tests/*.test.mjs" (Node ≥ 20), 410건
+npm run parity                     # node tools/parity_check.mjs (201 골든 검사)
+npm run parity:assets              # node tools/recipe_parity_check.mjs (39/39)
 node tools/png_cases_check.mjs
 node tools/view_check.mjs
 python schema/schema_selfcheck.py
+npm run app:build                  # 데스크톱 exe + 설치 파일 (docs/desktop.md)
 ```
 
-### 알려진 상태 (2026-10-09)
+데스크톱 셸 쪽 게이트는 두 개다. `cd src-tauri && cargo test --lib`(Rust base64 3건)와
+`node tools/stage_app.mjs && node tools/check_stage.mjs`(exe에 들어간 108개 모듈의
+import가 모두 살아 있는지). 둘 다 `npm run app:build`가 내부적으로 실행한다.
 
-- `npm test`의 `node --test tests/`는 Node 24에서 디렉터리 인자를 받지 않아 실패한다.
-  `package.json`의 스크립트 수정이 남아 있다. 현재는 `node --test "tests/*.test.mjs"`를
-  직접 실행할 것.
-- 그 명령 기준 **372건 전부 통과**한다. 블렌드 모드 6종 구현로 19건이 늘었고,
+### 알려진 상태 (2026-10-10)
+
+- `npm test`의 `node --test tests/`는 Node 24에서 디렉터리 인자를 받지 않아 실패했다.
+  `package.json`의 스크립트를 `node --test "tests/*.test.mjs"`로 고쳤고 지금은
+  정상 동작한다. 이 문서와 README가 오랫동안 "수정이 남아 있다"고 적었으나 실제로는
+  고쳐져 있었다 — 검증 없이 문구를 반복한 오류였다.
+- 그 명령 기준 **410건 전부 통과**한다. 블렌드 모드 6종 구현으로 19건이 늘었고,
   래스터 가드의 에러 타입 교체로 6건이 늘었다(`tests/blend_modes.test.mjs`·
-  `tests/raster_guards.test.mjs`).
-- `npm test`는 정상 동작한다. `package.json`의 스크립트가 이미 Node 24가 요구하는
-  glob 형태(`node --test "tests/*.test.mjs"`)다. 이 문서와 README가 오랫동안
-  "수정이 남아 있다"고 적었으나 실제로는 고쳐져 있었다 — 검증 없이 문구를
-  반복한 오류였다.
+  `tests/raster_guards.test.mjs`). 2026-10-10 Tauri 파일 브리지 6건이 더 늘었다
+  (`tests/io_native_file.test.mjs`).
 - 나머지 게이트도 모두 통과한다: parity 201건·png_cases 5/5·view OK·schema selfcheck OK·
   recipe parity 39/39·layer gallery 34/34·tool integrity check 34건.
 - 레이어 블렌드 모드(`multiply`·`screen`·`overlay`·`darken`·`lighten`)는 2026-10-09에
@@ -93,8 +103,13 @@ python schema/schema_selfcheck.py
 - `node tests/tool_integrity_check.mjs`는 2026-10-08부터 300줄 초과 검사 범위를 `src/`로
   좁혔다. 이전에는 리포지토리 전체를 훑어 `asset_work/`·`tools/`·`viewer/`의
   생성물·오라클·빌드 스캐폴드가 줄 수 기준을 넘어 **항상 실패**하고 있었다.
-  현재 기준 `src/` 내 300줄 초과 파일은 `src/core/raster/polygon.js`(301줄, 예약 면제)
-  단 하나뿐이다.
+  현재 기준 커밋된 코드 기준 `src/` 내 300줄 초과 파일은 `src/core/raster/polygon.js`(301줄,
+  예약 면제) 단 하나뿐이다. **작업 트리의 미커밋 변경** 때문에
+  `src/features/color/panel_color_wheel.js`가 290→312줄로 커져 이 게이트는 지금
+  1건 실패한다(33 passed, 1 failed). 이 파일은 데스크톱 셸 작업에서 손대지 않았다.
+- 2026-10-10 네이티브 셸(Tauri)이 들어왔다. `src/` 코드는 그대로이고
+  `src/io/file_io.js`만 런타임을 분기한다. `src/io/`의 300줄 제한도 그대로
+  통과한다(`file_io.js` 159줄). 자세한 내용은 `docs/desktop.md`.
 
 ### 수정 이력
 

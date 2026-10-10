@@ -1,0 +1,14 @@
+//! pixeldraw — native shell entry point.
+//!
+//! Phase 0.2 stub: the binary only proves the workspace wiring and the engine
+//! dependency. Phase 2 replaces `main` with the eframe window and the pixel
+//! canvas (docs/native_plan.md §6 Phase 2).
+
+fn main() {
+    println!(
+        "pixeldraw — schema {} · chunk {}px · engine skeleton",
+        pixel_engine::constants::SCHEMA_VERSION,
+        pixel_engine::constants::CHUNK_PX
+    );
+    println!("native shell lands in Phase 2 (docs/native_plan.md)");
+}

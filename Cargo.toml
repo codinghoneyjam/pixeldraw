@@ -1,0 +1,34 @@
+# pixeldraw — Rust workspace root (docs/native_plan.md §0.2)
+#
+# Three crates, mirroring the JS layering the port replaces:
+#
+#   crates/engine     pure pixel engine. No GPU, no OS, no network.
+#                     Constants/errors/blend/chunkstore/raster/composite/model/io.
+#   crates/platform   the things a browser used to give us: file dialogs, app dirs,
+#                     settings + autosave files, logging.
+#   crates/app        the native UI shell (egui/eframe) — Phase 2 onwards.
+#
+# The old JS entry point (`index.html` + `run.py`) and the Tauri shell
+# (`src-tauri/`) are both retired by this migration; see §1 of the plan.
+# src-tauri is excluded, not deleted, until Phase 6 so its base64 tests keep
+# working as a reference during the port.
+
+[workspace]
+resolver = "2"
+members = ["crates/engine", "crates/platform", "crates/app"]
+exclude = ["src-tauri"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.90"
+license = "MIT"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+panic = "abort"

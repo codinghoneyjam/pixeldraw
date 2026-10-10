@@ -1,0 +1,24 @@
+[package]
+name = "pixel-engine"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+# A pure engine: this crate must stay free of GPU, OS and network types exactly
+# like `src/core/**` and `src/features/document/**` were DOM-free in the JS tree
+# (docs/contract.md §4). Tests run under plain `cargo test` — no browser, no
+# wasm, no DOM shim.
+[dependencies]
+thiserror = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[dev-dependencies]
+# Re-derives the `hashes` group of raster_golden.json (masks too big to inline as
+# rows) so Phase 1.4 can check brush 64/33, ellipse 128x64 and the big
+# rrect/outline masks without leaving a case unverified.
+sha2 = "0.10"
+
+[lints]
+workspace = true
