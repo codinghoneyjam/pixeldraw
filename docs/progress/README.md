@@ -51,7 +51,7 @@ Phase 1  엔진             [x] 1.1 constants/errors/events/pixel
                           [x] 1.6 raster polygon
                           [x] 1.7 raster arc/chord
                           [x] 1.8 raster gradient/atlas
-                          [ ] 1.9 raster composite_ops
+                          [x] 1.9 raster composite_ops
                           [ ] 1.10 composite + kernels
                           [ ] 1.11 io/png
                           [ ] 1.12 model
@@ -67,7 +67,7 @@ Phase 6  절삭·패키징      [ ] 6.1 ~ 6.7
 
 | 지표 | 현재 |
 |---|---|
-| `cargo test` | **86 / 86** |
+| `cargo test` | **101 / 101** |
 | `cargo clippy -D warnings` | 그린 |
 | `cargo fmt --check` | 그린 |
 | JS 오라클(`npm test`) | 410 / 410 |

@@ -102,6 +102,7 @@ pub fn for_each_bresenham(
 /// production implementation; tests use a recorder.
 pub trait PixelSink {
     fn set(&mut self, x: i32, y: i32, packed: u32);
+    fn get(&self, x: i32, y: i32) -> u32;
 }
 
 impl PixelSink for crate::chunkstore::PixelWriter<'_> {
@@ -114,6 +115,14 @@ impl PixelSink for crate::chunkstore::PixelWriter<'_> {
             return;
         }
         crate::chunkstore::PixelWriter::set(self, x as u32, y as u32, packed);
+    }
+
+    #[inline]
+    fn get(&self, x: i32, y: i32) -> u32 {
+        if x < 0 || y < 0 {
+            return 0;
+        }
+        crate::chunkstore::PixelWriter::get(self, x as u32, y as u32)
     }
 }
 
@@ -190,6 +199,10 @@ mod tests {
     impl PixelSink for Recorder {
         fn set(&mut self, x: i32, y: i32, _: u32) {
             self.cells.push((x, y));
+        }
+
+        fn get(&self, _x: i32, _y: i32) -> u32 {
+            0
         }
     }
 

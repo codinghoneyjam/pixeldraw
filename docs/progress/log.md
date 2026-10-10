@@ -4,6 +4,31 @@
 
 ---
 
+## 2026-10-11 · Phase 1.9 · apply_shape + composite_ops
+
+**커밋 대상**: `crates/engine/src/raster/{shape_raster,composite_ops,brush,mod}.rs`·`docs/progress/`
+**테스트**: 86 → **101 그린**
+
+- **`apply_shape`**(shape_raster.rs) — 모든 도형 경로의 공용 진입점. 펜·도형
+  툴·HUD 브래킷·바이저 필이 전부 여기로 통과한다. 이미 검증된 마스크들을
+  조합하므로 패리티는 그것들을 상속 + 쓰기 순서.
+- **composite_ops 5종** — clipAlpha·erasePolygon·shapeFillMask·visorLayer·
+  sheenOverlay·hudBrackets.
+  - **`PixelSink`에 `get`을 추가했다.** 이 연산들은 이미 칠해진 타일을
+    **읽어야** 하므로 mask-and-fill로 express 불가. 트레이트에 읽기가 들어간 이유.
+  - **sheen의 3단계 순서가 load-bearing.** 레거시는 ①자체 오버레이에 그리고
+    ②오버레이 **알파**에 바이저 마스크를 곱하고 ③그때 composite한다.
+    composite 먼저·마스크 나중은 **다른 이미지**가 나온다. 단계를 합치지 않았다.
+  - **bbox 관례 차이를 찾았다.** 툴 스펙은 `[x,y,w,h]`, `shapeFillMask`는 코너
+    (`[[x0,y0],[x1,y1]]`)를 쓴다. JS의 `shapeArgs`가 그 변환을 한다. 내가
+    처음에 bbox를 그대로 코너로 넘겨 바이저 스캔라인이 전혀 어두워지지 않았고
+    테스트가 잡았다. `[x,y,w,h] → (x0,y0)~(x0+w-1, y0+h-1)`로 수정.
+  - `Math.round`은 부호 무관 `floor(v+0.5)`.
+- 남은: `stroke`(7)·`angle_snap`(8)·`resize`(15)·`drag_bbox`(8)·`unit_snap`(6)
+  그룹은 스냅 기하 + 커널 경로로 1.10에서 함께 검증.
+
+---
+
 ## 2026-10-11 · Phase 1.7~1.8 · arc/chard, gradient, atlas paste
 
 **커밋 대상**: `crates/engine/src/raster/{arc,gradient,atlas,mod}.rs`·`docs/progress/`
