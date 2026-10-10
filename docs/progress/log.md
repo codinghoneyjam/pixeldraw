@@ -4,6 +4,31 @@
 
 ---
 
+## 2026-10-11 · Phase 1.7~1.8 · arc/chard, gradient, atlas paste
+
+**커밋 대상**: `crates/engine/src/raster/{arc,gradient,atlas,mod}.rs`·`docs/progress/`
+**테스트**: 67 → **86 그린**
+
+- **1.7 arc/chord** — 골든 4건 전부 허용오차 안에 통과.
+  - **near-parity 허용오차를 명시적 상수로 핀**(`raster::arc::near_parity`).
+    `arc` missing 0/extra ≤16, `chord fill` missing 0/extra ≤4,
+    `chord outline` missing ≤16/extra ≤40. **PIL에 더 가깝게 만들면 게이트가
+    실패한다**는 점이 핵심 — 포팅은 JS 재현이지 오라클 정합이 아니다.
+  - **`Math.round`은 `floor(v+0.5)`.** 부호와 무관하다. 내가 불필요하게
+    분기했다가 `Math.round(-2.5)`가 -3이 나와 테스트가 잡았다. (`f64::round`은
+    half-away-from-zero라 **쓰면 안 된다**.)
+  - 각도는 PIL 규약(0°=3시, 시계방향 증가). `end < start`면 360을 더해 정규화.
+- **1.8 gradient/atlas** — 골든 7건(gradient 2·paste 5) 전부 통과.
+  - gradient는 **반올림이 아니라 절단**(`int()`). 레거시 쇼크웨이브 베이커의
+    T-5 알파 패리티 게이트가 기준. half-up과는 절반의 픽셀에서 다르다.
+  - atlas의 paste 법칙: `sheet.paste(part, pos, part)` — **타일이 자기 자신을
+    마스크로** 쓰이므로 알파가 제곱된다(128 → 64). 평범한 source-over로는
+    재현 불가. 256 알파 × 2000 RGBA로measured된 닫힌 형식을 그대로 쓴다.
+  - **픽스처 hex는 RGBA 바이트 순서**다("0A141EFF" → r=0A). big-endian u32로
+    파싱하면 채널이 뒤집힌다. 내가 그렇게 했다가 golden이 잡아줬다.
+
+---
+
 ## 2026-10-11 · Phase 0 + 1.1~1.6 · 엔진 기초·블렌드·청크저장·래스터 4종
 
 **커밋 대상**: `Cargo.toml`·`Cargo.lock`·`crates/`·`docs/`·`tools/`(신규 3개)

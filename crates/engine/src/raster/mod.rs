@@ -10,15 +10,21 @@
 //! A mask is `{ w, h, data }` with `data` row-major and 1 = painted, exactly the
 //! shape the JS tree used, so the golden fixtures read the same way on both sides.
 
+pub mod arc;
+pub mod atlas;
 pub mod brush;
+pub mod gradient;
 pub mod mask;
 pub mod polygon;
 pub mod segment;
 
+pub use arc::{Box2, arc_mask, chord_fill_mask, chord_outline_mask, near_parity};
+pub use atlas::{Sheet, Tile, assemble_sheet, paste_channel, paste_pixel};
 pub use brush::{
     BrushFootprint, PixelSink, brush_footprint, for_each_bresenham, stamp_brush, stroke_point,
     stroke_segment,
 };
+pub use gradient::{GradientMask, RadialGradient, Stop, radial_gradient_mask};
 pub use mask::{Mask, assert_mask_size, ellipse_mask, outline_ring, rrect_mask};
 pub use polygon::{
     Edge, fillet_polygon, line8, polygon_bbox, polygon_generic, polygon_inset_ring, polygon_mask,

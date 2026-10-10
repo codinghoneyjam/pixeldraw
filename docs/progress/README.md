@@ -49,8 +49,8 @@ Phase 1  엔진             [x] 1.1 constants/errors/events/pixel
                           [x] 1.4 raster brush+masks
                           [x] 1.5 raster segment (wide line)
                           [x] 1.6 raster polygon
-                          [ ] 1.7 raster arc/chord
-                          [ ] 1.8 raster gradient/text/atlas
+                          [x] 1.7 raster arc/chord
+                          [x] 1.8 raster gradient/atlas
                           [ ] 1.9 raster composite_ops
                           [ ] 1.10 composite + kernels
                           [ ] 1.11 io/png
@@ -67,9 +67,16 @@ Phase 6  절삭·패키징      [ ] 6.1 ~ 6.7
 
 | 지표 | 현재 |
 |---|---|
-| `cargo test` | **67 / 67** |
+| `cargo test` | **86 / 86** |
 | `cargo clippy -D warnings` | 그린 |
 | `cargo fmt --check` | 그린 |
 | JS 오라클(`npm test`) | 410 / 410 |
-| 골든 201건 중 커버 | **129 / 201** |
+| 골든 201건 중 커버 | **148 / 201** |
 | JS 베이스라인 | 측정 완료(14항목, `docs/native_plan.md` §6 Phase 0.1) |
+
+### 커밋 이력
+
+| sha | 내용 |
+|---|---|
+| `d5c2744` | phase 0 + 1.1~1.6 — workspace, oracle freeze, engine core, raster masks/blend/polygon/wide-line |
+| `1.7~1.8` | arc/chord near-parity 핀, gradient 절단 규칙, atlas paste 알파 제곱 |
