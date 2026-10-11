@@ -6,6 +6,7 @@
 //! * [`brush`] — the round pen footprint, Bresenham enumeration and stamping.
 //! * [`polygon`] — the PIL `Draw.c` scanline engine (fills, closed-path
 //!   outlines, wide lines, fillets).
+//! * [`snap`] — drag/resize/unit snap geometry, the tool-side helpers.
 //!
 //! A mask is `{ w, h, data }` with `data` row-major and 1 = painted, exactly the
 //! shape the JS tree used, so the golden fixtures read the same way on both sides.
@@ -19,6 +20,7 @@ pub mod mask;
 pub mod polygon;
 pub mod segment;
 pub mod shape_raster;
+pub mod snap;
 
 pub use arc::{Box2, arc_mask, chord_fill_mask, chord_outline_mask, near_parity};
 pub use atlas::{Sheet, Tile, assemble_sheet, paste_channel, paste_pixel};
@@ -35,3 +37,4 @@ pub use polygon::{
 };
 pub use segment::{Pt, line_mask};
 pub use shape_raster::{FillMode, ShapeKind, ShapeSpec, apply_shape};
+pub use snap::{DEFAULT_ANGLE_STEP, angle_snap, angle_snap_deg, drag_bbox, resize_bbox, unit_snap};

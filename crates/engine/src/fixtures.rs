@@ -38,6 +38,11 @@ pub fn repo_path(rel: &str) -> PathBuf {
     repo_root().join(rel)
 }
 
+/// Read a repo-relative text file.
+pub fn repo_file(rel: &str) -> String {
+    std::fs::read_to_string(repo_path(rel)).unwrap_or_else(|e| panic!("cannot read {rel}: {e}"))
+}
+
 /// Parsed `tests/fixtures/raster_golden.json`.
 pub fn golden() -> &'static serde_json::Value {
     static GOLDEN: OnceLock<serde_json::Value> = OnceLock::new();

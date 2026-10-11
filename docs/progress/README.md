@@ -52,9 +52,9 @@ Phase 1  엔진             [x] 1.1 constants/errors/events/pixel
                           [x] 1.7 raster arc/chord
                           [x] 1.8 raster gradient/atlas
                           [x] 1.9 raster composite_ops
-                          [ ] 1.10 composite + kernels
-                          [ ] 1.11 io/png
-                          [ ] 1.12 model
+                          [x] 1.10 composite + kernels + snap
+                          [x] 1.11 io/png + io/base64
+                          [ ] 1.12 model              ← 다음
                           [ ] 1.13 io/serialize
 Phase 2  네이티브 캔버스   [ ] 2.1 ~ 2.7
 Phase 3  UI              [ ] 3.1 ~ 3.10
@@ -67,11 +67,13 @@ Phase 6  절삭·패키징      [ ] 6.1 ~ 6.7
 
 | 지표 | 현재 |
 |---|---|
-| `cargo test` | **101 / 101** |
+| `cargo test` | **141 / 141** |
 | `cargo clippy -D warnings` | 그린 |
 | `cargo fmt --check` | 그린 |
 | JS 오라클(`npm test`) | 410 / 410 |
-| 골든 201건 중 커버 | **148 / 201** |
+| 래스터 골든 201건 중 커버 | **201 / 201** |
+| `png_cases` 5/5 | **5 / 5** |
+| 남은 Phase 1 게이트 | recipe 39/39(1.13) · view 수학(2.3) · schema(1.13) |
 | JS 베이스라인 | 측정 완료(14항목, `docs/native_plan.md` §6 Phase 0.1) |
 
 ### 커밋 이력
@@ -79,4 +81,6 @@ Phase 6  절삭·패키징      [ ] 6.1 ~ 6.7
 | sha | 내용 |
 |---|---|
 | `d5c2744` | phase 0 + 1.1~1.6 — workspace, oracle freeze, engine core, raster masks/blend/polygon/wide-line |
-| `1.7~1.8` | arc/chord near-parity 핀, gradient 절단 규칙, atlas paste 알파 제곱 |
+| `dcb1673` | phase 1.7~1.8 — arc/chord near-parity 핀, gradient 절단 규칙, atlas paste 알파 제곱 |
+| `1314937` | phase 1.9 — apply_shape 진입점 + composite_ops 5종 |
+| `HEAD` | phase 1.10~1.11 — snap 37건, composite/kernels, png 5/5 (이번 커밋) |

@@ -10,13 +10,19 @@
 //!
 //! Nothing here may touch the OS, the GPU or the network. The same rule the JS
 //! tree enforced as "DOM-free, importable in Node" (docs/contract.md §4).
+//!
+//! [`composite`] reads a layer stack back out, [`kernels`] writes into one, and
+//! `model` (Phase 1.12) owns the documents those layers live in.
 
 pub mod blend;
 pub mod chunkstore;
+pub mod composite;
 pub mod constants;
 pub mod errors;
 pub mod events;
 pub mod fixtures;
+pub mod io;
+pub mod kernels;
 pub mod pixel;
 pub mod raster;
 

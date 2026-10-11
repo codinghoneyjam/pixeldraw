@@ -4,6 +4,50 @@
 
 ---
 
+## 2026-10-11 · Phase 1.10~1.11 · composite·kernels·snap·png
+
+**커밋 대상**: `crates/engine/src/{composite,kernels,io/}.rs`·`crates/engine/src/raster/snap.rs`·`docs/progress/`
+**테스트**: 101 → **141 그린**(골든 201 + png 5 전부)
+
+- **1.10 snap**(`raster/snap.rs`) — `angleSnap`·`dragBBox`·`resizeBBox`·`unitSnap`.
+  골든 `angle_snap` 8 + `resize` 15 + `drag_bbox` 8 + `unit_snap` 6 = 37건 전건.
+  - **좌표 도메인을 `i64`로 잡았다.** JS는 여기서 `Number`를 쓴다. 드래그로
+    만들어진 박스의 원점은 캔버스 밖 수천 픽셀까지 나갈 수 있고(`oob_drawing`이
+    `-5000`에 찍는다), `resizeBBox`의 종횡비 고정 분기는 두 변의 곱을 계산한다.
+    `i32`로 가면 조용히 넘칠 자리가 넉넉히 있다.
+  - **`Math.floor(x/2)`가 아니다.** JS `Math.floor((size-ns)/2)`는 양수 전용이지만
+    이 경로는 음수가 된다. Rust `div_euclid(2)`로 옮겨야 JS와 같다.
+  - 핸들 파싱은 JS의 `handle.includes("e")` 그대로. **그래서 핸들 문자열에 `e`가
+    하나라도 들어 있으면 동쪽으로 해석된다** — 테스트에서 "move"를 무동작
+    핸들로 썼다가 `e`가 걸려 실패했다. 원본의 날카로운 모서리를 그대로 뒀다.
+- **1.10 composite**(`composite.rs`) — `compositeChunk`·`samplePixel`.
+  - **레이어 배열은 아래→위 순서이다.** 패널이 `topFirst = layers.reverse()`로
+    그리므로 배열 마지막이 맨 위. 처음에 반대로 짜서 테스트가 잡았다.
+  - `assertDoc`·`assertOut`의 `INVALID_STATE` 두 가드는 타입으로 흡수했다.
+    슬라이스와 길이 검사만 남기고, 길이 검사는 **같은 코드를 그대로** 낸다.
+  - **NaN 방어를 명시했다.** JS `!(opacity > 0)`는 NaN을 가린다.
+    `opacity <= 0.0`으로 쓰면 NaN이 통과하므로 `is_nan() || <= 0.0`으로 풀었다.
+  - 알파 0이면 RGB까지 0으로 지운다. 그래야 청크가 전부 0이 되어 `isAllZero`로
+   Prune되고 지운 자국이 파일에 남지 않는다.
+- **1.10 kernels**(`kernels.rs`) — `floodFillScanline`(골든 `fill` 3건)과
+  `strokeMask`(골든 `stroke` 7건). 나머지 두 커널은 1.4/1.9에서 이미 검증된
+  `raster::brush`·`raster::shape_raster`에 있으므로 옮기지 않았다(중복 금지).
+  - `strokeMask`는 JS 테스트가 쓰던 가짜 writer와 같은 형태의 `MaskSink`.
+    음수 좌표는 버리고 캔버스 오른쪽으로 **감싸지 않는다**.
+- **1.11 png** — CRC32·필터 0~4 디코드·필터 0 인코드. `png_cases` 5/5.
+  - `CompressionStream`은 `flate2`(miniz_oxide). 압축 바이트는 다르고 픽셀은 같다.
+  - 에러 코드 배열: 시그니처 실패 `PNG_SIGNATURE`, 잘림/CRC 불일치 `PNG_CRC`,
+    비RGBA·비인터레이스·크기 `PNG_UNSUPPORTED`. 잘린 파일에서 어떤 코드가 나오는지
+    8바이트 경계를 끊어가며 못 박았다(0~7바이트 → SIGNATURE, 그 이상 → CRC/UNSUPPORTED).
+  - 디코드 루프는 `split_at_mut` 대신 **인덱스만** 쓴다. 위 행을 이미 복원한
+    상태로 읽어야 하므로 차용 검사기가 튜�플로 `(위, 아래)`를 동시에 빌리면
+    끝이 안 난다.
+  - **필터 1~4는 픽스처가 태워주지 않는다.** `all_five_filters_6x5`는 다섯 필터를
+    다 쓰지만 한 이미지뿐이라, 각 필터를 **직접 역인코드해 넣는** 별도 테스트를
+    뒀다. 그게 없으면 paeth 분기가 실제로 한 번도 실행되지 않는 채로 통과한다.
+
+---
+
 ## 2026-10-11 · Phase 1.9 · apply_shape + composite_ops
 
 **커밋 대상**: `crates/engine/src/raster/{shape_raster,composite_ops,brush,mod}.rs`·`docs/progress/`

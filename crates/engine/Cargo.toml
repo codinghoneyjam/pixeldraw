@@ -9,10 +9,16 @@ license.workspace = true
 # like `src/core/**` and `src/features/document/**` were DOM-free in the JS tree
 # (docs/contract.md §4). Tests run under plain `cargo test` — no browser, no
 # wasm, no DOM shim.
+#
+# The two "outside" crates are both codecs, not capabilities: `flate2` replaces
+# `CompressionStream("deflate")` for PNG's IDAT, and `base64` replaces the
+# browser's `btoa`/`atob` bridge for chunk payloads. Neither touches the OS.
 [dependencies]
 thiserror = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+base64 = "0.22"
+flate2 = "1.1"
 
 [dev-dependencies]
 # Re-derives the `hashes` group of raster_golden.json (masks too big to inline as
