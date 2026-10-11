@@ -11,6 +11,10 @@ license.workspace = true
 pixel-engine = { path = "../engine" }
 pixel-platform = { path = "../platform" }
 
+[lib]
+name = "pixeldraw_app"
+path = "src/lib.rs"
+
 [[bin]]
 name = "pixeldraw"
 path = "src/main.rs"

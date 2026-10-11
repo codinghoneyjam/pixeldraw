@@ -1,0 +1,1 @@
+//! Canvas texture glue placeholder.

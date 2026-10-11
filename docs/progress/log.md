@@ -316,3 +316,16 @@
 - `gradient`(2)·`paste`(5)는 1.8. `composite`(8)·`fill`(3)은 1.10.
 - `arc`(2)·`chord`(2)는 **near-parity 허용오차**를 JS와 똑같이 재현해야
   한다(missing 0 / extras ≤16 등). 첫 구현은 1.7.
+
+---
+
+## 2026-10-11 · Phase 1.13 · IO/recipe native 포팅 계속
+
+**상태**: Phase 1 완료 — Rust native recipe parity 39/39와 기본 Rust/JS 게이트 통과.
+
+- `io/serialize`·`serialize_vector`·`validate*` Rust 모듈을 IO facade에 연결하고 JSON 문서/레이어 export-import, vector 복원, 구조·semantic validator 테스트를 추가.
+- Recipe 경로에 shape·alpha·line·arc/chord·radial gradient·clip/erase·visor/sheen/HUD·baked-glyph text 렌더를 연결. Text glyph는 기존 `tools/recipe/text_glyphs.json`을 compile-time asset으로 읽고 `title_logo_text_our` legacy PNG와 99% 이상 일치.
+- JS·Rust parity가 같은 39개 입력을 소비하도록 `tools/recipe_cases.json`을 공유 manifest로 만들고 Node adapter를 변경. JS parity `39/39`, `tests/spec_consistency` 포함 `npm test` 410/410, JS/Python golden 201/201, oracle manifest intact, view examples OK.
+- **Native parity의 두 원인을 고쳤다**: PNG Paeth decoder가 `pc=abs(p)`를 쓰던 버그를 JS/Pillow와 같은 `pc=abs(p-c)`로 수정하고 실제 enemy PNG `(1804,64)` RGBA `[255,230,0,255]` regression을 추가. 이어 JS token resolver와 동일하게 `body_*`·`body_outline` 파생색 처리를 palette 직접 override 조회보다 우선하게 정렬했다. native audit이 18/39 → 38/39 → **39/39**로 통과.
+- 39개 native parity harness를 상시 Rust integration test로 활성화하고 JS/Rust 공용 manifest를 사용한다. 기본 `cargo test --workspace`·clippy·fmt·diff-check, JS 410 tests·asset parity 39/39·golden 201/201·oracle·view checks 모두 통과.
+- Phase 1은 완료. 다음 계획 단계는 Phase 2.1 네이티브 캔버스 작업.

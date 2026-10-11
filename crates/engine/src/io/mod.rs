@@ -16,7 +16,12 @@
 pub mod base64;
 pub mod export;
 pub mod png;
+pub mod validate;
 
 pub use base64::{base64_to_bytes, bytes_to_base64};
 pub use export::{FlattenOptions, flatten_to_rgba};
 pub use png::{PngImage, decode_png, encode_png};
+pub mod serialize;
+pub mod vector;
+pub use serialize::{document_to_json, import_layer_json, json_to_document, layer_to_json};
+pub use vector::{document_to_vector_json, layer_to_vector_json, vector_json_to_document};

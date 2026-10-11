@@ -13,13 +13,12 @@
 use crate::errors::{DrawToolError, EngineResult};
 use crate::pixel::{Rgba, pack_rgba};
 use crate::raster::mask::assert_mask_size;
-
-/// `Math.floor` — the baker's truncation rule.
-#[inline]
+#[cfg(test)]
 fn grad_trunc(v: f64) -> u8 {
     v.floor().clamp(0.0, 255.0) as u8
 }
 
+/// `Math.floor` — the baker's truncation rule.
 #[inline]
 fn clamp01(t: f64) -> f64 {
     t.clamp(0.0, 1.0)
@@ -29,11 +28,10 @@ fn clamp01(t: f64) -> f64 {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Stop {
     pub t: f64,
-    pub rgba: Rgba,
+    pub rgba: [f64; 4],
 }
-
 impl Stop {
-    pub const fn new(t: f64, r: u8, g: u8, b: u8, a: u8) -> Self {
+    pub const fn new(t: f64, r: f64, g: f64, b: f64, a: f64) -> Self {
         Self {
             t,
             rgba: [r, g, b, a],
@@ -44,7 +42,7 @@ impl Stop {
 /// Interpolate one RGBA tuple across sorted stops at `t`.
 ///
 /// Stops are expected sorted by `t`; the caller sorts (see [`RadialGradient`]).
-fn sample_stops(sorted: &[Stop], t: f64) -> Rgba {
+fn sample_stops(sorted: &[Stop], t: f64) -> [f64; 4] {
     let first = sorted[0];
     let last = sorted[sorted.len() - 1];
     if t <= first.t {
@@ -66,10 +64,10 @@ fn sample_stops(sorted: &[Stop], t: f64) -> Rgba {
         };
         // The JS returned this array as the block's tail expression; say so.
         return [
-            grad_trunc(a.rgba[0] as f64 + (b.rgba[0] as f64 - a.rgba[0] as f64) * f),
-            grad_trunc(a.rgba[1] as f64 + (b.rgba[1] as f64 - a.rgba[1] as f64) * f),
-            grad_trunc(a.rgba[2] as f64 + (b.rgba[2] as f64 - a.rgba[2] as f64) * f),
-            grad_trunc(a.rgba[3] as f64 + (b.rgba[3] as f64 - a.rgba[3] as f64) * f),
+            (a.rgba[0] + (b.rgba[0] - a.rgba[0]) * f).floor(),
+            (a.rgba[1] + (b.rgba[1] - a.rgba[1]) * f).floor(),
+            (a.rgba[2] + (b.rgba[2] - a.rgba[2]) * f).floor(),
+            (a.rgba[3] + (b.rgba[3] - a.rgba[3]) * f).floor(),
         ];
     }
     // Unreachable for a sorted list with t strictly inside, but the JS fell
@@ -148,8 +146,8 @@ pub fn radial_gradient_mask(g: &RadialGradient) -> EngineResult<GradientMask> {
                 clamp01((d - g.r0) / span)
             };
             let c = sample_stops(&sorted, t);
-            if c[3] > 0 {
-                m.data[y * g.w + x] = pack_rgba(c[0] as f64, c[1] as f64, c[2] as f64, c[3] as f64);
+            if c[3] > 0.0 {
+                m.data[y * g.w + x] = pack_rgba(c[0], c[1], c[2], c[3]);
             }
         }
     }
@@ -179,10 +177,10 @@ mod tests {
                         Stop {
                             t: a[0].as_f64().unwrap(),
                             rgba: [
-                                a[1].as_u64().unwrap() as u8,
-                                a[2].as_u64().unwrap() as u8,
-                                a[3].as_u64().unwrap() as u8,
-                                a[4].as_u64().unwrap() as u8,
+                                a[1].as_u64().unwrap() as f64,
+                                a[2].as_u64().unwrap() as f64,
+                                a[3].as_u64().unwrap() as f64,
+                                a[4].as_u64().unwrap() as f64,
                             ],
                         }
                     })
@@ -230,8 +228,8 @@ mod tests {
             r0: 0.0,
             r1: 0.0,
             stops: vec![
-                Stop::new(0.0, 255, 0, 0, 255),
-                Stop::new(1.0, 0, 0, 255, 255),
+                Stop::new(0.0, 255.0, 0.0, 0.0, 255.0),
+                Stop::new(1.0, 0.0, 0.0, 255.0, 255.0),
             ],
             w: 3,
             h: 3,
@@ -268,9 +266,9 @@ mod tests {
             r0: 3.0,
             r1: 5.0,
             stops: vec![
-                Stop::new(0.0, 0, 0, 0, 0),
-                Stop::new(0.5, 255, 255, 255, 255),
-                Stop::new(1.0, 0, 0, 0, 0),
+                Stop::new(0.0, 0.0, 0.0, 0.0, 0.0),
+                Stop::new(0.5, 255.0, 255.0, 255.0, 255.0),
+                Stop::new(1.0, 0.0, 0.0, 0.0, 0.0),
             ],
             w: 9,
             h: 9,

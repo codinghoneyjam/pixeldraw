@@ -1,0 +1,336 @@
+{
+  "cases": [
+    {
+      "id": "sword_albedo",
+      "recipe": "assetdb/entity/weapon/weapon_sword.json",
+      "layer": "albedo",
+      "legacy": "assetdb/entity/weapon/sword_albedo.png"
+    },
+    {
+      "id": "sword_mask",
+      "recipe": "assetdb/entity/weapon/weapon_sword.json",
+      "layer": "mask",
+      "legacy": "assetdb/entity/weapon/sword_mask.png"
+    },
+    {
+      "id": "bow_albedo",
+      "recipe": "assetdb/entity/weapon/weapon_bow.json",
+      "layer": "albedo",
+      "legacy": "assetdb/entity/weapon/bow_albedo.png"
+    },
+    {
+      "id": "bow_mask",
+      "recipe": "assetdb/entity/weapon/weapon_bow.json",
+      "layer": "mask",
+      "legacy": "assetdb/entity/weapon/bow_mask.png"
+    },
+    {
+      "id": "spear_albedo",
+      "recipe": "assetdb/entity/weapon/weapon_spear.json",
+      "layer": "albedo",
+      "legacy": "assetdb/entity/weapon/spear_albedo.png"
+    },
+    {
+      "id": "spear_mask",
+      "recipe": "assetdb/entity/weapon/weapon_spear.json",
+      "layer": "mask",
+      "legacy": "assetdb/entity/weapon/spear_mask.png"
+    },
+    {
+      "id": "portal_keycap_unpressed",
+      "recipe": "assetdb/world/object/portal_keycap_master.json",
+      "layer": "keycap_unpressed",
+      "legacy": "assetdb/world/img/portal/portal_keycap_unpressed.png"
+    },
+    {
+      "id": "portal_keycap_pressed",
+      "recipe": "assetdb/world/object/portal_keycap_master.json",
+      "layer": "keycap_pressed",
+      "legacy": "assetdb/world/img/portal/portal_keycap_pressed.png"
+    },
+    {
+      "id": "title_diorama_sword_body",
+      "recipe": "assetdb/ui/data/title_diorama_sword_body.json",
+      "layer": "body",
+      "legacy": "assetdb/ui/title/title_diorama_sword_body.png"
+    },
+    {
+      "id": "title_logo_text_our",
+      "recipe": "pixeldraw/tests/fixtures/title_logo_text_our_recipe.json",
+      "layer": null,
+      "legacy": "assetdb/ui/title/title_logo_text_our.png"
+    },
+    {
+      "id": "title_logo_text_or",
+      "recipe": "pixeldraw/tests/fixtures/title_logo_text_or_recipe.json",
+      "layer": null,
+      "legacy": "assetdb/ui/title/title_logo_text_or.png"
+    },
+    {
+      "id": "title_logo_text_d",
+      "recipe": "pixeldraw/tests/fixtures/title_logo_text_d_recipe.json",
+      "layer": null,
+      "legacy": "assetdb/ui/title/title_logo_text_d.png"
+    },
+    {
+      "id": "shockwave_ring",
+      "recipe": "pixeldraw/tests/fixtures/shockwave_ring_recipe.json",
+      "layer": null,
+      "legacy": "assetdb/entity/player/shockwave_ring.png"
+    },
+    {
+      "id": "enemy_keybot_c001_sheet",
+      "recipe": "assetdb/entity/enemy/enemy_C-001_sheet.json",
+      "layer": null,
+      "legacy": "assetdb/entity/enemy/enemy_keybot_c001_sheet.png"
+    },
+    {
+      "id": "enemy_keybot_t002_sheet",
+      "recipe": "assetdb/entity/enemy/enemy_T-002_sheet.json",
+      "layer": null,
+      "legacy": "assetdb/entity/enemy/enemy_keybot_t002_sheet.png"
+    },
+    {
+      "id": "enemy_keybot_r003_sheet",
+      "recipe": "assetdb/entity/enemy/enemy_R-003_sheet.json",
+      "layer": null,
+      "legacy": "assetdb/entity/enemy/enemy_keybot_r003_sheet.png"
+    },
+    {
+      "id": "enemy_keybot_b001_sheet",
+      "recipe": "assetdb/entity/enemy/enemy_B-001_sheet.json",
+      "layer": null,
+      "legacy": "assetdb/entity/enemy/enemy_keybot_b001_sheet.png"
+    },
+    {
+      "id": "pantograph_sheet",
+      "recipe": "assetdb/ui/hud/pantograph_keycap_profile.json",
+      "layer": null,
+      "legacy": "assetdb/ui/hud/pantograph_sheet.png"
+    },
+    {
+      "id": "fused_keycap_9slice",
+      "recipe": "assetdb/ui/hud/pantograph_keycap_profile.json",
+      "layer": "fused_keycap",
+      "legacy": "assetdb/ui/hud/fused_keycap_9slice.png"
+    },
+    {
+      "id": "fused_keycap_hover_9slice",
+      "recipe": "assetdb/ui/hud/pantograph_keycap_profile.json",
+      "layer": "fused_keycap_hover",
+      "legacy": "assetdb/ui/hud/fused_keycap_hover_9slice.png"
+    },
+    {
+      "id": "fused_keycap_pressed_9slice",
+      "recipe": "assetdb/ui/hud/pantograph_keycap_profile.json",
+      "layer": "fused_keycap_pressed",
+      "legacy": "assetdb/ui/hud/fused_keycap_pressed_9slice.png"
+    },
+    {
+      "id": "hud_icons_128_atlas",
+      "recipe": "assetdb/ui/hud/hud_icons_128_atlas.json",
+      "layer": null,
+      "legacy": "assetdb/ui/hud/hud_icons_128_atlas.png"
+    },
+    {
+      "id": "keycap_screen_9slice",
+      "recipe": "assetdb/ui/hud/hud_composite_surfaces.json",
+      "layer": "keycap_screen_9slice",
+      "legacy": "assetdb/ui/hud/keycap_screen_9slice.png"
+    },
+    {
+      "id": "keyboard_plate_block",
+      "recipe": "assetdb/ui/hud/hud_composite_surfaces.json",
+      "layer": "keyboard_plate_block",
+      "legacy": "assetdb/ui/hud/keyboard_plate_block.png"
+    },
+    {
+      "id": "floating_visor_window",
+      "recipe": "assetdb/ui/hud/hud_composite_surfaces.json",
+      "layer": "floating_visor_window",
+      "legacy": "assetdb/ui/hud/floating_visor_window.png"
+    },
+    {
+      "id": "scanline_tile_fine",
+      "recipe": "assetdb/ui/hud/hud_composite_surfaces.json",
+      "layer": "scanline_tile_fine",
+      "legacy": "assetdb/ui/hud/scanline_tile_fine.png"
+    },
+    {
+      "id": "room_tileset",
+      "recipe": "assetdb/world/stage/room_tileset.json",
+      "layer": null,
+      "legacy": "assetdb/world/stage/room_tileset.png"
+    },
+    {
+      "id": "lobby_tileset",
+      "recipe": "assetdb/world/lobby/lobby_tileset.json",
+      "layer": null,
+      "legacy": "assetdb/world/lobby/lobby_tileset.png"
+    },
+    {
+      "id": "keycap_debris",
+      "recipe": "assetdb/entity/enemy/base_debris.json",
+      "layer": null,
+      "legacy": "assetdb/entity/enemy/keycap_debris.png"
+    },
+    {
+      "id": "title_weapons_atlas",
+      "recipe": "assetdb/ui/title/title_weapons_atlas.json",
+      "layer": null,
+      "legacy": "assetdb/ui/title/title_weapons_atlas.png"
+    },
+    {
+      "id": "mouse_hero_sheet",
+      "recipe": "assetdb/entity/player/mouse_hero_sheet.json",
+      "layer": null,
+      "legacy": "assetdb/entity/player/mouse_hero_sheet.png"
+    },
+    {
+      "id": "hero_trackball_cyber_sheet",
+      "recipe": "assetdb/entity/player/hero_trackball_cyber_sheet.json",
+      "layer": null,
+      "legacy": "assetdb/entity/player/hero_trackball_cyber_sheet.png"
+    }
+  ],
+  "layer_cases": [
+    {
+      "id": "player_mouse__shadow",
+      "recipe": "assetdb/entity/player/player_mouse.json",
+      "layer": "shadow",
+      "legacy": "tests/fixtures/player_arc/player_mouse__shadow_legacy.png",
+      "palette": {
+        "body_color": "#2C323D",
+        "body_dark": "#161920",
+        "body_deep": "#0E1015",
+        "body_bright": "#475569",
+        "body_outline": "#07080B",
+        "visor_color": "#000000",
+        "eye_color": "#38BDF8",
+        "glow_color": "#7DD3FC",
+        "wheel_core": "#0284C7",
+        "wheel_light": "#FFFFFF"
+      }
+    },
+    {
+      "id": "player_mouse__visor_left",
+      "recipe": "assetdb/entity/player/player_mouse.json",
+      "layer": "visor_left",
+      "legacy": "tests/fixtures/player_arc/player_mouse__visor_left_legacy.png",
+      "palette": {
+        "body_color": "#2C323D",
+        "body_dark": "#161920",
+        "body_deep": "#0E1015",
+        "body_bright": "#475569",
+        "body_outline": "#07080B",
+        "visor_color": "#000000",
+        "eye_color": "#38BDF8",
+        "glow_color": "#7DD3FC",
+        "wheel_core": "#0284C7",
+        "wheel_light": "#FFFFFF"
+      }
+    },
+    {
+      "id": "player_mouse__visor_right",
+      "recipe": "assetdb/entity/player/player_mouse.json",
+      "layer": "visor_right",
+      "legacy": "tests/fixtures/player_arc/player_mouse__visor_right_legacy.png",
+      "palette": {
+        "body_color": "#2C323D",
+        "body_dark": "#161920",
+        "body_deep": "#0E1015",
+        "body_bright": "#475569",
+        "body_outline": "#07080B",
+        "visor_color": "#000000",
+        "eye_color": "#38BDF8",
+        "glow_color": "#7DD3FC",
+        "wheel_core": "#0284C7",
+        "wheel_light": "#FFFFFF"
+      }
+    },
+    {
+      "id": "base_chassis_gem__shadow",
+      "recipe": "assetdb/entity/player/base_chassis_gem.json",
+      "layer": "shadow",
+      "legacy": "tests/fixtures/player_arc/base_chassis_gem__shadow_legacy.png",
+      "palette": {
+        "body_color": "#2C323D",
+        "body_dark": "#161920",
+        "body_deep": "#0E1015",
+        "body_bright": "#475569",
+        "body_outline": "#07080B",
+        "visor_color": "#000000",
+        "eye_color": "#38BDF8",
+        "glow_color": "#7DD3FC",
+        "wheel_core": "#0284C7",
+        "wheel_light": "#FFFFFF"
+      }
+    },
+    {
+      "id": "base_chassis_trackball__shadow",
+      "recipe": "assetdb/entity/player/base_chassis_trackball.json",
+      "layer": "shadow",
+      "legacy": "tests/fixtures/player_arc/base_chassis_trackball__shadow_legacy.png",
+      "palette": {
+        "body_color": "#2C323D",
+        "body_dark": "#161920",
+        "body_deep": "#0E1015",
+        "body_bright": "#475569",
+        "body_outline": "#07080B",
+        "visor_color": "#000000",
+        "eye_color": "#38BDF8",
+        "glow_color": "#7DD3FC",
+        "wheel_core": "#0284C7",
+        "wheel_light": "#FFFFFF"
+      }
+    },
+    {
+      "id": "base_chassis_trackball__body",
+      "recipe": "assetdb/entity/player/base_chassis_trackball.json",
+      "layer": "body",
+      "legacy": "tests/fixtures/player_arc/base_chassis_trackball__body_legacy.png",
+      "palette": {
+        "body_color": "#2C323D",
+        "body_dark": "#161920",
+        "body_deep": "#0E1015",
+        "body_bright": "#475569",
+        "body_outline": "#07080B",
+        "visor_color": "#000000",
+        "eye_color": "#38BDF8",
+        "glow_color": "#7DD3FC",
+        "wheel_core": "#0284C7",
+        "wheel_light": "#FFFFFF"
+      }
+    },
+    {
+      "id": "emoticons_cyber_neon__face_normal",
+      "recipe": "assetdb/entity/player/emoticons_cyber_neon.json",
+      "layer": "face_normal",
+      "legacy": "tests/fixtures/player_arc/emoticons_cyber_neon__face_normal_legacy.png",
+      "palette": {
+        "body_color": "#2C323D",
+        "body_dark": "#161920",
+        "body_deep": "#0E1015",
+        "body_bright": "#475569",
+        "body_outline": "#07080B",
+        "visor_color": "#000000",
+        "eye_color": "#38BDF8",
+        "glow_color": "#7DD3FC",
+        "wheel_core": "#0284C7",
+        "wheel_light": "#FFFFFF"
+      }
+    }
+  ],
+  "palette_spec": {
+    "body_color": "#2C323D",
+    "body_dark": "#161920",
+    "body_deep": "#0E1015",
+    "body_bright": "#475569",
+    "body_outline": "#07080B",
+    "visor_color": "#000000",
+    "eye_color": "#38BDF8",
+    "glow_color": "#7DD3FC",
+    "wheel_core": "#0284C7",
+    "wheel_light": "#FFFFFF"
+  }
+}

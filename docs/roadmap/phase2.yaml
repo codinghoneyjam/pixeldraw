@@ -1,0 +1,884 @@
+# Phase 2 — 네이티브 창 + 픽셀 캔버스 + 도구  (docs/native_plan.md §6 Phase 2: 2.1~2.7)
+# 선행: index.yaml 읽을 것. 표기 규칙/전역 규칙/번역 규약은 index.yaml 이 정의한다.
+# 이미 끝난 것(재구현 금지): view 수학 전부(engine/src/view/*: View, ViewStore, zoom_at, step_zoom, clamp_view, fit_view, actual_size_view,
+#   visible_chunk_range, screen_to_canvas, pixel_at, canvas_to_screen — Phase 2.3), composite_chunk/sample_pixel, 래스터 커널, model 전부.
+
+phase: 2
+goal: "마우스로 그릴 수 있는 네이티브 창. 새 문서·펜·지우개·도형 5종·채우기·스포이트·손·(호/현/그라디언트/텍스트)·줌/팬·Undo/Redo·PNG/JSON 저장·열기"
+gate: {doc: docs/native_smoke.md, kind: "수동 스모크 + 헤드리스 통합 테스트(W8)", see: W10}
+
+waves:
+  - {wave: 0, tasks: [W0],                              mode: serial,   needs: [D1]}
+  - {wave: 1, tasks: [W1, W2, W3, W4, W7, W9, W12],     mode: parallel, needs: [W0]}
+  - {wave: 2, tasks: [W5, W6, W11, W13],                mode: parallel, needs: [W1, W4, W12(W13만)]}
+  - {wave: 3, tasks: [W8],                              mode: serial,   needs: [W2, W3, W5, W6, W7, W9, W11, W13]}
+  - {wave: 4, tasks: [W10],                             mode: serial,   needs: [W8]}
+
+dependency_graph: |
+  W0 ─┬─> W1 ──┬─> W5 ──┐
+      ├─> W2 ──┼────────┤
+      ├─> W3 ──┤        │
+      ├─> W4 ──┼─> W6 ──┤
+      │        └─> W11 ─┼─> W8 ─> W10
+      ├─> W7 ───────────┤
+      ├─> W9 ───────────┤
+      └─> W12 ─> W13 ───┘
+  W5,W6,W11,W13 는 W1(StrokeSession)과 W0(공유 타입)에만 컴파일 의존. W4 는 W5 등의 테스트에서 RawPointer 를 쓰고 싶을 때만 필요(필수 아님: ToolEvent 는 W0).
+
+write_scopes:                     # 작업 간 겹침 없음(웨이브 내). 공유 파일은 W0 소유
+  W0:  [Cargo.toml, crates/*/Cargo.toml, crates/engine/src/lib.rs, crates/engine/src/{display,comp_cache}.rs(빈 파사드), crates/engine/src/raster/mod.rs(text_mask 선언 1줄), crates/engine/src/constants.rs, crates/app/src/{lib.rs,main.rs}, "crates/app/src/{input,tools}.rs(+ 빈 모듈 파일들)", crates/app/src/input/event.rs, crates/app/src/tools/{api,overlay}.rs, docs/contract.md]
+  W1:  [crates/engine/src/chunkstore/writer.rs, crates/engine/src/chunkstore.rs(재수출 한 줄만), crates/engine/src/model/edit_session.rs, "crates/engine/src/model/session/{core.rs,ops.rs}", crates/engine/src/model/session/stroke.rs(신규), crates/engine/tests/stroke_session.rs(신규), docs/model_internals.md(§8 추가)]
+  W2:  ["crates/engine/src/display/**", crates/engine/tests/display_parity.rs, tools/display_cases.mjs, tools/display_cases.json, docs/render.md(display 절)]
+  W3:  ["crates/engine/src/comp_cache/**", crates/engine/tests/comp_cache.rs, docs/render.md(comp_cache 절 — W2 와 같은 파일이므로 서로 다른 절, 오케스트레이터가 병합)]
+  W4:  ["crates/app/src/input/** (event.rs 제외)"]
+  W7:  [crates/app/Cargo.toml(eframe 의존성만), crates/app/src/main.rs, crates/app/src/shell.rs, crates/app/src/canvas_texture.rs]
+  W9:  [crates/platform/Cargo.toml, "crates/platform/src/**"]
+  W12: ["crates/engine/src/raster/text_mask.rs", "crates/engine/src/raster/text_mask/**", crates/engine/tests/text_mask.rs, tools/text_mask_cases.mjs, tools/text_mask_cases.json]
+  W5:  ["crates/app/src/tools/{manager,pen,fill,eyedropper,hand}.rs", "crates/app/src/tools/pen/**", "crates/app/src/tools/eyedropper/**"]
+  W6:  ["crates/app/src/tools/shape.rs", "crates/app/src/tools/shape/**"]
+  W11: ["crates/app/src/tools/{arc,gradient}.rs", "crates/app/src/tools/{arc,gradient}/**"]
+  W13: ["crates/app/src/tools/text.rs", "crates/app/src/tools/text/**"]
+  W8:  ["crates/app/src/{shell,canvas_view,session_glue,input_adapter,overlay_raster,file_ops}.rs(+ 하위 디렉터리)", crates/app/src/lib.rs(pub mod 줄)]
+  W10: [docs/native_smoke.md]
+
+# ══════════════════════════════════════════════════════════════════════════════
+tasks:
+
+# ─────────────────────────────────────────────────────────────────────────────
+- id: W0
+  title: 선행 스켈레톤 — 공유 파일·공유 타입·상수·app lib/bin 분리
+  wave: 0
+  why: "웨이브 1~2 가 서로의 컴파일을 깨지 않도록 공유 지점(lib.rs, Cargo.toml, 공유 타입, contract 상수)을 한 번에 확정"
+  steps:
+    - "D1 결정 반영(1.13 커밋). 에이전트는 커밋하지 않음 — 워킹트리 그대로 진행"
+    - "engine/src/lib.rs: `pub mod display; pub mod comp_cache;` 추가. 두 파사드 파일(display.rs, comp_cache.rs)은 `//!` 문서 주석 한 줄뿐인 빈 파일. raster/mod.rs 에 `pub mod text_mask;` 1줄 + 빈 raster/text_mask.rs"
+    - "constants.rs + contract.md: 아래 `constants_to_add` 전부. 각 상수를 constants 테스트에 핀(값 단언)"
+    - "crates/app: [lib] name=pixeldraw_app path=src/lib.rs + [[bin]] pixeldraw 유지. main.rs 는 `fn main(){ pixeldraw_app::shell::run() }` 형태이되 W7 전에는 기존 stub 출력 유지(shell::run 은 W7 이 채움; W0 는 `pub fn run(){ println!(..) }` stub)"
+    - "crates/app/src/lib.rs: `pub mod input; pub mod tools; pub mod shell; pub mod canvas_texture; pub mod canvas_view; pub mod session_glue; pub mod input_adapter; pub mod overlay_raster; pub mod file_ops;` 각 모듈은 `//!` 한 줄 빈 파일(소유 작업이 채움). shell/canvas_texture/canvas_view 는 W7/W8 이 egui 를 import 하므로 W0 는 egui 를 쓰지 않음"
+    - "app/src/input.rs 파사드: `mod event; pub use event::*;` 만. app/src/tools.rs 파사드: `pub mod api; pub mod overlay; pub mod manager; pub mod pen; pub mod fill; pub mod eyedropper; pub mod hand; pub mod shape; pub mod arc; pub mod gradient; pub mod text;` (manager..text 는 빈 파일. 각 소유 작업이 채움) + `pub use api::*;`"
+    - "공유 타입 3종 완성(아래 shared_types). `todo!()`/`unimplemented!()` 금지 — 순수 데이터와 작은 헬퍼 + 단위 테스트까지"
+  constants_to_add:               # JS 원천 → Rust const. 값은 JS 에서 복사
+    - {name: FRAME_BUDGET_MS, value: 6, js: "src/render/renderer_composite.js:5 const FRAME_BUDGET_MS = 6", type: "u64 ms"}
+    - {name: CHECKER_A_RGB, value: "[255,255,255]", js: "render/background.js:8 '#ffffff'"}
+    - {name: CHECKER_B_RGB, value: "[217,217,217]", js: "render/background.js:9 '#d9d9d9'"}
+    - {name: CHECKER_CSS_PX, value: 8, js: "paintChecker(..., checkerCssPx = 8)"}
+    - {name: CANVAS_HOST_BG_RGB, value: "[60,63,69]", js: "style_base.css --canvas-bg #3c3f45 (디자인 토큰). 문서 밖 영역 색 — display 프레임버퍼 초기색", note: "CSS 토큰이므로 style_base.css 를 읽어 값을 재확인"}
+    - {name: BORDER_RGBA, value: "[0,0,0,153]", js: "renderer_display.js:4 BORDER_STYLE 'rgba(0,0,0,0.6)'", note: "알파는 0.6 f64 상수로 유지(GRID 와 같이 f64 알파). u8 153 은 근사 — f64 0.6 을 상수로 두고 합성식에 그대로 사용"}
+    - {name: GRID_ALPHA_THIN, value: 0.3, js: "grid.js:16"}
+    - {name: GRID_ALPHA_THICK, value: 0.55, js: "grid.js:17"}
+    - {name: GRID_ALPHA_PIXEL, value: 0.15, js: "grid.js:18"}
+    - {name: GRID_THIN_CSS_PX, value: 1, js: "grid.js:21"}
+    - {name: GRID_THICK_CSS_PX, value: 2, js: "grid.js:22"}
+    - {name: GRID_BEVEL_DEV_PX, value: 1, js: "grid.js:23"}
+    - {name: GRID_PASS_ALPHA, value: "thick: light 0.44 / dark 0.5; thin: light 0.3 / dark 0.32", js: "grid.js passAlpha()"}
+    - {name: GRID_SHOW_MIN_CSS_PX, value: 6, js: "grid.js gridLines: CHUNK_PX*z >= 6, TILE_PX*z >= 6"}
+    - {name: GRID_PIXEL_MIN_ZOOM, value: 8, js: "grid.js: showPixel = mode==='pixel' && z >= 8"}
+    - {name: WHEEL_STEP_PX, value: 60, js: "tools/wheel_accumulator.js: Math.trunc(residue/60)"}
+    - {name: WHEEL_LINE_PX, value: 16, js: "deltaMode 1 → px *= 16"}
+    - {name: SHAPE_HANDLE_TOL_CSS_PX, value: 6, js: "shape.js hitHandle(..., 6 / zoom)"}
+    - {name: SHAPE_GRAB_MIN_CSS_PX, value: 4, js: "shape.js grab = max(penSize/2, 4/zoom)"}
+    - {name: SHAPE_NUDGE_STEP, value: "1 / shift 32", js: "shape_keys.js"}
+    - {name: SHAPE_HANDLE_DEV_PX, value: 8, js: "shape_overlay.js drawFrame hs = 8*dpr"}
+    - {name: SHAPE_DASH, value: "[4,3] (×dpr)", js: "shape_overlay.js setLineDash([4*dpr,3*dpr])"}
+    - {name: PREVIEW_ALPHA_SCALE, value: 0.82, js: "tools/pixel_preview.js Math.round(a*0.82)"}
+  shared_types:
+    input_event:                  # crates/app/src/input/event.rs — W4/W5/W6/W11/W13/W8 공통. W0 이후 변경 금지(필요 시 W0 재오픈)
+      source_js: "tools/pointer_event.js buildToolEvent 반환 객체; tools/tool_base.js 시그니처"
+      rust: |
+        #[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum Button { Left, Middle, Right, Other }   // JS button 0/1/2/그 외
+        #[derive(Clone, Copy, Debug, PartialEq, Eq)] pub enum PointerKind { Mouse, Pen, Touch }
+        #[derive(Clone, Debug, PartialEq)]
+        pub struct ToolEvent {
+            pub x: i32, pub y: i32,            // pixelAt = floor(screenToCanvas); i64→i32 포화 변환
+            pub fx: f64, pub fy: f64,          // 실수 캔버스 좌표(도형 핸들 히트 테스트가 사용)
+            pub sx: f64, pub sy: f64,          // 호스트 상대 논리 px
+            pub button: Button,
+            pub shift: bool, pub ctrl: bool,   // ctrl = ctrlKey || metaKey
+            pub alt: bool,
+            pub pointer_id: u64, pub pointer_kind: PointerKind,
+            pub coalesced: Vec<(i32, i32)>,    // 불변: 비어 있지 않음, 연속 중복 없음, 마지막 == (x, y)
+            pub time_ms: f64,
+        }
+        #[derive(Clone, Copy, Debug, PartialEq)] pub struct HoverEvent { pub x: i32, pub y: i32, pub fx: f64, pub fy: f64 }
+        #[derive(Clone, Debug, PartialEq)]
+        pub struct KeyEvent { pub key: String /* DOM KeyboardEvent.key: "Enter" "Escape" "Delete" "Backspace" "ArrowLeft".. 한 글자는 원문 */, pub code: String /* "Space" 등 */, pub shift: bool, pub ctrl: bool, pub alt: bool }
+    tool_api:                     # crates/app/src/tools/api.rs
+      source_js: "tools/tool_base.js (Tool), tools/tool_manager.js"
+      rust: |
+        pub struct ToolCx<'a> {
+            pub session: &'a mut pixel_engine::model::Session,
+            pub view: pixel_engine::view::View,        // Copy 스냅샷. 도구는 뷰를 바꾸지 않음(팬/줌은 InputController 책임)
+            pub need_render: &'a mut bool,             // JS requestRender()
+        }
+        impl ToolCx<'_> {
+            pub fn request_render(&mut self) { *self.need_render = true; }
+            /// 입력 경로 에러 정책(JS runAction): notify('error', message, code). 삼키지 않는다.
+            pub fn report(&mut self, e: pixel_engine::errors::DrawToolError) { self.session.notify("error", e.message.clone(), e.code); }
+            pub fn zoom(&self) -> f64 { self.view.zoom() }   // View::zoom() 접근자 존재(view/types.rs)
+        }
+        #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+        pub enum CursorKind { Default, Crosshair, Cell, Copy, Grab, Grabbing, Text }   // D12 매핑. JS data-URI 커서의 폴백 이름이 그대로 변종
+        pub trait Tool {
+            fn id(&self) -> &'static str;                                   // settings::TOOL_IDS 와 일치("pen","eraser","eyedropper","fill","line","rect","rrect","ellipse","polygon","arc","chord","radial_gradient","text","hand")
+            fn cursor(&self) -> CursorKind { CursorKind::Default }
+            fn activate(&mut self, _cx: &mut ToolCx) {}
+            fn deactivate(&mut self, _cx: &mut ToolCx) {}                   // ShapeTool 은 여기서 commit() → cx 필요
+            fn pointer_down(&mut self, _ev: &ToolEvent, _cx: &mut ToolCx) {}
+            fn pointer_move(&mut self, _ev: &ToolEvent, _cx: &mut ToolCx) {}
+            fn pointer_up(&mut self, _ev: &ToolEvent, _cx: &mut ToolCx) {}
+            fn cancel(&mut self, _cx: &mut ToolCx) {}
+            fn hover(&mut self, _ev: Option<&HoverEvent>, _cx: &mut ToolCx) {}
+            fn key_down(&mut self, _ev: &KeyEvent, _cx: &mut ToolCx) -> bool { false }
+            fn accepts_button(&self, b: Button) -> bool { b == Button::Left } // JS: acceptsButton 없으면 button===0
+            fn has_pending(&self) -> bool { false }
+            fn discard_pending(&mut self, _cx: &mut ToolCx) {}
+            /// 모든 등록 도구에 전달(활성 여부 무관). 반드시 큐 drain 시점에 호출됨(index.yaml translation_conventions.events)
+            fn on_model_event(&mut self, _ev: &pixel_engine::model::ModelEvent, _cx: &mut ToolCx) {}
+            fn overlay(&self, _info: &OverlayInfo, _out: &mut Vec<OverlayOp>) {}
+        }
+      notes:
+        - "JS Tool.hover(ev) 의 ev 는 {x,y,fx,fy}|null. Rust Option<&HoverEvent>"
+        - "ToolManager(W5)는 dyn Tool 을 Vec<Box<dyn Tool>> + id→index 로 보관"
+    overlay:                      # crates/app/src/tools/overlay.rs
+      why_changed: "이전 로드맵의 OverlayOp 5종은 shape/arc/gradient 미리보기(마스크 비트맵)와 펜 브러시 칸 채움을 표현 못 함"
+      rust: |
+        use std::sync::Arc;
+        pub struct OverlayInfo { pub view: pixel_engine::view::View, pub dpr: f64 }   // 출력 좌표계 = 장치 픽셀(프레임버퍼)
+        pub enum OverlayOp {
+            /// 캔버스 좌표계 비트맵. data[i]=packed RGBA(u32, 0=건너뜀). 최근접 확대: 픽셀 1칸 = zoom*dpr 장치 px
+            MaskBlit { x: i32, y: i32, w: u32, h: u32, data: Arc<[u32]> },
+            /// 장치 좌표. 채움(source-over)
+            FillRect { x: f64, y: f64, w: f64, h: f64, rgba: [u8; 4] },
+            /// 장치 좌표. 선 중심 기준 1px 선(canvas strokeRect 의미: 중심선, 정수 좌표면 반픽셀 걸침). dash=(on,off) 장치 px
+            StrokeRect { x: f64, y: f64, w: f64, h: f64, rgba: [u8; 4], dash: Option<(f64, f64)>, difference: bool },
+            Line { x0: f64, y0: f64, x1: f64, y1: f64, rgba: [u8; 4], width: f64, difference: bool },
+            Circle { cx: f64, cy: f64, r: f64, rgba: [u8; 4], width: f64, dash: Option<(f64, f64)> },   // 그라디언트 반경 원
+        }
+        /// 마스크(0/1) + 색 → MaskBlit. 설정된 셀의 bbox 로 잘라낸다(arc/chord 마스크는 캔버스 전체 크기라 그대로 보내면 프레임마다 2.2M 칸).
+        pub fn mask_to_blit(mask: &pixel_engine::raster::Mask, packed: u32, alpha_scale: Option<f64>) -> Option<OverlayOp>;
+        /// 이미 packed 픽셀 마스크(GradientMask.data) → MaskBlit (알파 0.82 적용은 alpha_scale)
+        pub fn packed_to_blit(w: usize, h: usize, data: &[u32], alpha_scale: Option<f64>) -> Option<OverlayOp>;
+      alpha_rule: "pixel_preview.js: hex 색은 a = Math.round(rgba.a * 0.82); packed 는 Math.round(a*0.82). 도형 미리보기(shape_overlay.js blitLayer)는 0.82 없이 원래 알파"
+      mask_struct: "raster::Mask{x:i32,y:i32,w,h, data:Vec<u8>} (mask.rs:16) — 필드·접근자를 읽고 시작. is_set(x,y)"
+  tests: ["공유 타입 단위 테스트(Default/비교/헬퍼)", "constants 핀", "cargo test --workspace >= 321 유지", "cargo run -p pixeldraw 정상 종료"]
+  accept: ["clippy/fmt 그린", "app: lib+bin 빌드, egui 의존 없음", "모든 stub 모듈이 컴파일"]
+  log_draft_hint: "constants 추가 수, 공유 타입 3종 시그니처 해시(후속 작업이 변경 못하게 오케스트레이터가 diff 감시)"
+
+# ─────────────────────────────────────────────────────────────────────────────
+- id: W1
+  title: StrokeSession — Session 이 편집(스트로크)을 소유 (도구 블로커)
+  wave: 1
+  difficulty: hard
+  problem: |
+    JS PenTool 은 pointerDown 에서 `edit = session.beginEdit()` 를 만들어 여러 이벤트에 걸쳐 필드로 들고 있다(pen.js:`this._edit`).
+    Rust `Session::begin_edit(&mut self) -> EditHandle<'_>` 는 Session 을 &mut 로 빌린 채 산다(session/core.rs:269, edit_session.rs:49).
+    도구가 핸들을 필드로 가질 수 없다(자기참조/이중 가변 빌림). → Session 이 스트로크 상태를 소유하는 API 를 추가한다.
+  verified_facts:
+    - "PixelWriter<'a>{store:&'a mut ChunkStore, layer_id:String(pub), before:BTreeMap<u64,Option<Box<Chunk>>>, dirty:BTreeSet<u64>, last_key:Option<u64>, done:bool} (chunkstore/writer.rs:30-41). Drop impl 없음"
+    - "PixelWriter 는 이미 raster::PixelSink 를 구현함(raster/brush.rs:108-124: 음수 좌표는 무시, i32→u32 캐스트). 어댑터 불필요"
+    - "EditHandle::commit(label): take_dirty → finish() → editing=false → pixels_changed 이벤트(dirty 비어있지 않으면) → cs None 이면 Ok(false) → history.record(PaintCommand::new(cs, label)) → dispatch_effects (edit_session.rs:118-143)"
+    - "EditHandle::cancel(): writer.discard() → editing=false → pixels_changed(dirty) (edit_session.rs:146-158)"
+    - "EditHandle::flush(): writer.take_dirty(); 비어있지 않으면 bus.emit(pixels_changed(layer_id, dirty)) (edit_session.rs:100-112)"
+    - "begin_edit 가드 순서: doc 없음→INVALID_STATE 'no document loaded'; core.editing → 'already editing'; layer 해석; locked→status warn '레이어가 잠겨 있습니다' + Err(layer_locked); !visible → warn '레이어가 숨겨져 있습니다' + Err(layer_hidden); editing=true (session/core.rs:269-303). label 기본 '연필'"
+    - "Session::undo/redo: step() 이 core.editing 이면 Ok(None)(session/core.rs:244) → undo 는 스트로크 중 Ok(false)"
+    - "Session::install(doc): editing=false 로 리셋(session/core.rs:178-190) — 스트로크가 남아있으면 같이 폐기해야 함"
+    - "SessionCore{history, editing, bus, settings}; dispatch_effects 는 core 메서드(pub(crate))"
+    - "Rust 테스트 하나가 '핸들을 commit/cancel 없이 drop 하면 is_editing 이 영구 true' 패리티를 고정함 — 건드리면 안 됨"
+  write_scope: {see: "write_scopes.W1"}
+  design:
+    state: |
+      // chunkstore/writer.rs
+      pub struct StrokeState { pub(crate) layer_id: String, pub(crate) before: BTreeMap<u64, Option<Box<Chunk>>>, pub(crate) dirty: BTreeSet<u64>, pub(crate) last_key: Option<u64> }
+      impl<'a> PixelWriter<'a> {
+          pub fn resume(store: &'a mut ChunkStore, state: StrokeState) -> Self;   // done=false
+          pub fn suspend(self) -> StrokeState;                                     // last_key 까지 보존(성능 R1)
+      }
+      // PixelWriter::new/finish/discard/set/get/take_dirty/touched 는 동작·시그니처 불변. 내부 필드를 StrokeState 로 묶는 리팩터는 허용하되 기존 chunkstore 테스트 전부 통과
+      // SessionCore 에 추가: pub(crate) stroke: Option<ActiveStroke>   // ActiveStroke{ state: StrokeState, label: String }
+    api: |
+      impl Session {
+          /// begin_edit 와 같은 가드·같은 status 이벤트·같은 에러 코드. 성공 시 core.editing=true, core.stroke=Some(..)
+          pub fn stroke_begin(&mut self, opts: EditOptions) -> EngineResult<()>;
+          /// 스트로크 레이어의 store 를 재차용해 PixelWriter 를 만들어 f 에 넘기고, 끝나면 suspend 해 되돌려 놓는다.
+          /// 스트로크 없음→INVALID_STATE "edit is not active". 레이어가 사라졌으면 INVALID_STATE + 스트로크 폐기(editing=false, 이벤트 없음)
+          pub fn stroke_with<R>(&mut self, f: impl FnOnce(&mut PixelWriter<'_>) -> R) -> EngineResult<R>;
+          pub fn stroke_flush(&mut self) -> Vec<(u32, u32)>;                       // EditHandle::flush 동치
+          pub fn stroke_commit(&mut self, label: Option<&str>) -> EngineResult<bool>; // EditHandle::commit 동치. 스트로크 없음 → Err("edit is not active")
+          pub fn stroke_cancel(&mut self);                                          // EditHandle::cancel 동치. 스트로크 없음 → no-op
+          pub fn has_stroke(&self) -> bool;
+          pub fn stroke_layer_id(&self) -> Option<&str>;
+      }
+    rules:
+      - "begin_edit 와 stroke_begin 은 같은 core.editing 플래그를 공유 → 동시에 쓰면 'already editing'"
+      - "install()(new_document/load_document)은 core.stroke 를 이벤트 없이 버린다(문서가 통째로 바뀌므로 복원 불필요) — editing=false 리셋과 한 쌍"
+      - "undo/redo 는 기존 가드 그대로 Ok(false)"
+      - "stroke_with 의 반환값 R 로 도구가 apply_shape 의 EngineResult 를 받을 수 있게 함. f 안에서 panic 하면 스트로크 상태가 날아감 → debug 에서만 문제(panic=abort 는 release)"
+      - "PixelWriter 를 만들 때 doc.get_layer_mut(layer_id).store 와 core(history 등)를 동시에 빌릴 일 없음: stroke_with 는 doc 만 빌린다(core.stroke 는 먼저 take 해서 지역 변수로)"
+  tests:
+    - "stroke_begin→stroke_with(stroke_point)→stroke_flush→stroke_commit 이 begin_edit 경로와 바이트 동일한 changeset·히스토리 엔트리를 만든다(두 Session 에 같은 입력, undo 후 store 바이트 비교, undo_label 동일)"
+    - "여러 stroke_with 호출에 걸친 before-image 유지: 청크 A,B 를 두 호출로 건드리고 cancel → 둘 다 원복, 신규 청크는 store 에서 제거(chunk_count 복원)"
+    - "stroke_flush 가 PixelsChunks 이벤트를 내고 같은 청크를 다시 쓰면 다시 dirty 에 들어간다(last_key 메모 리셋 트랩: writer.rs:101-105)"
+    - "잠긴/숨긴 레이어에서 stroke_begin: 같은 에러 코드(LAYER_LOCKED/LAYER_HIDDEN)와 같은 status 이벤트(level warn, 문자열 동일), is_editing=false"
+    - "스트로크 중 undo()==Ok(false), begin_edit/stroke_begin 은 'already editing'"
+    - "스트로크 중 레이어 삭제 후 stroke_with → INVALID_STATE, is_editing=false 복구"
+    - "스트로크 중 new_document → has_stroke=false, is_editing=false, 이벤트 순서 document_replaced→history_changed"
+    - "빈 스트로크(아무것도 안 씀) commit → Ok(false), 히스토리 엔트리 없음, editing=false"
+    - "기존 테스트 321건 전부 통과(특히 abandoned-handle 패리티)"
+    - "성능: examples/bench.rs 의 stroke pen=64 항목을 begin_edit 경로 vs stroke_with 경로로 비교해 회귀 ≤ 5% 임을 로그에(R1: last_key 보존). 신규 bench 항목 추가는 허용(bench.rs 는 W1 write_scope 밖이므로 examples/bench_stroke.rs 로 별도 파일)"
+  accept: ["위 테스트 + 게이트", "docs/model_internals.md §8 'StrokeSession' (설계 근거 + 위 rules)"]
+  extra_write_scope: [crates/engine/examples/bench_stroke.rs]
+
+# ─────────────────────────────────────────────────────────────────────────────
+- id: W2
+  title: display — 배경·그리드·테두리·블릿을 CPU 프레임버퍼로 (2.5)
+  wave: 1
+  difficulty: medium
+  read_first: [src/render/background.js, src/render/grid.js, src/render/renderer_display.js, "docs/render.md §7-§10", crates/engine/src/view/geom.rs, crates/engine/src/view/types.rs]
+  invariants:
+    framebuffer_opaque: "프레임버퍼는 CANVAS_HOST_BG 로 초기화한 불투명 RGBA(a=255 항상). JS 는 transparent 캔버스 위에 그리고 호스트 CSS 배경(#3c3f45)이 비쳤음 → 동치. 이로써 모든 합성식을 '불투명 dst'로 단순화"
+    no_dom: "엔진 순수: egui/winit/GPU import 0"
+  api: |
+    // display.rs 는 mod + pub use 만
+    pub struct Framebuffer { pub width: u32, pub height: u32, pub rgba: Vec<u8> }
+    impl Framebuffer {
+        pub fn new(w: u32, h: u32) -> Self;                       // CANVAS_HOST_BG 로 채움
+        pub fn resize_clear(&mut self, w: u32, h: u32);           // 크기 같으면 재사용, 내용은 CANVAS_HOST_BG 로 리셋
+        pub fn fill_rect(&mut self, x: i32, y: i32, w: i32, h: i32, rgb: [u8; 3]);                       // 불투명 덮어쓰기, 프레임버퍼 경계로 클립
+        pub fn blend_rect(&mut self, x: i32, y: i32, w: i32, h: i32, rgb: [u8; 3], alpha: f64, clip: Option<IRect>);   // source-over
+        pub fn difference_rect(&mut self, x: i32, y: i32, w: i32, h: i32, alpha: f64, clip: Option<IRect>);           // 흰 src, difference
+        pub fn draw_line(&mut self, /* W8 overlay_raster 가 쓰는 pub 프리미티브 — 서명은 W2 가 정하고 로그 초안에 적는다 */);
+    }
+    #[derive(Clone, Copy)] pub struct IRect { pub x0: i32, pub y0: i32, pub x1: i32, pub y1: i32 }   // 반개구간
+    #[derive(Clone, Copy, PartialEq, Eq)] pub enum GridMode { Off, Unit, Tile, Pixel }               // constants::GRID_MODES 와 1:1, GridMode::parse(&str)
+    pub struct GridStroke { pub g: u32, pub a: f64 }           // JS {g,a}: a 가 팔레트 마커(0.15/0.3/0.55)
+    pub struct GridLines { pub xs: Vec<GridStroke>, pub ys: Vec<GridStroke> }
+    pub fn grid_lines(view: &View, w: u32, h: u32, vw: f64, vh: f64, mode: GridMode) -> Option<GridLines>;
+    pub fn grid_stroke_dev_px(a: f64, dpr: f64) -> u32;
+    pub struct DisplayParams<'a> { pub view: View, pub canvas_w: u32, pub canvas_h: u32, pub css_w: f64, pub css_h: f64, pub dpr: f64,
+                                   pub background: &'a str, pub grid: GridMode, pub comp: Option<&'a [u8]> /* canvas_w*canvas_h*4 */ }
+    pub fn draw_display_into(p: &DisplayParams, fb: &mut Framebuffer);   // fb 크기 = max(1, round(css*dpr)) 로 맞춘 뒤 그림(호출자가 resize_clear)
+    pub fn draw_display(p: &DisplayParams) -> Framebuffer;
+    pub fn blit_visible(/* JS blitVisible */);
+  js_algorithm:                   # 코드 읽어 확인한 정확한 순서·수식(verified)
+    draw_display:
+      - "devW = max(1, round(cssW*dpr)); devH 동일 (JS Math.round)"
+      - "dx = round(offsetX*dpr); dy = round(offsetY*dpr); dw = round(w*zoom*dpr); dh = round(h*zoom*dpr) — 각각 개별 반올림(우하단을 dx+dw 로 유도 금지)"
+      - "1) 클립 rect(dx,dy,dw,dh) 안에서 paintBackground → blitVisible  2) 클립 해제 후 paintGrid(자체 클립 rect)  3) dw>0&&dh>0 이면 테두리 4변 4) 오버레이(W8)"
+    paint_background:
+      - "bg = (background==='transparent' || !문자열) ? None : parseHex(background). None 또는 bg.a===0 → paintChecker 만"
+      - "bg.a !== 255 → 체커 먼저, 그 위에 fillStyle `rgba(r,g,b,${(a/255).toFixed(3)})` — 알파가 소수 3자리로 양자화됨(트랩): alpha = parse(format!('{:.3}', a/255.0)) (JS toFixed(3) 는 반올림 half-up-ish; Rust format!('{:.3}') 는 half-to-even 아님(IEEE 정확값 기준) — 경계값 a=128 → 0.50196→'0.502' 로 둘 다 동일. 경계 케이스는 테스트로 고정)"
+      - "bg.a === 255 → 단색 fillRect(dx,dy,dw,dh) (체커 생략; 결과 동일)"
+    paint_checker:
+      - "cell = max(1, round(8*dpr)). 뷰포트 교집합 [vx0,vx1)×[vy0,vy1) = (dx..dx+dw)∩(0..devW) 만 칠함(비용을 뷰포트에 비례시키는 최적화이며 위상은 장치 원점 기준이라 전체 루프와 픽셀 동일 — 브루트포스 대조 테스트 필수)"
+      - "전체를 A(#fff)로 채우고, x0=floor(vx0/cell)*cell, y0=floor(vy0/cell)*cell, iy=round(y0/cell), ix=round(x0/cell) 부터 cell 간격으로 순회, ((ix+iy)%2+2)%2 !== 0 이면 B(#d9d9d9) 셀 fillRect(x,y,cell,cell) (뷰포트 밖으로 넘치는 셀은 캔버스 클립에 의해 잘림 — Rust 는 교집합으로 클립)"
+    blit_visible:
+      - "x0=max(0,floor((0-offsetX)/zoom)); y0 동일. sw=min(w, ceil((cssW-offsetX)/zoom)) - x0; sh 동일. sw<=0||sh<=0 → 종료"
+      - "ddw=round(sw*zoom*dpr); ddh 동일. <=0 → 종료. 목적 시작 = (round((offsetX+x0*zoom)*dpr), round((offsetY+y0*zoom)*dpr))"
+      - "drawImage(comp, x0,y0,sw,sh → dest, ddw,ddh) imageSmoothingEnabled=false(최근접) + 클립(dx,dy,dw,dh). source-over(comp 은 straight alpha RGBA)"
+      - "Rust 정의(계약): 목적 픽셀 (px,py) ← 소스 (x0 + floor((px-dest_x)*sw/ddw), y0 + floor((py-dest_y)*sh/ddh)). 정수 줌·정수 dpr 에서 브라우저와 정확히 일치. 비정수 배율은 이 정의가 계약(브라우저 구현 의존이라 비트 일치를 요구하지 않음)"
+    grid_lines:                   # 순수 함수 — JS 와 숫자 동일해야 함
+      - "z=view.zoom. showUnit=(mode∈{unit,pixel}) && CHUNK_PX*z>=6; showTile=(mode∈{tile,pixel}) && TILE_PX*z>=6; showPixel= mode==pixel && z>=8; 셋 다 false → None"
+      - "xA=(0-offsetX)/z, xB=(vw-offsetX)/z, yA,yB 동일. pushLines(arr, lo, hi, max, step, alpha): k0=max(0,ceil(max(0,lo)/step)); k1=min(max/step, floor(min(max,hi)/step)); k0..=k1 에 {g:k*step, a:alpha}"
+      - "순서: pixel(step1, a=0.15) → unit(step32, a=0.3) → tile(step64, a=0.55). xs,ys 각각. pixel 이 인덱스 0부터. (테스트 단언: 순서 포함)"
+      - "주의: max/step 이 정수가 아닐 수 있음(w/step) — w 는 32 배수라 unit/pixel 은 정수, tile(64) 은 w=96 같은 경우 소수 → k1=min(1.5, ..) 후 `for k<=k1` 이므로 k=0,1 — Rust 는 k1 을 f64 로 두고 비교"
+    paint_grid:
+      - "sx=max(1, dpr||1). y0=max(dy,0), y1=min(dy+dh,devH), gx0=max(dx,0), gx1=min(dx+dw,devW). y1<=y0||gx1<=gx0 → 종료. 클립 rect(dx,dy,dw,dh)"
+      - "xs 전부 먼저: strokeRun(a, x=round((offsetX+g*zoom)*sx), y=y0, len=y1-y0, horizontal=false). 그다음 ys: strokeRun(a, x=gx0, y=round((offsetY+g*zoom)*sx), len=gx1-gx0, horizontal=true)"
+      - "strokeDevPx(a,dpr): a==0.15 → 1; 아니면 css = (a==0.55 ? 2 : 1); max(1, ceil(css*dpr))  (ceil, round 아님 — 주석에 이유: dpr 1.25 에서 1css 선이 0.8 로 사라지는 것 방지)"
+      - "passAlpha(a,dark): a==0.55 → dark?0.5:0.44; 그 외 → dark?0.32:0.3"
+      - "strokeRun(a,x,y,len,horizontal,dpr): px=strokeDevPx, hair=(a==0.15), main=hair?1:px; cw = horizontal ? (hair ? len : main) : main; ch = horizontal ? main : (hair ? len : main)  ← D5: non-hair 의 light fillRect 는 main×main 정사각형(런 전체 아님). 리터럴 복제"
+      - "hair: globalCompositeOperation='difference', fillStyle rgba(255,255,255,a), fillRect(x,y,cw,ch) 로 끝. non-hair: source-over, light = rgba(255,255,255,passAlpha(a,false)) fillRect(x,y,cw,ch); dark = rgba(0,0,0,passAlpha(a,true)): bx = horizontal ? x : x+px-1; by = horizontal ? y+px-1 : y; fillRect(bx,by, horizontal?len:1, horizontal?1:len)"
+    border: "fillStyle rgba(0,0,0,0.6): fillRect(dx-1,dy-1,dw+2,1), (dx-1,dy+dh,dw+2,1), (dx-1,dy,1,dh), (dx+dw,dy,1,dh). 클립 밖(클립은 restore 됨). 프레임버퍼 경계로만 잘림"
+  compositing_formulas:           # 불투명 dst 가정. rnd = floor(v+0.5) (blend::rnd 재사용)
+    source_over: "out_c = rnd(dst_c*(1-a) + src_c*a), out_a=255. a=0 → no-op"
+    difference_white: "out_c = rnd(dst_c*(1-a) + a*(255-dst_c))  (src=255, difference = |dst-src| = 255-dst)"
+    caveat: "브라우저 캔버스는 프리멀티플라이드 8비트 내부 표현이라 ±1 차이가 날 수 있다. 계약은 위 식 고정이며 브라우저 비트 일치가 게이트가 아님 → docs/render.md 에 명시"
+  oracle:
+    script: tools/display_cases.mjs
+    does: "JS gridLines(view,w,h,vw,vh,mode) 를 (zoom∈{0.25,0.5,1,2,3,4,6,8,12,16,24,32} 일부) × (offset ±값) × (w,h∈{96,512,2048×1088}) × (mode 4종) ≥ 60 케이스로 실행해 {input, output} JSON 덤프 → tools/display_cases.json(커밋)"
+    rust_test: "tests/display_parity.rs 가 fixtures::repo_file('tools/display_cases.json') 로 읽어 grid_lines 결과를 정확 비교(g 정수, a f64 정확)"
+    note: "스크립트는 src/render/grid.js 를 import → Phase 6 에서 src/ 삭제 시 재생성 불가(JSON 은 남음). phase6.warnings 참조"
+  tests:
+    - "grid_lines 오라클 전 케이스 일치(순서 포함)"
+    - "체커: dpr {1,1.25,1.5,2}에서 셀 크기·위상, 뷰포트 교집합 최적화 == 전체 루프(작은 프레임버퍼 브루트포스 대조)"
+    - "배경: transparent / '#rrggbb' / '#rrggbbaa'(a=0 → 체커만, a=128 → 알파 0.502 양자화) / 잘못된 문자열(→ 체커) / non-string"
+    - "그리드 4모드 × z∈{0.25,1,2,8,32} 에서 선 위치·두께·베벨 픽셀 단위 단언(작은 뷰 손계산 기대값). D5 리터럴 동작(light 정사각형)을 테스트로 고정하고 주석 1줄"
+    - "draw_display 통합: 2×2 comp 한 장, zoom 8 → 8×8 블록 4개 정확, 테두리·그리드 위치. offset 음수(캔버스가 왼쪽 밖으로 나감)·캔버스가 뷰포트보다 작은 경우"
+    - "합성식 단위 테스트(source_over, difference_white — 경계 a=0, a=1)"
+    - "bench: examples/bench.rs 는 W2 소유 아님 → 1920×1080 draw_display_into 시간은 tests 에서 측정하지 말고(R12) 로그 초안에 수동 측정치만"
+  accept: ["위 테스트 + 게이트", "docs/render.md 에 'Rust display' 절(합성식 caveat, D5, blit 계약)"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+- id: W3
+  title: comp_cache — dirty 청크 합성 캐시 + 6ms 예산 (2.4)
+  wave: 1
+  difficulty: medium
+  read_first: [src/render/renderer_composite.js, "src/render/renderer.js (SUBS, _onPixels/_onLayers/_onSettings/_update/invalidate*)", crates/engine/src/composite.rs, crates/engine/src/model/event.rs, crates/engine/src/model/command.rs, crates/engine/tests/e2e_session.rs]
+  verified_js_behaviour:
+    events:
+      DocumentReplaced: "_setDocument → ensureComp(재할당 시 dirtyAll=true) 후 invalidateAll(): 항상 전체 무효화. 렌더 재요청"
+      PixelsChanged: "detail.all===true → invalidateAll; chunks 배열 → invalidateChunks; 항상 requestRender"
+      LayersChanged: "reason==='active' → return(무효화·렌더 없음). reason==='prop' && field==='name' → return — 그러나 session.js:90 이 field 를 안 실어 보내므로 죽은 코드(index.yaml corrections). 그 외 전부 invalidateAll + requestRender"
+      SettingsChanged: "key==='gridMode' → requestRender 만(합성 무효화 없음)"
+      others: "무시"
+    invalidate_chunks: "정수·비음수 cx/cy 만 dirty 에 추가. 상한 검사 없음(캔버스 밖 청크도 들어감, 칠해도 무해) → Rust 는 캔버스 밖을 건너뜀(allowed_deviation: 화면 결과 동일)"
+    paint_dirty: |
+      vis = visibleChunkRange(view, w, h, cssW, cssH)  (None 이면 가시 청크 없음)
+      keys = [...dirty]  (삽입 순서 스냅샷)
+      1) keys 중 가시 청크는 예산 없이 전부 합성 → dirty 에서 제거
+      2) t0 = now (가시 패스 이후에 측정!). 남은 keys 를 순회: dirty 에 없으면 skip; `now - t0 > 6ms` 이면 break; paint
+      즉 예산은 비가시 청크에만 적용되고 예산 검사는 청크 하나를 칠하기 '전'에 한다
+    update: "_update: 문서 크기 변경 시 ensureComp; dirtyAll 이면 dirty=전 청크(cy<h/32, cx<w/32) 로 확장 후 dirtyAll=false; dirty.size>0 이면 paintDirty; (drawDisplay); dirty 남았거나 dirtyAll 이면 requestRender"
+    ensure_comp: "크기 같으면 no-op, 다르면 새 w×h 투명 버퍼 + dirtyAll=true. 캔버스 크기는 항상 32 배수(is_valid_canvas_size)"
+    resize_invalidates_all_in_js: "JS resize() 는 디스플레이 캔버스 크기가 바뀌면 invalidateAll() — 합성 캐시와 무관한 낭비. Rust 는 뷰포트 변경에 합성을 무효화하지 않음(allowed_deviation: 가시 청크는 어차피 dirty 면 칠해짐)"
+  api: |
+    pub enum Budget { Unlimited, Time(std::time::Duration), Chunks(usize) }   // Chunks 는 테스트용 결정적 예산(R12). Time 은 Instant 사용
+    pub struct CompCache { /* width,height, comp: Vec<u8>, dirty: BTreeSet<u64>, dirty_all: bool, last_painted: usize */ }
+    impl CompCache {
+        pub fn new() -> Self;
+        pub fn ensure(&mut self, canvas_w: u32, canvas_h: u32);          // ensureComp
+        pub fn invalidate_all(&mut self);
+        pub fn invalidate_chunks(&mut self, chunks: &[(u32, u32)]);
+        /// 반환: 렌더(프레임) 재요청 필요 여부. 표: verified_js_behaviour.events. Settings 는 key 가 GridMode 일 때만 true
+        pub fn apply_event(&mut self, ev: &ModelEvent) -> bool;
+        /// 반환: 아직 dirty 가 남았는지
+        pub fn paint_dirty(&mut self, layers: &[LayerSource<'_>], visible: Option<VisibleChunkRange>, budget: Budget) -> bool;
+        /// JS _update 의 합성 절반: ensure(doc.canvas) → dirty_all 확장 → paint_dirty(doc.layer_sources(), ..)
+        pub fn update(&mut self, doc: &Document, visible: Option<VisibleChunkRange>, budget: Budget) -> bool;
+        pub fn comp(&self) -> &[u8];      // w*h*4 RGBA(straight alpha). 아직 안 칠한 칸은 투명(0)
+        pub fn size(&self) -> (u32, u32);
+        pub fn dirty_len(&self) -> usize;
+        pub fn last_painted(&self) -> usize;   // 마지막 paint_dirty 가 칠한 청크 수(테스트·HUD)
+    }
+  implementation_notes:
+    - "composite_chunk(layers, cx, cy, &mut [u8;4096]-슬라이스) -> EngineResult<bool>: 지역 4096B 버퍼에 합성 후 comp 에 행 복사(행 stride = w*4, 청크 행 32개 × 128B)"
+    - "dirty 순회 순서: JS Set=삽입 순, Rust BTreeSet<u64>=(cy,cx) 정렬. 결과 픽셀에는 영향 없고 예산 컷오프 시 어느 청크가 먼저 칠해지는지만 다름 → docs/render.md 한 줄"
+    - "invalidate_all 은 dirty_all=true 로만 표시하고 update 에서 확장(JS 와 동일) — 문서 크기를 모르는 상태에서도 호출 가능"
+    - "Document::layer_sources() 존재(model/document/types.rs:82). 레이어 0=맨 아래"
+  tests:
+    - "단일 레이어 점 하나 → update 후 comp 의 전 픽셀이 sample_pixel 과 일치(작은 문서 전 픽셀 스윕)"
+    - "dirty 가 비면 두 번째 update 는 합성 0개(last_painted==0)"
+    - "이벤트 표 6행(DocumentReplaced, PixelsAll, PixelsChunks, Layers(active → false), Layers(prop) → true+invalidate_all, Settings(GridMode) → true 무효화 없음, Settings(PenSize) → false)"
+    - "Budget::Chunks(0): 가시 청크는 전부 칠해지고 비가시는 0개. Budget::Unlimited: 전부"
+    - "resize_canvas 후 ensure 가 재할당 + 전체 dirty"
+    - "캔버스 밖 청크 invalidate 는 무시(dirty_len 불변)"
+    - "e2e(tests/comp_cache.rs): Session.subscribe 클로저로 Rc<RefCell<VecDeque<ModelEvent>>> 큐에 모아 apply_event 에 먹임 — 펜 스트로크(begin_edit 경로로 충분) → undo → redo → 각 단계에서 comp == flatten_to_rgba(include_background=false 와 동치인 투명 base) 와 바이트 동일. 이 큐 패턴을 W8 가 재사용하므로 '패턴 예제' 주석 1줄"
+  accept: ["위 테스트 + 게이트", "docs/render.md 에 comp_cache 절"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+- id: W4
+  title: input — 포인터·키보드·휠·커서 정규화 상태 머신 (2.6)
+  wave: 1
+  difficulty: medium
+  read_first: [src/tools/input_controller.js, src/tools/pointer_bindings.js, src/tools/pointer_event.js, src/tools/keyboard_bindings.js, src/tools/wheel_accumulator.js, src/tools/cursor_state.js, "tests/ 에서 input/wheel/cursor 검색: rg -l 'InputController|WheelAccumulator|resolveCursor' tests", crates/engine/src/view/geom.rs, crates/engine/src/view/clamp.rs, crates/engine/src/view/zoom.rs]
+  scope_note: "egui 이벤트 → 이 상태 머신 어댑터는 W8. 여기는 egui/winit import 0 (rg 로 검증)"
+  verified_js_behaviour:
+    build_tool_event: |
+      sx=clientX-rect.left, sy 동일. f=screenToCanvas(view,sx,sy); p=pixelAt(view,sx,sy).
+      rawList = getCoalescedEvents() 비어있지 않으면 그것, 아니면 [domEv]. 각 e: ef=screenToCanvas, ep={floor(ef.x), floor(ef.y)}; 직전 pts 끝과 같으면 건너뜀.
+      pts 비면 [p]. 아니면 마지막이 p 와 다르면 p push.  → 불변: 마지막 원소 == (x,y).
+      필드: x,y=p; fx,fy=f; sx,sy; button=domEv.button??0; shift; ctrl=ctrlKey||metaKey; alt; pointerId; pointerType; coalesced=pts; timeStamp
+    pointer_down: |
+      if drawPointerId!==null || panning → return (무시).  markInside.  if button===1 preventDefault.
+      shouldPan(e) = button===1 || spaceDown || toolManager.active.id==='hand'.
+      if shouldPan && (button===0||button===1): panning=true, panPointerId, panLast={sx,sy}, capture, applyCursor; return.
+      if !toolAcceptsButton(button) return (tool.acceptsButton 없으면 button===0; 있으면 그 결과; 예외 → false)
+      drawPointerId=pointerId; capture; toolManager.pointerDown(buildToolEvent)
+    pointer_move: |
+      syncInside(e, rect): panning 도 아니고 drawPointerId===null 이면 markInside(); 아니면 rect 로 inside 재계산(캡처 중 경계 이벤트 억제 대비). rect.right/bottom 이 숫자 아니면 변경 없음
+      panning && pointerId==panPointerId: dx,dy = 현재-panLast; panLast 갱신; next=panBy(view,dx,dy); doc&&vp 있으면 clampView(next,w,h,vp.w,vp.h); setView; requestRender; return
+      pointerId!==drawPointerId && drawPointerId!==null: pointerType!=='mouse' || (buttons??0)!==0 이면 return
+      te=buildToolEvent. 그리는 중(drawPointerId==pointerId) → toolManager.pointerMove(te); return
+      drawPointerId===null && !panning → toolManager.hover({x,y,fx,fy}); onHover({x,y})
+    end_draw(kind up|cancel): |
+      panning && pointerId==panPointerId → panning=false 정리 + applyCursor; return
+      pointerId!==drawPointerId → return
+      te=buildToolEvent; drawPointerId=null; up → toolManager.pointerUp(te), cancel → toolManager.cancel(); if !inside clearHover(= toolManager.hover(null), onHover(null)); applyCursor
+      lostpointercapture: 위와 비슷하나 항상 toolManager.cancel() (pointerUp 아님)
+    pointer_leave: "markInside(false); panning||drawPointerId!==null 이면 return; 아니면 clearHover()"
+    wheel: |
+      preventDefault. sx,sy=host 상대.
+      shift===true: next=panBy(view, -(deltaY||0), 0); clamp; setView; requestRender; return   (deltaX 는 읽지 않음 — 주석 TL-DRAW-04 Q2, 트랙패드 가로 스크롤은 의도적으로 무시)
+      pageH = getViewportSize()?.h ?? 0; steps = wheel.feed(deltaY??0, deltaMode??0, pageH); steps===0 → return
+      nz = stepZoom(view.zoom, steps)  // 부호만 사용: >0 한 칸 위, <0 한 칸 아래(index.yaml corrections)
+      next = zoomAt(view, sx, sy, nz); clamp; setView; requestRender
+    wheel_accumulator: |
+      feed(deltaY, deltaMode=0, pageHeight=0): px=Number(deltaY); !finite||0 → 0. deltaMode 1 → px*=16; 2 → px*=pageHeight||0; px==0 → 0.
+      dir=sign(px). 방향이 바뀌면(_dir!==0 && dir!==_dir) residue=px (누적 폐기), 아니면 residue+=px. _dir=dir.
+      steps=trunc(residue/60). steps!==0 → residue-=steps*60; return -steps. else 0.
+      → 휠 위(deltaY<0) → residue<0 → steps<0 → 반환 양수 → 확대.  reset(): residue=_dir=0
+    keyboard: |
+      keydown(window): target 이 input/textarea/contentEditable 이면 무시. code==='Space'||key===' ': spaceDown 아니었으면 spaceDown=true; panning 도 아니고 drawPointerId===null 이면 applyCursor. preventDefault(항상)
+      keyup: Space → spaceDown=false; !panning 이면 applyCursor
+      blur: resetTransientState() (spaceDown=false,panning=false,panPointerId=null,panLast=null,drawPointerId=null) + toolManager.cancel() + applyCursor
+      visibilitychange(hidden): resetTransient + toolManager.cancel() + (!inside 이면 clearHover) + applyCursor
+      settings(activeTool 변경) → applyCursor
+    cursor_ladder: "resolveCursor({inside=true,panning=false,spaceDown=false,toolCursor=null}): !inside → 'default'; panning → 'grabbing'; spaceDown → 'grab'; toolCursor 비어있지 않은 문자열이면 그것; 아니면 'default'"
+  api: |
+    pub struct RawPointer { pub pos: (f64, f64) /*호스트 상대 논리 px*/, pub coalesced: Vec<(f64, f64)> /*같은 프레임 중간 위치, 비어도 됨*/,
+                            pub button: Button, pub buttons_down: u8, pub shift: bool, pub ctrl: bool, pub alt: bool,
+                            pub pointer_id: u64, pub kind: PointerKind, pub time_ms: f64 }
+    pub fn build_tool_event(raw: &RawPointer, view: &View) -> ToolEvent;
+    pub enum WheelMode { Pixel, Line, Page }
+    pub struct WheelAccumulator { /* residue: f64, dir: i32 */ } impl WheelAccumulator { pub fn feed(&mut self, delta_y: f64, mode: WheelMode, page_h: f64) -> i32; pub fn reset(&mut self); }
+    pub fn resolve_cursor(inside: bool, panning: bool, space_down: bool, tool: CursorKind) -> CursorKind;   // 'Default' 폴백 포함
+    pub enum ToolCall { Down(ToolEvent), Move(ToolEvent), Up(ToolEvent), Cancel, Hover(Option<HoverEvent>) }
+    pub struct InputOutcome { pub tool_calls: Vec<ToolCall>, pub new_view: Option<View>, pub cursor: CursorKind, pub need_render: bool, pub capture: Option<bool> }
+    pub struct InputCtx<'a> { pub view: View, pub canvas: Option<(u32, u32)>, pub viewport: Option<(f64, f64)>, pub active_tool_id: &'a str,
+                              pub tool_accepts_button: &'a dyn Fn(Button) -> bool, pub tool_cursor: CursorKind, pub text_focus: bool }
+    pub struct InputController { .. } impl InputController {
+        pub fn new() -> Self;
+        pub fn pointer_down(&mut self, raw: &RawPointer, ctx: &InputCtx) -> InputOutcome;
+        pub fn pointer_move(&mut self, raw: &RawPointer, ctx: &InputCtx) -> InputOutcome;
+        pub fn pointer_up(&mut self, raw: &RawPointer, ctx: &InputCtx) -> InputOutcome;
+        pub fn pointer_cancel(&mut self, pointer_id: u64, ctx: &InputCtx) -> InputOutcome;
+        pub fn pointer_leave(&mut self, ctx: &InputCtx) -> InputOutcome;
+        pub fn wheel(&mut self, delta_y: f64, mode: WheelMode, shift: bool, pos: (f64, f64), ctx: &InputCtx) -> InputOutcome;
+        pub fn key_down(&mut self, k: &KeyEvent, ctx: &InputCtx) -> InputOutcome;   // Space(text_focus 아닐 때) → space_down
+        pub fn key_up(&mut self, k: &KeyEvent, ctx: &InputCtx) -> InputOutcome;
+        pub fn focus_lost(&mut self, ctx: &InputCtx) -> InputOutcome;               // blur/visibility hidden: reset_transient + ToolCall::Cancel
+        pub fn is_drawing(&self) -> bool; pub fn is_panning(&self) -> bool;
+    }
+  translation_notes:
+    - "egui 는 포인터 캡처를 Response::dragged 로 유지 → capture 필드는 상태 일관성용. lostpointercapture 에 해당하는 이벤트가 없으므로 W8 가 포인터가 창 밖에서 놓일 때 pointer_cancel 대신 pointer_up 을 호출하도록 어댑터에서 처리"
+    - "InputCtx.tool_accepts_button 은 클로저(JS tool.acceptsButton 동적 조회 대체). 활성 도구 id 는 'hand' 판정용"
+    - "inside 재계산에 필요한 호스트 rect 는 viewport(w,h)+원점 (0,0) 로 대체"
+    - "view 변경은 new_view 로 반환(컨트롤러가 ViewStore 를 소유하지 않음). 팬/줌 결과는 clamp_view(next, canvas_w, canvas_h, vp_w, vp_h) 적용 후(canvas·viewport 둘 다 Some 일 때만). 이후 ViewStore::set 이 한 번 더 clamp 하므로 이중 clamp 는 멱등"
+    - "좌표: screen_to_canvas(view, sx, sy)->CanvasPoint, pixel_at(view,sx,sy)->Pixel{x:i64,y:i64}. 포화 변환 i64→i32"
+  tests:
+    - "JS 테스트 포팅(검색 결과). 없으면 아래 시나리오로 대체"
+    - "build_tool_event: coalesced 중복 제거, 비었을 때 [p], 마지막이 p 와 다르면 push, 음수 좌표(캔버스 왼쪽 밖) floor"
+    - "팬→그리기 전환, 중간 버튼 팬, 스페이스 팬, hand 도구 팬 + 우클릭은 팬 안 됨"
+    - "도구가 우클릭을 받는 경우(스포이트)만 Down 호출, 안 받으면 상태 변화 없음"
+    - "그리는 중 pointer_down 재진입 무시, 팬 중 pointer_down 무시"
+    - "캡처 중 이탈→hover 억제, pointer_leave 정리 규칙, 복귀 시 inside"
+    - "휠: 일반/Shift, deltaMode 0/1/2, 방향 반전 시 residue 폐기, 60px 경계(59→0, 60→1, 119→1 + residue 59), steps 부호→확대/축소, clamp 적용"
+    - "커서 사다리 4단계 전부"
+    - "focus_lost: 모든 transient 초기화 + Cancel 호출"
+    - "text_focus=true 일 때 Space 무시"
+  accept: ["cargo test -p pixeldraw_app input:: 그린 + 게이트", "rg 'egui|winit|eframe' crates/app/src/input 결과 비어 있음"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+- id: W7
+  title: app 셸 — eframe 창 + Nearest 텍스처 뼈대 (2.1, 2.2 일부)
+  wave: 1
+  difficulty: easy_medium
+  scope: "창이 뜨고 임의 RGBA 버퍼가 픽셀 정확하게 보이는 최소 셸. 세션·도구·입력 연결은 W8"
+  inputs_verified:
+    window: {title: Pixeldraw, width: 1280, height: 820, min_width: 900, min_height: 560, resizable: true, source: src-tauri/tauri.conf.json}
+    windows_subsystem: "src-tauri/src/main.rs:2 `#![cfg_attr(not(debug_assertions), windows_subsystem = \"windows\")]` 를 crates/app/src/main.rs 에 이식(릴리스 콘솔 창 방지)"
+    eframe_versions: "registry 에 0.33.3 다운로드됨(cargo info 확인 시), 최신 0.36.2. D2"
+  steps:
+    - "eframe 버전 결정(D2): 두 버전 모두 `cargo check` 해보고 컴파일되는 쪽 고정. default-features=false + 필요한 것만(glow 백엔드, default_fonts 등). 선택 이유·컴파일 시간을 log_draft 에"
+    - "창: ViewportBuilder{title, inner_size 1280×820, min_inner_size 900×560}. 아이콘은 Phase 6"
+    - "한글 폰트(D3): egui 기본 폰트에는 한글 없음. 폰트 로더 `fn load_cjk_font(candidates: &[&Path], exists: impl Fn(&Path)->bool, read: impl Fn(&Path)->io::Result<Vec<u8>>) -> Option<Vec<u8>>`(순수·주입 가능) + Windows 후보 [C:/Windows/Fonts/malgun.ttf, C:/Windows/Fonts/malgunbd.ttf(?), C:/Windows/Fonts/NanumGothic.ttf(?)]. 로드 성공 시 FontDefinitions 의 Proportional/Monospace 뒤에 추가(폴백). 실패 시 log::warn. JS font-ui: system-ui, 'Noto Sans KR', 'Malgun Gothic'"
+    - "canvas_texture.rs: CanvasTexture{handle: Option<TextureHandle>, size:[usize;2]}. upload(ctx,&[u8],w,h): 크기 같으면 TextureHandle::set(ColorImage::from_rgba_unmultiplied, TextureOptions::NEAREST), 다르면 재생성. paint(ui, rect): 텍스처 크기==rect 장치 크기로 1:1(UV 전체)"
+    - "device_size(rect_points: (f32,f32), pixels_per_point: f32) -> (u32,u32): round, 최소 1 — 순수 함수 + 테스트"
+    - "shell.rs: eframe::App 구현, 중앙 패널에 체커 테스트 패턴(CPU 생성)을 CanvasTexture 로 표시. 변경 시에만 재업로드. `pub fn run() -> Result<(), eframe::Error>`"
+    - "main.rs: windows_subsystem 속성 + shell::run()"
+  api_facts_to_verify: ["egui TextureHandle::set / set_partial 존재와 시그니처(5.6 이 부분 업로드에 쓸 수 있는지)", "pixels_per_point 와 장치 픽셀 수의 관계", "egui 0.33/0.36 의 Context::set_fonts, FontData::from_owned, FontFamily 폴백 추가 방법", "wgpu 백엔드 vs glow(기본). 본 프로젝트는 소프트 렌더 호환성 위해 glow 권장(?)"]
+  tests: ["device_size 반올림/최소값", "텍스처 재생성 판정 순수 함수", "폰트 로더(존재/부재/읽기 실패 주입)", "체커 생성기 픽셀 단언"]
+  accept:
+    - "cargo build -p pixeldraw 성공, cargo build --release -p pixeldraw 컴파일 시간 기록"
+    - "창 실행·한글 렌더·Nearest 블러 없음은 사람 확인. 에이전트가 GUI 를 띄우지 못하면 '미실행'으로 정직하게 기록(다른 표현 금지)"
+    - "게이트(egui import 는 shell/canvas_texture 에만)"
+  deps_note: "crates/app/Cargo.toml 에 eframe 추가는 W7 만. log/env_logger 는 W9(platform)가 로깅을 소유하므로 app 은 log 매크로만"
+
+# ─────────────────────────────────────────────────────────────────────────────
+- id: W9
+  title: platform — 파일 IO·대화상자·앱 경로·로깅
+  wave: 1
+  difficulty: easy_medium
+  read_first: [src/io/file_io.js, src-tauri/src/lib.rs, docs/io.md §7 file_io, docs/desktop.md, crates/platform/src/lib.rs]
+  verified_js_behaviour:        # ui-agent 분석 + file_io 관련 사실
+    max_json_bytes: "64 MiB. 초과 시 DrawToolError FILE_TOO_LARGE `file too large (N bytes)`"
+    json_errors: "파싱 실패 → SCHEMA 'file is not valid JSON'; 읽기 불가 → SCHEMA 'unreadable file'"
+    sanitize_file_name: "정규식 [\\/:*?\"<>|\\x00-\\x1f]+ → '_'; 앞뒤 공백·점 제거; 80자 컷; 다시 trim; 빈 문자열 → 'untitled'"
+    save_dialog_filters: "제안 파일명의 확장자(대문자 이름), 없으면 MIME 이 png 면 PNG, 그 외 JSON. 열기 필터: json"
+    cancel: "저장/열기 취소는 false/null 반환(오류 아님)"
+    file_name_rules: "문서 `${name||'untitled'}.draw.json`, 레이어 `${name||'layer'}.drawlayer.json`(벡터 `.drawlayer.vector.json`), PNG `${name||'untitled'}.png`, 벡터 `.vector.json`. 본문 = stringifyReadableJson(obj) + '\\n'"
+  modules: {lib.rs: facade, paths.rs: "app_dir/settings_file/autosave_file(directories 크레이트)", files.rs: "read_bytes/write_bytes_atomic/sanitize_file_name/MAX_JSON_BYTES", dialogs.rs: "rfd", logging.rs: "env_logger 초기화"}
+  api: |
+    pub enum FileKind { Png, Json, Any }
+    pub fn pick_open_file(kind: FileKind) -> Option<PathBuf>;                       // UI 스레드 블로킹. rfd
+    pub fn pick_save_file(kind: FileKind, suggested_name: &str) -> Option<PathBuf>; // suggested_name 은 sanitize 후
+    pub fn confirm(title: &str, message: &str) -> bool;
+    pub fn read_bytes(path: &Path) -> Result<Vec<u8>, PlatformError>;               // 상한 검사는 read_json_limited 로 분리
+    pub fn read_json_limited(path: &Path) -> Result<Vec<u8>, PlatformError>;        // MAX_JSON_BYTES 초과 → PlatformError::TooLarge(len)
+    pub fn write_bytes_atomic(path: &Path, bytes: &[u8]) -> Result<(), PlatformError>;   // 같은 디렉터리 .tmp → rename. 실패 시 tmp 삭제
+    pub fn sanitize_file_name(name: &str) -> String;
+    pub fn app_dir() -> PathBuf;                    // 기존 시그니처 유지(테스트가 있음): APPDATA/pixeldraw. directories 로 대체 시 Windows 결과 동일해야 함
+    pub fn settings_file() -> PathBuf; pub fn autosave_file() -> PathBuf;
+    pub enum PlatformError { Io{path:PathBuf, source:io::Error}, TooLarge(u64), NoParent }   // thiserror
+  constraints:
+    - "app_dir() 은 기존 테스트 app_dir_is_absolute 유지. 현재 구현은 env APPDATA 직접 사용 — directories 로 바꾸면 경로가 달라질 수 있음(ProjectDirs 는 %APPDATA%/<org>/<app>/config 형태) → 기존 경로 %APPDATA%/pixeldraw 를 그대로 유지(루트 phase3 의 저장 위치 계약: crates/platform/src/lib.rs:12-17)"
+    - "rfd 는 Windows 만 필요한 feature 로 최소화(xdg-portal/gtk 제외). 다이얼로그는 테스트 불가 → 수동"
+    - "에러 메시지 문자열은 JS 영어 원문(예: 'file too large (N bytes)')을 Display 로 재현(UI 가 토스트로 보임)"
+  tests: ["write_bytes_atomic 라운드트립/덮어쓰기/부모 없음/임시 파일 정리", "sanitize_file_name 표(정규식 케이스·80자·점/공백·빈 문자열)", "read_json_limited 경계(64MiB 정확/초과 — 실제 64MiB 파일 대신 상한을 주입 가능한 내부 함수로)", "경로 계산 순수 함수"]
+  accept: ["테스트 + 게이트", "docs/desktop.md 는 건드리지 않음(Phase 6.5)"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+- id: W12
+  title: text_mask — 텍스트 도구용 래스터 + 글리프 디코드 (엔진)
+  wave: 1
+  difficulty: medium
+  why: "TextTool(JS)이 core/raster/text_mask.js 를 쓰는데 Rust 엔진에는 없음(recipe/text.rs 는 레시피 렌더러이고 API 가 다름)"
+  read_first: [src/core/raster/text_mask.js, src/features/text/glyph_set.js, src/features/text/text_tool.js, crates/engine/src/recipe/text.rs, crates/engine/src/blend.rs(over), tools/recipe/text_glyphs.json 의 구조(최상위 키만; 135KB)]
+  verified_js:
+    text_mask: |
+      textMask({text, glyphs, x, y, fill, stroke, strokeWidth, strokeMode, w, h}) -> {w,h,data:Uint32Array(w*h)}
+      assertMaskSize(w,h). placed = placeText(glyphs,text,x,y). fillRgb=unpack(fill>>>0)[0..3]; strokeRgb=unpack((stroke ?? fill)>>>0)[0..3]; sw=trunc(strokeWidth??0)
+      if (stroke !== 0 && sw > 0): mode = strokeMode ?? 'shape'. 각 글자: shaped = mode==='shape' ? glyph.shaped?.[String(sw)] : undefined.
+         shaped 있으면 stampGlyph(shaped, p.x - glyph.dx + shaped.dx, p.y - glyph.dy + shaped.dy, strokeRgb)
+         없으면 디스크 스탬프: for ox in -sw..=sw, oy in -sw..=sw if ox*ox+oy*oy <= sw*sw → stampGlyph(glyph, p.x+ox, p.y+oy, strokeRgb)
+      그다음 모든 글자 fill 스탬프: stampGlyph(glyph, p.x, p.y, fillRgb)
+      stampGlyph: 각 (gx,gy): cov=alpha[gy*w+gx]; cov==0 skip; 캔버스 밖 skip; i=y*W+x; blended = over(unpack(data[i]), [r,g,b,cov], 1); data[i]=pack(blended)
+      주의: 'stroke !== 0' 비교는 packed u32 stroke 값이 0(완전 투명 흑색)인지 — TextTool 은 secondaryColor 를 항상 packRGBA 로 넘김(알파 0 인 색은 normHex 로 설정 불가라 stroke!==0 항상 참)
+    place_text: "pen=penX; 각 ch: g=glyphs[ch] (없으면 DrawToolError UNSUPPORTED_LAYER_TYPE `glyph missing for ${JSON.stringify(ch)}`); x=round(pen+g.dx), y=round(penY+g.dy) (Math.round); pen+=g.advance"
+    measure_text: "placeText(glyphs,text,0,0) → minX/minY/maxX/maxY. 비면 모두 0. x0=min(0,minX); advanceRight = last.x - last.glyph.dx + last.glyph.advance; x1=max(maxX, advanceRight); h는 ink 기반. (TextTool 은 measure 안 씀 — 구현은 선택, recipe 용 테스트가 있으면 필요)"
+    decode_glyph_sets: "raw.fonts[name]{path,size,glyphs{ch:{advance,dx,dy,w,h,alpha_b64,shaped{strokeWidth:{dx,dy,w,h,alpha_b64}}}}} → alpha 는 base64 → w*h 바이트(길이 불일치 RangeError 'invalid glyph alpha size'). 폰트 이름: 'default-42', 'monogram-240'"
+    tool_error_notify: "TextTool: glyphs 없으면 notify('warn','텍스트 글꼴을 불러오지 못했습니다','TEXT_FONT_MISSING'); 지원 안 하는 문자 → notify('warn', `지원하지 않는 문자: ${ch}`, 'TEXT_GLYPH_MISSING') — 이 두 code 는 errors CATALOG 에 없는 notify 전용 문자열(Session::notify 의 code 는 &'static str)"
+  rust_existing: "recipe/text.rs: include_str!(tools/recipe/text_glyphs.json) 로 GLYPH_DATA 보유, 비공개 struct Glyph{advance,dx,dy,w,h,alpha,shaped: Map<String,Value>}, fn glyph(v)->Glyph, fn stamp(...), fn render<S:PixelSink>(...). 중복 정의를 피하되 recipe/ 는 W12 write_scope 밖 → 새 모듈이 자체 Glyph 타입을 가진다(중복 허용, 이유를 주석 1줄)"
+  api: |
+    // raster/text_mask.rs 파사드 (+ text_mask/{glyph,place,stamp}.rs)
+    pub struct GlyphShape { pub dx: i32, pub dy: i32, pub w: usize, pub h: usize, pub alpha: Vec<u8> }
+    pub struct Glyph { pub advance: f64, pub dx: i32, pub dy: i32, pub w: usize, pub h: usize, pub alpha: Vec<u8>, pub shaped: BTreeMap<u32, GlyphShape> }
+    pub struct GlyphSet { pub path: String, pub size: f64, pub glyphs: HashMap<char, Glyph> }
+    pub fn decode_glyph_sets(raw: &serde_json::Value) -> EngineResult<BTreeMap<String, GlyphSet>>;
+    pub struct PlacedGlyph<'a> { pub ch: char, pub x: i32, pub y: i32, pub glyph: &'a Glyph }
+    pub fn place_text<'a>(glyphs: &'a HashMap<char, Glyph>, text: &str, pen_x: i32, pen_y: i32) -> EngineResult<Vec<PlacedGlyph<'a>>>;
+    pub struct TextParams<'a> { pub text: &'a str, pub glyphs: &'a HashMap<char, Glyph>, pub x: i32, pub y: i32, pub fill: u32, pub stroke: u32, pub stroke_width: i32, pub shape_stroke: bool /*strokeMode==='shape'*/, pub w: usize, pub h: usize }
+    pub fn text_mask(p: &TextParams) -> EngineResult<GradientMask-유사 {w,h,data:Vec<u32>}>;   // raster::gradient::GradientMask{w,h,data:Vec<u32>} 재사용 가능(필드 동일). 재사용 여부는 W12 가 결정하고 로그에
+  oracle: "tools/text_mask_cases.mjs: JS textMask 를 작은 합성 글리프 세트(손으로 만든 3글자, shaped 유무)로 실행해 data 해시/전체 u32 배열을 JSON 으로 덤프 → Rust 와 정확 비교. 실제 text_glyphs.json 케이스 2~3개(default-42 'AB', monogram-240 'a', 외곽선 sw=2)도 포함"
+  tests: ["오라클 정확 일치", "place_text 정수 pen(Math.round 음수 .5 케이스)", "글리프 누락 에러 코드 UNSUPPORTED_LAYER_TYPE 와 메시지 JSON 인용부호 형식", "디스크 스탬프 vs shape 스탬프 분기", "캔버스 밖 클립", "alpha 길이 불일치 에러", "text_glyphs.json 전체 디코드가 성공하고 두 폰트 존재"]
+  accept: ["테스트 + 게이트", "300줄 이하 분할(파사드 + glyph/place/stamp)"]
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 웨이브 2
+# ─────────────────────────────────────────────────────────────────────────────
+- id: W5
+  title: tools-core — pen / eraser / fill / eyedropper / hand + ToolManager (2.7a)
+  wave: 2
+  difficulty: hard
+  needs: [W0, W1]
+  read_first: [src/features/pen/pen.js, src/features/pen/brush.js, src/features/fill/fill.js, src/features/eyedropper/eyedropper.js, src/features/hand/hand.js, src/tools/tool_base.js, src/tools/tool_manager.js, "rg -l 'PenTool|FillTool|EyedropperTool|ToolManager' tests", crates/engine/src/raster/brush.rs, crates/engine/src/kernels.rs, crates/engine/src/composite.rs(sample_pixel), crates/engine/src/pixel.rs]
+  rust_apis_verified:
+    - "raster::brush::{stroke_point(sink,x:i32,y:i32,n:usize,packed:u32), stroke_segment(sink,x0,y0,x1,y1,n,packed), stamp_brush, brush_footprint(n)->EngineResult<BrushFootprint{.. is_set(x,y), offset}>}; PixelSink 는 PixelWriter 가 구현"
+    - "kernels::flood_fill_scanline<S:PixelSink>(sink, w,h, sx,sy, seed, fill)(kernels.rs:84; 정확한 인자 순서는 읽을 것) — 재구현 금지"
+    - "composite::sample_pixel(&[LayerSource], x,y,w,h)->Rgba; Document::layer_sources()"
+    - "pixel::{parse_hex(&str)->Option<Rgba>, pack_rgba_bytes(r,g,b,a), unpack_rgba(u32)->Rgba, to_hex8(f64,f64,f64,f64)->String}"
+    - "Layer.store: ChunkStore — get_pixel(x:u32,y:u32)->u32 (캔버스 밖 0)"
+  tool_design: |
+    상태는 도구 구조체 필드, 스트로크 수명은 Session(W1). JS `this._edit` → `drawing: bool` 로 대체.
+    쓰기: cx.session.stroke_with(|w| stroke_segment(w, x0,y0,x1,y1, n, packed)) — PixelWriter 가 PixelSink.
+    flush: cx.session.stroke_flush(). 종료: cx.session.stroke_commit(Some(label)) (실패는 삼킴 — JS 의 빈 catch). 취소: stroke_cancel().
+  pen_eraser:
+    ids: {draw: pen, erase: eraser}
+    labels: {draw: "연필", erase: "지우개"}
+    fields: [mode, drawing, ignore_stroke, size: usize, packed: u32, last_point: Option<(i32,i32)>, hover: Option<(i32,i32)>]
+    cursor: {draw: Crosshair, erase: Cell}
+    pick_color: "erase → 0. draw → parse_hex(settings.primary_color) → pack_rgba_bytes(r,g,b,a); 파싱 실패 → pack(0,0,0,255)"
+    pointer_down: |
+      ev.button != Left → return.  drawing → return.
+      ev.alt → eyedrop(ev) 후 return (스트로크 시작 안 함).
+      match session.stroke_begin(EditOptions::on_active_layer().labeled(label)): Err → ignore_stroke=true, drawing=false, return (엔진이 잠김/숨김 status 를 이미 emit)
+      drawing=true; ignore_stroke=false; size=settings.pen_size; packed=pick_color()
+      if ev.shift && last_point.is_some(): stroke_segment(last→ev) ; last_point=ev; stroke_flush(); finish_up(); return
+      stroke_point(ev); last_point=ev; hover=ev; stroke_flush()
+    pointer_move: "ignore_stroke||!drawing → return. pts = ev.coalesced (비어있으면 [(x,y)]). 각 pt: stroke_segment(last_point→pt); last_point=pt. hover=last_point. stroke_flush()"
+    pointer_up: |
+      ignore_stroke → ignore=false, drawing=false, return.  !drawing → return.
+      ev 가 last_point 와 다르면 한 번 더 stroke_segment 후 last_point=ev; hover=ev. finish_up()
+    finish_up: "drawing=false; ignore=false; stroke_commit(Some(label)) — 에러 삼킴"
+    cancel/deactivate: "stroke_cancel(); drawing=false; ignore_stroke=false; deactivate 는 last_point=None 도"
+    activate: "last_point=None"
+    on_model_event: "DocumentReplaced → last_point=None. Layers{reason:Active} → last_point=None"
+    eyedrop: |
+      doc 없음 → return. rgba=sample_pixel(layers,x,y,w,h). rgba[3]==0 → session.notify("info","투명 픽셀","") ; return   (JS notify(level,text) — code 없음 → "" 또는 notify 의 code 인자에 빈 문자열; 엔진 시그니처 notify(level,text,code:&'static str))
+      else session.set_setting("primaryColor", SettingInput::Str(&to_hex8(r,g,b,a)))  (연필 alt-클릭은 항상 primary)
+    hover: "hover = ev.map(|e|(e.x,e.y)); request_render"
+    overlay: |
+      pos = drawing ? (hover ?? last_point) : hover.  pos 없음 → return.  (드로잉 중에만 last_point 폴백 — 포인터가 캔버스를 떠난 뒤 낡은 픽셀에 프리뷰가 남는 버그 방지(JS 주석))
+      n = drawing ? self.size : settings.pen_size(없으면 1)
+      zoom>=2: fp=brush_footprint(n). 풋프린트 셀마다 FillRect(rgba [255,255,255,89]  (0.35*255=89.25→ JS 는 'rgba(255,255,255,0.35)' f64 알파: OverlayOp 는 u8 → 89)) 위치 = pixelToDevice(pos.x-fp.offset+bx, pos.y-fp.offset+by), 크기 max(1,zoom*dpr).
+               이어서 difference StrokeRect(+0.5,+0.5 오프셋, 크기 n*zoom*dpr, 지우개는 dash (4*dpr, 2*dpr)) 흰색 alpha 1
+      zoom<2: difference 십자선 중심 (pos+0.5) 반경 5*dpr, 흰색
+      pixelToDevice(x,y) = ((offsetX + x*zoom)*dpr, (offsetY + y*zoom)*dpr)
+  fill:
+    id: fill; label: "페인트통"; cursor: Copy
+    pointer_down: |
+      ev.button != Left → return. doc 없음 → return. 좌표가 [0,w)×[0,h) 밖 → return.
+      stroke_begin(labeled("페인트통")) Err → return (JS: catch → return, 상태바 경고는 엔진이 emit)
+      seed=layer(active).store.get_pixel(x,y);  fill=parse(primary)→pack, 실패 → pack(0,0,0,255)
+      seed==fill → session.notify("info","이미 같은 색입니다",""); stroke_cancel(); return
+      stroke_with(|w| flood_fill_scanline(w, ...)) ; stroke_commit(Some("페인트통"))   (한 번의 stroke_with 안에서 완료)
+      주의: seed 를 읽을 때 활성 레이어를 doc.get_layer(active_layer_id) 로 — begin_edit 이후에 읽어도 동일(스트로크 시작은 데이터를 안 바꿈)
+  eyedropper:
+    id: eyedropper; cursor: Crosshair; accepts_button: "Left 또는 Right (Middle/그 외 무시)"
+    fields: [down: bool, btn: Button(latched), pos: Option<(i32,i32)>]
+    pick: |
+      doc 없음 → return. alt → 활성 레이어의 raw 픽셀: layer.store.get_pixel(x,y) → unpack. (get_layer 실패 → return). else sample_pixel(합성).
+      rgba[3]==0 → notify("info","투명 픽셀",""); return.   hex=to_hex8(..)
+      secondary = ev.shift || self.btn == Right  → key = secondary ? "secondaryColor" : "primaryColor"; set_setting(key, Str(hex))
+      (좌클릭+Shift=보조, 우클릭=보조, 우클릭+Shift=보조(Shift 규칙이 이김 — 레거시 동작))
+    pointer_down: "acceptsButton 아니면 return. down=true; btn=ev.button(래치: pointermove 의 button 은 -1 이라 우클릭 드래그를 재지정하면 안 됨); pos; pick"
+    pointer_move: "!down → return. pos 갱신 + pick"
+    pointer_up/cancel/deactivate: "down=false; btn=Left"
+    hover: "pos=ev.map(..); request_render"
+    overlay: "pos 있으면 difference StrokeRect 흰색(pos 의 장치 좌표 + 0.5, 크기 max(1, zoom*dpr))"
+  hand: "id hand; cursor Grab; 핸들러 없음(팬은 InputController 가 처리; InputController 가 id=='hand' 를 보고 좌클릭을 팬으로 가로챔)"
+  tool_manager:
+    api: |
+      pub struct ToolManager { tools: Vec<Box<dyn Tool>>, active: String }
+      impl ToolManager {
+          pub fn new(initial_active: &str) -> Self;
+          pub fn register(&mut self, tool: Box<dyn Tool>);                 // 등록 시 id==active 이면 activate 는 W8 가 cx 를 줄 때 호출(register 는 cx 없음) → activate_initial(cx)
+          pub fn activate_initial(&mut self, cx: &mut ToolCx);
+          pub fn active_id(&self) -> &str;
+          pub fn active(&self) -> EngineResult<&dyn Tool>;                 // 미등록 → INVALID_STATE `unregistered tool ${id}`
+          pub fn get(&self, id: &str) -> Option<&dyn Tool>; pub fn get_mut(&mut self, id: &str) -> Option<&mut dyn Tool>;
+          pub fn switch_to(&mut self, next: &str, cx: &mut ToolCx);        // JS _switchTo
+          pub fn pointer_down/move/up(&mut self, ev:&ToolEvent, cx:&mut ToolCx); pub fn cancel(&mut self, cx); pub fn hover(&mut self, ev:Option<&HoverEvent>, cx);
+          pub fn key_down(&mut self, ev:&KeyEvent, cx:&mut ToolCx) -> bool;
+          pub fn cursor(&self) -> CursorKind; pub fn accepts_button(&self, b: Button) -> bool;
+          pub fn on_model_event(&mut self, ev:&ModelEvent, cx:&mut ToolCx); // 모든 등록 도구에 전달 + Settings{ActiveTool} 이면 switch_to
+          pub fn overlay(&self, info:&OverlayInfo, out:&mut Vec<OverlayOp>);   // 활성 도구만
+      }
+    switch_to_rules: |
+      prev==next → no-op.  prev 가 있고 session.is_editing() → prev.cancel(cx) (실패해도 전환을 막지 않음).  prev.deactivate(cx).  active=next.  next 있으면 next.activate(cx) (실패 무시). next 미등록이면 active 만 바꾸고 return(이후 active() 가 에러)
+    traps:
+      - "JS ToolManager 는 SETTINGS_CHANGED(activeTool) 를 직접 구독. Rust 는 on_model_event 가 처리 → 이벤트 큐 drain 이 필요(index translation_conventions.events)"
+      - "모델 이벤트는 활성 도구뿐 아니라 모든 등록 도구에 전달(JS 각 도구가 자체 구독)"
+      - "pointer_* 는 활성 도구가 없으면(미등록) 에러 → notify error 하고 무시(JS 는 throw)"
+      - "key_down 반환값(소비 여부)은 W8/Phase3 단축키 처리가 먼저 도구에 물어보는 순서(ui/toolbar/shortcuts.js: 스페이스→편집 포커스→busy→도구 keyDown→resolveShortcut)에 쓰임"
+      - "도구 등록 순서(JS ui/app.js): pen(draw), pen(erase), fill, eyedropper, shape×5(line rect rrect ellipse polygon), arc, chord, radial_gradient, text, hand — 등록은 W8 가 수행(여기는 ToolManager 만)"
+  tests:
+    - "JS 포팅: rg -l 'PenTool|FillTool' tests 의 케이스(tools_basic.test.mjs 등)를 엔진 Session 위에서 재현"
+    - "(a) 펜 down/move/up → undo 1회 원복, 라벨 '연필' (b) shift 직선(last_point 필요) (c) 지우개(투명 0 쓰기→빈 청크 제거) (d) 잠긴 레이어: 스트로크 무시 + Status warn 이벤트 + 이후 move/up 무시 (e) 채우기 동일색 알림+히스토리 변화 없음 (f) alt 스포이트(펜) 투명/불투명 (g) 스포이트 좌/우/Shift/Alt 4×, 드래그 중 버튼 래치 (h) 도구 전환 중 진행 스트로크 취소 (i) DocumentReplaced 후 shift 직선이 last_point 없음으로 동작 (j) 스트로크 중 size 변경 무시 (k) coalesced 다점 이동 시 Bresenham 연속성 (l) 채우기 캔버스 밖 클릭 무시 (m) switch_to 가 cancel→deactivate→activate 순서"
+    - "ToolManager: 미등록 활성 도구 에러, 모든 도구에 이벤트 전달(비활성 pen 도 DocumentReplaced 로 last_point 초기화)"
+  accept: ["위 테스트 + 게이트", "rg 'egui|winit|eframe' crates/app/src/tools 비어 있음"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+- id: W6
+  title: tools-shape — line/rect/rrect/ellipse/polygon + 오버레이 (2.7b)
+  wave: 2
+  difficulty: hard
+  needs: [W0, W1]
+  read_first: [src/features/shape/shape.js, shape_geom.js, shape_render.js, shape_overlay.js, shape_pending.js, shape_keys.js, "rg -l 'ShapeTool|shape_geom|shape_pending' tests", crates/engine/src/raster/shape_raster.rs, crates/engine/src/raster/snap.rs, crates/engine/src/raster/mask.rs]
+  rust_apis_verified:
+    - "raster::shape_raster::{ShapeKind{Line,Rect,Rrect,Ellipse,Polygon}, FillMode{Outline,Fill,Both}, ShapeSpec{kind,stroke_width:i32,fill_mode,bbox:Option<[i32;4]>,p0,p1:Option<(i32,i32)>,radius:i32,points:Vec<[i32;2]>}(Debug+Clone, PartialEq 없음), apply_shape<S:PixelSink>(sink,&spec,primary:u32,secondary:u32)->EngineResult<usize>}"
+    - "raster::snap::{angle_snap(x0,y0,x1,y1,step_deg)->[f64;2], angle_snap_deg(..)(15°), drag_bbox((i64,i64),(i64,i64),lock,center)->[i64;4], resize_bbox(b:[i64;4], handle:&str, p:(i64,i64), lock, center, min_size:i64)->[i64;4], unit_snap([i64;4])->[i64;4]}"
+    - "blend::rnd 는 floor(v+0.5)(JS rnd). 32px 스냅: rnd(p/32)*32"
+    - "Layers 이벤트 reason: Add|Remove|Move|Prop|Active (Replace 없음 — JS 의 'replace' 분기는 DocumentReplaced 로 이미 커버)"
+  js_state_machine: |
+    mode ∈ {idle, drawing, pending, resizing, moving, placing}. 필드: pending, draw, op, place, hover_pt, emitted, masks cache.
+    KINDS/LABELS: line 직선, rect 사각형, rrect 둥근 사각형, ellipse 타원, polygon 다각형. 도구 id = kind. cursor Crosshair. 라이브 설정 키: penSize shapeFill shapeRadius snapUnit shapeLockAspect (색은 라이브가 아님 — pending.color 가 그리는 시점 색을 소유)
+    flags(ev) = {shift, lock: shift || settings.shapeLockAspect, center: alt, snap: settings.snapUnit}
+  pointer_down: |
+    button != Left → return. doc 없음 또는 mode ∉ {idle,pending,placing} → return.
+    p=(ev.x,ev.y).
+    mode==placing && place → placePoint
+    mode==pending && pending:
+       h=hitHandle(kind, pending, ev.fx, ev.fy, 6/zoom) → resize 시작: op={type:resize, handle:h.id, end:h.end, orig:clone(pending)}; mode=resizing; resizeTo(ev); return
+       grab=max(penSize/2, 4/zoom); insideShape(kind, pending, fx, fy, grab) → op={type:move, ox:p.x, oy:p.y, orig}; mode=moving; return
+       else commit()  (그리고 아래로 계속 — 새 도형 시작)
+    kind==polygon → place={points:[snapPlacePoint(p, snapUnit)], layerId:doc.activeLayerId}; hover_pt=None; mode=placing; emitChanged; render; return
+    else draw={p0:p, layerId:doc.activeLayerId, shift, alt}; mode=drawing; render
+  pointer_move: "drawing: draw.cur=(x,y), shift/alt 갱신, render. placing: hover_pt=(x,y), render. resizing: resizeTo(ev). moving: pending=moveGeom(kind, op.orig, ev.x-op.ox, ev.y-op.oy, snapUnit); emitChanged; render"
+  pointer_up: |
+    drawing: p0=draw.p0, p=(ev.x,ev.y); idle = pending?'pending':'idle'
+       p==p0 → draw=None; mode=idle(또는 pending)   (제자리 클릭은 도형 없음 — 펜과 달리 점을 안 찍음)
+       else g=dragGeom(kind,p0,p,flags(ev),settings.shapeRadius); pending={layerId:draw.layerId, color:settings.primaryColor, ..g}; mode=pending
+       emitChanged; render
+    resizing|moving: op=None; mode=pending; emitChanged; render
+  geometry:
+    drag_geom: "line: p = flags.shift ? angle_snap_deg(p0,p1) : p1 → {bbox:None, p0, p1:p, radius:0}. 그 외: b=drag_bbox(p0,p1,flags.lock,flags.center); snap 이면 unit_snap(b) → {bbox:b, radius:settings.shapeRadius}"
+    resize_geom: "line: fixed = end==0 ? orig.p1 : orig.p0; np = shiftSnap ? angle_snap(fixed,p) : p. polygon: idx=handle id 'v{i}' 파싱(범위 밖이면 orig 반환); snap 이면 rnd(p/32)*32. 그 외: resize_bbox(orig.bbox, handleId, p, flags.lock, flags.center, 1); snap 이면 unit_snap"
+    move_geom: "snap 이면 각 점/ bbox 원점을 rnd((v+d)/32)*32, 아니면 +d. line/polygon 은 모든 점"
+    handles: "bbox: x1=x+w-1, y1=y+h-1, xm=(x+x1)/2, ym=(y+y1)/2 (f64) 에서 nw,n,ne,e,se,s,sw,w 순(HANDLE_IDS). line: p0(end 0), p1(end 1). polygon: v0..vn"
+    hit_handle: "|fx-h.x|<=tol && |fy-h.y|<=tol 첫 일치(순서 = 레이아웃 순서)"
+    inside_shape: "line: distSeg<=grab. polygon: even-odd pointInPolygon 이거나 어떤 변과의 거리<=grab. bbox: fx∈[x, x+w-1] && fy∈[y, y+h-1]"
+    point_in_polygon: "for i,j=n-1: (yi>fy)!=(yj>fy) && fx < (xj-xi)*(fy-yi)/(yj-yi)+xi → inside 토글"
+    parse_option_values: "setPending(v) — 정수 가드 asInt(OUT_OF_RANGE `invalid ${what}`). bbox: w,h>=1 아니면 OUT_OF_RANGE 'shape w,h must be >= 1'; radius 정수·>=0 'radius must be >= 0'. line: {x0,y0,x1,y1} 또는 {x,y,w,h}(p1=x+w-1,y+h-1; w,h>=1 'line extents must be >= 1'). polygon: points>=3 'polygon needs >= 3 points'. 편집 시 기존 pending.color 유지(색 변경 후 숫자 수정이 재색칠하지 못하게)"
+  placing: |
+    place_point: pts=place.points; first=pts[0]; tol=6/zoom; (ev.fx,fy). pts.len()>=3 && |fx-first.x|<=tol && |fy-first.y|<=tol → finishPlacing; else pts.push(snapPlacePoint(p, snapUnit)); emitChanged; render
+    finish_placing: place.points.len()<3 → false. pending={layerId:place.layerId, color:settings.primaryColor, bbox:None,p0:None,p1:None, points}; place=None; hover_pt=None; mode=pending; emitChanged; render; true
+  keys: |
+    Enter: mode==placing → finishPlacing. drawing||!hasPending → false(소비 안 함). else op=None; mode=pending; commit(); true
+    Escape|Delete|Backspace:
+       placing&&place: Escape && points>1 → 마지막 점 pop(한 점 되돌리기); emitChanged; render; true.  그 외 → place=None; hover_pt=None; mode = pending?pending:idle; emitChanged; render; true
+       (drawing|resizing|moving) && Escape → cancel(); true
+       hasPending||draw||op → discardPending(); true
+       else false
+    Arrow*: step = shift?32:1. d. !d || !hasPending || mode!=pending → false. pending 의 모든 점/bbox/p0,p1 을 d 만큼 이동(bbox 는 x,y 만). emitChanged; render; true
+  commit: |
+    pending 없음 → false. layerId=pending.layerId; label=LABELS[kind]
+    session.stroke_begin(on_layer(layerId).labeled(label)): Err 코드 ∈ {LAYER_LOCKED, LAYER_HIDDEN, LAYER_NOT_FOUND} → discardPending(); return false. 다른 Err → 전파(report)
+    color=pending.color (스냅샷), packed=pack(parse_hex(color)) — 실패 시 OUT_OF_RANGE `invalid color`
+    stroke_with(|w| apply_shape(w, &spec, packed, packed))  ← primary 와 secondary 에 같은 색(보조색은 버퍼일 뿐 칠하지 않음 — JS 주석)
+    stroke_commit(Some(label)); pending=None; op=None; mode=idle; emitChanged; render; true
+    spec(kind,pending,settings): line → {kind:Line,p0,p1,stroke_width:penSize}. polygon → {kind:Polygon, points, stroke_width:penSize, fill_mode: settings.shapeFill}. 그 외 → {kind, bbox, radius: kind==Rrect? pending.radius : 0, stroke_width:penSize, fill_mode: settings.shapeFill}
+    fill_mode: FillMode::parse(Some(settings.shape_fill)) — settings 는 "outline"|"fill" 만(Both 는 도달 불가)
+  events:
+    on_model_event: |
+      Settings{key ∈ LIVE_KEYS}: kind==rrect && pending && key==shapeRadius → pending.radius = value(Int). pending||draw 있으면 emitChanged; render
+      Layers{reason:Active}: hasPending → commit()   (JS: 활성 레이어 변경 시 보류 도형을 먼저 확정. pending.layerId 를 캡처해 두었으므로 새 활성 레이어가 아니라 원래 레이어에 그려짐)
+      Layers{reason:Remove}: hasPending && pending.layerId 레이어가 doc 에 없음 → discardPending()
+      DocumentReplaced: discardPending()
+    deactivate: "placing 이면 points>=3 이면 finishPlacing, 아니면 place=None/hover=None/mode=pending?pending:idle. 그다음 hasPending → commit(). draw/op/place/hover=None; mode=idle  (도구를 떠나도 완성된 작업은 유지)"
+    activate: render
+    cancel: "placing: place/hover 제거, mode=pending?pending:idle, emitChanged, render. drawing: draw=None; mode 복귀. resizing|moving: pending=op.orig; op=None; mode=pending. 모두 emitChanged+render"
+    discard_pending: "pending/draw/op/place/hover=None; mode=idle; emitChanged; render"
+  emit_changed: |
+    cur = JSON.stringify({pending: getPending(), vertices: getVertices()}); cur==emitted 이면 return; emitted=cur; session.emitToolState(kind, pending)
+    getPending(): line → {x0,y0,x1,y1}; polygon → {points:[{x,y}]}; bbox → {x,y,w,h,radius}; pending 없음 → null.  getVertices(): polygon 이면 (place?.points ?? pending?.points) 복사, 아니면 null.
+    Rust: 변경 감지 키 = serde_json::to_string(&json!({"pending":..., "vertices":...})) (키 순서 pending, vertices). Session::emit_tool_state(kind, pending_string) 의 pending_string = serde_json 직렬화(키 순서 = 위 필드 순서, 없으면 'null')
+  preview_and_overlay:
+    preview_spec: "drawing → draw 의 cur(없으면 p0)로 dragGeom(flags: shift, lock=shift||shapeLockAspect, center=alt, snap) → spec. placing → placingSpec. else pending → buildSpec"
+    placing_spec: "placed=place.points; hov=hover_pt(반올림); hov 있으면 trail=placed+[hov]: trail>=3 → polygon(trail), 아니면 line(placed.last→hov). hov 없고 placed>=3 → polygon(placed). else None"
+    paint_layers_rust: "allowed_deviation(미리보기 한정): JS 는 마스크 함수를 따로 호출해 apply_shape 를 손으로 흉내냄(computePaintLayers). Rust 는 apply_shape 를 스크래치 PixelSink(bbox 수집)에 실행해 마스크를 얻는다 — 미리보기와 커밋이 구조적으로 동일(WYSIWYG 보장). 캐시 키 = format!('{:?}', spec) + color (ShapeSpec 에 PartialEq 가 없고 W6 는 engine 수정 불가)"
+    overlay_ops: |
+      MaskBlit(spec 래스터 결과, 알파 원본 — 0.82 아님; shape_overlay.js blitLayer: 설정된 칸은 css 색의 a 사용)
+      + StrokeRect 점선(dash (4*dpr, 3*dpr)) 검정 불투명, 1px: box = line → {min(p0,p1), |Δ|+1}; polygon → polygon_bbox(points); 그 외 spec.bbox. 위치=deviceOf(box.x, box.y)=((offsetX + x*zoom)*dpr, ...), 크기=max(w*zoom*dpr,1)
+      + 핸들: layoutHandles(spec.kind, geomFromSpec(spec)) 각 점마다 흰색 FillRect + 검정 StrokeRect, 한 변 hs=8*dpr, 중심 = deviceOf(h.x, h.y) (정수 픽셀의 좌상단 코너 기준 — 픽셀 중심이 아님; 그대로 복제)
+      주의: 핸들은 spec.kind 기준(도구 kind 아님): 다각형 배치 중 첫 변 미리보기는 line spec 이므로 line 핸들 2개
+  tests:
+    - "JS 포팅: rg -l 'ShapeTool|shape_geom|shape_pending|shape_keys' tests"
+    - "엔진 Session 위에서 rect/ellipse/line 드래그→commit(Enter)→undo, Escape 취소, 제자리 클릭=도형 없음"
+    - "polygon: 3점 + 첫 점 클릭(tol 6/zoom) 닫기, Escape 한 점 되돌리기, Enter 확정, <3점 Enter 무시"
+    - "resize 8핸들 × lock/center/snap 조합, move + snap, 핸들 우선 > 내부 이동 > 새 도형(외부 클릭은 먼저 commit)"
+    - "활성 레이어 변경 → 원래 레이어에 commit, 레이어 삭제 → discard, 문서 교체 → discard"
+    - "잠긴 레이어에 commit → pending 폐기 + false (+ Status 이벤트)"
+    - "emit_tool_state 변경 감지: 같은 상태 반복 호출에서 이벤트 1회, 키 순서 {pending,vertices}"
+    - "색 스냅샷: 그리기 후 primaryColor 변경해도 pending 색 유지, setPending 도 유지"
+    - "프리뷰 == 커밋: 같은 spec 의 preview mask 가 commit 후 레이어 픽셀 집합과 동일"
+    - "geometry 수식은 raster_golden.json 의 drag_bbox/angle_snap/unit_snap 그룹이 이미 snap.rs 를 검증하므로 도구 레벨에서는 호출 배선만 확인"
+  accept: ["위 테스트 + 게이트", "파일 각 300줄 이하(JS 6파일 → Rust 6~8모듈: shape.rs 파사드 + geom/pending/keys/render/overlay/state)", "egui import 0"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+- id: W11
+  title: tools-arc-gradient — arc/chord/radial_gradient 도구 (D11)
+  wave: 2
+  difficulty: medium
+  needs: [W0, W1]
+  read_first: [src/features/arc/arc_tool.js, src/features/gradient/gradient_tool.js, src/tools/pixel_preview.js, crates/engine/src/raster/arc.rs, crates/engine/src/raster/arc/angle.rs, crates/engine/src/raster/arc/chord.rs, crates/engine/src/raster/gradient.rs]
+  rust_apis_verified:
+    - "raster::arc::angle::{Box2{cx,cy,rx,ry}, arc_mask(b:Box2,start_deg,end_deg,width:i32,w:usize,h:usize)->EngineResult<Mask>} ; chord::{chord_fill_mask(b,start,end,w,h), chord_outline_mask(b,start,end,width,w,h)} — 모두 캔버스 전체 크기 w×h 마스크(Mask.data 0/1, 행 우선). 공개 경로(arc.rs 재수출 여부)는 읽을 것"
+    - "raster::gradient::{Stop::new(t,r,g,b,a), RadialGradient{cx,cy,r0,r1,stops:Vec<Stop>,w,h}, radial_gradient_mask(&g)->EngineResult<GradientMask{w,h,data:Vec<u32>}>}"
+  arc_chord_tool:
+    ids: "arc, chord (한 구조체 kind)"; cursor: Crosshair
+    fields: {start: "f64 기본 0", end: "f64 기본 180", width: "i32 기본 2", chord_mode: "Fill|Outline 기본 Fill", draw: Option<Draw>}
+    note_options: "이 4개는 설정(Settings)이 아니라 도구 로컬 값 — Phase 3.3 옵션바(panel_arc_options.js)가 도구 필드를 직접 쓴다 → 공개 setter/getter + 클램프 규칙(width 1..64 정수일 때만, start/end finite 무제한)을 도구가 소유: set_width(i32)->bool 등"
+    pointer_down: "button!=Left||doc 없음 → return. draw={x0,y0:round(ev), layer_id:active, fill_color:primary 스냅샷, outline_color:secondary 스냅샷, start,end,width,chord_mode 스냅샷, x1,y1=같음}; render"
+    pointer_move: "draw 있으면 x1,y1=round(ev); render"
+    pointer_up: |
+      draw 없음 → return. draw 해제; render. x1,y1=round(ev). if x1==x0 || y1==y0 → return (둘 중 하나라도 같으면 그리지 않음 — 'AND' 아님)
+      cx=(x0+x1)/2, cy 동일; rx=|x1-x0|/2, ry. fill=pack(parse(fill_color)), outline=pack(parse(outline_color))
+      arc: mask=arc_mask(Box2{cx,cy,rx,ry}, start,end, width, W,H), color=fill. chord+Fill: chord_fill_mask(.., start,end,W,H) color=fill. chord+Outline: chord_outline_mask(.., start,end,width,W,H), color=outline(보조색!)
+      stroke_begin(on_layer(layer_id).labeled(arc?"호":"현")) (Err → 반환; JS 는 throw) ; stroke_with: mask 의 1 인 칸마다 w.set(i%W, i/W, color) ; stroke_commit(Some(label))
+    overlay: "draw 있으면 같은 마스크를 계산해 mask_to_blit(mask, packed(draw.색), Some(0.82)) — 색: arc/chord fill 은 fill_color, chord outline 은 outline_color. 성능 주의: 마스크가 캔버스 전체 크기(최대 2048×1088)이고 포인터 이동마다 재계산(JS 동일). 결과를 draw 의 (x1,y1,start,end,width,mode) 키로 캐시해 같은 입력이면 재사용"
+    cancel/deactivate: "draw=None; render"
+    near_parity_note: "arc/chord 래스터는 PIL 과 근사 일치(arc: 누락 0·초과 ≤16, chord fill 초과 ≤4, outline 누락 ≤16·초과 ≤40 — raster/arc/angle.rs near_parity). 도구는 엔진 결과를 그대로 신뢰"
+  gradient_tool:
+    id: radial_gradient; cursor: Crosshair
+    fields: {inner_radius: "f64 기본 0", edge_mode: "Transparent|Solid 기본 Transparent", center: Option<Center>}
+    options_rule: "inner_radius 는 정수일 때만 clamp(0..2048)(panel_gradient_options.js). edge_mode 는 'transparent'|'solid' 만"
+    pointer_down: "button!=Left||doc 없음 → return. center={x,y:round(ev), layer_id, primary, secondary(스냅샷), inner_radius, edge_mode, x1,y1}; render"
+    pointer_up: |
+      center 없음 → return. 해제; render. radius=hypot(round(ev.x)-center.x, round(ev.y)-center.y). radius<1 → return
+      inner=parse(primary), outer=parse(secondary). RadialGradient{cx,cy, r0=min(inner_radius, radius), r1=radius, stops=[Stop(0, inner.rgba), Stop(1, outer.r,g,b, edge_mode==Solid ? outer.a : 0)], w,h}
+      mask=radial_gradient_mask(&g)?; stroke_begin(on_layer(layer_id).labeled("방사형 그라디언트")); mask.data[i]!=0 인 칸만 w.set(i%W, i/W, mask.data[i]) ; stroke_commit(Some("방사형 그라디언트"))
+    overlay: "radius>=1: packed_to_blit(mask, alpha 0.82) + Circle{중심=((offsetX+cx*zoom)*dpr, ...), r=radius*zoom*dpr, rgba [255,255,255,230] (0.9*255≈230), width 1, dash (4,3) — dash 는 dpr 곱 없음(JS: setLineDash([4,3]) 그대로)}"
+  tests: ["arc/chord/gradient 각각 드래그→commit→undo, 라벨 '호'/'현'/'방사형 그라디언트'", "x0==x1 또는 y0==y1 이면 아무것도 안 그림", "chord outline 이 보조색을 쓴다", "스냅샷 색: 드래그 중 설정 변경 무시", "radius<1 무시", "inner_radius > radius 일 때 r0=min", "edge Solid vs Transparent 알파", "오버레이 MaskBlit 가 commit 결과와 같은 픽셀 집합(arc)"]
+  accept: ["위 테스트 + 게이트", "마스크 계산 비용 측정치를 로그에(2048×1088 arc_mask 1회 시간)"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+- id: W13
+  title: tool-text — 텍스트 도구
+  wave: 2
+  needs: [W0, W1, W12]
+  read_first: [src/features/text/text_tool.js, src/features/text/panel_text_options.js]
+  tool:
+    id: text; cursor: Text
+    fields: {text: "String 기본 ''", font: "String 기본 'default-42' (또는 'monogram-240')", stroke_width: "i32 기본 0", glyph_sets: "BTreeMap<String,GlyphSet>"}
+    options_rule: "(panel_text_options.js) stroke_width: 정수면 clamp(0..16), 비정수면 0 으로 리셋(이전 값 유지 아님). text 는 입력마다 즉시 반영"
+    pointer_down: |
+      button!=Left || text 비어있음 || doc 없음 → return.
+      glyphs = glyph_sets[font].glyphs; 없으면 notify("warn","텍스트 글꼴을 불러오지 못했습니다","TEXT_FONT_MISSING"); return
+      unsupported = text 의 첫 글리프 없는 문자 → notify("warn", format!("지원하지 않는 문자: {ch}"), "TEXT_GLYPH_MISSING"); return
+      fill=pack(parse(primary)), stroke=pack(parse(secondary)); mask=text_mask(TextParams{text,glyphs,x:round(ev.x),y:round(ev.y),fill,stroke,stroke_width,shape_stroke:true,w,h})
+      stroke_begin(on_active_layer().labeled("텍스트")) ; mask 의 0 아닌 칸 → w.set ; stroke_commit(Some("텍스트"))
+    no_overlay: "JS TextTool 은 overlay 가 없음(미리보기 없음)"
+    glyph_loading: "JS app.js 가 fetch('./tools/recipe/text_glyphs.json') 후 decodeGlyphSets. Rust: W12 의 decode_glyph_sets(include_str!('../../../../tools/recipe/text_glyphs.json')) — 이 경로는 엔진 recipe/text.rs:10 도 쓰며 Phase 6 삭제 금지 목록(phase6.forbidden). 실패 시 빈 맵 + 도구가 TEXT_FONT_MISSING 경고"
+  tests: ["'A' 한 글자 commit → undo", "글꼴 없음/지원 안 하는 문자 경고 이벤트 code 문자열", "stroke_width>0 외곽선", "캔버스 밖 클립", "text 비어있으면 무시", "라벨 '텍스트'"]
+  accept: ["테스트 + 게이트"]
+
+# ═════════════════════════════════════════════════════════════════════════════
+# 웨이브 3
+# ─────────────────────────────────────────────────────────────────────────────
+- id: W8
+  title: 통합 — canvas_view · session_glue · input_adapter · overlay_raster · file_ops (2.2 완성 + 2.7)
+  wave: 3
+  difficulty: hard
+  needs: [W2, W3, W5, W6, W7, W9, W11, W13]
+  read_first: ["docs/roadmap/phase2.yaml 의 W2~W13 api", "src/ui/app.js (부팅 순서)", "src/ui/actions/file_actions.js, edit_actions.js, action_map.js", crates/engine/src/view/store.rs, crates/engine/src/io/export.rs, crates/engine/src/io/serialize.rs]
+  deliverables:
+    session_glue:
+      - "AppState{ session: Session, view_store: ViewStore, tools: ToolManager, input: InputController, comp: CompCache, events: Rc<RefCell<VecDeque<ModelEvent>>>, fb: Framebuffer, status: StatusState, toasts: Vec<..>, need_render: bool }"
+      - "Session::subscribe 로 큐에 push(index translation_conventions.events). drain(&mut self): 이벤트마다 comp.apply_event, tools.on_model_event(ev,&mut cx), Status 이벤트 보관(상태바용), DocumentReplaced 이면 view_store.set_canvas(w,h)+fit(), HistoryChanged 이면 can_undo/can_redo 갱신. drain 은 (a) 모든 입력 처리 직후 (b) 프레임 시작 두 곳. 1회 최대 1024개"
+      - "ToolCx 구성 헬퍼: fn with_cx<R>(&mut self, f: impl FnOnce(&mut ToolManager, &mut ToolCx)->R)->R  (session 과 tools 의 동시 가변 빌림을 필드 분리로 해결)"
+      - "도구 등록 순서(JS ui/app.js): pen(draw), pen(erase), fill, eyedropper, shape×5, arc, chord, radial_gradient, text(글리프), hand. 초기 활성 도구는 settings.active_tool(=pen)"
+    input_adapter:
+      - "egui InputState/Response → W4 RawPointer/휠/키. 한 프레임의 Event::PointerMoved 열을 coalesced 로 사용(egui 에 getCoalescedEvents 없음 — R6 위험: 빠른 드래그에서 JS 보다 점이 성길 수 있으나 펜은 Bresenham 으로 이어 연속성 유지)"
+      - "ctrl = modifiers.command(mac cmd / 그 외 ctrl). 버튼 매핑 Primary→Left, Middle→Middle, Secondary→Right"
+      - "egui 키 → DOM key 이름 변환표(Enter,Escape,Delete,Backspace,ArrowLeft/Right/Up/Down, Space 등) KeyEvent.key/code"
+      - "포인터가 창/위젯 밖에서 놓이면(캡처 상실) pointer_up 호출(JS lostpointercapture 는 cancel 이지만 egui 는 up 이 놓임 신호 — 결정: 밖에서 놓아도 up(스트로크 확정))"
+      - "ctx.wants_keyboard_input() → InputCtx.text_focus"
+      - "창 포커스 상실 → focus_lost()"
+      - "wheel: egui smooth_scroll_delta 가 아니라 raw_scroll_delta 사용(누산기가 60px 단위 자체 처리). 단위(점/라인/페이지) 매핑 확인 필요(?)"
+      - "활성 도구 커서: CursorKind → egui::CursorIcon 매핑(D12)"
+    canvas_view:
+      - "중앙 패널 rect → (css_w, css_h, dpr=pixels_per_point) → view_store.set_viewport(w,h) → 프레임: comp.update(doc, view_store.visible_chunk_range(), Budget::Time(6ms)) → draw_display_into(DisplayParams{...}) → overlay_raster 로 활성 도구 overlay → CanvasTexture::upload → paint"
+      - "dirty 남음 또는 need_render 또는 입력 있음 → ctx.request_repaint(). 변화 없으면 재업로드 생략(W7 의 변경 판정 사용)"
+      - "프레임버퍼 재할당 최소화: resize_clear 로 재사용"
+    overlay_raster:
+      - "OverlayOp → Framebuffer 래스터(W2 프리미티브 사용). MaskBlit: 최근접 확대(칸 크기 zoom*dpr, 위치 round((offset + x*zoom)*dpr)), 알파 source-over. StrokeRect/Line: 1px 선(중심선 의미 — 정수 좌표는 반픽셀 걸침: 축 정렬 면적 커버리지 AA 로 구현), dash 위상은 시작점에서. difference 는 W2 difference_rect"
+      - "순수 함수 + 단위 테스트(도형별 손계산 기대 픽셀)"
+    file_ops:
+      - "새 문서: Session::new_document(NewDocumentOptions) (Phase 3.7 다이얼로그 전에는 기본 512×512 transparent 로 버튼 1개 — JS DEFAULT_DOC)"
+      - "JSON 저장: io::serialize::document_to_json(doc) → stringify_readable(+ '\\n') → platform::pick_save_file(Json, '{name||untitled}.draw.json' sanitize) → write_bytes_atomic. 성공 시에만 history.mark_saved(); HISTORY_CHANGED 수동 emit(JS file_actions doSave: 취소는 아무것도 안 함, 성공 토스트)"
+      - "JSON 열기: pick_open_file(Json) → read_json_limited → serde_json::from_slice → format 필드 분기: 'draw_tool.document' → json_to_document(&Value) -> (Document, warnings) 후 loadDocument(mark_saved?) + warnings 마다 warn 토스트; 'draw_tool.layer' → notify info layerFileHint(토스트 아님); 그 외 → SCHEMA 'unknown file format'"
+      - "PNG 내보내기: flatten_to_rgba(doc.layer_sources(), w,h, FlattenOptions{include_background:true}) → encode_png → '{name||untitled}.png'. (현재 flatten 의 base_pixel 이 include_background 를 무시함 — export.rs:46-53 — 배경색이 있는 문서는 PNG 에 배경이 안 들어감: JS 와 어긋남. W8 범위 밖이므로 log_draft.discoveries 에 기록하고 Phase 5 P-C 로 이관)"
+      - "임시 상단 버튼 줄: [새 문서][열기][저장][PNG][Undo][Redo][−][+][맞춤][100%] + 도구 선택 버튼 14개(툴바는 Phase 3.2 가 교체). 이 임시 UI 는 Phase 3 에서 삭제된다는 주석 1줄"
+      - "Undo/Redo: JS requestUndo — 활성 도구 has_pending() 이면 discard_pending() 후 return(session.undo 호출 안 함); requestRedo — 보류가 있으면 무시 (ui/actions/edit_actions.js)"
+      - "레시피/벡터/레이어 가져오기·내보내기는 Phase 3.1"
+    shortcuts: "Phase 3.1 소관. W8 는 임시 최소 단축키만(Ctrl+Z/Ctrl+Y, Space 팬은 InputController). 단축키 우선순위(스페이스→편집 포커스→busy→도구 keyDown→resolve)는 3.1 에서 구현"
+  headless_integration_test:       # tests/ 아래 egui 없이
+    - "가짜 RawPointer 열을 InputController→ToolManager→Session→drain→CompCache→draw_display 에 흘려 Framebuffer 에 점이 찍히는지, undo 후 사라지는지, zoom 8 배율에서 픽셀 블록이 8×8 인지"
+    - "도구 전환 중 진행 스트로크 취소, 활성 레이어 변경 시 ShapeTool 보류 확정, 잠긴 레이어 경고 이벤트 → status 큐"
+    - "큐 drain 순서/상한(1024)"
+  accept: ["헤드리스 통합 테스트 + 게이트", "docs/native_smoke.md(W10) Phase 2 항목 수동 통과", "app 크레이트 egui import 는 shell/canvas_texture/canvas_view/input_adapter 에만"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+- id: W10
+  title: 스모크 문서 + Phase 2 게이트
+  wave: 4
+  needs: [W8]
+  write_scope: [docs/native_smoke.md]
+  content:
+    - "native_plan §6 Phase 2 게이트를 재현 가능한 단계로: 새 문서 → 펜 → 지우개 → 사각·타원·선·둥근 사각·다각형 → 채우기 → 스포이트(좌/우/Shift/Alt) → 손 → 줌/팬/리셋 → 그리드 4모드 → Undo/Redo → PNG 저장 → JSON 저장/열기 → (arc/chord/그라디언트/텍스트)"
+    - "D4: 'PNG 열기'는 JS 에 없으므로 제외, 대신 PNG 내보내기 + 자동 라운드트립 테스트(decode_png)"
+    - "각 항목: 기대 결과, 실패 시 의심 모듈(W1~W13 매핑), 관련 JS 파일"
+    - "실제 실행 결과(통과/실패/미실행)를 정직하게 기록. GUI 를 띄우지 못하면 '미실행'으로 적고 사람에게 넘김"
+  gate_numbers: "cargo test --workspace (전→후), 헤드리스 통합 테스트 수, 신규 골든/오라클(display_cases, text_mask_cases) 일치율"
+  after: "docs/native_plan.md Phase 2 절 상태 표기 + docs/progress/README 보드 [x] 2.1 2.2 2.4~2.7 (오케스트레이터)"
+
+risks:
+  - {id: P2-R1, what: "W1 설계(재차용 PixelWriter)가 pen=64 성능 회귀", mitigation: "last_key 보존, bench_stroke 전후 비교 ≤5%"}
+  - {id: P2-R2, what: "캔버스 difference/알파 합성과 Rust 프레임버퍼 ±1 차이", mitigation: "계약=식 고정(W2 compositing_formulas), 브라우저 비트 일치를 게이트로 삼지 않음"}
+  - {id: P2-R3, what: "egui coalesced 포인터 없음", mitigation: "프레임 내 PointerMoved 열(W8). 펜은 Bresenham 연결"}
+  - {id: P2-R4, what: "arc/chord 마스크가 캔버스 전체 크기(2.2M)라 포인터 이동마다 오버레이 재계산이 무거움", mitigation: "W11 캐시 + mask_to_blit bbox 크롭. 측정 후 Phase 5 로"}
+  - {id: P2-R5, what: "이벤트 큐 drain 이 지연돼 도구가 낡은 상태에서 이벤트를 받음", mitigation: "입력 직후·프레임 시작 이중 drain, ShapeTool 은 pending.layer_id/color 캡처본 사용"}
+  - {id: P2-R6, what: "한글 폰트/아이콘 글리프 커버리지", mitigation: "W7 시스템 폰트 폴백(D3). Phase 3 에서 이모지·기호는 직접 그리기"}
+  - {id: P2-R7, what: "병렬 에이전트가 같은 워킹트리에서 서로 컴파일을 깨뜨림", mitigation: "index R1/R5: 자기 크레이트·모듈만 테스트, 전체 게이트는 웨이브 종료 시"}
+  - {id: P2-R8, what: "W0 공유 타입이 이후 작업 중 부족해 재오픈이 필요", mitigation: "부족하면 수정하지 말고 blocked 로 보고 → 오케스트레이터가 W0 를 재실행"}

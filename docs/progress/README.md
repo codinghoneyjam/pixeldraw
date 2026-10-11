@@ -68,7 +68,7 @@ Phase 1  엔진             [x] 1.1 constants/errors/events/pixel
                           [x] 1.10 composite + kernels + snap
                           [x] 1.11 io/png + io/base64
                           [x] 1.12 model
-                          [ ] 1.13 io/serialize       ← 다음
+                          [x] 1.13 io/serialize + vector/recipe/validate (39/39 native parity)
                           [x] 1.13a chunkstore 파사드 분할
                         [x] 1.13b 파사드 분할 10모듈 (io/png·model 6·raster 3)
 Phase 2  네이티브 캔버스   [x] 2.3 view 선행 (파사드 7분할)
@@ -85,13 +85,13 @@ Phase 6  절삭·패키징      [ ] 6.1 ~ 6.7
 
 | 지표 | 현재 (2026-10-11 실측) |
 |---|---|
-| `cargo test` | **305 / 305** (lib 270 + e2e 5 + fixtures 4 + model_basic 14 + model_history 11 + platform 1) |
+| `cargo test --workspace` | **321 / 321** (lib 284 + integration 37, native recipe parity 39/39 포함) |
 | `cargo clippy -D warnings` | 그린 |
 | `cargo fmt --check` | 그린 |
 | JS 오라클(`npm test`) | 410 / 410 |
 | 래스터 골든 201건 중 커버 | **201 / 201** |
 | `png_cases` 5/5 | **5 / 5** |
-| 남은 Phase 1 게이트 | recipe 39/39(1.13) · schema(1.13) — view 수학은 2.3 선행 완료 |
+| Phase 1 게이트 | **완료** — Rust native recipe 39/39, schema consistency 포함 JS 410/410; view 수학 2.3 선행 완료 |
 | JS 베이스라인 | 측정 완료(14항목, `docs/native_plan.md` §6 Phase 0.1) |
 
 ### 커밋 이력

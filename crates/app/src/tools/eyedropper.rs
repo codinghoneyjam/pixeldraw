@@ -1,0 +1,1 @@
+//! Eyedropper tool placeholder.

@@ -15,4 +15,4 @@ mod writer;
 mod tests;
 
 pub use store::{Changeset, Chunk, ChunkDiff, ChunkStore, is_all_zero};
-pub use writer::PixelWriter;
+pub use writer::{PixelWriter, StrokeState};

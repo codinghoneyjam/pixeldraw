@@ -104,7 +104,7 @@ pub fn decode_png(bytes: &[u8]) -> EngineResult<PngImage> {
                 3 => x + ((a + b) >> 1),
                 4 => {
                     let p = a + b - c;
-                    let (pa, pb, pc) = ((b - c).abs(), (a - c).abs(), p.abs());
+                    let (pa, pb, pc) = ((b - c).abs(), (a - c).abs(), (p - c).abs());
                     x + if pa <= pb && pa <= pc {
                         a
                     } else if pb <= pc {

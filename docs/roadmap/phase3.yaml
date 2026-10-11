@@ -1,0 +1,339 @@
+# Phase 3 — UI 전면 이식 (docs/native_plan.md §6 Phase 3: 3.1~3.10)
+# 선행: index.yaml, phase2.yaml(W8 머지). 원천: JS src/ui/**, src/features/{color,layers,pen,shape,viewport,arc,gradient,text}/panel_*.js.
+# 이 파일의 JS 사실은 전부 서브에이전트가 해당 JS 파일을 직접 읽어 추출한 것(verified). 문서(ui.md 등)와 코드가 다르면 코드가 정답(index.known_doc_code_discrepancies).
+
+phase: 3
+goal: "JS UI 의 모든 패널·메뉴·다이얼로그·설정/자동저장을 egui 로 이식. 기존 저장 파일을 열었을 때 레이어/색상/히스토리 동일"
+gate: {doc: docs/native_smoke.md (UI 항목 추가), parity: "JS 가 저장한 샘플(.draw.json)을 앱 경로로 로드 → 레이어 수/이름/불투명도/블렌드/색 슬롯 동일"}
+
+# ──────────────────────────────────────────────────────────────────────────────
+architecture:
+  layout: |
+    crates/app/src/ui/
+      mod.rs(파사드) state.rs(UiState: 패널별 하위 상태 한 줄씩) theme.rs strings.rs toast.rs tooltip.rs collapsible.rs panel_sizes.rs icons/ (path 파서+painter)
+      menubar/ toolbar/ optionbar/ color/ layers/ status/ dialogs/ actions/ settings_store.rs autosave/
+  ownership_rule: |
+    패널 에이전트는 `fn show(ui: &mut egui::Ui, app: &mut AppState)` 형태이며 AppState 를 통해서만 세션을 건드린다.
+    AppState 필드 추가 금지(공유). 대신 3.8 이 `UiState` 를 선행 정의하면서 패널마다 `pub <panel>: <panel>::State` 한 줄과 빈 `State` struct 를 미리 만들어 둔다 → 각 패널 에이전트는 자기 State 만 채움.
+    AppState 에 새 공유 상태가 필요하면 수정하지 말고 log_draft.requests 로 반환(오케스트레이터가 W8 소유 파일에 반영).
+  actions: "action id(문자열 25개, JS action_map.js)는 enum Action 으로. 메뉴·단축키·툴바가 같은 Action 큐로 합류. 큐 소비는 3.1a. 오류 정책(JS runAction): DrawToolError → session.notify('error', e.message, e.code), 그 외 → STRINGS.toast.unexpected + log::error"
+  busy_flag: "다이얼로그 열림 또는 진행 바 표시 중 = busy. busy 면 단축키 무시, 상단 Undo/Redo 버튼 비활성(history_buttons.js: disabled = busy || !canUndo)"
+  design_tokens:                   # style_base.css (verified by agent)
+    colors: {bg: "#1e1f22", panel: "#2b2d31", panel2: "#232428", border: "#3a3d43", text: "#e6e6e6", text_dim: "#9aa0a6", accent: "#4cc2ff", accent_strong: "#1e88c7", danger: "#ff5c5c", warn: "#ffb020", canvas_bg: "#3c3f45", box_line: "#454a52", box_line_hi: "#565c66", sel_red: "#ff3b30", sel_black: "#000000"}
+    sizes: {font_ui: 13, font_mono: 12, radius_button: 4, radius_container: 8, radius_swatch: "10%", gap: 8, button_min: "32x32", input_min_h: 28, optionbar_number_w: 64, toolbar_w: 44, panel_padding: 8, section_padding: 10, left_section_gap: 12, resize_handle: 8}
+    layout: "행: 메뉴바(auto) / 옵션바(auto, min-h 40) / 본문(1fr) / 상태바(auto). 열: 툴바 44 | 좌 패널(기본 clamp(180px,20vw,260px)) | 핸들 8 | 캔버스 | 핸들 8 | 우 패널(기본 clamp(200px,22vw,320px))"
+    container_chrome: "border #454a52 1px, radius 8, fill #232428, 상단 inset 하이라이트 rgba(255,255,255,.055), 하단 외곽 rgba(0,0,0,.38). 패널 헤더: 11px bold 자간 0.06em #9aa0a6, ▼ 삼각 + 우측 헤어라인 #454a52"
+    motion_optional: "버튼 120ms 페이드, 눌림 scale .96, 툴바 선택 300ms 펄스, 토스트 180ms 슬라이드 — 전부 선택 사항(prefers-reduced-motion 이면 제거)"
+  font_glyph_risks:
+    - "한글: W7 폰트 로더 사용(D3)"
+    - "이모지 👁🚫🔒🔓 (panel_layers.js:170,195)와 기호 ↶ ↷ ⧉ ⬇ ↑ ↓ − ◐ ● 는 egui 기본 폰트 커버리지 불확실(?). 안전책: icons.js 의 eye/eyeOff/lock/unlock SVG 경로를 직접 그린다(JS 는 안 쓰지만 icons.js:19-22 에 존재)"
+    - "icons.js 경로가 SVG 호(a) 명령을 씀(arc/chord/hand/eyeOff/fill 등) → 직접 path 파서(M L H V C S Q T A Z) 또는 resvg/usvg(egui_extras svg) 필요. 선택은 3.2a 가 하고 근거를 로그에"
+
+waves:
+  - {wave: A, mode: parallel, needs: [phase2.W8], tasks: ["3.8 shared", "3.9 settings_store", "3.10a autosave_core", "3.4a color_math", "3.6a status_format", "3.1b shortcuts", "3.2a icons"]}
+  - {wave: B, mode: parallel, needs: ["3.8"], tasks: ["3.1a menubar+actions", "3.1c file_actions", "3.2b toolbar", "3.3a~3.3f optionbar", "3.4b~3.4f color/brush", "3.5a~3.5c layers", "3.6b statusbar", "3.7a~3.7e dialogs"]}
+  - {wave: C, mode: serial,   needs: [wave B, "3.9", "3.10a"], tasks: ["3.10b autosave 연결 + 복원 다이얼로그", "phase 3 게이트"]}
+dependency_graph: |
+  W8 ─> 3.8 ──┬─> 3.1a ─┐          3.9 ─────┬──────────────> 3.10b ─> gate
+              ├─> 3.1c ─┤          3.10a ───┘                 ▲
+              ├─> 3.2b ─┤  (3.2a icons ─> 3.2b, 3.5)         │
+              ├─> 3.3* ─┤  3.4a ─> 3.4c,3.4d,3.4e            │
+              ├─> 3.4* ─┼──────────────────────────────> gate
+              ├─> 3.5* ─┤  3.1b ─> 3.1a(키 처리 호출)
+              ├─> 3.6b ─┤  3.6a ─> 3.6b
+              └─> 3.7* ─┘  3.7 ─> 3.10b(복원 다이얼로그)
+
+# ══════════════════════════════════════════════════════════════════════════════
+tasks:
+
+- id: "3.8"
+  title: shared — strings · toast · tooltip · collapsible · panel_sizes · theme · UiState 선행 정의
+  wave: A
+  serial_before_panels: true
+  write_scope: ["crates/app/src/ui/{mod,state,theme,strings,toast,tooltip,collapsible,panel_sizes}.rs", crates/app/src/lib.rs(ui 선언)]
+  read_first: [src/ui/shared/strings.js, toast.js, tooltip.js, collapsible_sections.js, panel_resize.js, style_base.css(토큰), "docs/roadmap/phase3.yaml architecture"]
+  deliverables:
+    strings: |
+      pub mod strings: STRINGS 트리를 const 모듈로. JS 키 이름 유지. 카탈로그 외에 dialog_core/dialog_new_doc/panel_layers/color 의 하드코딩 문자열도 이 한 곳으로 수집(JS 는 흩어져 있음 — 각 패널 에이전트가 자기 문자열을 추가할 수 있게 하되 같은 파일을 동시에 편집하지 않도록 `strings/` 디렉터리 + 패널별 파일(strings/menus.rs, dialogs.rs, layers.rs, color.rs …)로 분리하고 mod.rs 가 pub use).
+      원문(verified): menus 파일/편집/보기/레이어 · blends normal=보통 multiply=곱하기 screen=스크린 overlay=오버레이 darken=어둡게 lighten=밝게
+      hints penEraser='Shift+클릭 = 직선, Alt+클릭 = 스포이트(펜)' · fill='클릭한 영역을 주색으로 채웁니다 (4방향, 허용오차 0)' · eyedropper='클릭 = 주색, Shift+클릭 = 보조색, Alt = 활성 레이어 기준' · hand='드래그로 화면 이동, 휠로 확대/축소' · shape='드래그로 그린 뒤 Enter 확정, Esc 취소'(미사용) · polygon='클릭으로 정점 추가, 첫 정점 클릭·Enter 확정, Esc 한 점 되돌리기'(미사용)
+      tools pen=펜 eraser=지우개 fill=페인트통 eyedropper=스포이트 line=직선 rect=사각형 rrect=둥근 사각형 ellipse=타원 polygon=다각형 hand=손 (10종뿐 — arc/chord/radial_gradient/text 는 없어 상태바에 영문 id 가 나옴: D10 패리티)
+      color panel=색상 primary=주색 secondary=보조색 swap='주/보조 교체 (X)' reset='기본색 (D)' hex=HEX palette=팔레트 recent='최근 색' · layers opacity=불투명도 show=표시 hide=숨기기 lock=잠금 unlock='잠금 해제' rename='이름 바꾸기 (더블클릭)' · status.dirty='●'
+      STRINGS.actions 라벨(예 '새로 만들기')과 메뉴 항목 실제 텍스트('새로 만들기 (Ctrl+N)')가 다름 → 메뉴 텍스트는 index.html 기준(3.1a 가 읽는다)
+      msg(key, fallback): 최상위 키 없으면 fallback
+    toast: |
+      Toast{text, level: Info|Warn|Error, expires}. 수명: Error 8000ms, 그 외 4000ms (Warn 도 4000 — 상태바 warn 8000 과 다름 주의). 우하단 스택(right 16, bottom 48), 열 방향, gap 8, 새 항목이 아래에 append, 최대 개수/중복 제거 없음.
+      스타일: fill #232428 + border #454a52 radius 8, warn border #ffb020, error border #ff5c5c, 등장 180ms translateY(8→0)+fade(선택).
+      소비: AppState.toasts(Vec). 생산자 = 파일 액션(성공/경고), STATUS_MESSAGE 중 warn/error 만(ui/app.js:164-167) — info 는 상태바에만.
+    tooltip: "옵션바 '?' 트리거용. TIP_AUTO_HIDE_MS=2500, GAP 6, MARGIN 8, MAX_TEXT 400(slice). 호버/포커스=임시, 클릭=고정(다시 클릭하면 닫힘), Esc/바깥 클릭/타이머에 닫힘, 동시에 1개. 단순화(on_hover_text)로 충분하면 그렇게 하되 pin/2500ms 패리티가 필요하면 상태 보관. 위치 규칙은 JS(트리거 아래, 우측 넘침 시 vw-w-8, 아래 넘침 시 위쪽) — egui 가 자동 처리하는 부분은 생략 가능"
+    collapsible: "섹션 id: dt-color-panel, dt-palette-panel, dt-recent-panel, dt-brush-panel, dt-layer-panel. 상태 {id: bool(접힘)} 영속(3.9). 기본 전부 펼침; 복원은 stored[id]===true 일 때만 접힘. 헤더 라벨: 색상 팔레트 '최근 색' 브러시 레이어. onExpand(→ refreshPanelCanvases)는 egui 에서 불필요"
+    panel_sizes: |
+      순수 함수 + 테스트(panel_resize.js 수식 그대로):
+      MAX_PANEL_WIDTH=440, GUTTER_WIDTH=16. min: 기본 left 180 / right 200; window≤720 → 130; ≤360 → 96. canvasMinWidth: 기본 220, ≤720 → 48, ≤360 → 40.
+      max = max(min, min(440, appWidth − toolbarWidth − minWidth(otherSide) − canvasMin − 16)).
+      clampPanelWidth(v,min,max) = round(min(max, max(min, Number(v)||min))).
+      한쪽을 키우면 반대쪽을 (totalCapacity − width) 로 줄이되 min 아래로는 안 줄임(setWidth L55-80). 1px 이상 변하면 반대쪽도 explicit 로 승격·저장.
+      저장 키 dt.panelWidths.v1 = {left?:int, right?:int} — 사용자가 명시적으로 조절한 쪽만(explicit 집합), px 반올림.
+      키보드: ←/→ 10px(left 는 → 가 증가, right 는 ← 가 증가), Home=min, End=max; 키 입력 즉시 persist. 드래그 부호: left 는 currentX−startX, right 는 startX−currentX.
+      기본 폭(미저장): left clamp(180px,20vw,260px), right clamp(200px,22vw,320px). aria 문구: '왼쪽 패널 너비 조절','오른쪽 패널 너비 조절','드래그 또는 방향키로 너비 조절'. (index.html aria-valuemax 420 vs 코드 MAX 440 → 코드 기준)
+      egui SidePanel::width_range 와 같은 결과를 내려면 매 프레임 계산(반대쪽/툴바/캔버스 최소폭 연동).
+    ui_state: "UiState{ menubar: menubar::State, toolbar: .., optionbar: .., color: .., brush: .., layers: .., status: .., dialogs: .., collapsed: HashMap<String,bool>, panel_widths: PanelWidths, recent_colors: Vec<String> } — 패널 State 는 각 모듈의 빈 `#[derive(Default)] pub struct State;` 로 선행 생성(모듈 파일도 빈 스텁으로 선행 생성하여 이후 에이전트가 같은 파일을 새로 만들지 않음)"
+  tests: ["panel_sizes 수식 표(JS 테스트 tests/panel_resize 있으면 포팅)", "toast 수명/스택", "strings 키 존재 핀"]
+
+- id: "3.9"
+  title: settings_store — 설정·최근색·패널 폭·접힘 영속
+  wave: A
+  needs: [phase2.W9]
+  write_scope: [crates/app/src/ui/settings_store.rs, "crates/app/src/ui/settings_store/**"]
+  js_facts:
+    keys: {settings: "dt.settings.v1", recent: "dt.recentColors", panels: "dt.panelWidths.v1"}
+    persist_keys_order: [primaryColor, secondaryColor, penSize, gridMode, snapUnit, shapeFill, shapeRadius, shapeLockAspect, activeTool]   # activeTool 이 마지막으로 복원
+    restore: "saved[k]!==undefined 인 키만 session.setSetting, 키별 try/catch 로 손상 값은 무시하고 다음 키 계속. 값 검증은 setSetting(validate_setting) 담당"
+    persist: "SETTINGS_CHANGED 마다 250ms 후행 디바운스(타이머 리셋)로 9키 전체 저장"
+    recent: "loadRecentColors: 배열이면 string 만 필터 후 slice(0,8). 정규화/검증 안 함(표시 시 normHex 실패 → 빈 칸). RECENT_MAX=8(ui.md 의 32 는 구버전). 저장 시 normHex 값만"
+    storeJson_loadJson: "모든 오류 무시. JSON 손상 → None"
+    collapsed_panels_bug: "JS 는 attachSettingsPersist 가 dt.settings.v1 을 9키만으로 통째로 덮어써 collapsedPanels 를 지움(collapsible_sections.js:30-35 가 같은 키에 병합 저장 → 다음 설정 변경 때 소실). D9: 수정 — 병합 저장"
+    schema_example: '{"primaryColor":"#000000","secondaryColor":"#ffffff","penSize":1,"gridMode":"off","snapUnit":false,"shapeFill":"outline","shapeRadius":8,"shapeLockAspect":false,"activeTool":"pen","collapsedPanels":{"dt-color-panel":true}}'
+  design:
+    files: "platform::settings_file() 하나의 JSON(키 이름은 JS localStorage 키를 필드로: settings 객체 + recentColors + panelWidths). 파일 분리 여부는 자유이나 JS 키 스키마 보존"
+    api: |
+      pub struct SettingsStore { path: PathBuf, pending: Option<Instant>, data: StoredSettings }
+      impl SettingsStore { pub fn load(path) -> Self; pub fn restore_into(&self, session: &mut Session);   // PERSIST_KEYS 순서, 키별 실패 무시
+                           pub fn on_event(&mut self, ev: &ModelEvent, now: Instant);                       // Settings 이벤트 → dirty + 디바운스 시작
+                           pub fn tick(&mut self, now: Instant, session: &Session) -> io::Result<()>;       // 250ms 경과 시 저장(병합: collapsedPanels/recent/panelWidths 보존)
+                           pub fn set_recent(&mut self, v: Vec<String>); pub fn set_collapsed(..); pub fn set_panel_widths(..) }
+    time: "Instant 주입(R12). 별도 스레드 금지(Session 이 !Send 일 수 있음) — 프레임 루프의 tick 에서 저장"
+  tests: ["복원: 손상 값 키만 건너뜀·순서(activeTool 마지막)", "디바운스: 250ms 이내 연속 변경 → 저장 1회(타이머 리셋)", "collapsedPanels 가 설정 저장에서 보존됨(D9 수정)", "recent 필터(비문자열 제거, 8개 제한)", "손상 JSON → 기본값", "원자적 쓰기(platform)"]
+
+- id: "3.10a"
+  title: autosave_core — 레코드 스키마·검증·스케줄러 (순수)
+  wave: A
+  needs: [phase2.W9]
+  write_scope: [crates/app/src/ui/autosave.rs, "crates/app/src/ui/autosave/**"]
+  js_facts_verified:
+    idb: {db: "draw_tool_v2 (version 1)", stores: ["meta(keyPath 'key'): 단일 레코드 key='current'", "chunks(keyPath 'key', index byLayer(layerId))"]}
+    meta_record: '{key:"current", schema:2, documentId, name, canvas:{widthPx,heightPx,background}, layers:[{id,name,visible,locked,opacity,blend}], activeLayerId, updatedAt:Date.now()}'
+    chunk_record: "{key:`${layerId}|${cy}|${cx}`, layerId, cx, cy, data: 4096 바이트 RGBA}"
+    meta_valid: "schema===2; documentId 비어있지 않은 string; canvas 크기 is_valid_canvas_size; layers 1..64; 각 layer: id/name string, visible/locked boolean, opacity 유한 0..1 (blend 는 미검증이나 Layer 생성자에서 거부 가능 ?)"
+    load: "meta 없으면 None. 검증 실패 → clear() 후 None. blend 없으면 'normal'. 청크: layer 존재, cx/cy 정수, byteLength==4096 인 것만 putChunk. activeLayerId 없으면 마지막(최상위) 레이어. Document 생성 예외 → clear() 후 None. name 폴백 'Untitled'"
+    schedule: "구독: PIXELS_CHANGED(all→레이어 전체 재기록, chunks→해당 청크), LAYERS_CHANGED(meta), DOCUMENT_REPLACED(meta+chunks clear 후 전 레이어 청크 put). 첫 이벤트부터 800ms 디바운스(타이머는 이미 있으면 리셋 안 함 — 'if(!_timer)') + 5000ms 강제 플러시 상한. flushNow 는 진행 중이면 같은 promise 재사용"
+    flush: "dirty 없으면 즉시 반환. meta 는 매 flush 마다 재생성(updatedAt 갱신). 한 트랜잭션: 사라진 레이어(knownLayers − current)의 청크 삭제, dirty 청크 put/삭제(레이어 안에서 사라진 청크는 delete)"
+    failure: "QuotaExceededError → notify('warn','자동저장 공간 부족','STORAGE_QUOTA'); 그 외 → notify('warn','자동저장 실패','INVALID_STATE'). dirty 유지 → 다음 스케줄에서 재시도"
+    triggers: "visibilitychange(모든 변화)와 pagehide 에서 즉시 flush → egui: 창 포커스 상실/종료 요청에서 flush"
+    not_saved: "undo 스택·설정은 저장하지 않음. 복원 시 dirty 로 표시(load_document(.., mark_saved=false))"
+  rust_design:
+    format: "단일 파일(platform::autosave_file()). 형식은 자유(예: 길이 접두 바이너리 또는 JSON+base64)이되 위 의미 보존. 원자적 쓰기(write_bytes_atomic). 청크 단위 증분 대신 '전체 재기록'도 허용(성능은 Phase 5 에서 평가) — 단 800ms/5000ms 스케줄과 실패 경고 2종 문구는 보존"
+    api: |
+      pub struct AutosaveRecord { meta: Meta, chunks: Vec<(String /*layer*/, u32, u32, Box<[u8; 4096]>)> }
+      pub fn build_record(doc: &Document) -> AutosaveRecord;                       // idb_record_builder.js
+      pub fn load_record(rec: &AutosaveRecord) -> Result<Document, AutosaveReject>;   // 검증+복원, 거부 이유는 로그
+      pub struct Scheduler { /* first_dirty: Option<Instant>, timer: Option<Instant> */ } // 800ms 디바운스(리셋 안 함) + 5000ms 상한. Instant 주입
+      pub enum Dirty { All(layer), Chunks(layer, Vec<(u32,u32)>), Meta, Replace }
+  tests: ["build→load 라운드트립(레이어 속성·블렌드·active·청크 픽셀)", "검증 거부 케이스 표(schema!=2, 빈 documentId, 잘못된 캔버스 크기, 레이어 0개/65개, opacity NaN/>1, 청크 byteLength!=4096)", "스케줄러: 첫 이벤트 후 800ms, 이벤트가 계속 와도 타이머 리셋 안 함, 5000ms 상한", "사라진 레이어 청크 정리", "마지막 레이어를 active 로 폴백"]
+
+- id: "3.4a"
+  title: color_math — HSV·hex·normHex 순수 모듈
+  wave: A
+  write_scope: [crates/app/src/ui/color/math.rs]
+  exact_js: |
+    상수: WHEEL_PX=132, RING_OUT=66, RING_IN=55.5, RING_MID=60.75, RING_CLEARANCE=3, SV_PX=floor((2*(55.5-3))/SQRT2)=74
+    angleToHue(dx,dy) = (atan2(dy,dx)*180/PI + 450) % 360   → 0°=위(12시), 시계방향 증가
+    hsvToRgb(h,s,v): hue=((h%360)+360)%360, c=v*s, x=c*(1-|((hue/60)%2)-1|), m=v-c, 6구간 표, 각 채널 Math.round((val+m)*255)
+    rgbToHsv(r,g,b): d=mx-mn; d>0 일 때 mx==r → 60*(((g-b)/d)%6), mx==g → 60*((b-r)/d+2), else 60*((r-g)/d+4); h<0 이면 +360; s=mx==0?0:d/mx; v=mx   (입력 0..255 → v 는 0..1 로 정규화되는지 원문 확인)
+    setHueSV(h,s,v): s>0.02 && v>0.02 && finite(h) 일 때만 state.h 갱신(무채색/검정에서 hue 유지); s,v 는 [0,1] 클램프. 초기 state {h:0,s:1,v:1}
+    normHex(v): parseHex 실패 또는 a===0 → None; a===255 → '#rrggbb'; 그 외 '#rrggbbaa'. parseHex 는 '#' 필수, 3/6/8자리 hex 만(공백 trim, 소문자화)
+    hsvToHex(opaque) + withSlotAlpha: 휠 pick 은 불투명 hex 를 만든 뒤 현재 슬롯 알파를 재부착(a!==255 면 hex+'aa' 2자리 소문자)
+    pointerToSv: border 제외 내용 박스 기준 s=clamp((x-left-border)/width), v=1-clamp((y-top-border)/height) — 모서리 도달 가능
+    Math.round 주의: JS Math.round(.5)=1, Math.round(-.5)=-0. blend::rnd(floor(v+0.5)) 재사용
+  tests: ["hsv↔rgb 라운드트립 표(경계 hue 0/60/120/…/360, s=0, v=0)", "무채색에서 hue 유지", "normHex 표(3/6/8자리, 대문자, 공백, '#' 없음, a=0, a=255, a=128)", "angleToHue 사분면", "SV 모서리"]
+  accept: "JS tests/color_*.test.mjs(rg -l 'hsvToRgb|normHex' tests)가 있으면 케이스를 그대로 포팅"
+
+- id: "3.6a"
+  title: status_format — 상태바 포맷 순수 함수
+  wave: A
+  write_scope: [crates/app/src/ui/status/format.rs]
+  exact_js: |
+    OUTSIDE_POS='- , -' (양 필드). pos null/NaN → 둘 다 이 문자열
+    formatGridCoords: px=floor(x), py=floor(y); cx=floor(px/32), tx=floor(px/64). px 필드 `${px}, ${py} px`; 셀 필드 `셀 ${cx}, ${cy} (32px) · 타일 ${tx}, ${ty} (64px)` (· = U+00B7)
+    줌 `${Math.round(zoom*100)}%`; 캔버스 `${w} × ${h} px (${w/64} × ${h/64} 타일)` — w/64 소수 가능(예 96→1.5), 반올림 없음. × = U+00D7
+    도구 `STRINGS.tools[id] ?? id`; dirty '●'(색 #ffb020) 아니면 빈 문자열
+    메시지 수명: INFO_MS=4000, WARN_MS=8000, error 는 만료 없음(다음 메시지가 덮어쓸 때까지). 만료 시 level 이 그대로일 때만 비움. 색 warn #ffb020, error #ff5c5c
+    7칸 순서: [메시지][커서 px][셀·타일][줌][캔버스][도구][dirty ●]. 스타일 mono 12px, gap 12, min-height 24, bg #232428, border-top #3a3d43
+  tests: ["formatGridCoords 표(음수·0·경계 31/32/63/64)", "JS 'tests/statusbar*.test.mjs' 포팅(rg -l 'formatPosition|formatGridCoords')", "f64 줌 반올림(0.25→25%, 3→300%)", "w/64 소수 표기(JS String(1.5)='1.5', 정수는 '8' — Rust Display 와 동일한지 확인)"]
+
+- id: "3.1b"
+  title: shortcuts — 단축키 해석 순수 모듈
+  wave: A
+  write_scope: [crates/app/src/ui/actions/shortcuts.rs, crates/app/src/ui/actions/action.rs]
+  read_first: [src/ui/toolbar/shortcuts.js, src/ui/actions/action_map.js]
+  exact_js: |
+    처리 순서(createShortcuts keydown): (1) key===' ' → false(스페이스는 핸드 패닝에 양보) (2) 편집 타깃이면 Esc 만 blur 로 소비, 나머지 무시 (3) busy 면 무시 (4) toolManager.keyDown({key,shift,ctrl,alt}) 가 true 반환하면 소비(Enter/Esc/방향키 등 도구 키) (5) resolveShortcut
+    normKey: 한 글자는 소문자화. alt 가 true 면 무조건 null. ctrl||meta → ctrl 로 취급. e.repeat 가드 없음(누르고 있으면 반복: x 스왑 깜박임, [ ] 반복 스텝)
+    Ctrl(또는 Cmd): N=file.new, Shift+N=layer.add, O=file.open, S=file.save, E=file.exportPng, Z=edit.undo, Shift+Z=edit.redo, Y=edit.redo, J=layer.duplicate, Shift+M=layer.mergeDown, ]=layer.up, [=layer.down, '=view.gridCycle, 그 외 Ctrl 조합은 null
+    단독(Shift 무관): + 또는 = → view.zoomIn, - → view.zoomOut, 0 → view.fit, 1 → view.actual
+    도구: B=pen E=eraser G=fill I=eyedropper L=line R=rect U=rrect O=ellipse P=polygon A=arc C=chord V=radial_gradient T=text H=hand
+    색: X=color.swap, D=color.reset
+    펜 크기: [ → −1, Shift+[({) → −5, ] → +1, Shift+](}) → +5 (clamp 1..64; brush.step 액션 우선, 폴백 clamp)
+    레이아웃 의존: '['/'{' 와 ']'/'}' 는 Shift 시 key 값이 바뀌는 US 가정 → egui 에서는 물리 키(OpenBracket/CloseBracket) + modifiers.shift 로 매핑. JS 에서 Ctrl+Shift+] / Ctrl+Shift+[ 는 key 가 '}'/'{' 라서 매칭 안 됨(null) — 패리티는 null 유지(물리 키 매핑 시 이 케이스를 일부러 null 로 남겨 둘 것)
+    undo: requestUndo 우선(보류 도형 있으면 폐기만), redo: 보류 중이면 무시. tool=setSetting('activeTool'), penSize=brush.step(delta)
+  action_ids_25: [file.new, file.open, file.save, file.exportLayer, file.importLayer, file.exportPng, file.importRecipe, file.exportVector, file.importVector, edit.undo, edit.redo, canvas.resize, view.zoomIn, view.zoomOut, view.fit, view.actual, view.gridCycle, layer.add, layer.duplicate, layer.remove, layer.mergeDown, layer.up, layer.down, brush.step, color.swap, color.reset]   # 26개로 보이면 JS action_map.js 가 정답
+  api: "pub enum Action{..}; pub struct KeyInput{key:String, physical: Option<PhysKey>, shift,ctrl,alt}; pub fn resolve_shortcut(k:&KeyInput, ctx:&ShortcutCtx)->Option<ActionCall>  // ActionCall = Action | SetTool(&'static str) | BrushStep(i32) — 순수 함수"
+  tests: ["표 전수(위 규칙 각 행) + Alt 무시 + Ctrl+Shift+] null + repeat 허용", "JS 'tests/shortcuts*.test.mjs' 포팅(rg -l resolveShortcut)"]
+
+- id: "3.2a"
+  title: icons — SVG 경로 → egui 페인터
+  wave: A
+  write_scope: ["crates/app/src/ui/icons.rs", "crates/app/src/ui/icons/**"]
+  js_facts: |
+    공통 SVG: viewBox 0 0 24 24, 24×24, fill none, stroke currentColor, stroke-width 2, round cap/join.
+    도구 14종: pen eraser fill eyedropper line rect rrect ellipse polygon arc chord radial_gradient text hand; 비도구 6종: eye eyeOff lock unlock swap plus (JS 는 실제로 안 쓰지만 레이어 패널에 쓸 것)
+    경로에 SVG 호(a) 명령 사용. FALLBACK_CHAR: pen 펜, eraser 지, fill 통, eyedropper 스, line 선, rect 사, rrect 둥, ellipse 타, polygon 다, arc 호, chord 현, radial_gradient 빛, text 문, hand 손; 없으면 '?'
+  tasks: ["icons.js 의 경로 문자열 20개를 const 로(JS 원문 그대로)", "path 파서(M m L l H h V v C c S s Q q T t A a Z z) → 폴리라인 평탄화(곡선 8~16분할, 호는 SVG 규격 endpoint→center 변환) → egui::Shape::line/path 로 stroke", "fn icon(ui, id, size, color) 및 비트맵 텍스처 캐시 대안 중 하나 선택 — 근거를 로그에"]
+  tests: ["파서 단위 테스트(상대/절대, 호 플래그 압축 표기 'a2 2 0 1 1-4 0' 등)", "아이콘 20개 전부 파싱 성공 + 경로 점이 24×24 안", "bbox 스냅샷(주요 아이콘 3~4개 손계산)"]
+
+# ───────────────────────── wave B ─────────────────────────
+- id: "3.1a"
+  title: menubar + 상단 Undo/Redo + 액션 소비
+  wave: B
+  needs: ["3.8", "3.1b"]
+  write_scope: ["crates/app/src/ui/menubar/**", "crates/app/src/ui/actions/{dispatch,edit,view,layer,brush,color}.rs"]
+  read_first: [index.html(메뉴 DOM 텍스트), src/ui/menubar/*.js, src/ui/actions/{action_map,edit_actions}.js, src/features/color/color_actions.js, src/features/viewport/view_actions.js, src/features/layers/layer_actions.js, src/features/pen/brush_actions.js]
+  menu_items_verified: |
+    파일: 새로 만들기 (Ctrl+N)=file.new | 열기 (Ctrl+O)=file.open | 저장 (Ctrl+S)=file.save | 레시피 가져오기=file.importRecipe | 벡터 내보내기=file.exportVector | 벡터 가져오기=file.importVector | 레이어 내보내기=file.exportLayer | 레이어 가져오기=file.importLayer | PNG 내보내기 (Ctrl+E)=file.exportPng
+    편집: 실행 취소 (Ctrl+Z)=edit.undo | 다시 실행 (Ctrl+Y)=edit.redo | 캔버스 크기=canvas.resize
+    보기: 확대 (+)=view.zoomIn | 축소 (-)=view.zoomOut | 화면에 맞춤 (0)=view.fit | 100% (1)=view.actual | 그리드 순환 (Ctrl+')=view.gridCycle
+    레이어: 추가 (Ctrl+Shift+N)=layer.add | 복제 (Ctrl+J)=layer.duplicate | 삭제=layer.remove | 아래로 병합 (Ctrl+Shift+M)=layer.mergeDown | 위로 (Ctrl+])=layer.up | 아래로 (Ctrl+[)=layer.down
+    상단 버튼: '실행 취소'(title '실행 취소 (Ctrl+Z)'), '다시 실행'(title '다시 실행 (Ctrl+Y)'), 초기 disabled, 접두 글리프 '↶ ' '↷ '(폰트 커버리지 불확실 → 글리프 대신 텍스트만 가능), 버튼 min-height 26, padding 0 10, 12px
+  traps:
+    - "native_plan 은 '파일/편집/레이어/보기/도움' 이라 썼지만 실제는 파일/편집/보기/레이어 4개, 도움 없음"
+    - "상단 Undo 버튼은 disabled = busy || !can_undo → 보류 도형만 있고 히스토리가 비면 버튼은 비활성이지만 Ctrl+Z/메뉴 항목은 보류 도형을 폐기함(JS 불일치 그대로). 편집 드롭다운의 Undo/Redo 항목은 항상 활성(동기화 안 함)"
+    - "requestUndo: 활성 도구 has_pending() 이면 discard_pending() 후 return — session.undo() 호출 안 함(edit_actions.js:9-18). requestRedo: 보류가 있으면 무시"
+    - "view.zoom*/fit/actual 은 runAction 미경유(오류 처리 없음), 나머지는 runAction 경유"
+    - "menubar.js: MENU_CLOSE_DELAY_MS=220 hover 열기/클릭 고정. egui ui.menu_button 은 클릭 기반 — hover-open 은 선택 사항(?)"
+    - "gridCycle: GRID_MODES[(idx+1)%4]. layerUp/Down 끝에서 엔진 OUT_OF_RANGE → 오류 토스트. brushStep: clamp(1,64,cur+delta)"
+    - "color.swap: 스냅샷 s 읽고 primary←s.secondary 후 secondary←s.primary; lock 없이 setSetting 하므로 최근색에 두 번 기록(기록 순서: 새 primary, 새 secondary). color.reset: primary '#000000', secondary '#ffffff'(값이 같으면 이벤트 없음)"
+  tests: ["Action 디스패치 → 세션 상태 변화(layer.up/down 끝 오류 토스트, brush.step clamp, gridCycle 순환, swap/reset)", "requestUndo/Redo 보류 가드", "busy 일 때 단축키 무시"]
+
+- id: "3.1c"
+  title: file_actions — 저장/열기/가져오기/내보내기 액션
+  wave: B
+  needs: ["3.8", "3.7(다이얼로그 API 계약만)", phase2.W9]
+  write_scope: ["crates/app/src/ui/actions/file/**", crates/app/src/file_ops.rs(W8 소유 → 확장만, 충돌 시 blocked)]
+  read_first: [src/ui/actions/file_actions.js, src/io/file_io.js, src/io/serialize.js, src/io/serialize_vector.js, src/io/serialize_recipe.js, crates/engine/src/io/{serialize,vector}.rs, crates/engine/src/recipe.rs]
+  js_facts_verified: |
+    파일명: `${doc.name||'untitled'}.draw.json`, 레이어 `${layer.name||'layer'}.drawlayer.json`(벡터 `.drawlayer.vector.json`), PNG `${name||'untitled'}.png`, 벡터 `.vector.json`. 본문 stringifyReadableJson(obj)+'\n'
+    doSave: 성공(ok) 시에만 history.markSaved() 후 HISTORY_CHANGED 수동 디스패치 + toast(saved). 취소면 아무 것도 안 함
+    dirty 가드(confirmDiscardChanges)는 doNew/doOpen/doImportRecipe/doImportVector 에만. doImportLayer 는 가드 없음
+    doOpen: format=='draw_tool.document' → jsonToDocument 는 {document,warnings}; warnings 마다 toast(w,'warn') 후 toast(opened). format=='draw_tool.layer' → session.notify('info', layerFileHint)(토스트 아님). 그 외 DrawToolError('SCHEMA','unknown file format')
+    doImportLayer: vector 포맷이면 layers.length===1 이어야 함(아니면 SCHEMA 'layer import needs exactly one vector layer'); dropped>0 이면 toast(`${droppedChunks}: ${dropped}`,'warn')
+    doImportRecipe 3번째 분기 조건: obj.canvas||geometry||surfaces||albedo_layers||mask_layers||layers
+    JS 버그(D9-b): doImportRecipe 의 draw_tool.document 분기(L144-147)는 jsonToDocument 결과({document,warnings})를 loadDocument 에 그대로 넘겨 INVALID_STATE — Rust 는 .0 을 꺼냄(동작 변경으로 보고)
+    doNew: newDocument({widthPx,heightPx,background,name,id}) — id 는 crypto.randomUUID 있을 때만(Rust: 엔진 next_doc_id() 사용)
+    진행 표시: '저장 중','열기','레이어 내보내기','레이어 가져오기','PNG 내보내기','레시피 가져오기','벡터 내보내기','벡터 가져오기'. PNG 는 prog.update(0.8) 후 저장, includeBackground:true
+    MAX_JSON_BYTES=64MiB, 에러 문구는 W9 참조
+    toast 문자열: STRINGS.toast.{saved, opened, exportedPng, exportedLayer, importedLayer, droppedChunks, layerFileHint, importedRecipe, exportedVector, importedVector, unexpected} — 3.8 strings 에서 JS 원문 복사
+  engine_apis: "io::serialize::{document_to_json(&Document)->EngineResult<Value>, layer_to_json(doc,layer_id), json_to_document(&Value)->EngineResult<(Document,Vec<String>)>, import_layer_json(&mut Document,&Value)->EngineResult<(Layer,usize /*dropped*/,Vec<String>)>}; io::vector::{document_to_vector_json, layer_to_vector_json, vector_json_to_document}; recipe 모듈(json→Document: 공개 진입점은 recipe.rs 를 읽고 확인); io::export::flatten_to_rgba + io::png::encode_png. stringify_readable(JS io/stringify_readable.js 27줄)은 Rust 에 있는지 확인(?) — 없으면 serde_json::to_string_pretty 가 JS 와 다를 수 있음: 원문 읽고 동치 구현을 platform 이나 app 에"
+  note_png_export_background: "engine io/export.rs:46-53 base_pixel 이 include_background 를 무시(항상 투명) → 배경색 있는 문서의 PNG 에 배경이 안 들어감(JS 와 불일치). 이 작업에서 발견되면 phase5.P-C 로 이관하거나 W8 후속 엔진 수정으로 보고"
+  tests: ["파일명 규칙 표 + sanitize", "저장 성공/취소 시 mark_saved 여부", "열기 분기 3종 + warnings 토스트 순서", "dirty 가드 적용 대상 4종만", "importRecipe 분기 조건", "진행 라벨"]
+
+- id: "3.2b"
+  title: toolbar — 도구 14종 세로 툴바
+  wave: B
+  needs: ["3.8", "3.2a"]
+  write_scope: ["crates/app/src/ui/toolbar/**"]
+  spec: |
+    SidePanel::left 고정 폭 44. 버튼 36×36 × 14, 구분선 2개(폭 28 높이 1 #3a3d43, 마진 4). 순서: pen, eraser, fill, eyedropper | line, rect, rrect, ellipse, polygon, arc, chord, radial_gradient, text | hand
+    타이틀: 펜 (B), 지우개 (E), 페인트통 (G), 스포이트 (I), 직선 (L), 사각형 (R), 둥근 사각형 (U), 타원 (O), 다각형 (P), 호 (A), 현 (C), 방사형 그라디언트 (V), 텍스트 (T), 손 (H)
+    상태: 활성 bg #1e88c7 / border #4cc2ff / 아이콘 흰색. 기본 bg #232428 / border #3a3d43. hover bg #2b2d31 + border #4cc2ff. 클릭 → set_setting('activeTool', id) (실패 시 notify error — runAction 경유)
+    in/out: settings.active_tool / set_setting. 툴바 폭 44 는 panel_sizes 계산 입력
+  tests: ["클릭 → active_tool 변경", "불가능한 id 방어", "툴 순서/타이틀 표"]
+
+- id: "3.3"
+  title: optionbar — 셸 + 도구별 섹션 6종 (6개 하위 작업, 파일 disjoint)
+  wave: B
+  needs: ["3.8", "phase2.W5", "phase2.W6", "phase2.W11", "phase2.W13"]
+  common: |
+    TopBottomPanel::top, ScrollArea::horizontal 한 줄, min-height 40, gap 16(바)/8(섹션 내부). 섹션 Frame(border #454a52 radius 8 fill #232428 padding 3/10). 숫자 입력은 TextEdit + lost_focus(blur/Enter)에서만 커밋(JS 'change' 의미). 포커스 중인 입력은 외부 변경으로 덮어쓰지 않음. 모든 섹션의 sync 는 보이든 말든 매번 실행(disabled 상태는 세션 상태의 순수함수).
+    가시성(activeTool 포함 여부): view=14도구 전부; (굵기)=pen,eraser; shape=line rect rrect ellipse polygon; text=text; arc=arc,chord; gradient=radial_gradient; 도움말만=fill eyedropper hand(+ pen/eraser 굵기에도 도움말).
+    도움말 '?' 4종 툴팁 문구: strings.hints 참조(penEraser, fill, eyedropper, hand).
+    TOOL_STATE 라우팅: tool===activeTool 일 때만, fill 훅 보유 섹션(shape 뿐)에 pending 전달 후 sync. ※ Rust emit_tool_state 의 pending 은 String — UI 는 이 문자열을 파싱하지 말고 도구 구조체를 직접 읽어 렌더(ToolManager::get(id) 의 도구별 pub 접근자). 따라서 W6 ShapeTool 은 getPending/setPending/getVertices/isPlacing/commit/discard_pending 에 대응하는 pub 메서드를 가져야 함 → W6 명세에 없었으므로 3.3d 시작 시 W6 결과를 확인하고 부족하면 blocked 로 보고
+    펜 크기 라벨 `${penSize}px`(초기 1px).
+  subtasks:
+    - {id: "3.3a", file: "optionbar/shell.rs", what: "가시성 + TOOL_STATE 라우팅 + 펜 크기 라벨 + '?' 툴팁"}
+    - {id: "3.3b", file: "optionbar/view.rs", what: "그리드 ComboBox 끔/32px/64px/픽셀(GRID_MODES 순서 off,unit,tile,pixel), 확대 ComboBox(ZOOM_LEVELS 12단계 '25%'~'3200%'), 맞춤, 100%. 현재 줌 표시는 가장 가까운 레벨(abs 차 최소, 동률이면 작은 쪽). 줌 선택 → view_store.zoom_to(level)(뷰포트 중심 기준). 셀렉트 포커스 중 gridMode 외부 변경은 반영 안 함"}
+    - {id: "3.3c", file: "optionbar/shape.rs", what: "가장 큼. 채움 토글 2분할 스위치(shapeFill 'fill'↔'outline', 라벨 '테두리'/'채움', disabled=!shape 도구||line), 반경 입력(disabled=activeTool!=='rrect', 정수&&>=0 일 때만 set_setting('shapeRadius'), 기본 8, 상한 2048 은 엔진 검증→OUT_OF_RANGE→notify), '비율 고정'(shapeLockAspect) 체크, '32px 스냅'(snapUnit) 체크, X/Y/W/H(bbox; line 은 X,Y=x0,y0 이고 W,H 칸에 x1,y1 이 표시됨 — 라벨은 W/H 그대로), 네 값이 모두 정수여야 setPending(하나라도 비정수면 조용히 무시), polygon 정점 목록(번호+X/Y 정수 입력+'−' 삭제(3개 이하면 비활성), 편집 가능 조건 = pending 있음 && !isPlacing, 최대 높이 120/폭 360 스크롤, 비정수 입력 → 현재값 복귀), '정점 추가'(마지막·첫 정점 중점 Math.round 를 끝에 추가), '확정'(tool.commit)/'취소'(tool.discard_pending) 는 보류가 있어야 활성. 보류 없거나 polygon 이면 bbox 4입력 disabled"}
+    - {id: "3.3d", file: "optionbar/arc.rs", what: "시작 각도(기본 0)/끝 각도(기본 180)/선폭(1..64 정수일 때만, 비정수 무시, 기본 2)/현 토글(chord 에서만 보임, '채움'|'테두리'). 값은 설정이 아니라 도구 필드(W11) — 영속 안 됨. start/end 는 finite 면 무제한. 변경 후 request_render"}
+    - {id: "3.3e", file: "optionbar/gradient.rs", what: "안쪽 반경(정수일 때만 clamp 0..2048, 기본 0), 바깥쪽 ComboBox('투명'=transparent, '보조색 유지'=solid)"}
+    - {id: "3.3f", file: "optionbar/text.rs", what: "텍스트 입력(placeholder '입력', 입력마다 즉시 반영), 글꼴 ComboBox('기본 42px'=default-42, '모노그램 240px'=monogram-240), 외곽선(0..16, 정수면 clamp, 비정수면 0 으로 리셋). 마운트 즉시 도구에 기본값 주입"}
+  write_scope: ["crates/app/src/ui/optionbar/**"]
+  tests: ["각 섹션의 입력 검증 규칙(비정수 무시/0 리셋/클램프) 표", "가시성 표(14도구 × 6섹션)", "그리드/줌 ComboBox 최근접 레벨"]
+
+- id: "3.4"
+  title: color panel — 휠·필드·팔레트·최근색·슬롯·조립·브러시 (3.4b~3.4f)
+  wave: B
+  needs: ["3.8", "3.4a"]
+  write_scope: ["crates/app/src/ui/color/**(math.rs 제외)", "crates/app/src/ui/brush/**"]
+  subtasks:
+    - {id: "3.4b", file: "color/wheel.rs", what: "색상환 132×132 RGBA 텍스처 1회 생성(Nearest), SV 74×74 는 hue 바뀔 때만 재생성(캐시 키=hue f64 정확 비교). 링 래스터: 픽셀 중심 dx=x-66+0.5, dy=y-66+0.5, r=hypot; r>66 또는 r<55.5 면 투명, 아니면 hsvToRgb(angleToHue,1,1) 불투명(안티앨리어싱 없음). SV: span=max(1,74-1)=73; 픽셀(x,y)=hsvToRgb(hue, x/span, 1-y/span). hue 마커: 각도 a=(h-90)°, 중심 66,66 반경 60.75, 원 반지름 7, 채움 hsl(h,100%,50%), 외곽 흰색 2px. SV 마커: (s*span,(1-v)*span) 반지름 5 흰색 2px 테두리(채움 없음). hit-test: onRing = hypot(dx,dy) >= RING_IN-6 = 49.5 (상한 없음 — 캡처 중 바깥도 유효), 링 안쪽 구멍(<49.5)은 변경 없음, 포인터 오프셋은 rect 크기→132 스케일 보정. SV 는 사각형 안쪽 비율 clamp(0..1). 드래그: 시작에서 pick, 드래그 중 pick(record 없음), 종료 시 commit 1회 → pushRecent(canonical). 휠 onChange 는 applyColor(record:false, preserveWheel:true)(드래그 중 hue 튀지 않게). SV 사각형은 링 위에 겹침(중앙 50%,50%, border 1px #3a3d43, 각진 모서리). contextmenu 차단"}
+    - {id: "3.4c", file: "color/fields.rs", what: "R/G/B/A/HEX 5행 세로(라벨 34px; R #ff5c5c, G #3ddc5c, B #5c9bff, A/HEX 라벨 #9aa0a6). HEX maxlength 9, '#' 없으면 무효 → 정본 복귀. RGB 정수 0..255 만(빈/소수/범위 밖 무효, 알파 유지). 알파 정수 1..255(0 불가, 255 면 '#rrggbb'). 커밋 시점 = blur 또는 Enter. 무효 입력도 read() ?? canonical 로 복귀하고 그래도 apply(record:true) 호출 → 무효 편집도 현재 색을 최근색에 기록(트랩, 패리티). 포커스된 입력은 force 가 아니면 덮어쓰지 않음"}
+    - {id: "3.4d", file: "color/palette.rs + recent.rs + slots.rs", what: "팔레트 40색(8열×5행): 행1 #ffffff #ffcdd2 #ffe0b2 #fff9c4 #c8e6c9 #b2ebf2 #bbdefb #e1bee7 / 행2 #dedede #ef5350 #ffb74d #fff176 #81c784 #4dd0e1 #64b5f6 #ba68c8 / 행3 #9e9e9e #e53935 #fb8c00 #fdd835 #43a047 #00acc1 #1e88e5 #8e24aa / 행4 #616161 #b71c1c #e65100 #f9a825 #1b5e20 #006064 #0d47a1 #4a148c / 행5 #000000 #5f0a15 #6d2f00 #6e5b00 #103516 #0f3c45 #08214d #230a32. 좌클릭=pickSwatch(활성 슬롯, Shift=반대 슬롯, record:true), 우클릭=secondary 슬롯 record:true. active 표식=현재 primary/secondary 와 normHex 가 같은 모든 셀(코너 타깃 마커 sel_red 2px+검정 림 2px, 팔길이 11, 바깥 3). 최근색: 고정 8칸 1행, 빈 칸 체커 #ffffff/#dcdcdc 8px opacity .5 라벨 '빈 칸', pushRecent: normHex 실패 무시, [v,...기존.filter(c!==v)].slice(0,8)(중복 비교는 저장 문자열 그대로), 클릭=pickSwatch(record:true)(우클릭 핸들러 없음), 알파 있는 색은 '#rrggbbaa'. 슬롯: FG/BG 카드 34×34 border 2px(secondary 좌상단 z1, primary 우하단 z2 border #e6e6e6), radius 10%, 그림자 0 1 3 rgba(0,0,0,.5), 카드 배경은 설정 색 그대로(알파 포함, 체커 없음). fgbg 영역 어디를 클릭해도 교체; JS keydown 은 아무 키나 swap(L22 — Enter/Space 만이 아님; egui 는 클릭만 구현). '◐' reset 버튼(primary '#000000', secondary '#ffffff', 최근색 기록 안 함). 스왑은 applyColor 두 번(lock 안에서 setSetting) — 패널 버튼 스왑/리셋은 기록 안 함(D: 외부 변경과 불일치 그대로)"}
+    - {id: "3.4e", file: "color/panel.rs", what: "조립 + 단일 읽기/쓰기 경로. canonicalHex = normHex(settings[slot]) ?? '#000000'. applyColor(slot,hex,{record,preserveWheel}): normHex 무효면 paint(force) 후 false. lock+1 → (정규화값이 현재와 다르면) set_setting → lock−1 → paint(force, preserveWheel) → record 면 pushRecent. paint(force,preserveWheel): lock>0 이면 읽기만. 두 슬롯 버튼 배경=설정 값 그대로, 필드 갱신, preserveWheel 아니면 wheel.setFromRgb(parseHex(hex)), 활성 스와치 표식. 패널 안 모든 입력(HEX,RGB,A,팔레트,최근색,휠 commit)은 apply(record:true), 휠 드래그 중은 record:false. ui.slot 은 'primaryColor' 로 시작하며 setSlot 호출 경로가 없음 → 사실상 항상 primary(secondary 는 Shift+클릭/우클릭/스왑으로만). 최근색 기록 규칙 3경로: 패널 내부 커밋(record:true) / 휠 드래그(종료 시 1회) / 외부 변경(lock==0 이면 SETTINGS_CHANGED 로 자동 기록: 스포이트, 키보드 X/D). 추가: HISTORY_CHANGED 시 undoLabel ∈ PAINT_LABELS 이면 primary 를 최근색 맨 앞으로 push(undo/redo 후에도 push) — PAINT_LABELS = {연필, 지우개, 페인트통, 직선, 사각형, 둥근 사각형, 타원} (다각형/호/현/방사형 그라디언트/텍스트는 제외; 엔진 라벨 문자열과 정확히 일치해야 함 — W5/W6/W11/W13 의 라벨과 대조 테스트)"}
+    - {id: "3.4f", file: "brush/panel.rs", what: "숫자 입력(1..64 정수 아니면 UI 복귀), 슬라이더 1..64(input 즉시 set), 프리셋 4×4 [1,2,3,4,5,6,8,10,12,16,20,24,32,40,48,64](presetColumns: 4부터 최소 약수(≤8), 없으면 4) aria '굵기 ${size}px'(활성=코너 마커), 프리뷰 64×64 텍스처를 56×56 Nearest 로 표시(흰 배경 #ffffff, 마스크=brush_footprint(size) 를 ox=oy=floor((64-size)/2) 에 1:1, 색 rgba(r,g,b,a/255)). 휠(숫자 입력/슬라이더 위): stepPenSize(current,deltaY,shift): dy==0/NaN → None; base=round(current) 비유한이면 PEN_MIN; start 클램프 1..64; step=shift?5:1; dy<0 → +step(휠 위=증가); 결과 클램프. ctrl+휠 무시. 라벨 '굵기','굵기 슬라이더','브러시 미리보기'"}
+  tests: ["math/wheel: JS tests 포팅(rg -l 'colorWheel|pointerToSv|hsvToHex' tests)", "래스터 비교: 링/SV 샘플 픽셀 몇 점 손계산 + JS 로 덤프한 해시 오라클(tools/color_wheel_cases.mjs 선택)", "applyColor 락/기록 규칙 표(8개 입력 경로)", "PAINT_LABELS 와 도구 라벨 일치 테스트", "최근색 dedup/8개 상한", "팔레트 40색 const 핀"]
+
+- id: "3.5"
+  title: layers panel — 목록·컨트롤·이름 변경 (3.5a~3.5c)
+  wave: B
+  needs: ["3.8", "3.2a"]
+  write_scope: ["crates/app/src/ui/layers/**"]
+  subtasks:
+    - {id: "3.5a", file: "layers/list.rs", what: "top-first 목록(doc.layers 를 reverse; 위로=move_layer(id, idx+1), 아래로=idx-1). 행 [눈][썸네일][이름 ellipsis flex1][잠금], padding 4, border 1 #3a3d43, radius 4, gap 6, hover bg #232428, 선택 행 bg rgba(76,194,255,0.10)+border #565c66+accent 코너 마커. 눈/잠금은 SVG 아이콘 직접(이모지 회피), 이름 opacity 0.45(locked/hidden). 행 클릭=set_active_layer; 눈/잠금 클릭은 이벤트 전파 차단. 썸네일 32×32: 레이어 store 만(가시성·불투명도·블렌드 무시) 최근접 sx=min(w-1, floor(tx*w/32)), sy 동일, 알파 포함 그대로(체커 없음). 갱신: LAYERS/HISTORY/DOCUMENT_REPLACED → 전체 재렌더+썸네일 전부 재칠; PIXELS_CHANGED 는 layerId 별 250ms 스로틀(진행 중이면 추가 이벤트 무시, 타이머 발화 시 1회 재칠). egui 는 텍스처 캐시 필요"}
+    - {id: "3.5b", file: "layers/controls.rs", what: "불투명도 슬라이더 0..100 정수: 드래그 중 set_layer_opacity(id, v/100, final_=false)(히스토리 병합), 놓을 때/숫자 입력 change 시 final_=true(병합 끊기). 숫자 입력은 change 시 [0,100] 클램프, 비유한값은 UI 복귀. 표시값 round(opacity*100). 드래그 중에는 슬라이더 값을 외부 동기화하지 않음, 숫자 입력은 포커스 중 갱신 안 함. 블렌드 ComboBox: BLEND_MODES=[normal,multiply,screen,overlay,darken,lighten] 순서, 한글은 strings.blends, 포커스 중엔 동기화 안 함. 하단 6버튼 글리프 + ⧉ − ⬇ ↑ ↓(폰트 커버리지 불확실 → 아이콘/텍스트 대체 허용), title: 추가 복제 삭제 아래로 병합 위로 아래로. disabled: remove: n<=1; merge: !(idx>0); up: !(idx>=0&&idx<n-1); down: !(idx>0); duplicate: idx<0; add: !doc. 새 레이어 이름 `Layer ${n+1}`, 복제 `${name} copy`(엔진). 64레이어 상한은 엔진 오류로만. 모든 액션은 safe(): DrawToolError → notify('error', message, code)"}
+    - {id: "3.5c", file: "layers/rename.rs", what: "이름 더블클릭 → 텍스트 입력(전체 선택). Enter=커밋(trim 후 비어 있으면 무시), Esc=취소, blur=취소(커밋 아님! JS 트랩). 어떤 목록 재렌더든 입력이 사라짐 → 취소. 엔진 검증: 1~128자, 공백만 불가(INVALID_STATE). 입력 중 단축키는 위로 전파하지 않음(egui wants_keyboard_input 로 text_focus)"}
+  strings: ["불투명도","불투명도 수치","블렌드","레이어 목록","레이어 이름","숨기기","표시","잠금","잠금 해제","더블클릭으로 이름 변경"]
+  tests: ["버튼 enable 규칙 표", "reverse 인덱스 변환(위/아래)", "썸네일 샘플 좌표", "불투명도 final 플래그 시퀀스(드래그 N회→히스토리 1건으로 병합)", "이름 변경 Enter/Esc/blur 규칙", "PIXELS_CHANGED 스로틀(Instant 주입)"]
+
+- id: "3.6b"
+  title: status bar + history buttons
+  wave: B
+  needs: ["3.8", "3.6a"]
+  write_scope: ["crates/app/src/ui/status/{bar,history}.rs"]
+  spec: "TopBottomPanel::bottom 7칸. 입력: STATUS_MESSAGE 큐(W8 session_glue 가 보관), view.zoom, 캔버스 크기, activeTool, history.is_dirty, 포인터 캔버스 좌표 or None. 구독 대상(JS): STATUS_MESSAGE, DOCUMENT_REPLACED, HISTORY_CHANGED, LAYERS_CHANGED, SETTINGS_CHANGED(activeTool 만), view 변경. 마운트 직후에도 setCursor(null)(→ '- , -')"
+  tests: ["메시지 만료 규칙(Instant 주입: info 4s/warn 8s/error 상주, 만료 시 level 불변일 때만 비움)", "7칸 문자열 스냅샷"]
+
+- id: "3.7"
+  title: dialogs — 모달 셸 + 5종 (3.7a~3.7e)
+  wave: B
+  needs: ["3.8"]
+  write_scope: ["crates/app/src/ui/dialogs/**"]
+  shell: "egui::Modal 또는 Area+반투명 배경 rgba(0,0,0,.5). 박스 min-width 320, max-width 480, padding 16, 버튼 우측 정렬 gap 8, 위 마진 12. Esc 와 바깥 클릭 → close(null). 첫 focusable 에 초기 포커스(confirm='취소', restore='버리기', export-format='픽셀 청크 JSON'). 닫힌 뒤 결과 전달은 1회 보장(settled). root 없는 환경 폴백(confirm=false, restore='discard', export-format=None)은 테스트용"
+  subtasks:
+    - {id: "3.7a", file: "dialogs/new_doc.rs", what: "초기 wTiles=8,hTiles=8,background='transparent',name='Untitled'. TILE_MIN=0.5, TILE_MAX_W=2048/64=32, TILE_MAX_H=1088/64=17, step 0.5. wPx=round(w*64). ok = w>=0.5&&w<=32&&finite 그리고 32<=wPx<=2048&&32<=hPx<=1088&&wPx%32==0&&hPx%32==0(예: 0.75타일=48px 은 거부). 빈 입력 Number('')=0 → 거부. 만들기 disabled=!ok. 오류문 `범위: 너비 0.5–32, 높이 0.5–17 타일 (32px 배수 결과 필요)`(en dash). px 안내 `${wPx} × ${hPx} px`. 프리셋(라벨,wTiles,hTiles): ['1슬롯 128×128',2,2],['16슬롯 512×512',8,8],['64슬롯 1024×1024',16,16],['풀HD 1920×1088',30,17]; 프리셋 줄 맨 위. 필드 순서: 프리셋→너비(타일)→높이(타일)→문서 이름→배경→px안내→오류문. 배경 옵션 transparent/투명, #ffffff/흰색, #000000/검정. 결과 {widthPx,heightPx,background,name: String(name||'Untitled')}(이름 trim 안 함). 버튼 [취소,만들기]"}
+    - {id: "3.7b", file: "dialogs/resize.rs", what: "검증 Number.isInteger(w,h) && 32<=w<=2048 && 32<=h<=1088 && w%32==0 && h%32==0; step=32. 오류문 `32–2048 × 32–1088, 32의 배수여야 합니다`. 라벨 '너비(px, 32px 배수)','높이(px, 32px 배수)'. 버튼 [취소,확인]. 초기값=현재 캔버스 크기. 엔진 ResizeCanvasCommand 가 is_valid_canvas_size 로 재검증, 실패 CANVAS_SIZE_INVALID"}
+    - {id: "3.7c", file: "dialogs/confirm.rs", what: "'변경 버리기' / '저장하지 않은 변경이 있습니다. 버리시겠습니까?' [취소,버리기]. v===true 만 true"}
+    - {id: "3.7d", file: "dialogs/restore_export.rs", what: "자동저장 복원: 제목 '자동저장 복원', 본문 '자동저장된 문서'+(name? ` \"${name}\"`:'')+(when? ` (${when})`:'')+'가 있습니다. 복원하시겠습니까?' when=updatedAt 로컬 시각 문자열(로케일 의존 — Rust 는 chrono 없이 std 로 포맷하거나 'YYYY-MM-DD HH:MM:SS' 로 고정하고 로그). 버튼 [버리기,복원]; v==='restore' 만 restore, 나머지(Esc·바깥 클릭 포함)는 'discard'(D8: 자동저장 삭제 UX 패리티). 레이어 저장 형식: 제목 '레이어 저장 형식', 본문 '픽셀 청크는 무손실이며, 명령 형식은 현재 픽셀을 rect/pixel 명령으로 근사합니다.', 버튼 [픽셀 청크 JSON(chunks), 명령 레이어 JSON(commands), 취소(None)]"}
+    - {id: "3.7e", file: "dialogs/progress.rs", what: "하단 중앙(bottom 48) 라벨+트랙 240×8(#232428) 채움 #4cc2ff. update(v): clamp 0..1 → width % = round(v*100). close 멱등. 열려 있는 동안 busy(단축키/undo·redo 잠금)"}
+  tests: ["new_doc 유효성 표(0.5/0.75/32/33/NaN/빈/1920×1088 프리셋)", "resize 표", "결과 변환 규칙(restore 외 전부 discard)", "버튼 순서/초기 포커스", "진행 clamp"]
+
+- id: "3.10b"
+  title: autosave 연결 — 시작 시 복원 흐름 + 플러시 트리거
+  wave: C
+  needs: ["3.9", "3.10a", "3.7d"]
+  write_scope: ["crates/app/src/ui/autosave_glue.rs", crates/app/src/session_glue.rs(훅 추가 — W8 소유, 확장만)]
+  boot_order_js: "ui/app.js L81-158: restoreSettings → loadRecentColors → AutosaveStore.open/peek → 복원 다이얼로그 → (미복원 시) newDocument(DEFAULT_DOC 512×512 transparent) → 도구 등록 → renderer/input → viewStore.fit() → viewStore.subscribe(render) → buildActions → menubar/toolbar → status → color/brush/layers/options/collapsible/panelResize → attachSettingsPersist → store.attach. 복원 시 loadDocument(doc,{markSaved:false}) → 복원 직후 dirty ●. 복원 외 모든 결과는 store.clear()(자동저장 삭제). store.attach 는 패널 mount 뒤(첫 문서는 attach 전이라 첫 변경 전까지 기록 안 됨)"
+  window_close: "beforeunload: history.is_dirty() 면 닫기 차단 → egui close_requested 에서 취소하고 confirm 다이얼로그(문구는 JS 에 없음 → 3.7c '변경 버리기')"
+  tests: ["부팅 시나리오: 자동저장 없음/있음+복원/있음+버림(삭제)/손상(삭제 후 기본 문서)", "복원 후 dirty=true", "attach 전 이벤트는 기록되지 않음", "종료 시 flush"]
+
+- id: "3.G"
+  title: Phase 3 게이트
+  wave: C
+  content: "docs/native_smoke.md 에 UI 항목 추가(메뉴 4종 전 항목, 툴바 14, 옵션바 6섹션, 컬러 8입력 경로, 레이어 6버튼+이름 변경+불투명도 병합, 상태바 7칸, 다이얼로그 5종, 설정 영속(재시작 후 복원), 자동저장 복원). 패리티: tests/fixtures 또는 asset_work 의 JS 저장 샘플을 앱 경로로 열어 레이어/색/블렌드/이름 확인(JSON 라운드트립 자체는 1.13 에서 검증됨). 실행하지 못한 항목은 '미실행'"
+
+risks:
+  - {id: P3-R1, what: "AppState 필드 충돌", mitigation: "3.8 의 UiState 선행 정의(패널당 State 한 줄)"}
+  - {id: P3-R2, what: "아이콘/이모지/기호 글리프", mitigation: "3.2a 직접 그리기"}
+  - {id: P3-R3, what: "ShapeTool 의 pending 접근 API 가 W6 명세에 없음", mitigation: "3.3c 시작 시 W6 pub 메서드 확인, 부족하면 blocked → W6 소유자 패치"}
+  - {id: P3-R4, what: "TOOL_STATE.pending 이 문자열", mitigation: "UI 는 문자열 파싱 금지, 도구 구조체 직접 읽기"}
+  - {id: P3-R5, what: "JS 불일치/버그 복제 vs 수정(상단 Undo 버튼 비활성 조건, 색 기록 경로 불일치, 이름 변경 blur 취소 등)", mitigation: "기본은 패리티, 수정은 D9 목록만"}
+  - {id: P3-R6, what: "썸네일 텍스처가 레이어 64개 × PIXELS_CHANGED 로 비용 증가", mitigation: "레이어별 250ms 스로틀(JS 규칙) + 변경 레이어만"}
+  - {id: P3-R7, what: "egui TextEdit 의 change/blur/Enter 의미 차이", mitigation: "lost_focus && (Enter||blur) 를 커밋 지점으로 통일하는 헬퍼를 3.8 에 둠(commit_on_blur)"}

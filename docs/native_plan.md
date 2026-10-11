@@ -4,8 +4,7 @@
 웹 런타임(WebView2·브라우저·`run.py`·Node 테스트)에의 의존을 **끝낸다**.
 규범은 계속 `docs/contract.md`이며, 이 문서는 이전 **작업 계획**이다.
 
-작성: 2026-10-10 · 상태: **Phase 1 진행 중**(0.1~0.4 베이스라인·워크스페이스·동결·픽스처 하네스 완료,
-1.1~1.11 완료 — 남은 건 1.12 `model`·1.13 `io/serialize`)
+작성: 2026-10-10 · 상태: **Phase 1 완료**(0.1~0.4 베이스라인·워크스페이스·동결·픽스처 하네스 및 1.1~1.13 완료; Rust native recipe parity 39/39)
 
 ---
 
@@ -296,7 +295,7 @@ LOC는 `Measure-Object -Line` 측정값(2026-10-10)이다. Rust는 엔진이 1.2
    (`off`·`unit`·`tile`·`pixel`)이 있으나 `docs/core.md` §3 표에는 없다.
    `crates/engine/src/constants.rs`에 함께 포팅했다.
 
-### Phase 1 — 엔진 크레이트 (3~5일, 에이전트 3~4개 병렬) — 🔄 진행 중 (11/13)
+### Phase 1 — 엔진 크레이트 (3~5일, 에이전트 3~4개 병렬) — ✅ 완료 (13/13)
 
 `engine/`은 네이티브 `cargo test`로만 검증한다(wasm 불요).
 
@@ -308,22 +307,21 @@ LOC는 `Measure-Object -Line` 측정값(2026-10-10)이다. Rust는 엔진이 1.2
 | 1.4 | `raster/brush`+`masks` | golden `brush`(14)·`ellipse`(15)·`rrect`(8)·`outline`(10)·`bresenham`(7)·`hashes` | 47건 + 해시 6건 | ✅ |
 | 1.5 | `raster/segment` | golden `wide_line`(54) | 전건 | ✅ |
 | 1.6 | `raster/polygon` | golden `polygon`(6)·`polygon_outline`(6)·`fillet`(5) | 전건 | ✅ |
-| 1.7 | `raster/arc` | golden `arc`(2)·`chord`(2) | 허용오차 동일 | ⬜ |
-| 1.8 | `raster/gradient`·`text`·`atlas` | golden `gradient`(2)·`paste`(5) | 전건 | ⬜ |
-| 1.9 | `raster/composite_ops` | `recipe_*` 8파일 | 전건 | ⬜ |
+| 1.7 | `raster/arc` | golden `arc`(2)·`chord`(2) | 허용오차 동일 | ✅ |
+| 1.8 | `raster/gradient`·`text`·`atlas` | golden `gradient`(2)·`paste`(5) | 전건 | ✅ |
+| 1.9 | `raster/composite_ops` | `recipe_*` 8파일 | 전건 | ✅ |
 | 1.10 | `composite` + `kernels` | `render_grid`·`shape_*`·`autosave_blend` | 동치 불변 | ✅ |
 | 1.11 | `io/png` | `png_cases` 5/5 | 동일 픽셀·동일 에러 | ✅ |
-| 1.12 | `model` | `model_basic`·`model_history`·`e2e_session` | 전건 | ⬜ |
-| 1.13 | `io/serialize` | `io_basic`·`recipe_parity` 39/39 | 바이트 동일 저장 | ⬜ |
+| 1.12 | `model` | `model_basic`·`model_history`·`e2e_session` | 전건 | ✅ |
+| 1.13 | `io/serialize`·`vector`·`recipe`·`validate` | `io_basic`·Rust `recipe_parity` 39/39·schema | 왕복·validator·pixel parity | ✅ |
 
-**게이트(Phase 1 종료)**: `cargo test` = 골든 201 + png 5 + recipe 39/39 + view OK
-전부 그린. 현재 **141/141** 그린(Phase 0 하네스 + 1.1~1.11).
+**게이트(Phase 1 종료)**: `cargo test --workspace` = 골든 201 + png 5 + Rust recipe 39/39 + model/session + view checks 전부 그린. `npm test` schema consistency도 통과.
 실측 골든 커버리지(준비된 21개 그룹 전부, 197건 + 해시 6건):
 brush 14 + ellipse 15 + rrect 8 + outline 10 + bresenham 7 + stroke 7 +
 angle_snap 8 + resize 15 + drag_bbox 8 + unit_snap 6 + composite 8 + fill 3 +
 wide_line 54 + polygon 6 + polygon_outline 6 + fillet 5 + gradient 2 + arc 2 +
 chord 2 + paste 5 + hashes 6 = **201건**, png_cases 5/5.
-남은 게이트: recipe 39/39(1.13) · view 수학(2.3) · schema(1.13).
+남은 Phase 1 게이트 없음. 후속 작업은 Phase 2.1 이후 네이티브 캔버스 단계.
 
 #### 1.4에서 나온 구현 노트
 
@@ -614,5 +612,3 @@ M3는 그 위의 완성도 작업이다. 일정이 늘어나도 M2는 반드시 
 - 공수 전제: **에이전트 병렬 생산**(본 저장소 21,726줄/1주 관측). §0-1 참조.
 - Next: **Phase 0.1 베이스라인 계측**과 **Phase 0.2 워크스페이스 전환**부터 시작.
   순서를 바꾸지 말 것(베이스라인 없이는 Phase 5 목표가 검증 불가).
-
-

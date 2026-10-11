@@ -5,10 +5,5 @@
 //! canvas (docs/native_plan.md §6 Phase 2).
 
 fn main() {
-    println!(
-        "pixeldraw — schema {} · chunk {}px · engine skeleton",
-        pixel_engine::constants::SCHEMA_VERSION,
-        pixel_engine::constants::CHUNK_PX
-    );
-    println!("native shell lands in Phase 2 (docs/native_plan.md)");
+    pixeldraw_app::shell::run();
 }

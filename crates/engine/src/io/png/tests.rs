@@ -189,7 +189,7 @@ fn each_row_filter_reverses_exactly() {
                     3 => x - ((a + b) >> 1),
                     _ => {
                         let p = a + b - c;
-                        let (pa, pb, pc) = ((b - c).abs(), (a - c).abs(), p.abs());
+                        let (pa, pb, pc) = ((b - c).abs(), (a - c).abs(), (p - c).abs());
                         x - if pa <= pb && pa <= pc {
                             a
                         } else if pb <= pc {

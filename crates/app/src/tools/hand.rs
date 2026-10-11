@@ -1,0 +1,1 @@
+//! Hand tool placeholder.

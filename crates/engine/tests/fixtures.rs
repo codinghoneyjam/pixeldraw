@@ -95,3 +95,15 @@ fn oracle_manifest_is_present_and_current() {
         assert!(files.contains_key(must), "manifest is missing {must}");
     }
 }
+
+#[test]
+fn real_atlas_png_pixel_decodes_as_rgba() {
+    let bytes = std::fs::read(repo_path(
+        "asset_work/target/assetdb/entity/enemy/enemy_keybot_c001_sheet.png",
+    ))
+    .unwrap();
+    let image = pixel_engine::io::png::decode_png(&bytes).unwrap();
+    assert_eq!((image.width, image.height), (2048, 128));
+    let o = image.offset(1804, 64);
+    assert_eq!(&image.rgba[o..o + 4], &[255, 230, 0, 255]);
+}

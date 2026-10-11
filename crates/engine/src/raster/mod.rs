@@ -21,6 +21,7 @@ pub mod polygon;
 pub mod segment;
 pub mod shape_raster;
 pub mod snap;
+pub mod text_mask;
 
 pub use arc::{Box2, arc_mask, chord_fill_mask, chord_outline_mask, near_parity};
 pub use atlas::{Sheet, Tile, assemble_sheet, paste_channel, paste_pixel};

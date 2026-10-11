@@ -44,6 +44,55 @@ fn new_document_dispatches_replaced_then_history() {
 }
 
 #[test]
+fn stroke_begin_then_commit_matches_the_edit_handle_flow() {
+    let mut s = Session::new();
+    s.new_document(NewDocumentOptions::default().size(32, 32))
+        .unwrap();
+    let layer_id = s.doc().unwrap().active_layer_id.clone();
+
+    s.stroke_begin(EditOptions::on_layer(&layer_id).labeled("연필"))
+        .expect("stroke begin");
+    assert!(s.has_stroke());
+    assert_eq!(s.stroke_layer_id(), Some(layer_id.as_str()));
+
+    let changed = s
+        .stroke_with(|writer| {
+            writer.set(0, 0, 0xff0000ff);
+            writer.get(0, 0)
+        })
+        .expect("stroke_with");
+    assert_eq!(changed, 0xff0000ff);
+
+    assert!(!s.stroke_flush().is_empty());
+    assert!(s.stroke_commit(None).expect("stroke commit"));
+    assert!(!s.is_editing());
+    assert!(!s.has_stroke());
+}
+
+#[test]
+fn stroke_begin_rejects_hidden_layers_and_tracks_editing_guard() {
+    let mut s = Session::new();
+    s.new_document(NewDocumentOptions::default().size(32, 32))
+        .unwrap();
+    let layer_id = s.doc().unwrap().active_layer_id.clone();
+    s.set_layer_visible(&layer_id, false).unwrap();
+
+    let err = s
+        .stroke_begin(EditOptions::on_layer(&layer_id))
+        .unwrap_err();
+    assert_eq!(err.code, crate::errors::CODE_LAYER_HIDDEN);
+    assert!(!s.has_stroke());
+
+    s.set_layer_visible(&layer_id, true).unwrap();
+    s.stroke_begin(EditOptions::on_layer(&layer_id)).unwrap();
+    assert!(s.is_editing());
+    assert!(s.stroke_begin(EditOptions::on_layer(&layer_id)).is_err());
+    s.stroke_cancel();
+    assert!(!s.is_editing());
+    assert!(!s.has_stroke());
+}
+
+#[test]
 fn undo_and_redo_walk_the_stroke_and_property_stacks() {
     let mut s = Session::new();
     s.new_document(NewDocumentOptions::default().size(32, 32))

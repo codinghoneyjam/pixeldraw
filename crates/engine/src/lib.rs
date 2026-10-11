@@ -20,8 +20,10 @@
 
 pub mod blend;
 pub mod chunkstore;
+pub mod comp_cache;
 pub mod composite;
 pub mod constants;
+pub mod display;
 pub mod errors;
 pub mod events;
 pub mod fixtures;
@@ -30,6 +32,7 @@ pub mod kernels;
 pub mod model;
 pub mod pixel;
 pub mod raster;
+pub mod recipe;
 pub mod view;
 
 #[cfg(test)]

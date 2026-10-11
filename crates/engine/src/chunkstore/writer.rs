@@ -27,6 +27,14 @@ use crate::chunkstore::store::{Changeset, Chunk, as_bytes, chunk_eq, is_all_zero
 use crate::constants::chunk_coords;
 use crate::constants::chunk_key;
 
+#[derive(Clone, Debug)]
+pub struct StrokeState {
+    pub(crate) layer_id: String,
+    pub(crate) before: BTreeMap<u64, Option<Box<Chunk>>>,
+    pub(crate) dirty: BTreeSet<u64>,
+    pub(crate) last_key: Option<u64>,
+}
+
 #[derive(Debug)]
 pub struct PixelWriter<'a> {
     store: &'a mut crate::chunkstore::store::ChunkStore,
@@ -41,6 +49,25 @@ pub struct PixelWriter<'a> {
 }
 
 impl<'a> PixelWriter<'a> {
+    pub fn resume(store: &'a mut crate::chunkstore::store::ChunkStore, state: StrokeState) -> Self {
+        Self {
+            store,
+            layer_id: state.layer_id.clone(),
+            before: state.before,
+            dirty: state.dirty,
+            last_key: state.last_key,
+            done: false,
+        }
+    }
+
+    pub fn suspend(self) -> StrokeState {
+        StrokeState {
+            layer_id: self.layer_id.clone(),
+            before: self.before,
+            dirty: self.dirty,
+            last_key: self.last_key,
+        }
+    }
     pub fn new(
         store: &'a mut crate::chunkstore::store::ChunkStore,
         layer_id: impl Into<String>,
