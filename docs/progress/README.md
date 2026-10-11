@@ -106,4 +106,4 @@ Phase 6  절삭·패키징      [ ] 6.1 ~ 6.7
 | `6158fc3` | phase 2.3b — view 파사드 7분할, contract 상수 3핀 |
 | `93f024c` | docs — 1.12 parity 트랩 기록 (가드 순서·Undo 정체성·병합 정책) |
 | `37cf0f6` | phase 1.13a — chunkstore 파사드 분할 |
-| `e5d03bb` | phase 1.13b — io/png·model 6·raster 3 파사드 분할, internals 문서 2편 |
+| `69f3467` | phase 1.13b — io/png·model 6·raster 3 파사드 분할, internals 문서 2편 |
