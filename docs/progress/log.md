@@ -4,6 +4,117 @@
 
 ---
 
+## 2026-10-11 · Phase 1.12 · model(document/layer/history/commands/session)
+
+**커밋**: `8c17959`(view와 합쳐 커밋됨)·`src/features/{document,layers}` 967줄 → 15 모듈 5,088줄
+**테스트**: 141 → **303 그린**(phase 기여 +106)
+
+### 못 박아둔 JS 의미론(순서가 결과를 바꾸는 것들)
+
+- **`Document` 생성자는 레이어별 검사를 한 바퀴에 한다.** 중복 id가 저장소 크기
+  검사보다 **먼저** 올라간다(`document.js` L84-95). 처음에 두 바퀴로 쪼갰다가
+  `[정상, 잘못된크기, 중복]`이 `INVALID_STATE`가 아닌 `DUP_LAYER_ID`로 나오는 걸
+  테스트가 잡았다.
+- **`_remove`의 active 재지정**은 스플라이스 **뒤**의 `min(index, len-1)`. 구멈으로
+  밀려올라간 레이어가 후임이지, 아래 레이어가 아니다. 세 개의 내 테스트가 틀렸다.
+- **`AddLayerCommand.undo`는 지운 레이어를 버린다**(`commands.js` L62-64). 따라서
+  추가한 레이어에 친 줄은 **자기 PaintCommand**로만 살아남는다. Rust는 `apply`에서
+  클론을 넣어 그 성질을 재현한다(주석 명시).
+- **`_insert` 인덱스**: `undefined`면 append, `len` 초과는 클램프가 아니라
+  `OUT_OF_RANGE`. 가드 순서 = 중복id → 64한도 → 저장소크기 → 인덱스.
+- **Undo 정체성**: `_enforceBudget`의 가드는 `length > 1`이라 한 건의 과다 항목은
+  항상 산다. `_savedTop`은 **객체 동일성**으로 비교하는데 `Box<dyn Command>`로는
+  못 하므로, 스택 사이를 이동하는 `seq`로 대신 실었다.
+- **`clear()`는 `_lastCmd`를 리셋하지 않는다**(`session.js` L45-47`이 `clear`를
+  건너뜀). 그래서 `last_effects()`가 `clear()`를 살아남는다.
+- **병합 정책**: `mergeWith`를 가진 명령은 `SetLayerPropCommand`뿐이고, 병합 대상은
+  **opacity 필드 하나**, 같은 레이어+필수일 때만.
+- **병합은 `top`에게 알리지 `cmd`에게 알리지 않는다**(`history.js` L61`), 그런데
+  `Session::execute`가 `cmd.effects()`를 재dispatch한다. `SetLayerProp`에서는
+  결과가 같으므로 기록만 했다.
+- **`Session::undo()`는 문서도 스택도 비면 `false`**다 — `history.js` L73``가 `_doc`를
+  만지기 **전에** 언두 스택 길이를 본다. 처음에는 `INVALID_STATE`를 냈고 세션
+  테스트가 잡았다.
+- **`moveLayer`**: `from === toIndex`이면 범위 검사 **전에** `false`를 돌려준다.
+  같은 자리 이동은 no-op, `-1`은 `OUT_OF_RANGE`.
+- **값이 안 바뀌어도 `setLayerOpacity(…, {final:true})`는 `breakMerge`를 부른다.**
+  슬라이더 드래그 한 번 = 히스토리 한 항목과 필드 넉거듬 한 항목씩의 차이다.
+- **`setActiveLayer`는 히스토리 항목이 없으면서 `layers-changed`를 self-dispatch한다.**
+  명령 바깥에서 나오는 유일한 effect다.
+- **`mergePixel`는 아래→위로 투명을 먼저 합성한다.** JS의 `packRGBA`→`unpackRGBA`
+  왕복은 이미 클램프된 출력에서 항등이라 바이트를 그대로 옮긴다.
+- **merge-down은 불투명도를 굽고 아래쪽 것을 1로 만든다.** 흰@0.5 위 검정 =
+  `[128,128,128,255]`. `_checkFlags`는 숨김보다 **잠금을 먼저** 본다.
+- **`_captured`는 첫 `do`의 크기를 붙잡는다** — do/undo/do가 자기 꼬리를 쫓지 않게.
+- **`validateLayerName`은 JS `String.length`** = UTF-16 코드 단위. 이모지 65자 이름은
+  128 단위에서 거부된다. `encode_utf16().count()`로 포팅.
+- **`edit.commit()`은 `finish()` 뒤에 `takeDirty()`를 읽는다** — Rust의 `finish`이
+  writer를 소모하므로 먼저 비운다. `finish`은 `_dirty`를 건드리지 않아 목록은 일치.
+
+### 타입계가 흡수한 것(고치지 않고 기록)
+
+- `setProp("visible", 1)`은 JS에서 조용히 `false`를 저장했다. `LayerPropValue`를
+  필드별 태그로 만들어 불일치를 명시했고, JS의 모든 생산자는 이미 맞는 타입을
+  넘겼으므로 그 경로는 도달 불가.
+- `validateViewport`의 "객체여야 한다"/"정수여야 한다" 가드는 `Viewport`가 구조체가
+  되면 표현 불가. `composite.rs`가 `assertDoc`/`assertOut`에 쓴 것과 같은 처리.
+  크기·범위 검사와 코드는 그대로.
+- `edit.commit()`의 `session._edit !== edit` 가드는 핸들을 consume하면 **컴파일
+  에러**가 되는 구조.
+
+### 차용검사기가 강제한 API 형태
+
+- `EditHandle`은 수명 동안 `Session` 전체를 빌린다(`PixelWriter`가 레이어 저장소를
+  빌리므로). 그래서 **리스너는 `begin_edit` 전에 등록해야 한다.** JS는 `writer.set`
+  과 `commit` 사이에 `addEventListener`할 수 있었으나 그 창에서 dispatch하는 것이
+  없어 포팅된 단정은 그대로다.
+- `Session`의 `_lastCmd`는 **히스토리 구독**이 쓰는데, 세션은 자기 자신에게 못 한다.
+  `UndoManager::last_effects()`로 옮기고 `notify`가 갱신한다(`clear` 제외 전 kind).
+- **버려진 핸들은 세션을 영원히 `editing`으로 둔다.** `Drop`을 일부러 넣지 않았다 —
+  JS의 `_edit` 참조가 갖던 새는 그대로이며 테스트로 못 박었다.
+- `emitToolState`의 `pending`는 `String`이다. `shape.js` L150-153``가
+  `JSON.stringify({pending, vertices})`를 비교하므로 **텍스트가 계약**이다. 실제
+  타입은 Phase 2/3 몫.
+
+### 기타
+
+- **`settings_validator.js`는 DOM-free였다.** `errors`·`events`·`constants`·`pixel`
+  만 import하므로 그대로 `model::settings`으로 포팅하고 deferred 시킬 것이 없었다.
+- `e2e_session.test.mjs` 9개 H3 그룹 중 **4개만 지금 이식 가능**. H3.1/3.2는
+  ToolManager(2.7), H3.3/3.5는 `documentToJson`(1.13), H3.7은 flatten(1.10 보조).
+  이식한 것은 `beginEdit` + brush 커널로 같은 문서모델 사실을 단정하며, flatten은
+  `composite_chunk`로, `hashDoc`은 sha256으로 대체.
+- **내 버그를 골든이 잡았다**: `BLACK`을 `0x000000ff`로 썼다 — 이건 `r=255, a=0`
+  (투명한 빨강)이다. 패킹은 `a<<24|b<<16|g<<8|r`이므로 검정은 `0xff000000`,
+  초록은 `0xff00ff00`.
+
+---
+
+## 2026-10-11 · Phase 2.3 · view + 모듈 분할 규칙 정착
+
+**커밋 대상**: `crates/engine/src/view.rs` + `view/{types,geom,zoom,clamp,fit,chunks,store,tests}.rs`·`docs/contract.md`·`docs/README.md`·`docs/view_math.md`·`docs/progress/README.md`
+**테스트**: 303 그린 유지(view 56)
+
+- **view를 파사드로 분할했다.** `view.rs`는 `mod` 선언과 `pub use`만(31줄),
+  구현은 7개 하위 모듈. 최대 파일 330줄.
+- **주석을 트랩만 남기고 다 없앴다.** 원본 746줄 중 주석이 289줄(39%)이었다.
+  서명만 보면 모를 것만 남겼다: `Math.round` ≠ `f64::round`의 음수 하프 경계,
+  `canvas_to_screen`의 곱셈 우선 순서가 비트 동일성을 지탱하는 사실,
+  `clamp_offset`의 `max-then-min`이 역전 범위에서 `hi`에 핀되는 사실,
+  `visibleChunkRange`의 `-1e-9`.
+- **긴 설명은 `docs/view_math.md`로 보냈다.** 좌표 모델·상수 출처·반올림 규칙·
+  사다리 양끝 달라붙음·`ViewStore`의 세 가지 차이와 이벤트 카탈로그를 여덟로
+  늘리지 않은 이유. 소스에는 포인터 한 줄만.
+- **contract에 상수 3개를 핀했다.** `VIEW_CLAMP_MARGIN` 32·`VIEW_FIT_PADDING` 16·
+  `VIEW_CHUNK_EDGE_EPS` 1e-9. 셋 다 JS 기본매개변수/하드코딩이었고 contract에 없었다.
+  모듈에 숫자를 새로 만들지 않는다는 규칙의 첫 사례.
+- **내 테스트 착오 4건**: ①512 캔버스를 800 뷰포트에 클램프하면 원점은 이미
+  유효 범위라 **no-op**(768으로 끌려가는다고 착각) ②fit 후 actual은 같은 뷰에
+  도달하므로 `changed: false`가 정답 ③뷰포트를 키우면 재클램프가 변화를 만들지
+  않을 수 있다 ④`cx0 >= 0`은 타입상 항상 참이라 비교가 무효 — `cx0 == 0`으로.
+
+---
+
 ## 2026-10-11 · Phase 1.10~1.11 · composite·kernels·snap·png
 
 **커밋 대상**: `crates/engine/src/{composite,kernels,io/}.rs`·`crates/engine/src/raster/snap.rs`·`docs/progress/`
