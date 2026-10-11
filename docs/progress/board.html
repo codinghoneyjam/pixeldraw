@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pixeldraw Rust 전환 — 진행 보드</title>
+<style>
+  :root { --bg:#0f1115; --card:#171b22; --line:#262d38; --txt:#e8ecf1; --mut:#9aa4b2;
+          --ok:#3fb950; --ing:#d29922; --todo:#6e7681; --accent:#58a6ff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt);
+         font:14px/1.55 "Pretendard","Malgun Gothic",system-ui,sans-serif; }
+  header { padding:28px 28px 8px; max-width:1100px; margin:0 auto; }
+  header h1 { margin:0 0 4px; font-size:22px; }
+  header p { margin:0; color:var(--mut); }
+  header p code { color:var(--accent); }
+  main { max-width:1100px; margin:0 auto; padding:16px 28px 60px; display:grid; gap:16px; }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
+  .stat { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; }
+  .stat b { display:block; font-size:22px; }
+  .stat span { color:var(--mut); font-size:12px; }
+  .bar { height:8px; background:#0b0e12; border:1px solid var(--line); border-radius:99px; overflow:hidden; margin-top:8px;}
+  .bar i { display:block; height:100%; background:linear-gradient(90deg,var(--ok),var(--accent)); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:12px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
+  .card h2 { margin:0 0 2px; font-size:15px; }
+  .card .sub { color:var(--mut); font-size:12px; margin-bottom:10px; }
+  .task { display:flex; gap:8px; align-items:flex-start; padding:6px 0; border-top:1px dashed var(--line); }
+  .task:first-of-type { border-top:0; }
+  .pill { flex:none; font-size:11px; font-weight:700; border-radius:99px; padding:1px 8px; margin-top:2px;}
+  .ok { background:rgba(63,185,80,.15); color:var(--ok); border:1px solid var(--ok); }
+  .ing { background:rgba(210,153,34,.15); color:var(--ing); border:1px solid var(--ing); }
+  .todo { background:rgba(110,118,129,.15); color:var(--todo); border:1px solid var(--todo); }
+  .task small { display:block; color:var(--mut); }
+  .task code { color:var(--accent); font-size:12px; }
+  .road { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; }
+  .ms { flex:1 1 140px; min-width:140px; background:var(--card); border:1px solid var(--line);
+        border-radius:12px; padding:10px 12px; }
+  .ms b { display:block; font-size:13px; }
+  .ms span { color:var(--mut); font-size:12px; }
+  .warn { border:1px solid var(--ing); background:rgba(210,153,34,.08); border-radius:12px; padding:12px 16px; }
+  pre { background:#0b0e12; border:1px solid var(--line); border-radius:10px; padding:12px; overflow:auto; }
+  footer { color:var(--mut); font-size:12px; }
+  a { color:var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Pixeldraw Rust 전환 — 진행 보드</h1>
+  <p>기준 <b>2026-10-11</b> · 근거 <code>docs/native_plan.md</code> + <code>docs/progress/log.md</code> + <code>cargo test --workspace</code> 실측 ·
+  이 파일은 오프라인 단일 HTML이다. 브라우저로 열면 된다.</p>
+</header>
+<main>
+  <!-- 전체 수치: cargo test 270+5+4+14+11+1 = 305 -->
+  <section class="stats">
+    <div class="stat"><b>305 / 305</b><span>cargo test --workspace 그린</span>
+      <div class="bar"><i style="width:100%"></i></div></div>
+    <div class="stat"><b>201 / 201</b><span>래스터 골든 (Phase 1 게이트)</span>
+      <div class="bar"><i style="width:100%"></i></div></div>
+    <div class="stat"><b>5 / 5</b><span>png_cases</span>
+      <div class="bar"><i style="width:100%"></i></div></div>
+    <div class="stat"><b>0 / 39</b><span>recipe parity (1.13 잔여)</span>
+      <div class="bar"><i style="width:2%"></i></div></div>
+    <div class="stat"><b>12 / 13</b><span>Phase 1 항목 완료 (92%)</span>
+      <div class="bar"><i style="width:92%"></i></div></div>
+    <div class="stat"><b>1 / 7</b><span>Phase 2 선행 완료 (2.3 view)</span>
+      <div class="bar"><i style="width:14%"></i></div></div>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Phase 0 — 기반 정비 ✅</h2>
+      <div class="sub">게이트: cargo 18/18 · npm 410/410 · oracle --check 그린</div>
+      <div class="task"><span class="pill ok">완료</span><div>0.1 베이스라인 계측<small><code>tools/bench_baseline.mjs</code> 14항목 (pen=64 2785ms가 최대 병목)</small></div></div>
+      <div class="task"><span class="pill ok">완료</span><div>0.2 워크스페이스 전환<small><code>crates/{engine,platform,app}</code> · unsafe 금지</small></div></div>
+      <div class="task"><span class="pill ok">완료</span><div>0.3 오라클 동결<small>193파일 digest <code>de5de4f5…</code></small></div></div>
+      <div class="task"><span class="pill ok">완료</span><div>0.4 픽스처 하네스<small><code>engine/src/fixtures.rs</code></small></div></div>
+      <div class="task"><span class="pill ok">보류</span><div>0.5 <code>src/</code> 이동 취소<small>상대 import 수백 개 보호. 삭제는 6.3으로 이관</small></div></div>
+    </section>
+
+    <section class="card">
+      <h2>Phase 1 — 엔진 🔄 (다음: 1.13)</h2>
+      <div class="sub">게이트: 골든 201 + png 5 + recipe 39/39 + view + schema</div>
+      <div class="task"><span class="pill ok">완료</span><div>1.1 ~ 1.6 기초·래스터<small>constants/errors 21종 · blend · chunkstore · brush/mask · wide_line 54 · polygon</small></div></div>
+      <div class="task"><span class="pill ok">완료</span><div>1.7 ~ 1.8 arc/chord · gradient · atlas<small>near-parity 허용오차 핀 · 절단 규칙 · paste 알파 제곱</small></div></div>
+      <div class="task"><span class="pill ok">완료</span><div>1.9 composite_ops<small>clip/erase/visor/sheen/hud + apply_shape</small></div></div>
+      <div class="task"><span class="pill ok">완료</span><div>1.10 composite + kernels + snap<small>snap 37건 · fill 3 · stroke 7</small></div></div>
+      <div class="task"><span class="pill ok">완료</span><div>1.11 io/png + base64<small>png_cases 5/5 · flate2 픽셀 동일</small></div></div>
+      <div class="task"><span class="pill ok">완료</span><div>1.12 model<small><code>8c17959</code> · 141→303 테스트 · 가드 순서/Undo 정체성 등 트랩 12건 기록</small></div></div>
+      <div class="task"><span class="pill ing">다음</span><div>1.13 io/serialize + validate + recipe<small>남은 게이트: recipe 39/39 · schema · 바이트 동일 저장. <code>io/export.rs</code>는 flatten만 있고 serialize 미착수</small></div></div>
+      <div class="task"><span class="pill ing">WIP</span><div>1.13a chunkstore 파사드 분할<small>미커밋: <code>chunkstore/{store,writer,tests}</code> + model/raster 파사드 분할군</small></div></div>
+    </section>
+
+    <section class="card">
+      <h2>Phase 2 — 네이티브 캔버스 ⬜</h2>
+      <div class="sub">목표: 창에서 펜/도형/채우기로 그리기 (M2 조기 가치 지점)</div>
+      <div class="task"><span class="pill todo">미착수</span><div>2.1 eframe 뼈대<small><code>crates/app/src/main.rs</code>는 아직 stub (println만)</small></div></div>
+      <div class="task"><span class="pill todo">미착수</span><div>2.2 프레임버퍼 → Nearest 텍스처<small>합성 결과 업로드 · 스무딩 off 동치</small></div></div>
+      <div class="task"><span class="pill ok">선행완료</span><div>2.3 view 수학<small><code>6158fc3</code> · view 56 테스트 · 파사드 7분할 · contract 상수 3핀</small></div></div>
+      <div class="task"><span class="pill todo">미착수</span><div>2.4 dirty 청크 캐시 · 6ms 예산</div></div>
+      <div class="task"><span class="pill todo">미착수</span><div>2.5 배경/그리드/테두리 CPU 프레임버퍼</div></div>
+      <div class="task"><span class="pill todo">미착수</span><div>2.6 입력 정규화<small>winit → {x,y,button,shift,alt,coalesced}</small></div></div>
+      <div class="task"><span class="pill todo">미착수</span><div>2.7 도구 배선<small>pen·eraser·shape 5종·fill·eyedropper·hand</small></div></div>
+    </section>
+
+    <section class="card">
+      <h2>Phase 3~6 — 로드맵 ⬜</h2>
+      <div class="sub">Phase 1.13 + Phase 2가 병목. 이후는 매핑 작업</div>
+      <div class="task"><span class="pill todo">3.1~3.10</span><div>UI 전면 이식<small>메뉴·툴바·옵션바·색환·레이어·다이얼로그·토스트·설정·자동저장. 최대 리스크(R1)</small></div></div>
+      <div class="task"><span class="pill todo">Phase 4</span><div>자산 파이프라인 판단<small>tools/recipe·asset_work는 개발 자산 유지 · viewer 제거</small></div></div>
+      <div class="task"><span class="pill todo">5.1~5.7</span><div>성능 단계<small>pen=64 2785ms→30ms · flatten 2002ms→3ms · composite 391ms→2ms</small></div></div>
+      <div class="task"><span class="pill todo">6.1~6.7</span><div>절삭·패키징<small>단일 exe · src/index.html/run.py/src-tauri 삭제 · clippy/fmt 그린</small></div></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>마일스톤 로드맵 (native_plan §10)</h2>
+    <div class="sub">M2 말미에 "그릴 수 있는 오프라인 exe" — 일정이 밀려도 M2는 지킨다</div>
+    <div class="road">
+      <div class="ms"><b>M0 기반 ✅</b><span>0.5일 · 워크스페이스·동결·베이스라인</span></div>
+      <div class="ms"><b>M1 엔진 🔄</b><span>3~5일 · ★ 가장 중요 · 남은 건 1.13 하나</span></div>
+      <div class="ms"><b>M2 캔버스 ⬜</b><span>2~3일 · 2.3만 선행 · 2.1부터 재개</span></div>
+      <div class="ms"><b>M3 UI ⬜</b><span>3~5일 · 3,675줄 최대 분량</span></div>
+      <div class="ms"><b>M4 파이프라인 ⬜</b><span>0.5일 · 판단만</span></div>
+      <div class="ms"><b>M5 속도 ⬜</b><span>1~2일 · SIMD·rayon·목표 수치</span></div>
+      <div class="ms"><b>M6 절삭 ⬜</b><span>1일 · 단일 exe·문서·CI</span></div>
+    </div>
+  </section>
+
+  <div class="warn"><b>지금 막힌 곳 (WIP 주의).</b>
+    <code>git status</code>에 미커밋 분할 작업이 있다:
+    <code>io/png.rs · model/{commands,document,history,session,settings} · raster/{arc,polygon,composite_ops}</code> 파사드 분할군(untracked) +
+    같은 이름 구 파일 수정(mixed). 커밋 전에 <code>cargo test</code>로 게이트 확인 필요.
+    진행 규칙: <a href="README.md">docs/progress/README.md</a> ①로그 1줄 + ②보드 체크 + ③커밋 — 셋 중 하나만 하면 안 됨.
+  </div>
+
+  <section class="card">
+    <h2>다음 3수</h2>
+    <div class="task"><span class="pill ing">1</span><div>WIP 파사드 분할 커밋 마무리<small><code>cargo test --workspace</code> 305 유지 확인 → <code>phase 1.13a</code> 형식으로 커밋</small></div></div>
+    <div class="task"><span class="pill ing">2</span><div>1.13 serialize 본편<small><code>io/serialize</code>·<code>validate*</code>·<code>serialize_recipe/vector</code> → recipe 39/39 + schema 게이트</small></div></div>
+    <div class="task"><span class="pill todo">3</span><div>2.1 eframe 창 띄우기<small>Phase 2 재개. M1 게이트 그린 뒤 착수</small></div></div>
+  </section>
+
+  <section class="card">
+    <h2>검증 명령</h2>
+<pre>cargo test --workspace                          # 지금 305/305
+cargo clippy --workspace --all-targets -- -D warnings
+cargo fmt --all --check
+node tools/oracle_manifest.mjs --check          # JS 오라클 동결 확인
+npm test                                        # JS 오라클 410</pre>
+    <footer>숫자 출처: <code>cargo test</code> 실측(270 lib + 5 e2e + 4 fixtures + 14 model_basic + 11 model_history + 1 platform).
+    보드 텍스트판은 <a href="README.md">README.md 상태 보드</a>, 전체 계획은 <a href="../native_plan.md">native_plan.md</a>,
+    작업 기록은 <a href="log.md">log.md</a>.</footer>
+  </section>
+</main>
+</body>
+</html>

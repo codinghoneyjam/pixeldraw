@@ -67,26 +67,31 @@ Phase 1  엔진             [x] 1.1 constants/errors/events/pixel
                           [x] 1.9 raster composite_ops
                           [x] 1.10 composite + kernels + snap
                           [x] 1.11 io/png + io/base64
-                          [ ] 1.12 model              ← 다음
-                          [ ] 1.13 io/serialize
-Phase 2  네이티브 캔버스   [ ] 2.1 ~ 2.7
+                          [x] 1.12 model
+                          [ ] 1.13 io/serialize       ← 다음
+                          [x] 1.13a chunkstore 파사드 분할
+                        [x] 1.13b 파사드 분할 10모듈 (io/png·model 6·raster 3)
+Phase 2  네이티브 캔버스   [x] 2.3 view 선행 (파사드 7분할)
+                          [ ] 2.1 · 2.2 · 2.4 ~ 2.7
 Phase 3  UI              [ ] 3.1 ~ 3.10
 Phase 4  자산 파이프라인   [ ]
 Phase 5  성능            [ ] 5.1 ~ 5.7
 Phase 6  절삭·패키징      [ ] 6.1 ~ 6.7
 ```
 
+시각 보드: [board.html](board.html) — 브라우저로 열면 되는 오프라인 단일 파일.
+
 ## 누적 게이트
 
-| 지표 | 현재 |
+| 지표 | 현재 (2026-10-11 실측) |
 |---|---|
-| `cargo test` | **141 / 141** |
+| `cargo test` | **305 / 305** (lib 270 + e2e 5 + fixtures 4 + model_basic 14 + model_history 11 + platform 1) |
 | `cargo clippy -D warnings` | 그린 |
 | `cargo fmt --check` | 그린 |
 | JS 오라클(`npm test`) | 410 / 410 |
 | 래스터 골든 201건 중 커버 | **201 / 201** |
 | `png_cases` 5/5 | **5 / 5** |
-| 남은 Phase 1 게이트 | recipe 39/39(1.13) · view 수학(2.3) · schema(1.13) |
+| 남은 Phase 1 게이트 | recipe 39/39(1.13) · schema(1.13) — view 수학은 2.3 선행 완료 |
 | JS 베이스라인 | 측정 완료(14항목, `docs/native_plan.md` §6 Phase 0.1) |
 
 ### 커밋 이력
@@ -96,4 +101,9 @@ Phase 6  절삭·패키징      [ ] 6.1 ~ 6.7
 | `d5c2744` | phase 0 + 1.1~1.6 — workspace, oracle freeze, engine core, raster masks/blend/polygon/wide-line |
 | `dcb1673` | phase 1.7~1.8 — arc/chord near-parity 핀, gradient 절단 규칙, atlas paste 알파 제곱 |
 | `1314937` | phase 1.9 — apply_shape 진입점 + composite_ops 5종 |
-| `HEAD` | phase 1.10~1.11 — snap 37건, composite/kernels, png 5/5 (이번 커밋) |
+| `85fe248` | phase 1.10~1.11 — snap 37건, composite/kernels, png 5/5 |
+| `8c17959` | phase 1.12+2.3 — model 15모듈 + view 수학, 285 그린 |
+| `6158fc3` | phase 2.3b — view 파사드 7분할, contract 상수 3핀 |
+| `93f024c` | docs — 1.12 parity 트랩 기록 (가드 순서·Undo 정체성·병합 정책) |
+| `37cf0f6` | phase 1.13a — chunkstore 파사드 분할 |
+| `e5d03bb` | phase 1.13b — io/png·model 6·raster 3 파사드 분할, internals 문서 2편 |

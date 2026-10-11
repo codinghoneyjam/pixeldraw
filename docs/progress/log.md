@@ -4,6 +4,39 @@
 
 ---
 
+## 2026-10-11 · Phase 1.13b · 파사드 분할 10모듈 (io/png·model 6·raster 3)
+
+**커밋 대상**: `crates/engine/src/{io/png, model/{commands,commands_pixel,document,history,session,settings}, raster/{arc,composite_ops,polygon}}.{rs,/*}`·`docs/{model_internals,raster_internals}.md`·`docs/progress/`
+**테스트**: 305 그린 유지(lib 270 — 분할은 테스트 이동뿐 증감 없음)
+
+- model 6 파일(410~668줄)·raster 3 파일·`io/png`를 `mod` 선언 + `pub use`
+  파사드로 쪼갰다. 파일명 그대로 옆에 같은 이름 디렉터리를 붙이는
+  Rust 2018+ 문법(`chunkstore.rs` + `chunkstore/` 형태). 공개 경로
+  (`crate::model::history::…` 등)가 그대로여서 `crates/engine/tests/*`와
+  다른 모듈은 손대지 않았다.
+- 분할 지도: `io/png`→crc·decode·encode / `model/commands`→layer_cmd·paint·prop /
+  `model/commands_pixel`→merge_down·resize / `model/document`→types·validate
+  (**가드 순서는 `validate`가 소유** — 한 바퀴 검사를 쪼갰다가 코드가
+  엉킨 트랩) / `model/history`→budget·undo_redo / `model/session`→core·ops
+  (`SessionCore` 분리 이유는 model_internals §7) / `model/settings`→
+  types·validate / `raster/arc`→angle·chord / `raster/composite_ops`→
+  clip·common·erase·hud·sheen·visor / `raster/polygon`→fillet·masks·scanline
+  (폴리곤은 예약 면제 대상이라 관심사별로만 분할).
+- **최대 파일 355줄**(`model/layer.rs` — 기존, 분할 대상 아님). 분할된
+  파일은 전부 300줄 이하.
+- **긴 설명은 `docs/model_internals.md`·`docs/raster_internals.md`로 옮겼다.**
+  소스 주석은 "서명만 보면 알 수 없는 것"(JS 패리티 트랩·비트 동일성을
+  지탱하는 연산 순서·일부러 고치지 않은 이유)만 남긴다. 코드를 그대로
+  되풀이하는 주석은 삭제했다.
+- **살려둬야 하는 주석 한 줄**: `polygon/fillet.rs`의 `py_round` 짝수
+  내림 분리를 갈라놓는 주석 — 지우면 clippy `if_same_then_else`가
+  `-D warnings`를 낸다(raster_internals §2).
+- 시각 보드 `docs/progress/board.html` 추가(오프라인 단일 파일).
+- clippy·fmt 그린. 골든 201·png 5/5·JS 오라클 410은 코드 경로가 그대로여서
+  재측정 없이 유효.
+
+---
+
 ## 2026-10-11 · Phase 1.12 · model(document/layer/history/commands/session)
 
 **커밋**: `8c17959`(view와 합쳐 커밋됨)·`src/features/{document,layers}` 967줄 → 15 모듈 5,088줄
