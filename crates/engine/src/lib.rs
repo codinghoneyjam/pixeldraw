@@ -5,14 +5,18 @@
 //! ```text
 //! constants errors events ← pixel ← blend ← chunkstore ← raster ← kernels
 //!                                                    ↓
-//!                     composite ← model (commands ← history)
+//!                     composite ← model (commands ← history ← session)
+//!                                                    ↓
+//!                     io ← app ← platform
 //! ```
 //!
 //! Nothing here may touch the OS, the GPU or the network. The same rule the JS
 //! tree enforced as "DOM-free, importable in Node" (docs/contract.md §4).
 //!
 //! [`composite`] reads a layer stack back out, [`kernels`] writes into one, and
-//! `model` (Phase 1.12) owns the documents those layers live in.
+//! [`model`] owns the documents those layers live in. [`view`] is the zoom·pan
+//! math the canvas widgets drive, and it depends on nothing but [`constants`]
+//! and [`errors`].
 
 pub mod blend;
 pub mod chunkstore;
@@ -23,8 +27,10 @@ pub mod events;
 pub mod fixtures;
 pub mod io;
 pub mod kernels;
+pub mod model;
 pub mod pixel;
 pub mod raster;
+pub mod view;
 
 #[cfg(test)]
 mod tests {

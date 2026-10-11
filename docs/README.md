@@ -64,6 +64,7 @@ core → shape_raster → features/shape 도구 ─┘
 | `model.md` | 문서·히스토리·세션·레이어·Command (`features/document/`·`features/layers/`) |
 | `io.md` | base64·PNG·검증·직렬화·내보내기·파일·자동저장 |
 | `native_plan.md` | 완전 오프라인 exe화 이전 계획(Rust)·Phase 0~6·패리티 게이트 |
+| `perf_js_vs_rust.md` | JS 엔진 대 Rust 엔진 실측 비교(2048×1088·64레이어)·Phase 5 목표 판정 |
 | `desktop.md` | 네이티브 셸(Tauri)·스테이징·네이티브 파일 브리지 |
 | `render.md` | view·composite·renderer·grid·background |
 | `tools.md` | 베이스·매니저·입력 + features/pen·shape·fill·eyedropper·hand |

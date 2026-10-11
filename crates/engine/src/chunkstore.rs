@@ -8,7 +8,7 @@
 //! [`PixelWriter`] or a Command's `do`/`undo`. Out-of-canvas `set` is silently
 //! ignored, which is why callers never clip.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::constants::{CHUNK_LEN, chunk_coords, chunk_key};
 use crate::errors::{DrawToolError, EngineResult};
@@ -236,7 +236,11 @@ pub struct PixelWriter<'a> {
     store: &'a mut ChunkStore,
     pub layer_id: String,
     before: BTreeMap<u64, Option<Box<Chunk>>>,
-    dirty: Vec<(u32, u32)>,
+    /// Keys of the chunks this writer has touched, drained by `take_dirty`.
+    dirty: BTreeSet<u64>,
+    /// Chunk the previous `set` landed in, so a whole footprint touches the
+    /// bookkeeping once rather than once per pixel.
+    last_key: Option<u64>,
     done: bool,
 }
 
@@ -246,21 +250,23 @@ impl<'a> PixelWriter<'a> {
             store,
             layer_id: layer_id.into(),
             before: BTreeMap::new(),
-            dirty: Vec::new(),
+            dirty: BTreeSet::new(),
+            last_key: None,
             done: false,
         }
     }
 
     fn touch(&mut self, x: u32, y: u32) {
         let key = chunk_key(x >> 5, y >> 5);
+        if self.last_key == Some(key) {
+            return;
+        }
         self.before.entry(key).or_insert_with(|| {
             let (cx, cy) = chunk_coords(key);
             self.store.copy_chunk(cx, cy)
         });
-        let (cx, cy) = chunk_coords(key);
-        if !self.dirty.contains(&(cx, cy)) {
-            self.dirty.push((cx, cy));
-        }
+        self.dirty.insert(key);
+        self.last_key = Some(key);
     }
 
     /// Bounds-checked write; out of canvas is ignored.
@@ -284,9 +290,16 @@ impl<'a> PixelWriter<'a> {
 
     /// `(cy, cx)`-ordered dirty list; empties the internal set so a mid-stroke
     /// render loop can drain it repeatedly.
+    ///
+    /// A `BTreeSet<u64>` of chunk keys is used because `chunk_key = cy*64+cx`,
+    /// so key order **is** `(cy, cx)` order — the sort the old `Vec` needed on
+    /// every drain is gone. The memo is reset too: otherwise a write to the
+    /// chunk the previous pixel landed in would skip re-inserting it after the
+    /// set was just emptied, and the drained chunk would go missing.
     pub fn take_dirty(&mut self) -> Vec<(u32, u32)> {
-        self.dirty.sort_by_key(|&(cx, cy)| (cy, cx));
-        std::mem::take(&mut self.dirty)
+        let keys = std::mem::take(&mut self.dirty);
+        self.last_key = None;
+        keys.into_iter().map(chunk_coords).collect()
     }
 
     /// Consume the stroke into a changeset, or `None` when nothing changed.
@@ -530,6 +543,73 @@ mod tests {
         let cs = w.finish().unwrap();
         assert_eq!(cs.byte_size(), CHUNK_LEN * 2);
         assert_eq!(Changeset::default().byte_size(), 0);
+    }
+
+    // ---- the memoised dirty set (docs/perf_js_vs_rust.md §4-1) ----
+
+    #[test]
+    fn draining_mid_stroke_then_writing_again_re_reports_the_chunk() {
+        // `take_dirty` empties the set, so the "last chunk" memo must be reset
+        // with it. Otherwise the next write into the same chunk would see the
+        // memo hit and skip the insert, and the render loop would miss it.
+        let mut s = ChunkStore::new(128, 128).expect("valid size");
+        let mut w = PixelWriter::new(&mut s, "layer-0001");
+        w.set(0, 0, 0xff0000ff);
+        w.set(5, 5, 0xff0000ff);
+        assert_eq!(w.take_dirty(), vec![(0, 0)]);
+        // Second pixel in the SAME chunk, after the drain.
+        w.set(6, 6, 0xff0000ff);
+        assert_eq!(w.take_dirty(), vec![(0, 0)], "the chunk must re-appear");
+        // A different chunk, then back to the first one.
+        w.set(96, 96, 0xff0000ff); // chunk (3,3)
+        w.set(7, 7, 0xff0000ff); // back in chunk (0,0)
+        assert_eq!(w.take_dirty(), vec![(0, 0), (3, 3)]);
+        assert!(w.finish().is_some());
+    }
+
+    #[test]
+    fn a_wide_stroke_records_every_chunk_it_touched_in_order() {
+        // A pen=64 stroke spans several chunks per axis, so the dirty set has to
+        // be complete — not just the last chunk of a run.
+        let mut s = ChunkStore::new(128, 128).expect("valid size");
+        {
+            let mut w = PixelWriter::new(&mut s, "layer-0001");
+            crate::raster::brush::stroke_point(&mut w, 32, 32, 64, 0xff0000ff);
+            let dirty = w.take_dirty();
+            // The 64px footprint is a DISC, not a square (3,228 of 4,096 cells),
+            // so it straddles the chunk grid rather than filling it. Eight chunks
+            // fall inside the disc around (32,32); what matters here is that the
+            // set is complete and in (cy,cx) order, not that a corner was hit.
+            assert_eq!(dirty.len(), 8, "a disc this size straddles 8 chunks");
+            assert_eq!(dirty[0], (0, 0));
+            assert!(
+                dirty
+                    .windows(2)
+                    .all(|p| (p[0].1, p[0].0) <= (p[1].1, p[1].0)),
+                "(cy,cx) order must hold without a sort: {dirty:?}"
+            );
+        }
+        // And key order really is (cy,cx) order, with no sort anywhere.
+        let mut w2 = PixelWriter::new(&mut s, "layer-0001");
+        w2.set(96, 0, 0x00ff00ff); // chunk (3,0)
+        w2.set(0, 32, 0x00ff00ff); // chunk (0,1)
+        w2.set(0, 0, 0x00ff00ff); // chunk (0,0)
+        w2.set(64, 32, 0x00ff00ff); // chunk (2,1)
+        assert_eq!(w2.take_dirty(), vec![(0, 0), (3, 0), (0, 1), (2, 1)]);
+        let _ = w2.finish();
+    }
+
+    #[test]
+    fn many_writes_inside_one_chunk_record_it_once() {
+        // The whole point of the memo: a footprint writes thousands of pixels
+        // into one chunk, and each of those must not re-probe the bookkeeping.
+        let mut s = ChunkStore::new(64, 64).expect("valid size");
+        let mut w = PixelWriter::new(&mut s, "layer-0001");
+        for i in 0..512u32 {
+            w.set(i % 32, (i / 32) % 32, 0xff0000ff);
+        }
+        assert_eq!(w.take_dirty(), vec![(0, 0)], "512 writes, one chunk");
+        w.discard();
     }
 
     #[test]

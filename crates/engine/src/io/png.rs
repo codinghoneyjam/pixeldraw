@@ -48,24 +48,38 @@ impl PngImage {
 /// Hand-rolled rather than pulled from `crc32fast` (which `flate2` already
 /// brings) because the table is 8 lines and the whole point of the engine's
 /// small-dependency rule is not to widen the graph for it.
+///
+/// The 256-entry table is built **once** and shared, exactly as the JS module
+/// built it at import time. Recomputing it per call burns 2048 iterations for
+/// nothing, which on a chunk stream is most of the work.
 fn crc32(bytes: &[u8]) -> u32 {
-    let mut table = [0u32; 256];
-    for (n, slot) in table.iter_mut().enumerate() {
-        let mut c = n as u32;
-        for _ in 0..8 {
-            c = if c & 1 != 0 {
-                0xedb8_8320 ^ (c >> 1)
-            } else {
-                c >> 1
-            };
-        }
-        *slot = c;
-    }
+    let table = crc_table();
     let mut c = 0xffff_ffff;
     for &b in bytes {
         c = table[((c ^ b as u32) & 0xff) as usize] ^ (c >> 8);
     }
-    (c ^ 0xffff_ffff) as u32
+    c ^ 0xffff_ffff
+}
+
+/// The lazily built CRC table, behind the same `OnceLock` the brush footprint
+/// cache uses — the workspace forbids `unsafe`, so no `static mut` trick.
+fn crc_table() -> &'static [u32; 256] {
+    static TABLE: std::sync::OnceLock<[u32; 256]> = std::sync::OnceLock::new();
+    TABLE.get_or_init(|| {
+        let mut table = [0u32; 256];
+        for (n, slot) in table.iter_mut().enumerate() {
+            let mut c = n as u32;
+            for _ in 0..8 {
+                c = if c & 1 != 0 {
+                    0xedb8_8320 ^ (c >> 1)
+                } else {
+                    c >> 1
+                };
+            }
+            *slot = c;
+        }
+        table
+    })
 }
 
 /// Big-endian `u32`, the width the PNG chunk headers use.
