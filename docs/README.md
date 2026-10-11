@@ -61,10 +61,10 @@ core → shape_raster → features/shape 도구 ─┘
 | `contract.md` | 고정 상수·전역 불변 조건·에러 코드 카탈로그·DOM 금지 구역·의존 DAG |
 | `features.md` | 피처 패키지 지도·공개 API 표·DOM 규칙·새 도구 추가 체크리스트 |
 | `core.md` | 상수·에러·이벤트·픽셀·합성·청크·도형 래스터(`raster/`) |
-| `model.md` | 문서·히스토리·세션·레이어·Command (`features/document/`·`features/layers/`) |
-| `io.md` | base64·PNG·검증·직렬화·내보내기·파일·자동저장 |
+| `model.md` | 문서·히스토리·세션·레이어·Command (`features/document/`·`features/layers/`) || `io.md` | base64·PNG·검증·직렬화·내보내기·파일·자동저장 |
 | `native_plan.md` | 완전 오프라인 exe화 이전 계획(Rust)·Phase 0~6·패리티 게이트 |
 | `perf_js_vs_rust.md` | JS 엔진 대 Rust 엔진 실측 비교(2048×1088·64레이어)·Phase 5 목표 판정 |
+| `view_math.md` | 좌표 모델·반올림 규칙·`visibleChunkRange` 엡실론·사다리·`ViewStore` 차이의 근거 |
 | `desktop.md` | 네이티브 셸(Tauri)·스테이징·네이티브 파일 브리지 |
 | `render.md` | view·composite·renderer·grid·background |
 | `tools.md` | 베이스·매니저·입력 + features/pen·shape·fill·eyedropper·hand |

@@ -24,6 +24,9 @@
 | `UNDO_MAX_STEPS` | 200 | |
 | `UNDO_MAX_BYTES` | 96 MiB | 둘 중 먼저 도달하는 쪽 |
 | `ZOOM_LEVELS` | `[0.25,0.5,1,2,3,4,6,8,12,16,24,32]` | 배율 = 캔버스 1px당 CSS px |
+| `VIEW_CLAMP_MARGIN` | 32 (CSS px) | `clampView` 기본 마진. 캔버스가 완전히 화면 밖으로 나가지 않도록 항상 이만큼 남긴다 |
+| `VIEW_FIT_PADDING` | 16 (CSS px) | `fitView` 기본 여백. 양쪽 축에 `2*padding`를 뺀 뒤 축소 |
+| `VIEW_CHUNK_EDGE_EPS` | `1e-9` | `visibleChunkRange`의 먼 가장자리에서 빼는 값. 캔버스 경계가 청크 경계와 정확히 만날 때 청크를 하나 과다 보고하는 것을 막는다 |
 | `DEFAULT_DOC` | 512×512, 배경 `transparent` | |
 | `SCHEMA_VERSION` | `"2.0.0"` | |
 
