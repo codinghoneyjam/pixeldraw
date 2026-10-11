@@ -1,5 +1,5 @@
-# <META - FILE SUMMARY - Draw Tool v2 launcher: free-port server + auto-open browser>
-"""One-command launcher for the Draw Tool v2 editor.
+# <META - FILE SUMMARY - Pixeldraw launcher: free-port server + auto-open browser>
+"""One-command launcher for the Pixeldraw editor.
 
 The editor is plain ESM, so it cannot be opened over file:// (Chromium blocks ES
 module imports cross-origin). This script removes that footgun: it picks a free
@@ -87,7 +87,7 @@ def open_browser_later(url: str, delay: float = 0.6) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="run.py",
-        description="Serve the Draw Tool v2 editor and open it in your browser.",
+        description="Serve the Pixeldraw editor and open it in your browser.",
     )
     parser.add_argument("--port", type=int, default=None, help="preferred port (default: auto)")
     parser.add_argument("--host", default="127.0.0.1", help="bind address (default: 127.0.0.1)")
@@ -102,7 +102,7 @@ def main(argv: list[str] | None = None) -> int:
     url = f"http://{args.host}:{port}/"
     httpd = serve(port, args.host)
 
-    print("[draw-tool] Draw Tool v2 is running", flush=True)
+    print("[draw-tool] Pixeldraw is running", flush=True)
     print(f"[draw-tool]   {url}", flush=True)
     print("[draw-tool]   Ctrl+C to stop", flush=True)
     if not args.no_browser:

@@ -15,7 +15,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Working assets live under asset_work/target/ (recipes + legacy PNGs + oracle ground truth).
 const REPO_ROOT = path.resolve(__dirname, "..");
 const TARGET_ROOT = path.join(REPO_ROOT, "asset_work", "target");
-const targetPath = (rel) => path.join(TARGET_ROOT, rel.replace(/^draw_tool_v2\//, ""));
+const targetPath = (rel) => path.join(TARGET_ROOT, rel.replace(/^pixeldraw\//, ""));
 
 const G = JSON.parse(
   fs.readFileSync(new URL("./fixtures/raster_golden.json", import.meta.url), "utf-8"),
@@ -66,7 +66,7 @@ describe("shockwave_ring reproduction", () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "shockwave-"));
     const png = path.join(tmp, "shockwave_ring.png");
     await transpileAndRender({
-      recipePath: targetPath("draw_tool_v2/tests/fixtures/shockwave_ring_recipe.json"),
+      recipePath: targetPath("pixeldraw/tests/fixtures/shockwave_ring_recipe.json"),
       layerKey: null,
       outputDocPath: path.join(tmp, "shockwave_ring.json"),
       outputPngPath: png,

@@ -11,7 +11,7 @@ const SHAPE_KEYS = ["shapeFill", "shapeRadius", "shapeLockAspect", "snapUnit"];
 export function mountShapeOptions(root, deps = {}) {
   const { session, toolManager = null, safe = (fn) => fn() } = deps;
   const q = (sel) => root?.querySelector(sel) ?? null;
-  const fillToggle = q("#dt-shape-fill-toggle");
+  const modeToggle = q("#dt-shape-mode");
   const radius = q("#dt-shape-radius");
   const lock = q("#dt-shape-lock");
   const snap = q("#dt-snap-unit");
@@ -20,7 +20,7 @@ export function mountShapeOptions(root, deps = {}) {
   const vertexAdd = q("#dt-polygon-add");
   const commitBtn = q("#dt-shape-commit");
   const cancelBtn = q("#dt-shape-cancel");
-  if (!fillToggle && !radius && !lock && !snap && !commitBtn) return null;
+  if (!modeToggle && !radius && !lock && !snap && !commitBtn) return null;
 
   const disposers = [];
   const listen = (t, type, fn) => {
@@ -127,7 +127,7 @@ export function mountShapeOptions(root, deps = {}) {
     const id = activeToolId();
     const isLine = id === "line";
     const isShape = SHAPE_TOOLS.includes(id);
-    if (fillToggle) fillToggle.disabled = !isShape || isLine;
+    if (modeToggle) modeToggle.disabled = !isShape || isLine;
     if (radius) radius.disabled = id !== "rrect";
     const pending = pendingOf();
     // Polygon pending is vertex-based, so the bbox number fields do not apply.
@@ -177,18 +177,18 @@ export function mountShapeOptions(root, deps = {}) {
   // <META - ROLE : Reflect the shape settings, never stealing a focused field | L84-91>
   function syncValues() {
     const s = session.settings;
-    if (fillToggle) {
-      const filled = s.shapeFill === "fill";
-      fillToggle.textContent = filled ? "채움" : "테두리";
-      fillToggle.setAttribute("aria-pressed", filled ? "true" : "false");
-      fillToggle.setAttribute("aria-label", `도형 채움: ${filled ? "채움" : "테두리"}`);
+    const filled = s.shapeFill === "fill";
+    if (modeToggle) {
+      modeToggle.dataset.mode = filled ? "fill" : "outline";
+      modeToggle.setAttribute("aria-pressed", String(filled));
+      modeToggle.setAttribute("aria-label", `도형 그리기 방식: ${filled ? "채움" : "테두리"}`);
     }
     if (radius && document.activeElement !== radius) radius.value = String(s.shapeRadius);
     if (lock) lock.checked = s.shapeLockAspect === true;
     if (snap) snap.checked = s.snapUnit === true;
   }
 
-  if (fillToggle) fillToggle.addEventListener("click", () => safe(() => {
+  if (modeToggle) modeToggle.addEventListener("click", () => safe(() => {
     session.setSetting("shapeFill", session.settings.shapeFill === "fill" ? "outline" : "fill");
   }));
   if (radius) radius.addEventListener("change", () => safe(() => {

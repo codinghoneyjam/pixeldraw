@@ -15,7 +15,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Working assets live under asset_work/target/ (recipes + legacy PNGs + oracle ground truth).
 const REPO_ROOT = path.resolve(__dirname, "..");
 const TARGET_ROOT = path.join(REPO_ROOT, "asset_work", "target");
-const targetPath = (rel) => path.join(TARGET_ROOT, rel.replace(/^draw_tool_v2\//, ""));
+const targetPath = (rel) => path.join(TARGET_ROOT, rel.replace(/^pixeldraw\//, ""));
 const RECIPE = targetPath("assetdb/ui/data/title_diorama_sword_body.json");
 const LEGACY = targetPath("assetdb/ui/title/title_diorama_sword_body.png");
 

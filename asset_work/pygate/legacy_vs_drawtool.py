@@ -48,13 +48,13 @@ DRAWTOOL_ROOT: Path = TOOL_ROOT
 def target_path(rel: str) -> Path:
     """Resolve one asset path against target/ (recipes and legacy PNGs).
 
-    This tool used to live at <game>/draw_tool_v2/, so the cases spelled asset
+    This tool used to live at <game>/pixeldraw/, so the cases spelled asset
     paths relative to the game repo and rendered the game's own copies.
     Standalone, every asset it reads lives under pixeldraw/asset_work/target/, which
     carries the same relative paths, so the old strings still resolve once the
     root is repointed.
     """
-    return TARGET_ROOT / rel.removeprefix("draw_tool_v2/")
+    return TARGET_ROOT / rel.removeprefix("pixeldraw/")
 
 
 MATCH_FRACTION_THRESHOLD: float = 0.99

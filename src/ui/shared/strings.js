@@ -1,6 +1,6 @@
 // <META - FILE SUMMARY - Korean UI strings central catalog (G1)>
 export const STRINGS = Object.freeze({
-  appTitle: "Draw Tool v2",
+  appTitle: "Pixeldraw",
   menus: Object.freeze({
     file: "파일",
     edit: "편집",

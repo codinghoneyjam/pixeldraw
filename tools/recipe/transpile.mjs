@@ -1,4 +1,4 @@
-// <META - FILE SUMMARY - Recipe JSON transpiler: legacy recipe -> draw_tool_v2 Document + PNG
+// <META - FILE SUMMARY - Recipe JSON transpiler: legacy recipe -> pixeldraw Document + PNG
 //
 // Lives in tools/ (not src/): recipe schema resolution stays out of core (P-1).
 
@@ -220,7 +220,7 @@ export async function transpileAndRender({
 // <META - ROLE : Write the document JSON and PNG for a rendered document | L141-164>
 /**
  * Serialise a document to disk and return both artefacts.
- * @param {object} doc draw_tool_v2 document
+ * @param {object} doc pixeldraw document
  * @param {string} outputDocPath destination for the document JSON
  * @param {string} outputPngPath destination for the PNG
  * @param {?object} vp logical viewport, or null to emit the whole canvas

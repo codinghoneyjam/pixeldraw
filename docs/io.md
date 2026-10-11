@@ -64,9 +64,11 @@ io 모듈은 문서의 바깥 경계를 담당한다. 메모리 안의 Document�
 ## 7. file_io.js — 다섯 가지 파일 함수와 64MiB 제한
 
 `sanitizeFileName(name)`은 금지 문자와 제어 문자를 밑줄로 바꾸고 앞뒤 공백과 점을 제거한 뒤 최대 80자로 자른다. 결과가 비면 `untitled`을 돌려준다.
-`saveTextFile(suggestedName, text, mime)`과 `saveBinaryFile(suggestedName, bytes, mime)`은 내부적으로 같은 저장 경로를 쓴다. File System Access의 저장 피커가 있으면 그곳에 쓰고, 사용자가 취소하면 false를 돌려준다. 피커가 없으면 Blob을 만들어 앵커 다운로드로 저장한다. 문서 환경 자체가 없으면 `INVALID_STATE`를 던진다.
-`pickFile(accept)`은 열기 피커가 있으면 단일 파일을 받아 File 객체로 돌려주고, 취소하면 null을 돌려준다. 피커가 없으면 숨은 파일 입력 요소를 만들어 같은 동작을 흉내 낸다. 어떤 API도 없으면 `INVALID_STATE`다.
+`saveTextFile(suggestedName, text, mime)`과 `saveBinaryFile(suggestedName, bytes, mime)`은 내부적으로 같은 저장 경로를 쓴다. 셸을 고르는 기준은 `window.__TAURI__`가 있는지다. 있으면 네이티브 저장 대화상자로 고른 경로에 그대로 쓰고, 사용자가 취소하면 false를 돌려준다. 없으면 File System Access의 저장 피커가 있으면 그곳에 쓰고, 그것도 없으면 Blob을 만들어 앵커 다운로드로 저장한다. 문서 환경 자체도 없으면 `INVALID_STATE`를 던진다.
+`pickFile(accept)`은 네이티브 런타임에서는 열기 대화상자에서 고른 파일의 바이트를 읽어 File 객체로 감싸 돌려준다. 브라우저에서는 열기 피커가 있으면 단일 파일을 받아 File 객체로, 취소하면 null을 돌려준다. 피커가 없으면 숨은 파일 입력 요소를 만들어 같은 동작을 흉내 낸다. 어떤 API도 없으면 `INVALID_STATE`다. File을 돌리므로 이 함수 뒤의 코드는 두 런타임을 구분하지 않는다.
 `readJsonFile(file)`은 크기 필드와 텍스트 읽기 함수가 없으면 `SCHEMA`로 거절한다. 크기가 64MiB를 넘으면 `FILE_TOO_LARGE`로 먼저 차단하고 파일을 읽지 않는다. 이후 텍스트를 JSON으로 파싱하고 실패하면 `SCHEMA`로 던진다.
+
+네이티브 브리지가 쓰는 Rust 명령 이름과 base64 규약은 `docs/desktop.md` §2, 회귀 테스트는 `tests/io_native_file.test.mjs`가 맡는다.
 
 ## 8. 자동저장 — AutosaveStore와 네 위임 모듈
 
@@ -119,7 +121,7 @@ io 모듈은 문서의 바깥 경계를 담당한다. 메모리 안의 Document�
 | `validate_structural.js` | 139 | 분리됨 |
 | `png.js` | 138 | 단일 책임 |
 | `export_png.js` | 105 | 단일 책임 |
-| `file_io.js` | 96 | 단일 책임 |
+| `file_io.js` | 159 | 런타임 분기(네이티브·브라우저) 추가. `docs/desktop.md` §2 |
 | `validate.js` | 96 | 분리 후 진입점 |
 | `idb_loader.js` | 72 | 분리됨 |
 | `idb_scheduler.js` | 43 | 분리됨 |
@@ -145,6 +147,6 @@ an export named 'buildChunkRecords'
 테스트 경로 수정이 더 순수하므로 이를 택했다. 현재 io 계층 35/35 통과.
 
 ## Handoff
-- **Wrote**: `draw_tool_v2/docs/io.md`
+- **Wrote**: `pixeldraw/docs/io.md`
 - **Result**: 분리 후 13파일 라인 수 표 + `io_basic.test.mjs` 회귀 해소 기록
 - **Next**: 없음. io 계층 검증 35/35 통과

@@ -130,7 +130,7 @@
 
 ## Handoff
 
-- **Wrote**: `draw_tool_v2/docs/model.md`
+- **Wrote**: `pixeldraw/docs/model.md`
 - **Result**: `src/model/` 제거를 반영해 두 피처(`features/document/`·`features/layers/`)로
   인벤토리 교정. `commands.js` 2차 분리는 이미 `commands_pixel.js`로 해소됨.
 - **Next**: `panel_layers.js` 264줄이 유일한 250줄 초과 파일 — 목록 렌더와 썸네일

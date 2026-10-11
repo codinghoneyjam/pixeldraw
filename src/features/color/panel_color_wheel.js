@@ -305,7 +305,7 @@ function withSlotAlpha(ui, hex) {
 export function mountWheel(ui) {
   ui.wheel = createColorWheel({
     container: ui.els.wheelWrap,
-    onChange: (hex) => ui.safe(() => ui.applyColor(ui.slot, withSlotAlpha(ui, hex), { record: false })),
+    onChange: (hex) => ui.safe(() => ui.applyColor(ui.slot, withSlotAlpha(ui, hex), { record: false, preserveWheel: true })),
     onCommit: () => ui.safe(() => ui.pushRecent(ui.canonical())),
   });
   return () => ui.wheel?.dispose();

@@ -10,7 +10,7 @@ metadata={
 
 [deps]
 
-source_file="res://draw_tool_v2/tests/fixtures/player_arc/player_mouse__visor_right_legacy.png"
+source_file="res://pixeldraw/tests/fixtures/player_arc/player_mouse__visor_right_legacy.png"
 dest_files=["res://.godot/imported/player_mouse__visor_right_legacy.png-98c16cf5dc9294ba42c06b88c5b1a96f.ctex"]
 
 [params]

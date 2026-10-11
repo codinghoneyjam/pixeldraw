@@ -1,6 +1,6 @@
 // View worked examples + composite basics (docs/render.md).
 // Grid/renderer cases live in render_grid.test.mjs.
-// Run: node --test draw_tool_v2/tests/view_basic.test.mjs
+// Run: node --test pixeldraw/tests/view_basic.test.mjs
 
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";

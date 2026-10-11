@@ -1,6 +1,6 @@
 // <META - FILE SUMMARY - Vector recipe converter: Document <-> vector command list>
 //
-// Converts between Draw Tool v2 Document (raster chunks) and vector command lists.
+// Converts between Pixeldraw Document (raster chunks) and vector command lists.
 // Each layer stores a sequence of drawing commands (rect, circle, etc.) instead
 // of pixel data.
 //

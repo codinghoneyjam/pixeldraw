@@ -208,7 +208,7 @@ Session 메서드 호출과 이벤트 구독만 하고 모델을 직접 변조�
 
 ## Handoff
 
-- Wrote: `draw_tool_v2/core.md`
+- Wrote: `pixeldraw/core.md`
 - Result: `core/` 11개 파일(raster/ 4개 포함) 전 심볼 커버리지, 미해결 중복 3건 명시
 - Next: Orchestrator — `raster_brush.js` 제거 및 `rnd` 단일화 판단
 

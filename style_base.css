@@ -65,18 +65,18 @@ html, body {
 }
 #dt-app {
   display: grid;
-  grid-template-columns: 44px minmax(180px, var(--panel-w)) minmax(0, 1fr) minmax(200px, var(--right-w));
+  grid-template-columns: 44px minmax(180px, var(--panel-w)) 8px minmax(0, 1fr) 8px minmax(200px, var(--right-w));
   grid-template-rows: auto auto minmax(0, 1fr) auto;
   height: 100dvh;
 }
 @media (max-width: 720px) {
   #dt-app {
-    grid-template-columns: 32px minmax(130px, 1fr) minmax(48px, 1.2fr) minmax(130px, 1fr);
+    grid-template-columns: 32px minmax(130px, var(--panel-w)) 8px minmax(48px, 1.2fr) 8px minmax(130px, var(--right-w));
   }
 }
 @media (max-width: 360px) {
   #dt-app {
-    grid-template-columns: 28px minmax(96px, 1fr) minmax(40px, 0.8fr) minmax(96px, 1fr);
+    grid-template-columns: 28px minmax(96px, var(--panel-w)) 8px minmax(40px, 0.8fr) 8px minmax(96px, var(--right-w));
   }
 }
 #dt-menubar, #dt-optionbar, #dt-statusbar {
@@ -110,6 +110,8 @@ html, body {
   user-select: none;
 }
 #dt-left-panels {
+  grid-column: 2;
+  grid-row: 3;
   background: var(--panel);
   border-right: 1px solid var(--border);
   overflow-y: auto;
@@ -123,6 +125,8 @@ html, body {
   gap: 12px;
 }
 #dt-canvas-host {
+  grid-column: 4;
+  grid-row: 3;
   position: relative;
   min-width: 0;
   min-height: 0;
@@ -138,6 +142,8 @@ html, body {
   height: 100%;
 }
 #dt-right-panels {
+  grid-column: 6;
+  grid-row: 3;
   background: var(--panel);
   border-left: 1px solid var(--border);
   overflow-y: auto;
@@ -146,6 +152,41 @@ html, body {
   scrollbar-width: thin;
   min-width: 0;
   padding: var(--gap);
+}
+.dt-panel-resize {
+  grid-row: 3;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  cursor: col-resize;
+  touch-action: none;
+  user-select: none;
+}
+#dt-left-resize { grid-column: 3; }
+#dt-right-resize { grid-column: 5; }
+.dt-panel-resize::after {
+  content: "";
+  width: 2px;
+  margin-block: 6px;
+  border-radius: 2px;
+  background: var(--border);
+  transition: background-color 120ms ease, width 120ms ease;
+}
+.dt-panel-resize:hover::after,
+.dt-panel-resize:focus-visible::after,
+.dt-panel-resize.is-dragging::after {
+  width: 3px;
+  background: var(--accent);
+}
+.dt-panel-resize:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+body.dt-panel-resizing,
+body.dt-panel-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
 }
 #dt-statusbar {
   display: flex;

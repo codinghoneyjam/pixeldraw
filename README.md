@@ -1,125 +1,50 @@
-# Draw Tool v2
+# Pixeldraw
 
-General-purpose pixel art editor for tile-based 2D assets. Dependency: none.
-Pixel-pen raster editor. 32px chunk layers, no antialiasing, zero npm dependencies, no build step.
+타일 기반 2D 에셋을 위한 픽셀 아트 편집기입니다. 브러시·도형·레이어 편집, 실행 취소/다시 실행, PNG 및 문서 JSON 저장을 지원합니다. npm 런타임 의존성은 없고 빌드 단계도 없습니다(데스크톱 exe는 선택).
+![Pixeldraw 편집 화면](docs/pixeldraw-demo.png)
 
-## Run
+## 실행
+
+Python 3가 설치된 환경에서 저장소 루트에서 실행합니다.
 
 ```bash
-cd draw_tool_v2
 python run.py
 ```
 
-Picks a free loopback port, serves the tool, and opens your browser.
-`--port N` to prefer a port, `--no-browser` to just print the URL.
-`file://` direct open is **unsupported** (Chromium blocks ES modules over CORS),
-which is why `run.py` exists.
+로컬 서버가 빈 포트를 선택해 브라우저를 엽니다. `--port 8000`으로 포트를 지정하거나 `--no-browser`로 브라우저 자동 실행을 끌 수 있습니다. ESM을 사용하므로 `index.html`을 `file://`로 직접 열 수 없습니다.
 
-## Test
+저장 위치는 브라우저의 파일 저장 대화상자 또는 다운로드 설정이 결정합니다. 브라우저 보안상 앱이 임의의 `saves/` 폴더를 강제로 지정할 수는 없습니다. `saves/`는 로컬 산출물 보관용으로 Git에서 제외됩니다.
+
+## 데스크톱 앱
+
+Python이나 브라우저 없이 바로 실행하는 exe로도 쓸 수 있습니다. 인터넷이 없어도 동작합니다.
 
 ```bash
-node --test "tests/*.test.mjs"   # node --test tests/  (Node >= 20, no framework)
-npm run parity      # node tools/parity_check.mjs  (201 golden checks)
-npm run parity:assets  # node tools/recipe_parity_check.mjs  (39 legacy PNG renders)
-npm run layers      # node tools/extract_layers.mjs  (per-layer PNG + Document JSON)
-npm run gallery     # node tools/build_layer_gallery.mjs  (34 assets x 3, see below)
-node tools/png_cases_check.mjs   # PNG codec cases 5/5
-node tools/view_check.mjs        # view-math worked examples
-node tests/tool_integrity_check.mjs  # post-cleanup gate: exports, line counts, link check
-python schema/schema_selfcheck.py  # schema + semantic + flatten parity
+npm install          # @tauri-apps/cli (개발 의존성, 최초 1회)
+npm run app:build    # src-tauri/target/release/pixeldraw.exe 생성
 ```
 
-## Layer gallery (viewer/)
+편집기 코드(`src/`)는 그대로입니다. `src-tauri/`(Rust)는 네이티브 파일 대화상자와
+파일 쓰기만 맡고, `src/io/file_io.js`가 데스크톱에서는 네이티브 경로를, 브라우저에서는
+기존 경로를 씁니다. 단, Windows의 WebView2 런타임을 사용하므로 Windows 10 21H2
+이후·Windows 11에서 실행해야 합니다. 구조와 요구사항은 [docs/desktop.md](docs/desktop.md)에 적었습니다.
 
-`viewer/index.html` lists the 34 ACTIVE legacy assets
-(`asset_work/tidy/numbered/11_*.png` .. `44_*.png`) as triples:
-① the draw_tool_v2 **layer units** (PNG + `_drawtool.json`), ② the **PNG rendered
-from those layers**, ③ the **legacy PNG**. Each card also bakes a diff map and
-reports RGBA parity against the legacy file.
+## 검증
 
-`node tools/build_layer_gallery.mjs` regenerates everything
-(`asset_work/layers/gallery/` + `viewer/js/gallery_data.js`) and fails the process
-if any of the 34 lacks layers or scores below 0.99. Serve it with
-`python run.py` and open `/viewer/`; it also works from `file://`.
+Node.js 20 이상에서 전체 테스트와 렌더링 검증을 실행할 수 있습니다.
 
-## Layout
-
-```text
-index.html  package.json  run.py  split_serialize.py
-style_base.css  style_polish.css  style_juicy.css  style_picker.css
-src/
-  core/     constants.js errors.js events.js pixel.js blend.js chunkstore.js
-            raster/  (arc atlas composite_ops gradient polygon raster_brush
-                      raster_masks raster_snap segment shape_raster text_mask)
-  features/ 툴 기능 단위 피처 패키지
-            viewport/ view.js (줌·팬 수학) view_store.js
-            document/ document.js history.js session.js settings_validator.js
-            layers/   layer.js layer_operations.js commands.js commands_pixel.js
-                      edit_session.js layer_actions.js panel_layers.js
-            pen/      pen.js (pen+eraser) brush.js panel_brush.js
-            shape/    shape.js shape_geom.js shape_overlay.js shape_render.js
-                      shape_pending.js shape_keys.js
-            fill/     fill.js
-            eyedropper/ eyedropper.js
-            hand/     hand.js
-            color/    panel_color.js panel_color_fields.js panel_color_wheel.js
-                      color_palette.js color_recent.js color_slots.js color_events.js
-  io/       base64.js png.js validate.js validate_structural.js validate_semantic.js
-            serialize.js (래스터 + 배럴) serialize_vector.js serialize_recipe.js
-            export_png.js file_io.js store_idb.js
-            idb_schema.js idb_record_builder.js idb_scheduler.js idb_loader.js
-  render/   composite.js renderer.js renderer_composite.js renderer_display.js
-            background.js grid.js
-  tools/    tool_base.js tool_manager.js input_controller.js
-            pointer_bindings.js keyboard_bindings.js pointer_event.js wheel_accumulator.js
-            cursor_state.js
-  ui/       app.js
-            actions/ action_map.js edit_actions.js file_actions.js
-            menubar/ menubar.js menubar_wiring.js history_buttons.js
-            optionbar/ panel_options.js
-            toolbar/ icons.js shortcuts.js toolbar_wiring.js
-            statusbar/ statusbar.js
-            dialogs/ dialog_core.js dialog_new_doc.js dialog_resize.js
-            shared/  dom.js strings.js tooltip.js collapsible_sections.js
-                     panel_refresh.js dialogs.js storage.js toast.js
-            (도구별 액션은 피처로 이감: viewport/view_actions.js·
-             color/color_actions.js·pen/brush_actions.js·layers/layer_actions.js)
-tests/     *.test.mjs  helpers/  fixtures/   (fixtures are normative)
-schema/    layer_schema.v2.json document_schema.v2.json
-tools/     parity_check.mjs png_cases_check.mjs view_check.mjs png_unique_colors.mjs + gen_*.py
-           recipe/  (transpile.mjs render_tile.js schema.mjs recipe_converter.mjs ...)
-reference/ raster_ref.mjs png_ref.mjs view_ref.mjs (non-normative)
+```bash
+npm test                       # 410건 (네이티브 파일 브리지 6건 포함)
+npm run parity                 # 201 골든 검사
+npm run parity:assets          # 39/39
+node tools/png_cases_check.mjs
+node tools/view_check.mjs
+python schema/schema_selfcheck.py
 ```
 
-피처 기반 재편(2026-10-08)으로 모델 계층 `src/model/`은 사라지고 `features/document/`와
-`features/layers/`로 갈라졌다. 도구 구현체(`pen`·`shape`·`fill`·`eyedropper`·`hand`)와
-패널(`panel_color*`·`panel_brush`·`panel_layers`), 뷰(`view.js`·`view_store.js`)도 각 피처로
-옮겨갔으므로 `src/tools/`에는 입력 플럼빙만, `src/render/`에는 합성·표시만 남았다.
-`src/`는 계층당 6~36개 파일, 총 **104개 `.js`**다. 상세 구성과 라인 수는 각 계층 문서
-(`docs/core.md`·`model.md`·`io.md`·`render.md`·`tools.md`·`ui.md`)를 따른다.
+데스크톱 셸 쪽 검증은 `cd src-tauri && cargo test --lib`(base64 3건)과
+`npm run app:build`입니다.
 
-Headless integration: `tests/e2e_session.test.mjs` drives `Session` via
-`ToolManager` + fake `ToolEvent` (H3 1-9: diagonal scenario, hash-verified
-undo/redo, serialize determinism, dirty flag, layer export-import, 4x3 shape
-undo, no-AA PNG check, locked/hidden reject, small-budget history eviction).
+## 개발 문서
 
-## Known issues
-
-None open. Two that this file used to list are closed: the `test` script already
-runs the glob form Node 24 requires (`node --test "tests/*.test.mjs"`, so
-`npm test` works), and `src/core/raster/**` no longer throws `RangeError`.
-
-## Verification status (2026-10-09)
-
-All gates pass:
-
-| Gate | Result |
-|:---|:---|
-| `node --test "tests/*.test.mjs"` | 372/372 |
-| `node tools/parity_check.mjs` | 201 golden checks |
-| `node tools/recipe_parity_check.mjs` | 39/39 legacy renders |
-| `node tools/build_layer_gallery.mjs` | 34/34 assets layered, min parity 0.990131 |
-| `node tools/png_cases_check.mjs` | 5/5 |
-| `node tools/view_check.mjs` | OK |
-| `python schema/schema_selfcheck.py` | OK |
-| `node tests/tool_integrity_check.mjs` | 34/34 |
+아키텍처 및 동작 계약은 [docs/contract.md](docs/contract.md), 모듈별 설명은 [docs/README.md](docs/README.md)에서 확인할 수 있습니다. 레이어 갤러리는 `python run.py` 실행 후 `/viewer/`에서 열 수 있습니다.

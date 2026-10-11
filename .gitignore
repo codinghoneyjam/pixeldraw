@@ -1,0 +1,22 @@
+# Local saves and generated Python bytecode
+/saves/
+/line_counts.txt
+/report.md
+/split_serialize.py
+__pycache__/
+*.py[cod]
+
+# Local tooling and OS metadata
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.DS_Store
+Thumbs.db
+
+# Rust workspace (Cargo.toml at the repo root)
+/target/
+
+# Desktop shell build artifacts
+/node_modules/
+/build/
+/src-tauri/gen/schemas/

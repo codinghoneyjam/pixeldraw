@@ -49,13 +49,13 @@ function applyColor(ui, key, hex, opts = {}) {
   } finally {
     ui.lock -= 1;
   }
-  paint(ui, true);
+  paint(ui, true, opts.preserveWheel === true);
   if (opts.record) pushRecent(ui, v);
   return true;
 }
 
 // <META - ROLE : Repaint every control from the canonical colour | L34-50>
-function paint(ui, force = false) {
+function paint(ui, force = false, preserveWheel = false) {
   if (ui.lock > 0) return canonicalHex(ui);
   const hex = canonicalHex(ui);
   const { els, wheel, session } = ui;
@@ -66,7 +66,7 @@ function paint(ui, force = false) {
   }
   paintColorFields(ui.fields, hex, force);
   const c = parseHex(hex);
-  if (wheel && c) wheel.setFromRgb(c);
+  if (wheel && c && !preserveWheel) wheel.setFromRgb(c);
   syncActiveSwatches(ui);
   return hex;
 }

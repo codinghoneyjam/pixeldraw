@@ -1,6 +1,7 @@
 import { arcMask, chordFillMask, chordOutlineMask } from "../../core/raster/arc.js";
 import { packRGBA, parseHex } from "../../core/pixel.js";
 import { Tool } from "../../tools/tool_base.js";
+import { drawPixelPreview } from "../../tools/pixel_preview.js";
 
 export class ArcTool extends Tool {
   constructor(env, kind = "arc") {
@@ -9,13 +10,23 @@ export class ArcTool extends Tool {
     this.start = 0;
     this.end = 180;
     this.width = 2;
-    this.fill = true;
-    this.outline = true;
+    this.chordMode = "fill";
     this._draw = null;
+    this._preview = { canvas: null };
   }
 
   get id() { return this.kind; }
   get cursor() { return "crosshair"; }
+  get fill() { return this.chordMode === "fill"; }
+  set fill(value) {
+    if (value) this.chordMode = "fill";
+    else if (this.chordMode === "fill") this.chordMode = "outline";
+  }
+  get outline() { return this.chordMode === "outline"; }
+  set outline(value) {
+    if (value) this.chordMode = "outline";
+    else if (this.chordMode === "outline") this.chordMode = "fill";
+  }
 
   pointerDown(ev) {
     if ((ev.button !== 0 && ev.button !== undefined) || !this.session.doc) return;
@@ -25,13 +36,28 @@ export class ArcTool extends Tool {
       layerId: this.session.doc.activeLayerId,
       fillColor: this.session.settings.primaryColor,
       outlineColor: this.session.settings.secondaryColor,
+      start: this.start,
+      end: this.end,
+      width: this.width,
+      chordMode: this.chordMode,
+      x1: Math.round(ev.x),
+      y1: Math.round(ev.y),
     };
+    this.requestRender();
+  }
+
+  pointerMove(ev) {
+    if (!this._draw) return;
+    this._draw.x1 = Math.round(ev.x);
+    this._draw.y1 = Math.round(ev.y);
+    this.requestRender();
   }
 
   pointerUp(ev) {
     if (!this._draw) return;
     const draw = this._draw;
     this._draw = null;
+    this.requestRender();
     const x1 = Math.round(ev.x);
     const y1 = Math.round(ev.y);
     if (x1 === draw.x0 || y1 === draw.y0) return;
@@ -47,10 +73,10 @@ export class ArcTool extends Tool {
     const masks = [];
 
     if (this.kind === "arc") {
-      masks.push({ mask: arcMask(cx, cy, rx, ry, this.start, this.end, this.width, width, height), color: fillPacked });
+      masks.push({ mask: arcMask(cx, cy, rx, ry, draw.start, draw.end, draw.width, width, height), color: fillPacked });
     } else {
-      if (this.fill) masks.push({ mask: chordFillMask(cx, cy, rx, ry, this.start, this.end, width, height), color: fillPacked });
-      if (this.outline) masks.push({ mask: chordOutlineMask(cx, cy, rx, ry, this.start, this.end, this.width, width, height), color: outlinePacked });
+      if (draw.chordMode === "fill") masks.push({ mask: chordFillMask(cx, cy, rx, ry, draw.start, draw.end, width, height), color: fillPacked });
+      else masks.push({ mask: chordOutlineMask(cx, cy, rx, ry, draw.start, draw.end, draw.width, width, height), color: outlinePacked });
     }
     if (!masks.length) return;
 
@@ -64,6 +90,28 @@ export class ArcTool extends Tool {
     this.env.requestRender?.();
   }
 
-  cancel() { this._draw = null; }
+  overlay(ctx, info = {}) {
+    const draw = this._draw;
+    if (!draw || !this.session.doc) return;
+    const { widthPx: width, heightPx: height } = this.session.doc.canvas;
+    const cx = (draw.x0 + draw.x1) / 2;
+    const cy = (draw.y0 + draw.y1) / 2;
+    const rx = Math.abs(draw.x1 - draw.x0) / 2;
+    const ry = Math.abs(draw.y1 - draw.y0) / 2;
+    const masks = this.kind === "arc"
+      ? [{ mask: arcMask(cx, cy, rx, ry, draw.start, draw.end, draw.width, width, height), color: draw.fillColor }]
+      : draw.chordMode === "fill"
+        ? [{ mask: chordFillMask(cx, cy, rx, ry, draw.start, draw.end, width, height), color: draw.fillColor }]
+        : [{ mask: chordOutlineMask(cx, cy, rx, ry, draw.start, draw.end, draw.width, width, height), color: draw.outlineColor }];
+    const view = info.view ?? this.getView?.() ?? { zoom: 1, offsetX: 0, offsetY: 0 };
+    for (const entry of masks) {
+      drawPixelPreview(ctx, entry.mask, entry.color, view, info.dpr ?? 1, this._preview);
+    }
+  }
+
+  cancel() {
+    this._draw = null;
+    this.requestRender();
+  }
   deactivate() { this.cancel(); }
 }

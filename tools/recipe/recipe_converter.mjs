@@ -1,6 +1,6 @@
-// <META - FILE SUMMARY - Recipe converter: legacy recipe <-> draw_tool_v2 Document JSON>
+// <META - FILE SUMMARY - Recipe converter: legacy recipe <-> pixeldraw Document JSON>
 //
-// Converts legacy recipe JSON to draw_tool_v2 Document JSON (layer-based format)
+// Converts legacy recipe JSON to pixeldraw Document JSON (layer-based format)
 // and vice versa. This enables:
 //   1. Legacy recipe -> Document JSON (layer set)
 //   2. Document JSON -> Legacy recipe (reverse conversion)
@@ -84,7 +84,7 @@ function isSurfaceManifest(recipe) {
   return Boolean(recipe && Array.isArray(recipe.surfaces));
 }
 
-// <META - ROLE : Convert legacy recipe to draw_tool_v2 Document | L75-180>
+// <META - ROLE : Convert legacy recipe to pixeldraw Document | L75-180>
 async function legacyRecipeToDocument(recipe) {
   const session = new Session();
 
@@ -216,7 +216,7 @@ async function legacyRecipeToDocument(recipe) {
   return doc;
 }
 
-// <META - ROLE : Convert draw_tool_v2 Document to legacy recipe format | L185-260)>
+// <META - ROLE : Convert pixeldraw Document to legacy recipe format | L185-260)>
 function documentToLegacyRecipe(doc) {
   const recipe = {
     canvas: {

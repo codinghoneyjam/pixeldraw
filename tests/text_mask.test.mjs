@@ -15,7 +15,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Working assets live under asset_work/target/ (recipes + legacy PNGs + oracle ground truth).
 const REPO_ROOT = path.resolve(__dirname, "..");
 const TARGET_ROOT = path.join(REPO_ROOT, "asset_work", "target");
-const targetPath = (rel) => path.join(TARGET_ROOT, rel.replace(/^draw_tool_v2\//, ""));
+const targetPath = (rel) => path.join(TARGET_ROOT, rel.replace(/^pixeldraw\//, ""));
 
 const GLYPHS = loadGlyphSet(path.join(__dirname, "..", "tools", "recipe", "text_glyphs.json"));
 
@@ -62,7 +62,7 @@ describe("title logo text reproduction", () => {
         outputDocPath: path.join(tmp, `${t}.json`),
         outputPngPath: png,
       });
-      const legacy = await decodePng(fs.readFileSync(path.join(TARGET_ROOT, "assetdb/ui/title".replace(/^draw_tool_v2\//, ""), `title_logo_text_${t}.png`)));
+      const legacy = await decodePng(fs.readFileSync(path.join(TARGET_ROOT, "assetdb/ui/title".replace(/^pixeldraw\//, ""), `title_logo_text_${t}.png`)));
       const cand = await decodePng(fs.readFileSync(png));
       const [cw, ch] = recipe.crop;
       assert.equal(legacy.width, cw, "legacy width");
@@ -94,7 +94,7 @@ describe("hud icons atlas text cell", () => {
       outputDocPath: path.join(tmp, "diamond.json"),
       outputPngPath: png,
     });
-    const legacy = await decodePng(fs.readFileSync(path.join(TARGET_ROOT, "assetdb/ui/hud".replace(/^draw_tool_v2\//, ""), "hud_icons_128_atlas.png")));
+    const legacy = await decodePng(fs.readFileSync(path.join(TARGET_ROOT, "assetdb/ui/hud".replace(/^pixeldraw\//, ""), "hud_icons_128_atlas.png")));
     const cand = await decodePng(fs.readFileSync(png));
     // diamond_gem is ICON_NAMES index 7 -> cell (384, 128) in the 512 atlas
     const total = 128 * 128;

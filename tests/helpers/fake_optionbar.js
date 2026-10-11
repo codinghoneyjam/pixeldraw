@@ -95,14 +95,14 @@ export function makeOptionbar() {
   };
 
   add(
-    ["pen", "eraser", "fill", "eyedropper", "line", "rect", "rrect", "ellipse", "polygon", "hand"],
+    ["pen", "eraser", "fill", "eyedropper", "line", "rect", "rrect", "ellipse", "polygon", "arc", "chord", "radial_gradient", "hand"],
     "view",
     [gridSel, mk("dt-zoom-fit", "button"), mk("dt-zoom-actual", "button"), zoomSel],
   );
   add(["pen", "eraser"], null, [penSizeLabel]);
 
   const shapeControls = [
-    mk("dt-shape-fill-toggle", "button"), mk("dt-shape-radius"),
+    mk("dt-shape-mode", "button"), mk("dt-shape-radius"),
     mk("dt-shape-lock"), mk("dt-snap-unit"),
     mk("dt-shape-x"), mk("dt-shape-y"), mk("dt-shape-w"), mk("dt-shape-h"),
     mk("dt-polygon-vertices", "div"), mk("dt-polygon-add", "button"),
@@ -111,13 +111,20 @@ export function makeOptionbar() {
   // Named aliases: the array order is index.html's markup order, but tests read
   // far clearer through names than through five skipped slots.
   const shape = {
-    fillToggle: shapeControls[0], radius: shapeControls[1],
+    modeToggle: shapeControls[0], radius: shapeControls[1],
     lock: shapeControls[2], snap: shapeControls[3],
     x: shapeControls[4], y: shapeControls[5], w: shapeControls[6], h: shapeControls[7],
     vertexHost: shapeControls[8], vertexAdd: shapeControls[9],
     commit: shapeControls[10], cancel: shapeControls[11],
   };
   add(["line", "rect", "rrect", "ellipse", "polygon"], "shape", shapeControls);
+  const arc = {
+    start: mk("dt-arc-start"), end: mk("dt-arc-end"), width: mk("dt-arc-width"),
+    modeToggle: mk("dt-chord-mode", "button"),
+  };
+  add(["arc", "chord"], "arc", [arc.start, arc.end, arc.width, arc.modeToggle]);
+  const gradient = { innerRadius: mk("dt-gradient-inner-radius"), edgeMode: mk("dt-gradient-edge-mode", "select") };
+  add(["radial_gradient"], "gradient", [gradient.innerRadius, gradient.edgeMode]);
   add(["fill"], null, []);
   add(["eyedropper"], null, []);
   add(["hand"], null, []);
@@ -126,7 +133,7 @@ export function makeOptionbar() {
   root.append(...sections);
   root.querySelector = (sel) => byId.get(sel) ?? null;
   root.querySelectorAll = (sel) => (sel === "[data-for-tools]" ? sections : []);
-  return { root, sections, byId, penSizeLabel, gridSel, zoomSel, shapeControls, shape };
+  return { root, sections, byId, penSizeLabel, gridSel, zoomSel, shapeControls, shape, arc, gradient };
 }
 
 // <META - ROLE : Install a document/window pair, return a restore handle | L120-134>

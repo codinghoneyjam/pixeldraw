@@ -135,7 +135,9 @@ DOM-free 규칙을 그대로 지킨다. 구분선은 파일 접미사다: `panel
 - `src/`는 상대 경로 ESM `import`만 쓴다. `export default`, 동적 `import()`, `import.meta`를
   쓰지 않는다(브라우저가 모듈을 그대로 로드하므로 번들러가 개입하지 않는다).
 - 최상위 선언 이름은 모듈 간 충돌이 없도록 고유해야 한다.
-- 실행 진입점은 `run.py` 하나다. 구버전 단일 HTML 번들러는 제거되었다.
+- 실행 진입점은 두 개다 — 브라우저는 `run.py`, 네이티브는 `src-tauri/`(Tauri).
+  구버전 단일 HTML 번들러는 제거되었다. 두 경로가 만나는 지점은
+  `src/io/file_io.js` 하나뿐이며, 규칙은 `docs/desktop.md`에 적었다.
 
 ## 6. 의존 DAG
 

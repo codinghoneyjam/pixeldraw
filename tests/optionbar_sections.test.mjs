@@ -12,6 +12,8 @@ import { installDom, makeOptionbar, withDom } from "./helpers/fake_optionbar.js"
 import { makeSession, envFor } from "./helpers/tool_session.js";
 import { PenTool } from "../src/features/pen/pen.js";
 import { ShapeTool } from "../src/features/shape/shape.js";
+import { ArcTool } from "../src/features/arc/arc_tool.js";
+import { GradientTool } from "../src/features/gradient/gradient_tool.js";
 import { ToolManager } from "../src/tools/tool_manager.js";
 
 // The optionbar reads document.activeElement while syncing, so the fake DOM has
@@ -28,6 +30,9 @@ function mount() {
   for (const kind of ["line", "rect", "rrect", "ellipse", "polygon"]) {
     toolManager.register(new ShapeTool({ session, getView: envFor(session).getView, requestRender: () => {} }, kind));
   }
+  toolManager.register(new ArcTool({ session, requestRender: () => {} }, "arc"));
+  toolManager.register(new ArcTool({ session, requestRender: () => {} }, "chord"));
+  toolManager.register(new GradientTool({ session, requestRender: () => {} }));
   toolManager.register(new PenTool(envFor(session)));
   const bar = makeOptionbar();
   const view = { get: () => ({ zoom: 1 }), subscribe: () => () => {}, zoomTo: () => {}, fit: () => {}, actual: () => {} };
@@ -87,8 +92,8 @@ describe("optionbar shape block enable matrix", () => {
   it("line disables the fill toggle, rrect is the only tool with a radius", () => {
     const { session, bar, dispose } = mount();
     session.setSetting("activeTool", "line");
-    const { fillToggle, radius, lock, snap, x, commit, cancel } = bar.shape;
-    assert.equal(fillToggle.disabled, true, "line cannot fill");
+    const { modeToggle, radius, lock, snap, x, commit, cancel } = bar.shape;
+    assert.equal(modeToggle.disabled, true, "line cannot change fill mode");
     assert.equal(radius.disabled, true, "radius is rrect-only");
     assert.equal(lock.disabled, false);
     assert.equal(snap.disabled, false);
@@ -98,23 +103,42 @@ describe("optionbar shape block enable matrix", () => {
     assert.equal(cancel.disabled, true);
 
     session.setSetting("activeTool", "rrect");
-    assert.equal(fillToggle.disabled, false, "rrect can fill");
+    assert.equal(modeToggle.disabled, false, "rrect can toggle fill mode");
     assert.equal(radius.disabled, false, "rrect owns the radius");
     dispose();
   });
 
-  it("fill toggle flips the setting and its accessible state", () => {
+  it("the split fill/outline switch reverses mode on every click", () => {
     const { session, bar, dispose } = mount();
-    const toggle = bar.shape.fillToggle;
-    assert.equal(toggle.textContent, "테두리");
+    const toggle = bar.shape.modeToggle;
+    assert.equal(toggle.dataset.mode, "outline");
     assert.equal(toggle.getAttribute("aria-pressed"), "false");
     toggle.emit("click");
     assert.equal(session.settings.shapeFill, "fill");
-    assert.equal(toggle.textContent, "채움");
+    assert.equal(toggle.dataset.mode, "fill");
     assert.equal(toggle.getAttribute("aria-pressed"), "true");
     toggle.emit("click");
     assert.equal(session.settings.shapeFill, "outline");
+    assert.equal(toggle.dataset.mode, "outline");
     assert.equal(toggle.getAttribute("aria-pressed"), "false");
+    dispose();
+  });
+
+  it("chord split switch reverses mode on every click", () => {
+    const { session, toolManager, bar, dispose } = mount();
+    session.setSetting("activeTool", "chord");
+    const tool = toolManager.get("chord");
+    assert.equal(bar.arc.modeToggle.hidden, false);
+    assert.equal(bar.arc.modeToggle.dataset.mode, "fill");
+    bar.arc.modeToggle.emit("click");
+    assert.equal(tool.chordMode, "outline");
+    assert.equal(bar.arc.modeToggle.dataset.mode, "outline");
+    assert.equal(bar.arc.modeToggle.getAttribute("aria-pressed"), "false");
+    bar.arc.modeToggle.emit("click");
+    assert.equal(tool.chordMode, "fill");
+    assert.equal(bar.arc.modeToggle.dataset.mode, "fill");
+    session.setSetting("activeTool", "arc");
+    assert.equal(bar.arc.modeToggle.hidden, true);
     dispose();
   });
 

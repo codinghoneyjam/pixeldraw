@@ -12,7 +12,7 @@ const REPO_ROOT = path.resolve(__dirname, "..");
 const TARGET_ROOT = path.join(REPO_ROOT, "asset_work", "target");
 
 export const resolveCasePath = (rel) =>
-  path.join(TARGET_ROOT, rel.startsWith("draw_tool_v2/") ? rel.slice("draw_tool_v2/".length) : rel);
+  path.join(TARGET_ROOT, rel.startsWith("pixeldraw/") ? rel.slice("pixeldraw/".length) : rel);
 
 // The 13 single-invocation assets. Portal socket/sky_gate are excluded (no PNG).
 // Layer keys match the scratch all_assets_verify.py baseline exactly (no --slot).
@@ -29,12 +29,12 @@ export const CASES = [
   // plus a viewport so the stored document stays chunk-aligned; the transpiler
   // emits the cropped 280x560 PNG.
   { id: "title_diorama_sword_body", recipe: "assetdb/ui/data/title_diorama_sword_body.json", layer: "body", legacy: "assetdb/ui/title/title_diorama_sword_body.png" },
-  // Title logo type. Recipes live under draw_tool_v2/tests/fixtures/ because the
+  // Title logo type. Recipes live under pixeldraw/tests/fixtures/ because the
   // committed PNGs were baked from these exact specs, not from assetdb recipes.
-  { id: "title_logo_text_our", recipe: "draw_tool_v2/tests/fixtures/title_logo_text_our_recipe.json", layer: null, legacy: "assetdb/ui/title/title_logo_text_our.png" },
-  { id: "title_logo_text_or", recipe: "draw_tool_v2/tests/fixtures/title_logo_text_or_recipe.json", layer: null, legacy: "assetdb/ui/title/title_logo_text_or.png" },
-  { id: "title_logo_text_d", recipe: "draw_tool_v2/tests/fixtures/title_logo_text_d_recipe.json", layer: null, legacy: "assetdb/ui/title/title_logo_text_d.png" },
-  { id: "shockwave_ring", recipe: "draw_tool_v2/tests/fixtures/shockwave_ring_recipe.json", layer: null, legacy: "assetdb/entity/player/shockwave_ring.png" },
+  { id: "title_logo_text_our", recipe: "pixeldraw/tests/fixtures/title_logo_text_our_recipe.json", layer: null, legacy: "assetdb/ui/title/title_logo_text_our.png" },
+  { id: "title_logo_text_or", recipe: "pixeldraw/tests/fixtures/title_logo_text_or_recipe.json", layer: null, legacy: "assetdb/ui/title/title_logo_text_or.png" },
+  { id: "title_logo_text_d", recipe: "pixeldraw/tests/fixtures/title_logo_text_d_recipe.json", layer: null, legacy: "assetdb/ui/title/title_logo_text_d.png" },
+  { id: "shockwave_ring", recipe: "pixeldraw/tests/fixtures/shockwave_ring_recipe.json", layer: null, legacy: "assetdb/entity/player/shockwave_ring.png" },
   // 16-slot enemy atlas (2048x128). The recipes flatten the legacy shape spec
   // into per-slot command lists; residual is the sheen stamp model and the
   // visor_50/25 cutout path. See docs/40_work/task/active/DRAWTOOL_REPRO.md.

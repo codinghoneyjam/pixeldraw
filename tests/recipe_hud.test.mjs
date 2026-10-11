@@ -13,7 +13,7 @@ import { decodePng } from "../src/io/png.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "..");
 const TARGET_ROOT = path.join(REPO_ROOT, "asset_work", "target");
-const targetPath = (rel) => path.join(TARGET_ROOT, rel.replace(/^draw_tool_v2\//, ""));
+const targetPath = (rel) => path.join(TARGET_ROOT, rel.replace(/^pixeldraw\//, ""));
 const HUD = targetPath("assetdb/ui/hud");
 const RECIPE = path.join(HUD, "hud_icons_128_atlas.json");
 const LEGACY = path.join(HUD, "hud_icons_128_atlas.png");

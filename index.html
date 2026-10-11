@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Draw Tool v2</title>
+<title>Pixeldraw</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="./style_base.css">
 <link rel="stylesheet" href="./style_polish.css">
@@ -80,7 +80,10 @@
       <button type="button" class="dt-tip-trigger" data-tip="Shift+클릭 = 직선, Alt+클릭 = 스포이트(펜)" aria-label="도움말" aria-expanded="false">?</button>
     </section>
     <section data-section="shape" data-for-tools="line rect rrect ellipse polygon">
-      <button type="button" id="dt-shape-fill-toggle" class="dt-option-flip" aria-pressed="false" aria-label="도형 채움: 테두리">테두리</button>
+      <button type="button" id="dt-shape-mode" class="dt-option-switch" data-mode="outline" aria-pressed="false" aria-label="도형 그리기 방식: 테두리">
+        <span class="dt-option-switch__option">테두리</span>
+        <span class="dt-option-switch__option">채움</span>
+      </button>
       <label for="dt-shape-radius">반경</label>
       <input type="number" id="dt-shape-radius" min="0" value="8">
       <label><input type="checkbox" id="dt-shape-lock">비율 고정</label>
@@ -109,8 +112,10 @@
       <label for="dt-arc-start">시작 각도</label><input type="number" id="dt-arc-start" value="0">
       <label for="dt-arc-end">끝 각도</label><input type="number" id="dt-arc-end" value="180">
       <label for="dt-arc-width">선폭</label><input type="number" id="dt-arc-width" min="1" max="64" value="2">
-      <label><input type="checkbox" id="dt-chord-fill" checked>현 채움</label>
-      <label><input type="checkbox" id="dt-chord-outline" checked>현 테두리</label>
+      <button type="button" id="dt-chord-mode" class="dt-option-switch" data-mode="fill" aria-pressed="true" aria-label="현 그리기 방식: 채움">
+        <span class="dt-option-switch__option">테두리</span>
+        <span class="dt-option-switch__option">채움</span>
+      </button>
     </section>
     <section data-section="gradient" data-for-tools="radial_gradient">
       <label for="dt-gradient-inner-radius">안쪽 반경</label>
@@ -218,7 +223,9 @@
       </div>
     </section>
   </aside>
+  <div id="dt-left-resize" class="dt-panel-resize" role="separator" aria-orientation="vertical" aria-valuemin="180" aria-valuemax="420" aria-valuenow="220" aria-label="왼쪽 패널 너비 조절" title="드래그 또는 방향키로 너비 조절" tabindex="0"></div>
   <main id="dt-canvas-host" aria-label="캔버스"></main>
+  <div id="dt-right-resize" class="dt-panel-resize" role="separator" aria-orientation="vertical" aria-valuemin="200" aria-valuemax="420" aria-valuenow="240" aria-label="오른쪽 패널 너비 조절" title="드래그 또는 방향키로 너비 조절" tabindex="0"></div>
   <aside id="dt-right-panels" aria-label="오른쪽 패널">
     <section id="dt-layer-panel" aria-label="레이어" data-collapsed="false">
       <button type="button" class="dt-panel-head" aria-expanded="true" aria-controls="dt-layer-body">레이어</button>

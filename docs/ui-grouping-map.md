@@ -1,4 +1,4 @@
-# UI Grouping Map — Draw Tool V2 (Slice A layout contract, frozen)
+# UI Grouping Map — Pixeldraw (Slice A layout contract, frozen)
 
 > **STATUS: SUPERSEDED (2026-10-08). 이 문서는 더 이상 실행 계약이 아니다.**
 > 원래는 "이 문서와 표만 보고 TL-CODE-03..13의 이동을 진행하라"는 Slice A 산출물이었다.
@@ -12,7 +12,7 @@
 
 ## 0. Closed inventory (36 files, verified on disk)
 
-- Root `draw_tool_v2/src/ui/*.js` (31): `app.js`, `collapsible_sections.js`,
+- Root `pixeldraw/src/ui/*.js` (31): `app.js`, `collapsible_sections.js`,
   `color_events.js`, `color_palette.js`, `color_palette_data.js`, `color_recent.js`,
   `color_slots.js`, `color_wheel.js`, `dialog_confirm.js`, `dialog_core.js`,
   `dialog_new_doc.js`, `dialog_progress.js`, `dialog_resize.js`, `dialog_restore.js`,
@@ -20,9 +20,9 @@
   `panel_brush.js`, `panel_color.js`, `panel_color_fields.js`, `panel_color_wheel.js`,
   `panel_layers.js`, `panel_options.js`, `panel_refresh.js`, `shortcuts.js`,
   `statusbar.js`, `strings.js`, `tooltip.js`, `view_store.js`.
-- Actions `draw_tool_v2/src/ui/actions/*.js` (5): `edit_actions.js`, `file_actions.js`,
+- Actions `pixeldraw/src/ui/actions/*.js` (5): `edit_actions.js`, `file_actions.js`,
   `layer_actions.js`, `tool_actions.js`, `view_actions.js`.
-- Entry: `app.js` (loaded by `draw_tool_v2/index.html` entry script).
+- Entry: `app.js` (loaded by `pixeldraw/index.html` entry script).
 - Barrel: `dialogs.js` (dialog re-export barrel).
 
 ## 1. DOM units (10, from `index.html:14-204`)
@@ -42,7 +42,7 @@
 
 ## 2. Source-to-target mapping (36/36, each file exactly once)
 
-Convention: DOM-id folder names under `draw_tool_v2/src/ui/`.
+Convention: DOM-id folder names under `pixeldraw/src/ui/`.
 `app.js` and `dialogs.js` stay at `src/ui/` root for entry stability.
 Shared helpers stay importable at root. No path alias (none exists today;
 `app.js` imports each file directly).
@@ -138,6 +138,6 @@ Shared helpers stay importable at root. No path alias (none exists today;
 ## 6. Out of scope (later / separate slices)
 
 - Physical moves: TL-CODE-03..10. Merges: Slice C task(s).
-- `draw_tool_v2/index.html` entry referrer: owned by TL-CODE-04.
-- `draw_tool_v2/src/tools/*`, PenTool, AutosaveStore (G1/G2/G3): FUTURE slices.
+- `pixeldraw/index.html` entry referrer: owned by TL-CODE-04.
+- `pixeldraw/src/tools/*`, PenTool, AutosaveStore (G1/G2/G3): FUTURE slices.
 - Global referrer sweep outside `src/ui` (Q7 DEFERRED): separate approval.

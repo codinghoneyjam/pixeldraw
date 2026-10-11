@@ -109,7 +109,7 @@
     },
     {
       "slug": "title_logo_text_our_recipe",
-      "recipe": "draw_tool_v2/tests/fixtures/title_logo_text_our_recipe.json",
+      "recipe": "pixeldraw/tests/fixtures/title_logo_text_our_recipe.json",
       "assets": [
         "title_logo_text_our"
       ],
@@ -123,7 +123,7 @@
     },
     {
       "slug": "title_logo_text_or_recipe",
-      "recipe": "draw_tool_v2/tests/fixtures/title_logo_text_or_recipe.json",
+      "recipe": "pixeldraw/tests/fixtures/title_logo_text_or_recipe.json",
       "assets": [
         "title_logo_text_or"
       ],
@@ -137,7 +137,7 @@
     },
     {
       "slug": "title_logo_text_d_recipe",
-      "recipe": "draw_tool_v2/tests/fixtures/title_logo_text_d_recipe.json",
+      "recipe": "pixeldraw/tests/fixtures/title_logo_text_d_recipe.json",
       "assets": [
         "title_logo_text_d"
       ],
@@ -151,7 +151,7 @@
     },
     {
       "slug": "shockwave_ring_recipe",
-      "recipe": "draw_tool_v2/tests/fixtures/shockwave_ring_recipe.json",
+      "recipe": "pixeldraw/tests/fixtures/shockwave_ring_recipe.json",
       "assets": [
         "shockwave_ring"
       ],

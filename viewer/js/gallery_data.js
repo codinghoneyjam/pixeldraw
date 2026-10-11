@@ -1193,7 +1193,7 @@ const LAYER_GALLERY = {
       },
       "recipe": {
         "path": "../asset_work/target/asset_work/target/tests/fixtures/shockwave_ring_recipe.json",
-        "rel": "draw_tool_v2/tests/fixtures/shockwave_ring_recipe.json",
+        "rel": "pixeldraw/tests/fixtures/shockwave_ring_recipe.json",
         "caseId": "shockwave_ring",
         "layerKey": null,
         "paletteOverride": false,
@@ -3460,7 +3460,7 @@ const LAYER_GALLERY = {
       },
       "recipe": {
         "path": "../asset_work/target/asset_work/target/tests/fixtures/title_logo_text_our_recipe.json",
-        "rel": "draw_tool_v2/tests/fixtures/title_logo_text_our_recipe.json",
+        "rel": "pixeldraw/tests/fixtures/title_logo_text_our_recipe.json",
         "caseId": "title_logo_text_our",
         "layerKey": null,
         "paletteOverride": false,
@@ -3547,7 +3547,7 @@ const LAYER_GALLERY = {
       },
       "recipe": {
         "path": "../asset_work/target/asset_work/target/tests/fixtures/title_logo_text_or_recipe.json",
-        "rel": "draw_tool_v2/tests/fixtures/title_logo_text_or_recipe.json",
+        "rel": "pixeldraw/tests/fixtures/title_logo_text_or_recipe.json",
         "caseId": "title_logo_text_or",
         "layerKey": null,
         "paletteOverride": false,
@@ -3634,7 +3634,7 @@ const LAYER_GALLERY = {
       },
       "recipe": {
         "path": "../asset_work/target/asset_work/target/tests/fixtures/title_logo_text_d_recipe.json",
-        "rel": "draw_tool_v2/tests/fixtures/title_logo_text_d_recipe.json",
+        "rel": "pixeldraw/tests/fixtures/title_logo_text_d_recipe.json",
         "caseId": "title_logo_text_d",
         "layerKey": null,
         "paletteOverride": false,

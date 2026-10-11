@@ -28,6 +28,7 @@ import { createViewStore } from "../features/viewport/view_store.js";
 import { createMenubar } from "./menubar/menubar.js";
 import { createHistoryButtons } from "./menubar/history_buttons.js";
 import { refreshPanelCanvases } from "./shared/panel_refresh.js";
+import { mountPanelResize } from "./shared/panel_resize.js";
 import { requestUndo, requestRedo } from "./actions/edit_actions.js";
 import { buildActions } from "./actions/action_map.js";
 import { wireMenubar } from "./menubar/menubar_wiring.js";
@@ -35,7 +36,6 @@ import { wireToolbar } from "./toolbar/toolbar_wiring.js";
 import { RECENT_KEY, RECENT_MAX, restoreSettings, loadRecentColors, storeJson, attachSettingsPersist } from "./shared/storage.js";
 import { toast } from "./shared/toast.js";
 
-// <META - ROLE : Boot sequence per G3 order 1-9 | L35-170>
 async function loadTextGlyphs() {
   try {
     const response = await fetch("./tools/recipe/text_glyphs.json");
@@ -47,6 +47,7 @@ async function loadTextGlyphs() {
   }
 }
 
+// <META - ROLE : Boot sequence per G3 order 1-9 | L35-170>
 async function boot() {
   const app = document.getElementById("dt-app");
   const host = document.getElementById("dt-canvas-host");
@@ -113,10 +114,10 @@ async function boot() {
   toolManager.register(new FillTool(env));
   toolManager.register(new EyedropperTool(env));
   for (const kind of ["line", "rect", "rrect", "ellipse", "polygon"]) toolManager.register(new ShapeTool(env, kind));
-  toolManager.register(new HandTool(env));
   for (const kind of ["arc", "chord"]) toolManager.register(new ArcTool(env, kind));
   toolManager.register(new GradientTool(env));
   toolManager.register(new TextTool(env, await loadTextGlyphs()));
+  toolManager.register(new HandTool(env));
   renderer = new CanvasRenderer({ host, session, getView: () => viewStore.get(), getOverlay: () => toolManager.overlay });
   renderer.attach();
   input = new InputController({
@@ -150,6 +151,7 @@ async function boot() {
     [document.getElementById("dt-left-panels"), document.getElementById("dt-right-panels")],
     { onExpand: () => refreshPanelCanvases(session) },
   ));
+  panelDisposers.push(mountPanelResize(app));
 
   attachSettingsPersist(session);
 

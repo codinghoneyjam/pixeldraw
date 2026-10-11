@@ -14,7 +14,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Working assets live under asset_work/target/ (recipes + legacy PNGs + oracle ground truth).
 const REPO_ROOT = path.resolve(__dirname, "..");
 const TARGET_ROOT = path.join(REPO_ROOT, "asset_work", "target");
-const targetPath = (rel) => path.join(TARGET_ROOT, rel.replace(/^draw_tool_v2\//, ""));
+const targetPath = (rel) => path.join(TARGET_ROOT, rel.replace(/^pixeldraw\//, ""));
 
 const G = JSON.parse(
   fs.readFileSync(new URL("./fixtures/raster_golden.json", import.meta.url), "utf-8"),
@@ -104,7 +104,7 @@ describe("player arc/chord layer parity", () => {
         outputPngPath: png,
       });
       const legacy = await decodePng(fs.readFileSync(
-        path.join(TARGET_ROOT, "draw_tool_v2/tests/fixtures/player_arc".replace(/^draw_tool_v2\//, ""), `${c.id}_legacy.png`)));
+        path.join(TARGET_ROOT, "pixeldraw/tests/fixtures/player_arc".replace(/^pixeldraw\//, ""), `${c.id}_legacy.png`)));
       const cand = await decodePng(fs.readFileSync(png));
       assert.equal(legacy.width, cand.width, "width");
       assert.equal(legacy.height, cand.height, "height");

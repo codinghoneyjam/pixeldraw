@@ -177,7 +177,7 @@
 
 ## Handoff
 
-- Wrote: `draw_tool_v2/docs/ui.md`
+- Wrote: `pixeldraw/docs/ui.md`
 - Result: `ui/`를 **23파일**로 정정(구 36파일). `actions/`는 5종→3종(`view_actions`·`tool_actions`는
   `edit_actions.js`에 합류, `layer_actions`는 `features/layers/`로 이동), `dialogs/`는
   `dialog_confirm`·`dialog_restore`·`dialog_progress`가 `dialog_core.js`로 흡수됐고,

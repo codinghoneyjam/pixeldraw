@@ -1,0 +1,44 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "pixeldraw",
+  "version": "0.1.0",
+  "identifier": "com.codinghoneyjam.pixeldraw",
+  "build": {
+    "frontendDist": "../build/app",
+    "devUrl": "http://localhost:1420",
+    "beforeDevCommand": "python run.py --port 1420 --no-browser",
+    "beforeBuildCommand": "node tools/stage_app.mjs"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Pixeldraw",
+        "width": 1280,
+        "height": 820,
+        "minWidth": 900,
+        "minHeight": 560,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null,
+      "headers": {
+        "Access-Control-Allow-Origin": "*",
+        "Cross-Origin-Resource-Policy": "cross-origin"
+      }
+    },
+    "withGlobalTauri": true
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

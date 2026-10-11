@@ -1,4 +1,4 @@
-// Post-commit tool check for the draw_tool_v2 cleanup. Verifies the modules the
+// Post-commit tool check for the pixeldraw cleanup. Verifies the modules the
 // split created still behave, independent of the unit suite.
 import fs from "node:fs";
 import path from "node:path";

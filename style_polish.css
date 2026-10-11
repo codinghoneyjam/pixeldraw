@@ -122,20 +122,35 @@
   accent-color: var(--accent);
 }
 
-/* --- 1d. Binary shape-fill mode button. --- */
-#dt-optionbar .dt-option-flip {
-  min-width: 78px;
-  padding: 0 10px;
+/* --- 1d. Mutually exclusive fill/outline controls. --- */
+#dt-optionbar .dt-option-switch {
+  display: inline-flex;
+  align-items: stretch;
+  min-width: 136px;
   min-height: 32px;
+  padding: 2px;
+  gap: 0;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   font-weight: 700;
   transition: background-color 120ms ease-out, border-color 120ms ease-out, color 120ms ease-out;
 }
-#dt-optionbar .dt-option-flip[aria-pressed="true"] {
-  background: #ffffff;
-  border-color: var(--accent);
-  color: #17689a;
+#dt-optionbar .dt-option-switch__option {
+  display: grid;
+  flex: 1 1 50%;
+  min-width: 0;
+  place-items: center;
+  padding: 0 8px;
+  color: var(--text-dim);
 }
-#dt-optionbar .dt-option-flip:disabled {
+#dt-optionbar .dt-option-switch[data-mode="outline"] .dt-option-switch__option:first-child,
+#dt-optionbar .dt-option-switch[data-mode="fill"] .dt-option-switch__option:last-child {
+  background: var(--accent-strong);
+  border-radius: 2px;
+  color: #ffffff;
+}
+#dt-optionbar .dt-option-switch:disabled {
   opacity: 0.4;
   cursor: default;
 }
@@ -257,7 +272,7 @@
   #dt-toast .dt-toast-item,
   #dt-layer-list li.dt-layer,
   .dt-panel-body,
-  #dt-optionbar .dt-option-flip {
+  #dt-optionbar .dt-option-switch {
     transition: none;
     animation: none;
   }
