@@ -4,6 +4,18 @@
 
 ---
 
+## 2026-10-12 · Phase 4.1 · 자산 파이프라인 판단: viewer 제거, 개발 자산 유지(A 선택)
+
+**커밋 대상**: `viewer/` 삭제 · `docs/progress/README.md` 상태 보드 갱신
+**테스트**: 506 그린 유지(전체 워크스페이스)
+
+- **A(권장) 선택**: `tools/recipe/*`·`tools/gen_fixtures.py`·`asset_work/`는 **개발 자산으로 유지**. 골든 픽스처 원본이므로 제거 불가. 레시피 이식·내보내기는 Rust(`engine/io/serialize_recipe.rs`)에 이미 구현됨.
+- **`viewer/` 삭제**: 레이어 갤러리(34/34)는 앱 기능이 아니므로 제거. `viewer/css/`, `viewer/js/`, `viewer/index.html`, `viewer/recipe_viewer.html` 전부 삭제.
+- `tools/recipe/*`(bake_hud_atlas·bake_lib·bake_player_atlas·bake_tileset·color_tokens·recipe_converter·render_tile·schema·text_glyphs·transpile·vector_converter)·`tools/gen_fixtures.py`·`asset_work/`(layers·pygate·scratch·target·tidy)는 모두 유지.
+- `tools/recipe_parity_check.mjs` 39/39 통과로 Rust 레시피 패리티 검증 완료.
+
+---
+
 ## 2026-10-11 · Phase 1.13b · 파사드 분할 10모듈 (io/png·model 6·raster 3)
 
 **커밋 대상**: `crates/engine/src/{io/png, model/{commands,commands_pixel,document,history,session,settings}, raster/{arc,composite_ops,polygon}}.{rs,/*}`·`docs/{model_internals,raster_internals}.md`·`docs/progress/`

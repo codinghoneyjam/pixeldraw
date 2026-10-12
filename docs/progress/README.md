@@ -73,8 +73,8 @@ Phase 1  엔진             [x] 1.1 constants/errors/events/pixel
                         [x] 1.13b 파사드 분할 10모듈 (io/png·model 6·raster 3)
 Phase 2  네이티브 캔버스   [x] 2.3 view 선행 (파사드 7분할)
                           [ ] 2.1 · 2.2 · 2.4 ~ 2.7
-Phase 3  UI              [ ] 3.1 ~ 3.10
-Phase 4  자산 파이프라인   [ ]
+Phase 3  UI              [x] 3.1 ~ 3.10
+Phase 4  자산 파이프라인   [x] 4.1 viewer 제거, 개발 자산 유지(A 선택)
 Phase 5  성능            [ ] 5.1 ~ 5.7
 Phase 6  절삭·패키징      [ ] 6.1 ~ 6.7
 ```
