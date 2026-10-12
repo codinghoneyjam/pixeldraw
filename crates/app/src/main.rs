@@ -1,9 +1,8 @@
-//! pixeldraw — native shell entry point.
-//!
-//! Phase 0.2 stub: the binary only proves the workspace wiring and the engine
-//! dependency. Phase 2 replaces `main` with the eframe window and the pixel
-//! canvas (docs/native_plan.md §6 Phase 2).
+//! pixeldraw native entry point.
+//
+// Phase 2.1-2.2: eframe window setup + framebuffer → NEAREST texture upload.
+// See: docs/native_plan.md §6 Phase 2
 
 fn main() {
-    pixeldraw_app::shell::run();
+    pixeldraw_app::run();
 }

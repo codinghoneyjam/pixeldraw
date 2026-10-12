@@ -1,8 +1,8 @@
-//! pixeldraw_app — native UI shell entry point.
-//!
-//! This library is the phase-2 entry used by the native app crate. The public
-//! surface is intentionally small at this stage so the engine remains isolated
-//! from OS/UI concerns while the tool pipeline is assembled incrementally.
+//! pixeldraw_app ??native UI shell entry point.
+//
+// This library is the phase-2 entry used by the native app crate.
+// The public surface exposes the shell's run() function and internal modules
+// for testing.
 
 pub mod canvas_texture;
 pub mod canvas_view;
@@ -13,6 +13,8 @@ pub mod overlay_raster;
 pub mod session_glue;
 pub mod shell;
 pub mod tools;
+
+pub use shell::run;
 
 #[cfg(test)]
 mod tests {

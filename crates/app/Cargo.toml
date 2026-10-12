@@ -10,6 +10,9 @@ license.workspace = true
 [dependencies]
 pixel-engine = { path = "../engine" }
 pixel-platform = { path = "../platform" }
+serde_json = { version = "1" }
+eframe = { version = "0.36.2", default-features = false, features = ["glow", "default_fonts"] }
+egui = { version = "0.36.2", default-features = false, features = ["default_fonts"] }
 
 [lib]
 name = "pixeldraw_app"
