@@ -32,6 +32,31 @@
 
 `chunkKey(cx, cy) = cy*64 + cx` (Map 키). 역변환은 `chunkCoords(key)`.
 
+### 1-2. 표시 상수 — Phase 2 (2026-10-12 확정)
+
+정의처는 `src/render/*.js`의 모듈 상수였는데, 이 파일들은 `src/core/**` 밖이라
+`constants.js`에 닿지 못한다(§4가 DOM을 허용하는 구역). Rust 이식에서 값이
+희족어지는 것을 막기 위해 **계약 표로 등록**하고 정의처는
+`crates/engine/src/constants.rs` 하나로 옮겼다. 값은 JS 원본에서 복사했다.
+
+| 이름 | 값 | JS 원본 |
+|---|---|---|
+| `FRAME_BUDGET_MS` | 6 | `renderer_composite.js` L5 |
+| `CHECKER_A` / `CHECKER_B` | `#ffffff` / `#d9d9d9` | `background.js` L6-7 |
+| `CHECKER_CSS_PX` | 8 | `background.js` L9 기본매개변수 |
+| `BORDER_RGBA` | `(0,0,0,0.6)` → `[0,0,0,153]` | `renderer_display.js` L4 |
+| `GRID_ALPHA_THIN` / `GRID_ALPHA_THICK` / `GRID_ALPHA_PIXEL` | 0.3 / 0.55 / 0.15 | `grid.js` L14-16 |
+| `GRID_THIN_CSS_PX` / `GRID_THICK_CSS_PX` | 1 / 2 | `grid.js` L19-20 |
+| `GRID_BEVEL_DEV_PX` | 1 | `grid.js` L21 |
+| bevel pass 알파 | thick 밝 0.44·어둠 0.5, thin 밝 0.3·어둠 0.32 | `grid.js` L48-51 |
+
+**그리드 선 폭은 `ceil(css*dpr)`다(round 아님)** — dpr 1.25의 1 CSS px 선이
+0.8 device px로 내려가 선이 사는 것을 막는다. 단 `GRID_ALPHA_PIXEL` 헤어라인은
+예외로 모든 dpr에서 정확히 1 device px다.
+**알파 3종은 무게가 아니라 팔레트 마커**다(`strokeDevPx`가 `a`로 두께를,
+`passAlpha`가 `a`로 잉크량을 고른다). 그래서 `GridStroke::a`는 가중치 이상의
+의미를 가지며 다른 값으로 대체할 수 없다.
+
 ### 1-1. 레이어 블렌드 모드 (2026-10-09 확정)
 
 `BLEND_MODES`의 정의처는 `src/core/blend.js` **하나**이며, 값은 아래 여섯 가지다.

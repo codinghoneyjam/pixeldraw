@@ -13,3 +13,6 @@ pub mod shape;
 pub mod text;
 pub use api::*;
 pub use overlay::*;
+
+#[cfg(test)]
+mod tests;

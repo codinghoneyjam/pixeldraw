@@ -1,20 +1,15 @@
-//! Composite cache scaffolding for Phase 2.
+//! Composite cache — the dirty-chunk compositor with the 6 ms frame budget.
 //!
-//! The actual invalidation and cache policy is implemented later by the display
-//! and composite pipeline tasks; this stub keeps the module graph stable.
+//! Ported from `src/render/renderer_composite.js` (`ensureComp`/`paintDirty`) and
+//! the invalidation half of `src/render/renderer.js`. The module keeps the buffer
+//! in **straight alpha** with no background: painting it is the display renderer's
+//! job, exactly as in the JS tree (docs/render.md).
 
-/// Minimal placeholder for the composite cache map used by the renderer.
-#[derive(Clone, Default, Debug, PartialEq, Eq)]
-pub struct CompCache {
-    pub generation: u64,
-}
+mod cache;
+mod events;
+mod paint;
+#[cfg(test)]
+mod tests;
 
-impl CompCache {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn invalidate_all(&mut self) {
-        self.generation += 1;
-    }
-}
+pub use cache::CompCache;
+pub use paint::Budget;

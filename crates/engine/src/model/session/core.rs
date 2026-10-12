@@ -377,10 +377,9 @@ impl Session {
             .ok_or_else(|| DrawToolError::invalid_state("edit is not active"))?;
         let layer_id = stroke.layer_id.clone();
         let document = self.doc.as_mut().ok_or_else(no_document)?;
-        let layer = document.get_layer_mut(&layer_id).map_err(|e| {
+        let layer = document.get_layer_mut(&layer_id).inspect_err(|_| {
             self.core.editing = false;
             self.core.stroke = None;
-            e
         })?;
 
         let mut writer = PixelWriter::resume(&mut layer.store, stroke.state.clone());

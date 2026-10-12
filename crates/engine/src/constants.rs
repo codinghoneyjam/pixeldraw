@@ -36,6 +36,46 @@ pub const DEFAULT_DOC_WIDTH_PX: u32 = 512;
 pub const DEFAULT_DOC_HEIGHT_PX: u32 = 512;
 pub const DEFAULT_DOC_BACKGROUND: &str = "transparent";
 
+// --- Phase 2 display constants (docs/contract.md §1-2) -----------------------
+//
+// These came from the canvas display layer, where `src/core/constants.js` never
+// reached because the render files live outside `src/core/**` (contract §4 lets
+// them touch the DOM). They are declared here so the CPU display port reads
+// them from one place like everything else.
+
+/// One frame's budget for painting dirty chunks that are *off* screen
+/// (`src/render/renderer_composite.js` L5).
+pub const FRAME_BUDGET_MS: u64 = 6;
+
+/// Checkerboard colours, screen-fixed (`src/render/background.js` L6-7).
+pub const CHECKER_RGBA_A: [u8; 4] = [0xff, 0xff, 0xff, 0xff];
+pub const CHECKER_RGBA_B: [u8; 4] = [0xd9, 0xd9, 0xd9, 0xff];
+
+/// Checkerboard cell size in CSS px; the device size is `max(1, rnd(this*dpr))`.
+pub const CHECKER_CSS_PX: f64 = 8.0;
+
+/// Canvas border, `rgba(0,0,0,0.6)` (`src/render/renderer_display.js` L4).
+pub const BORDER_RGBA: [u8; 4] = [0x00, 0x00, 0x00, 0x99];
+
+/// Grid stroke alphas — they double as the palette marker that selects a
+/// stroke's weight, so they are identity, not just weights (`grid.js` L14-16).
+pub const GRID_ALPHA_THIN: f64 = 0.3;
+pub const GRID_ALPHA_THICK: f64 = 0.55;
+pub const GRID_ALPHA_PIXEL: f64 = 0.15;
+
+/// Grid stroke widths in CSS px, converted with **ceil** to device px (`grid.js` L19-21).
+pub const GRID_THIN_CSS_PX: f64 = 1.0;
+pub const GRID_THICK_CSS_PX: f64 = 2.0;
+
+/// Dark bevel run width on a light run's trailing edge (device px).
+pub const GRID_BEVEL_DEV_PX: u32 = 1;
+
+/// Per-bevel-pass ink (`grid.js` L48-51). Thick strokes out-ink thin ones.
+pub const GRID_PASS_ALPHA_THICK_LIGHT: f64 = 0.44;
+pub const GRID_PASS_ALPHA_THICK_DARK: f64 = 0.5;
+pub const GRID_PASS_ALPHA_THIN_LIGHT: f64 = 0.3;
+pub const GRID_PASS_ALPHA_THIN_DARK: f64 = 0.32;
+
 /// `cy * MAX_CHUNKS_X + cx` — the sparse-map key rule (docs/contract.md §1).
 ///
 /// `chunkKey(1,2) === 129` in the JS tree; keep that identity.
@@ -130,5 +170,25 @@ mod tests {
         assert!(is_valid_canvas_size(512, 512));
         assert!(is_valid_canvas_size(2048, 128));
         assert!(!is_valid_canvas_size(2048 + 32, 128));
+    }
+
+    // Phase 2 display constants, pinned against the JS sources they came from.
+    #[test]
+    fn display_constants_are_frozen() {
+        assert_eq!(FRAME_BUDGET_MS, 6);
+        assert_eq!(CHECKER_RGBA_A, [0xff, 0xff, 0xff, 0xff]);
+        assert_eq!(CHECKER_RGBA_B, [0xd9, 0xd9, 0xd9, 0xff]);
+        assert_eq!(CHECKER_CSS_PX, 8.0);
+        assert_eq!(BORDER_RGBA, [0, 0, 0, 0x99]);
+        assert_eq!(GRID_ALPHA_THIN, 0.3);
+        assert_eq!(GRID_ALPHA_THICK, 0.55);
+        assert_eq!(GRID_ALPHA_PIXEL, 0.15);
+        assert_eq!(GRID_THIN_CSS_PX, 1.0);
+        assert_eq!(GRID_THICK_CSS_PX, 2.0);
+        assert_eq!(GRID_BEVEL_DEV_PX, 1);
+        assert_eq!(GRID_PASS_ALPHA_THICK_LIGHT, 0.44);
+        assert_eq!(GRID_PASS_ALPHA_THICK_DARK, 0.5);
+        assert_eq!(GRID_PASS_ALPHA_THIN_LIGHT, 0.3);
+        assert_eq!(GRID_PASS_ALPHA_THIN_DARK, 0.32);
     }
 }

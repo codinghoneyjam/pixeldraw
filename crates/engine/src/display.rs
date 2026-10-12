@@ -1,29 +1,19 @@
-//! Display framebuffer scaffolding for Phase 2.
+//! Display pipeline — the CPU port of `src/render/{background,grid,renderer_display}.js`.
 //!
-//! This stub keeps the engine-side API surface in place while the real CPU
-//! display pipeline is implemented in the native shell tasks.
+//! DOM-free, GPU-free: [`draw_display`] takes a view, a canvas size, the comp
+//! buffer and the two settings (background, grid) and returns an RGBA
+//! framebuffer in **device** pixels, exactly the pixels the JS canvas had.
+//! No overlays (W8 rasterises `OverlayOp`s on top of the result).
 
-/// Placeholder framebuffer type used by the display layer.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Framebuffer {
-    pub width: u32,
-    pub height: u32,
-    pub rgba: Vec<u8>,
-}
+mod background;
+mod frame;
+mod framebuffer;
+mod grid;
 
-impl Framebuffer {
-    pub fn new(width: u32, height: u32) -> Self {
-        Self {
-            width,
-            height,
-            rgba: vec![0; (width as usize) * (height as usize) * 4],
-        }
-    }
+#[cfg(test)]
+mod tests;
 
-    pub fn resize_clear(&mut self, width: u32, height: u32) {
-        self.width = width;
-        self.height = height;
-        self.rgba
-            .resize((width as usize) * (height as usize) * 4, 0);
-    }
-}
+pub use background::{paint_background, paint_checker};
+pub use frame::{DisplayParams, blit_visible, draw_display, draw_display_into};
+pub use framebuffer::Framebuffer;
+pub use grid::{GridLines, GridMode, GridStroke, grid_lines, grid_stroke_dev_px, paint_grid};

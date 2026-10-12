@@ -32,6 +32,10 @@ pub enum CursorKind {
     Grab,
     Grabbing,
     Text,
+    Pen,
+    Eraser,
+    Fill,
+    Eyedropper,
 }
 
 pub trait Tool {
