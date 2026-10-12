@@ -13,6 +13,7 @@ pub mod overlay_raster;
 pub mod session_glue;
 pub mod shell;
 pub mod tools;
+pub mod ui;
 
 pub use shell::run;
 
@@ -22,5 +23,11 @@ mod tests {
     fn app_lib_exports_tools_and_input() {
         let _ = super::input::PointerKind::Mouse;
         let _ = super::tools::CursorKind::Crosshair;
+    }
+
+    #[test]
+    fn app_lib_exports_ui() {
+        let _ = super::ui::ActionMap::new();
+        let _ = super::ui::UiState::default();
     }
 }

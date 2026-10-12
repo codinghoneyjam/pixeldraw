@@ -1,9 +1,9 @@
 //! Document file operations — new/open/save, PNG/JSON (dialog-free core).
-//!
-//! The native pickers live in `platform` and the buttons in `shell`; the
-//! functions here take bytes and paths so they stay headless-testable. PNG
-//! opens become a fresh document (JS parity for "open"; "import as layer" is
-//! Phase 3 UI).
+//
+// The native pickers live in `platform` and the buttons in `shell`; the
+// functions here take bytes and paths so they stay headless-testable. PNG
+// opens become a fresh document (JS parity for "open"; "import as layer" is
+// Phase 3 UI).
 
 use pixel_engine::errors::{DrawToolError, EngineResult};
 use pixel_engine::io::export::{FlattenOptions, flatten_to_rgba};
@@ -17,9 +17,24 @@ use crate::session_glue::AppState;
 
 /// Blank document at `w,h`, view refit.
 pub fn new_document(state: &mut AppState, w: u32, h: u32) -> EngineResult<()> {
+    new_document_with_bg(state, w, h, "transparent")
+}
+
+/// Blank document at `w,h` with background color, view refit.
+pub fn new_document_with_bg(
+    state: &mut AppState,
+    w: u32,
+    h: u32,
+    background: &str,
+) -> EngineResult<()> {
+    let bg = match background {
+        "transparent" => "transparent",
+        s if s.starts_with('#') && s.len() == 7 => s,
+        _ => "transparent",
+    };
     state
         .session
-        .new_document(NewDocumentOptions::default().size(w, h))?;
+        .new_document(NewDocumentOptions::default().size(w, h).background(bg))?;
     state.after_document_replaced();
     // The queue carries the replacement; drain it now so one frame is enough.
     state.drain_events();
@@ -110,4 +125,33 @@ pub fn open_png_bytes(state: &mut AppState, bytes: &[u8]) -> EngineResult<()> {
     state.after_document_replaced();
     state.drain_events();
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_document_with_transparent_bg() {
+        let mut state = AppState::new();
+        new_document_with_bg(&mut state, 128, 128, "transparent").unwrap();
+        let doc = state.session.doc().unwrap();
+        assert_eq!(doc.canvas.background, "transparent");
+    }
+
+    #[test]
+    fn new_document_with_white_bg() {
+        let mut state = AppState::new();
+        new_document_with_bg(&mut state, 128, 128, "#ffffff").unwrap();
+        let doc = state.session.doc().unwrap();
+        assert_eq!(doc.canvas.background, "#ffffff");
+    }
+
+    #[test]
+    fn new_document_rejects_invalid_bg() {
+        let mut state = AppState::new();
+        new_document_with_bg(&mut state, 128, 128, "invalid").unwrap();
+        let doc = state.session.doc().unwrap();
+        assert_eq!(doc.canvas.background, "transparent");
+    }
 }
