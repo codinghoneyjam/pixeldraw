@@ -73,6 +73,8 @@ impl PixeldrawApp {
         if !install_korean_font(ctx) {
             eprintln!("pixeldraw: no Korean system font found; Latin fallback only");
         }
+        ctx.set_visuals(crate::ui::theme::neon_dark());
+        ctx.style_mut_of(egui::Theme::Dark, |s| crate::ui::theme::apply_spacing(s));
         Self {
             state: AppState::new(),
             ui_state: UiState::default(),
@@ -168,7 +170,8 @@ impl PixeldrawApp {
                 let current = self.state.session.settings().grid_mode;
                 let next = match current {
                     "off" => "unit",
-                    "unit" => "pixel",
+                    "unit" => "tile",
+                    "tile" => "pixel",
                     _ => "off",
                 };
                 let _ = self
@@ -202,20 +205,24 @@ impl PixeldrawApp {
                     crate::ui::dialogs::DialogKind::Help,
                 ));
             }
-            ToolPen | ToolEraser | ToolLine | ToolRect | ToolEllipse | ToolFill
-            | ToolEyedropper | ToolHand | ToolText | ToolGradient | ToolShape => {
+            ToolPen | ToolEraser | ToolFill | ToolEyedropper | ToolLine | ToolRect
+            | ToolRrect | ToolEllipse | ToolPolygon | ToolArc | ToolChord
+            | ToolRadialGradient | ToolText | ToolHand => {
                 let tool_id = match action {
                     ToolPen => "pen",
                     ToolEraser => "eraser",
-                    ToolLine => "line",
-                    ToolRect => "rect",
-                    ToolEllipse => "ellipse",
                     ToolFill => "fill",
                     ToolEyedropper => "eyedropper",
-                    ToolHand => "hand",
+                    ToolLine => "line",
+                    ToolRect => "rect",
+                    ToolRrect => "rrect",
+                    ToolEllipse => "ellipse",
+                    ToolPolygon => "polygon",
+                    ToolArc => "arc",
+                    ToolChord => "chord",
+                    ToolRadialGradient => "radial_gradient",
                     ToolText => "text",
-                    ToolGradient => "gradient",
-                    ToolShape => "shape",
+                    ToolHand => "hand",
                     _ => unreachable!(),
                 };
                 self.ui_state.toolbar.active_tool = tool_id.to_string();

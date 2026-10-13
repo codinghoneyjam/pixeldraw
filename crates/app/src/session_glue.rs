@@ -19,12 +19,15 @@ use pixel_engine::view::ViewStore;
 
 use crate::input::InputController;
 use crate::tools::api::ToolCx;
+use crate::tools::arc::ArcTool;
 use crate::tools::eyedropper::EyedropperTool;
 use crate::tools::fill::FillTool;
+use crate::tools::gradient::GradientTool;
 use crate::tools::hand::HandTool;
 use crate::tools::manager::ToolManager;
 use crate::tools::pen::PenTool;
 use crate::tools::shape::shape_tools;
+use crate::tools::text::TextTool;
 
 /// The W8 event queue behind `Session::subscribe`.
 pub type EventQueue = Rc<RefCell<VecDeque<ModelEvent>>>;
@@ -80,6 +83,10 @@ impl AppState {
         for tool in shape_tools() {
             tools.register(tool);
         }
+        tools.register(Box::new(ArcTool::arc()));
+        tools.register(Box::new(ArcTool::chord()));
+        tools.register(Box::new(GradientTool::new()));
+        tools.register(Box::new(TextTool::new()));
         let mut state = Self {
             session,
             view_store: ViewStore::new(),

@@ -324,7 +324,8 @@ fn dispatch_action(action: Action, app: &mut AppState, ui_state: &mut UiState) {
             let current = app.session.settings().grid_mode;
             let next = match current {
                 "off" => "unit",
-                "unit" => "pixel",
+                "unit" => "tile",
+                "tile" => "pixel",
                 _ => "off",
             };
             let _ = app

@@ -9,15 +9,18 @@ pub const COPY_SUFFIX: &str = " 복사본";
 pub const TOOL_TIPS: &[(&str, &str)] = &[
     ("pen", "펜 (B)"),
     ("eraser", "지우개 (E)"),
+    ("fill", "채우기 (G)"),
+    ("eyedropper", "스포이드 (I)"),
     ("line", "직선 (L)"),
     ("rect", "사각형 (R)"),
-    ("ellipse", "타원 (U)"),
-    ("fill", "채우기 (F)"),
-    ("eyedropper", "스포이드 (I)"),
-    ("hand", "손 (H)"),
+    ("rrect", "둥근 사각형 (U)"),
+    ("ellipse", "타원 (O)"),
+    ("polygon", "다각형 (P)"),
+    ("arc", "호 (A)"),
+    ("chord", "현 (C)"),
+    ("radial_gradient", "그라디언트 (V)"),
     ("text", "텍스트 (T)"),
-    ("gradient", "그라디언트 (G)"),
-    ("shape", "도형 (M)"),
+    ("hand", "손 (H)"),
 ];
 
 pub fn tool_tip(id: &str) -> &str {

@@ -21,7 +21,7 @@ export const BLEND_MODES = Object.freeze(["normal", "multiply", "screen", "overl
 // rounding conventions would make the result depend on evaluation order.
 // The overlay seam at dc=128 is the documented formula's own behaviour: 128 is
 // >= 128, so it takes the screen branch and lands 1 LSB off the ideal midpoint.
-function blendChannel(mode, sc, dc) {
+export function blendChannel(mode, sc, dc) {
   switch (mode) {
     case "multiply": return rnd((sc * dc) / 255);
     case "screen": return rnd(sc + dc - (sc * dc) / 255);
@@ -54,20 +54,45 @@ function blendChannel(mode, sc, dc) {
  * @returns {number[]} straight [r,g,b,a]
  */
 export function overBlend(dst, src, opacity, mode) {
-  const sa = (src[3] / 255) * opacity;
-  if (sa === 0) return [dst[0], dst[1], dst[2], dst[3]];
-  const da = dst[3] / 255;
-  const oa = sa + da * (1 - sa);
+  const tmp = [0, 0, 0, 0];
+  overBlendInto(tmp, dst[0], dst[1], dst[2], dst[3], src[0], src[1], src[2], src[3], opacity, mode);
+  return tmp;
+}
+
+// Zero-alloc scalar path for per-pixel hot loops (compositeChunk, flattenToRgba).
+// Same op order as overBlend — overBlend above delegates here so the math
+// cannot drift. Pass a reused length-4 array as tmp (one per chunk/image).
+export function overBlendInto(tmp, dr, dg, db, da, sr, sg, sb, sa8, opacity, mode) {
+  const sa = (sa8 / 255) * opacity;
+  if (sa === 0) {
+    tmp[0] = dr;
+    tmp[1] = dg;
+    tmp[2] = db;
+    tmp[3] = da;
+    return tmp;
+  }
+  const dan = da / 255;
+  const oa = sa + dan * (1 - sa);
   const inv = 1 - sa;
   // A mode of "normal" (or an unknown string) must produce exactly what over()
   // produces, byte for byte, so the fast paths downstream stay honest.
   const blend = mode !== "normal" && da > 0;
-  const c0 = blend ? rnd((blendChannel(mode, src[0], dst[0]) * sa + dst[0] * da * inv) / oa) : rnd((src[0] * sa + dst[0] * da * inv) / oa);
-  const c1 = blend ? rnd((blendChannel(mode, src[1], dst[1]) * sa + dst[1] * da * inv) / oa) : rnd((src[1] * sa + dst[1] * da * inv) / oa);
-  const c2 = blend ? rnd((blendChannel(mode, src[2], dst[2]) * sa + dst[2] * da * inv) / oa) : rnd((src[2] * sa + dst[2] * da * inv) / oa);
+  const c0 = blend ? rnd((blendChannel(mode, sr, dr) * sa + dr * dan * inv) / oa) : rnd((sr * sa + dr * dan * inv) / oa);
+  const c1 = blend ? rnd((blendChannel(mode, sg, dg) * sa + dg * dan * inv) / oa) : rnd((sg * sa + dg * dan * inv) / oa);
+  const c2 = blend ? rnd((blendChannel(mode, sb, db) * sa + db * dan * inv) / oa) : rnd((sb * sa + db * dan * inv) / oa);
   const a = rnd(oa * 255);
-  if (a === 0) return [0, 0, 0, 0];
-  return [c0, c1, c2, a];
+  if (a === 0) {
+    tmp[0] = 0;
+    tmp[1] = 0;
+    tmp[2] = 0;
+    tmp[3] = 0;
+    return tmp;
+  }
+  tmp[0] = c0;
+  tmp[1] = c1;
+  tmp[2] = c2;
+  tmp[3] = a;
+  return tmp;
 }
 
 // <META - ROLE : normal-mode alias for callers with no layer concept | L58-62>

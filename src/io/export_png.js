@@ -3,7 +3,7 @@
 // Reads core/blend.js through the same entry point the display compositor and
 // merge-down use, so the file can never disagree with the screen (contract §1-1).
 import { DrawToolError } from "../core/errors.js";
-import { overBlend } from "../core/blend.js";
+import { overBlendInto } from "../core/blend.js";
 import { parseHex } from "../core/pixel.js";
 import { encodePng } from "./png.js";
 
@@ -31,6 +31,7 @@ export function flattenToRgba(doc, { includeBackground = true } = {}) {
     if (!layer.store) continue;
     srcs.push({ store: layer.store, opacity, mode: layer.blend ?? "normal" });
   }
+  const tmp4 = [0, 0, 0, 0];
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       let dr = base[0];
@@ -54,11 +55,11 @@ export function flattenToRgba(doc, { includeBackground = true } = {}) {
           da = 255;
           continue;
         }
-        const mixed = overBlend([dr, dg, db, da], [sr, sg, sb, sa8], op, mode);
-        dr = mixed[0];
-        dg = mixed[1];
-        db = mixed[2];
-        da = mixed[3];
+        overBlendInto(tmp4, dr, dg, db, da, sr, sg, sb, sa8, op, mode);
+        dr = tmp4[0];
+        dg = tmp4[1];
+        db = tmp4[2];
+        da = tmp4[3];
       }
       const o = (y * w + x) * 4;
       out[o] = dr;

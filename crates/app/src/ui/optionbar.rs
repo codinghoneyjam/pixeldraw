@@ -24,7 +24,8 @@ impl Optionbar {
                 ui.horizontal_wrapped(|ui| {
                     ui.spacing_mut().item_spacing = Vec2::new(12.0, 8.0);
 
-                    // Tool-specific options
+                    // Tool-specific options (JS parity: the option bar never owned
+                    // opacity/blend — opacity lives in the layer panel).
                     match active_tool.as_str() {
                         "pen" | "eraser" | "line" => self.pen_options(ui, options),
                         "rect" | "ellipse" => self.shape_options(ui, options),
@@ -33,30 +34,6 @@ impl Optionbar {
                         "gradient" => self.gradient_options(ui, options),
                         "shape" => self.shape_tool_options(ui, options),
                         _ => self.generic_options(ui, options),
-                    }
-
-                    ui.separator();
-
-                    // Common: opacity
-                    ui.label("불투명도:");
-                    if let Some(op) = &mut options.opacity {
-                        let mut val = *op;
-                        if ui.add(Slider::new(&mut val, 0.0..=1.0).text("")).changed() {
-                            options.opacity = Some(val);
-                        }
-                    }
-
-                    // Common: blend mode (for brush tools)
-                    if matches!(active_tool.as_str(), "pen" | "eraser" | "fill") {
-                        ui.label("블렌드:");
-                        let modes = ["Normal", "Multiply", "Screen", "Overlay"];
-                        ComboBox::from_id_salt("blend_mode")
-                            .selected_text("Normal")
-                            .show_ui(ui, |ui| {
-                                for m in modes {
-                                    ui.selectable_value(&mut options.opacity, Some(1.0), m);
-                                }
-                            });
                     }
                 });
             });
@@ -73,13 +50,14 @@ impl Optionbar {
             hardness: if tool == "pen" { Some(1.0) } else { None },
             fill_color: None,
             stroke_color: None,
+            blend_mode: Some("normal".to_string()),
         }
     }
 
     fn pen_options(&self, ui: &mut Ui, options: &mut ToolOptions) {
         ui.label("크기:");
         if let Some(size) = &mut options.size {
-            ui.add(DragValue::new(size).range(1..=256).speed(1.0).suffix(" px"));
+            ui.add(DragValue::new(size).range(1..=64).speed(1.0).suffix(" px"));
         }
         ui.label("경도:");
         if let Some(hardness) = &mut options.hardness {

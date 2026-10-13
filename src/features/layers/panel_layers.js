@@ -279,8 +279,14 @@ export function mountLayers(root, deps = {}) {
     listen(session, EVENTS.DOCUMENT_REPLACED, refresh);
     // blend is a layer property, so the prop reason reaches it through LAYERS_CHANGED;
     // HISTORY_CHANGED covers undo/redo of a SetLayerPropCommand("blend").
-    listen(session, EVENTS.LAYERS_CHANGED, () => { renderList(); syncOpacity(); syncBlend(); });
-    listen(session, EVENTS.HISTORY_CHANGED, () => { renderList(); syncOpacity(); syncBlend(); });
+    // Opacity drag emits LAYERS_CHANGED + HISTORY_CHANGED per tick: skip full
+    // list rebuild while dragging (value already in slider), full refresh on final.
+    const onLayersPreview = () => {
+      if (dragging) { syncOpacity(); return; }
+      renderList(); syncOpacity(); syncBlend();
+    };
+    listen(session, EVENTS.LAYERS_CHANGED, onLayersPreview);
+    listen(session, EVENTS.HISTORY_CHANGED, onLayersPreview);
     listen(session, EVENTS.PIXELS_CHANGED, (e) => {
       const id = e.detail?.layerId;
       if (typeof id === "string") scheduleThumb(id);

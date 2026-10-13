@@ -2,7 +2,7 @@
 // Contract: docs/render.md (composite.js). Background is NOT handled here.
 
 import { CHUNK_PX, CHUNK_LEN } from "../core/constants.js";
-import { overBlend } from "../core/blend.js";
+import { overBlend, overBlendInto } from "../core/blend.js";
 import { DrawToolError } from "../core/errors.js";
 
 function assertDoc(doc) {
@@ -42,6 +42,7 @@ export function compositeChunk(doc, cx, cy, out) {
     return false;
   }
   let anyVisible = false;
+  const tmp = [0, 0, 0, 0];
   for (let i = 0; i < CHUNK_PX * CHUNK_PX; i++) {
     const o = i * 4;
     let dr = 0;
@@ -63,11 +64,11 @@ export function compositeChunk(doc, cx, cy, out) {
         da = 255;
         continue;
       }
-      const mixed = overBlend([dr, dg, db, da], [data[o], data[o + 1], data[o + 2], sa8], opacity, mode);
-      dr = mixed[0];
-      dg = mixed[1];
-      db = mixed[2];
-      da = mixed[3];
+      overBlendInto(tmp, dr, dg, db, da, data[o], data[o + 1], data[o + 2], sa8, opacity, mode);
+      dr = tmp[0];
+      dg = tmp[1];
+      db = tmp[2];
+      da = tmp[3];
     }
     out[o] = dr;
     out[o + 1] = dg;

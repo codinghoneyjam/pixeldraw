@@ -8,8 +8,10 @@ pub mod actions;
 pub mod dialogs;
 pub mod menubar;
 pub mod optionbar;
+pub mod panels;
 pub mod shared;
 pub mod statusbar;
+pub mod theme;
 pub mod toolbar;
 
 // Re-export commonly used items
@@ -29,6 +31,7 @@ pub struct UiState {
     pub optionbar: OptionbarState,
     pub statusbar: StatusbarState,
     pub dialogs: DialogsState,
+    pub panels: panels::PanelsState,
     pub toasts: Vec<Toast>,
     pub tooltip: Option<Tooltip>,
 }
@@ -61,6 +64,7 @@ pub struct ToolOptions {
     pub hardness: Option<f32>,
     pub fill_color: Option<[u8; 4]>,
     pub stroke_color: Option<[u8; 4]>,
+    pub blend_mode: Option<String>,
 }
 
 #[derive(Default)]
@@ -111,11 +115,25 @@ pub fn render_ui(
         optionbar::show(ui, ui_state, app_state);
     });
 
-    // 4. Central canvas area is handled by shell.rs show_canvas()
+    // 4. Side panels (JS left/right parity) + central canvas in shell.rs
+    egui::Panel::left("left_panels")
+        .resizable(true)
+        .show(ui, |ui| {
+            egui::ScrollArea::vertical().show(ui, |ui| {
+                panels::show_left(ui, ui_state, app_state);
+            });
+        });
+    egui::Panel::right("right_panels")
+        .resizable(true)
+        .show(ui, |ui| {
+            egui::ScrollArea::vertical().show(ui, |ui| {
+                panels::show_right(ui, ui_state, app_state);
+            });
+        });
 
     // 5. Statusbar (bottom)
     egui::Panel::bottom("statusbar_panel")
-        .frame(pad(12.0, 4.0).fill(egui::Color32::from_rgb(255, 0, 0)))
+        .frame(pad(12.0, 4.0))
         .show(ui, |ui| {
             statusbar::show(ui, ui_state, app_state);
         });

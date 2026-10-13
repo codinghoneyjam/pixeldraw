@@ -30,18 +30,21 @@ pub enum Action {
     ToggleGrid,
     TogglePixelGrid,
 
-    // Tools (toolbar shortcuts)
+    // Tools (toolbar shortcuts) — JS `shortcuts.js` single-key map.
     ToolPen,
     ToolEraser,
-    ToolLine,
-    ToolRect,
-    ToolEllipse,
     ToolFill,
     ToolEyedropper,
-    ToolHand,
+    ToolLine,
+    ToolRect,
+    ToolRrect,
+    ToolEllipse,
+    ToolPolygon,
+    ToolArc,
+    ToolChord,
+    ToolRadialGradient,
     ToolText,
-    ToolGradient,
-    ToolShape,
+    ToolHand,
 
     // Layer
     NewLayer,
@@ -186,12 +189,22 @@ impl ActionMap {
             Shortcut::new(G, Modifiers::COMMAND | Modifiers::SHIFT, ToggleGrid),
         );
 
-        // Tools (single-key shortcuts)
+        // Tools (single-key shortcuts, JS `shortcuts.js` order)
         self.add(ToolPen, "펜", Shortcut::new(B, Modifiers::NONE, ToolPen));
         self.add(
             ToolEraser,
             "지우개",
             Shortcut::new(E, Modifiers::NONE, ToolEraser),
+        );
+        self.add(
+            ToolFill,
+            "채우기",
+            Shortcut::new(G, Modifiers::NONE, ToolFill),
+        );
+        self.add(
+            ToolEyedropper,
+            "스포이드",
+            Shortcut::new(I, Modifiers::NONE, ToolEyedropper),
         );
         self.add(
             ToolLine,
@@ -204,36 +217,37 @@ impl ActionMap {
             Shortcut::new(R, Modifiers::NONE, ToolRect),
         );
         self.add(
+            ToolRrect,
+            "둥근 사각형",
+            Shortcut::new(U, Modifiers::NONE, ToolRrect),
+        );
+        self.add(
             ToolEllipse,
             "타원",
-            Shortcut::new(U, Modifiers::NONE, ToolEllipse),
+            Shortcut::new(O, Modifiers::NONE, ToolEllipse),
         );
         self.add(
-            ToolFill,
-            "채우기",
-            Shortcut::new(F, Modifiers::NONE, ToolFill),
+            ToolPolygon,
+            "다각형",
+            Shortcut::new(P, Modifiers::NONE, ToolPolygon),
+        );
+        self.add(ToolArc, "호", Shortcut::new(A, Modifiers::NONE, ToolArc));
+        self.add(
+            ToolChord,
+            "현",
+            Shortcut::new(C, Modifiers::NONE, ToolChord),
         );
         self.add(
-            ToolEyedropper,
-            "스포이드",
-            Shortcut::new(I, Modifiers::NONE, ToolEyedropper),
+            ToolRadialGradient,
+            "그라디언트",
+            Shortcut::new(V, Modifiers::NONE, ToolRadialGradient),
         );
-        self.add(ToolHand, "손", Shortcut::new(H, Modifiers::NONE, ToolHand));
         self.add(
             ToolText,
             "텍스트",
             Shortcut::new(T, Modifiers::NONE, ToolText),
         );
-        self.add(
-            ToolGradient,
-            "그라디언트",
-            Shortcut::new(G, Modifiers::NONE, ToolGradient),
-        );
-        self.add(
-            ToolShape,
-            "도형",
-            Shortcut::new(M, Modifiers::NONE, ToolShape),
-        );
+        self.add(ToolHand, "손", Shortcut::new(H, Modifiers::NONE, ToolHand));
 
         // Layer
         self.add(

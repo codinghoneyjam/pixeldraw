@@ -248,15 +248,6 @@
 #dt-layer-list li.dt-layer:hover {
   background-color: var(--panel-2);
 }
-@keyframes dt-hover-pulse {
-  from { filter: brightness(0.82); }
-  to { filter: brightness(1.16); }
-}
-#dt-toolbar button:hover:not(:disabled),
-#dt-left-panels .dt-panel-head:hover,
-#dt-layer-list li.dt-layer:hover {
-  animation: dt-hover-pulse 900ms ease-in-out infinite alternate;
-}
 
 /* --- 3e. Keep focus-visible working (offset only; outline color unchanged) --- */
 :focus-visible {

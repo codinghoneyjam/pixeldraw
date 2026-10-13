@@ -57,6 +57,18 @@ impl Toolbar {
                     help: "지운 자리는 투명해집니다.",
                 },
                 ToolButton {
+                    id: "fill",
+                    label: "채우기",
+                    shortcut: "G",
+                    help: "누른 색으로 연속된 영역을 채웁니다.",
+                },
+                ToolButton {
+                    id: "eyedropper",
+                    label: "스포이드",
+                    shortcut: "I",
+                    help: "누른 곳의 색을 현재 색으로 가져옵니다.",
+                },
+                ToolButton {
                     id: "line",
                     label: "직선",
                     shortcut: "L",
@@ -69,28 +81,40 @@ impl Toolbar {
                     help: "누른 곳에서 놓은 곳까지 직사각형을 그립니다.",
                 },
                 ToolButton {
+                    id: "rrect",
+                    label: "둥근사각형",
+                    shortcut: "U",
+                    help: "모서리가 둥근 직사각형을 그립니다.",
+                },
+                ToolButton {
                     id: "ellipse",
                     label: "타원",
-                    shortcut: "U",
+                    shortcut: "O",
                     help: "누른 곳에서 놓은 곳까지 타원을 그립니다.",
                 },
                 ToolButton {
-                    id: "fill",
-                    label: "채우기",
-                    shortcut: "F",
-                    help: "누른 색으로 연속된 영역을 채웁니다.",
+                    id: "polygon",
+                    label: "다각형",
+                    shortcut: "P",
+                    help: "클릭으로 정점을 놓고 Enter로 확정합니다.",
                 },
                 ToolButton {
-                    id: "eyedropper",
-                    label: "스포이드",
-                    shortcut: "I",
-                    help: "누른 곳의 색을 현재 색으로 가져옵니다.",
+                    id: "arc",
+                    label: "호",
+                    shortcut: "A",
+                    help: "누른 곳에서 놓은 곳까지 호를 그립니다.",
                 },
                 ToolButton {
-                    id: "hand",
-                    label: "손",
-                    shortcut: "H",
-                    help: "화면을 끌어다 봅니다.",
+                    id: "chord",
+                    label: "현",
+                    shortcut: "C",
+                    help: "호에 현을 더해 부채꼴을 그립니다.",
+                },
+                ToolButton {
+                    id: "radial_gradient",
+                    label: "그라디언트",
+                    shortcut: "V",
+                    help: "누른 곳에서 놓은 곳까지 방사형 그라디언트를 그립니다.",
                 },
                 ToolButton {
                     id: "text",
@@ -99,16 +123,10 @@ impl Toolbar {
                     help: "눌러서 입력한 뒤 Esc로 확정합니다.",
                 },
                 ToolButton {
-                    id: "gradient",
-                    label: "그라디언트",
-                    shortcut: "G",
-                    help: "누른 곳에서 놓은 곳까지 색을 바꿉니다.",
-                },
-                ToolButton {
-                    id: "shape",
-                    label: "도형",
-                    shortcut: "M",
-                    help: "사각형·타원·둥근 사각형·다각형·선을 고릅니다.",
+                    id: "hand",
+                    label: "손",
+                    shortcut: "H",
+                    help: "화면을 끌어다 봅니다.",
                 },
             ],
         }
@@ -127,14 +145,14 @@ impl Toolbar {
                 let response = ui
                     .add(
                         Button::new(
-                            RichText::new(format!("{}  {}", tool.label, tool.shortcut)).size(13.0),
+                            RichText::new(format!("{} {}", tool.label, tool.shortcut)).size(12.0),
                         )
                         .fill(if is_active {
                             ui.visuals().selection.bg_fill
                         } else {
                             egui::Color32::TRANSPARENT
                         })
-                        .min_size(Vec2::new(78.0, 26.0)),
+                        .min_size(Vec2::new(56.0, 24.0)),
                     )
                     .on_hover_text(format!("[{}]  {}", tool.shortcut, tool.help));
 
@@ -230,9 +248,25 @@ mod tests {
     #[test]
     fn toolbar_has_all_tools() {
         let toolbar = Toolbar::new();
-        assert_eq!(toolbar.tools.len(), 11);
-        assert!(toolbar.tools.iter().any(|t| t.id == "pen"));
-        assert!(toolbar.tools.iter().any(|t| t.id == "eraser"));
+        assert_eq!(toolbar.tools.len(), 14);
+        for id in [
+            "pen",
+            "eraser",
+            "fill",
+            "eyedropper",
+            "line",
+            "rect",
+            "rrect",
+            "ellipse",
+            "polygon",
+            "arc",
+            "chord",
+            "radial_gradient",
+            "text",
+            "hand",
+        ] {
+            assert!(toolbar.tools.iter().any(|t| t.id == id), "missing tool {id}");
+        }
     }
 
     /// Every tool needs its own help text; the option bar's generic branch used
