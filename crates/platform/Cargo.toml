@@ -8,6 +8,16 @@ license.workspace = true
 # What a browser used to hand the editor for free (docs/native_plan.md §3):
 # native file dialogs, an app data directory, settings + autosave files, logging.
 [dependencies]
+# ProjectDirs — %APPDATA%\pixeldraw on Windows (Known Folder API).
+directories = "6"
+# Native modal dialogs. Windows IFileDialog only: default features pull the
+# XDG portal + Wayland client stack this app never uses (Linux-first is Phase 6).
+rfd = { version = "0.17", default-features = false }
+# Error enum for the platform surface (thiserror derive).
+thiserror = "2"
+# Logging facade + env-configurable backend (RUST_LOG, default info).
+log = "0.4"
+env_logger = "0.11"
 
 [lints]
 workspace = true

@@ -19,6 +19,25 @@ pub fn rnd(v: f64) -> f64 {
     (v + 0.5).floor()
 }
 
+/// The same rule, straight to a byte: `Math.floor(v + 0.5)` truncated.
+///
+/// **Why this is not `rnd(v) as u8`.** The two agree on every `f64`, but only one
+/// of them can be compiled cheaply. `f64::floor` needs a round-toward-negative-
+/// infinity instruction — `roundsd`, which is **SSE4.1** — and the x86-64
+/// baseline that every binary may assume is **SSE2**. At the baseline LLVM has to
+/// expand `floor` into a bit-mask / compare / subtract sequence, once per
+/// channel per layer per pixel, in the innermost loop of compositing.
+///
+/// Rust's `f64 as u8` already truncates toward zero and saturates. A saturating
+/// `floor(x) as u8` and a truncating `x as u8` produce the same byte for every
+/// input — `floor` never moves `x` across zero, and saturation clamps both to
+/// the same end, so negatives, NaN and ±inf agree too. Dropping the `floor` is
+/// therefore a pure deletion with no possible change to any output byte.
+#[inline]
+pub fn rnd_u8(v: f64) -> u8 {
+    (v + 0.5) as u8
+}
+
 /// The six layer blend modes, in the order the UI lists them.
 pub const BLEND_MODES: [&str; 6] = [
     "normal", "multiply", "screen", "overlay", "darken", "lighten",
@@ -39,21 +58,22 @@ pub fn is_blend_mode(mode: &str) -> bool {
 #[inline]
 fn blend_channel(mode: &str, sc: u8, dc: u8) -> u8 {
     let (sc, dc) = (sc as f64, dc as f64);
-    let v = match mode {
-        "multiply" => rnd(sc * dc / 255.0),
-        "screen" => rnd(sc + dc - sc * dc / 255.0),
+    // `rnd` folded into the `as u8` — see `rnd_u8`. Every arm is `(v + 0.5) as
+    // u8` with the arm's own expression in place of `v`.
+    match mode {
+        "multiply" => rnd_u8(sc * dc / 255.0),
+        "screen" => rnd_u8(sc + dc - sc * dc / 255.0),
         "overlay" => {
             if dc < 128.0 {
-                rnd(2.0 * sc * dc / 255.0)
+                rnd_u8(2.0 * sc * dc / 255.0)
             } else {
-                rnd(255.0 - 2.0 * (255.0 - sc) * (255.0 - dc) / 255.0)
+                rnd_u8(255.0 - 2.0 * (255.0 - sc) * (255.0 - dc) / 255.0)
             }
         }
-        "darken" => sc.min(dc),
-        "lighten" => sc.max(dc),
-        _ => sc,
-    };
-    v as u8
+        "darken" => sc.min(dc) as u8,
+        "lighten" => sc.max(dc) as u8,
+        _ => sc as u8,
+    }
 }
 
 /// Mode-aware source-over, the only place alpha is combined.
@@ -64,6 +84,11 @@ fn blend_channel(mode: &str, sc: u8, dc: u8) -> u8 {
 /// transparent region black instead of leaving the source untouched.
 ///
 /// `mode` is `""`/`"normal"` for a plain layer.
+///
+/// `#[inline]` because this is called once per channel per layer per pixel from
+/// the innermost loop of compositing; left as a real call it is also opaque to
+/// the vectoriser's SLP pass.
+#[inline]
 pub fn over_blend(dst: Rgba, src: Rgba, opacity: f64, mode: &str) -> Rgba {
     let sa = (src[3] as f64 / 255.0) * opacity;
     if sa == 0.0 {
@@ -77,14 +102,15 @@ pub fn over_blend(dst: Rgba, src: Rgba, opacity: f64, mode: &str) -> Rgba {
     // stay honest.
     let blend = mode != "normal" && !mode.is_empty() && da > 0.0;
     let c = |i: usize| -> u8 {
-        let v = if blend {
-            rnd((blend_channel(mode, src[i], dst[i]) as f64 * sa + dst[i] as f64 * da * inv) / oa)
+        if blend {
+            rnd_u8(
+                (blend_channel(mode, src[i], dst[i]) as f64 * sa + dst[i] as f64 * da * inv) / oa,
+            )
         } else {
-            rnd((src[i] as f64 * sa + dst[i] as f64 * da * inv) / oa)
-        };
-        v as u8
+            rnd_u8((src[i] as f64 * sa + dst[i] as f64 * da * inv) / oa)
+        }
     };
-    let a = rnd(oa * 255.0) as u8;
+    let a = rnd_u8(oa * 255.0);
     if a == 0 {
         return [0, 0, 0, 0];
     }

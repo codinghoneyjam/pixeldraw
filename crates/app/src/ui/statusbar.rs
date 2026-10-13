@@ -27,62 +27,80 @@ impl Statusbar {
         }
         state.statusbar.zoom = app.view_store.view().zoom() as f32;
 
-        egui::Panel::bottom("statusbar")
-            .frame(egui::Frame::new().inner_margin(Vec2::new(12.0, 4.0)))
-            .show(ui, |ui| {
-                ui.horizontal(|ui| {
-                    ui.spacing_mut().item_spacing = Vec2::new(16.0, 0.0);
+        // Laid out directly into the caller's `Ui` — see the note on the free
+        // function below for why there is no panel of its own.
+        eprintln!(
+            "DIAG statusbar max_rect={:?} min={:?} size={:?} avail={:?} clip={:?}",
+            ui.max_rect(),
+            ui.min_rect(),
+            ui.max_rect().size(),
+            ui.available_rect_before_wrap(),
+            ui.clip_rect()
+        );
+        ui.painter()
+            .rect_filled(ui.max_rect(), 0.0, Color32::from_rgb(255, 0, 0));
+        ui.horizontal(|ui| {
+            ui.spacing_mut().item_spacing = Vec2::new(16.0, 0.0);
 
-                    // Left: status messages
-                    if let Some(last) = state.statusbar.status_messages.last() {
-                        ui.label(RichText::new(last).size(12.0).color(Color32::LIGHT_GRAY));
-                    } else if let Some(doc) = app.session.doc() {
-                        ui.label(
-                            RichText::new(format!(
-                                "{} × {} px",
-                                doc.canvas.width_px, doc.canvas.height_px
-                            ))
-                            .size(12.0)
-                            .color(Color32::LIGHT_GRAY),
-                        );
-                    }
+            // Left: status messages
+            if let Some(last) = state.statusbar.status_messages.last() {
+                ui.label(RichText::new(last).size(12.0).color(Color32::LIGHT_GRAY));
+            } else if let Some(doc) = app.session.doc() {
+                ui.label(
+                    RichText::new(format!(
+                        "{} × {} px",
+                        doc.canvas.width_px, doc.canvas.height_px
+                    ))
+                    .size(12.0)
+                    .color(Color32::LIGHT_GRAY),
+                );
+            }
 
-                    ui.separator();
+            ui.separator();
 
-                    // Center: cursor position
-                    if let Some((x, y)) = state.statusbar.cursor_pos {
-                        ui.label(
-                            RichText::new(format!("X: {}  Y: {}", x, y))
-                                .size(12.0)
-                                .monospace(),
-                        );
-                    } else {
-                        ui.label(
-                            RichText::new("X: —  Y: —")
-                                .size(12.0)
-                                .monospace()
-                                .color(Color32::GRAY),
-                        );
-                    }
+            // Tool help for whatever the pointer is over. This is the
+            // only place `ToolbarState::tool_hovered` was ever read from,
+            // so before the toolbar carried help strings the field was
+            // written every frame and never consumed.
+            if let Some(help) = super::toolbar::Toolbar::help_for(state) {
+                ui.label(RichText::new(help).size(12.0).color(Color32::GRAY));
+            }
 
-                    ui.separator();
+            ui.separator();
 
-                    // Right: zoom + layer info
-                    ui.label(
-                        RichText::new(format!("{:.0}%", state.statusbar.zoom * 100.0))
-                            .size(12.0)
-                            .monospace(),
-                    );
-                    ui.separator();
-                    if let Some(layer_info) = &state.statusbar.layer_info {
-                        ui.label(
-                            RichText::new(layer_info)
-                                .size(12.0)
-                                .color(Color32::LIGHT_GRAY),
-                        );
-                    }
-                });
-            });
+            // Center: cursor position
+            if let Some((x, y)) = state.statusbar.cursor_pos {
+                ui.label(
+                    RichText::new(format!("X: {}  Y: {}", x, y))
+                        .size(12.0)
+                        .monospace(),
+                );
+            } else {
+                ui.label(
+                    RichText::new("X: —  Y: —")
+                        .size(12.0)
+                        .monospace()
+                        .color(Color32::GRAY),
+                );
+            }
+
+            ui.separator();
+
+            // Right: zoom + layer info
+            ui.label(
+                RichText::new(format!("{:.0}%", state.statusbar.zoom * 100.0))
+                    .size(12.0)
+                    .monospace(),
+            );
+            ui.separator();
+            if let Some(layer_info) = &state.statusbar.layer_info {
+                ui.label(
+                    RichText::new(layer_info)
+                        .size(12.0)
+                        .color(Color32::LIGHT_GRAY),
+                );
+            }
+        });
     }
 }
 
@@ -92,14 +110,13 @@ impl Default for Statusbar {
     }
 }
 
-// Integration function
+// Integration function.
+//
+// `render_ui` in `super::mod` already owns `Panel::bottom("statusbar_panel")`;
+// this used to re-open the same id, nesting a panel inside itself.
 pub fn show(ui: &mut egui::Ui, ui_state: &mut UiState, app_state: &mut AppState) {
     let mut statusbar = Statusbar::new();
-    egui::Panel::bottom("statusbar_panel")
-        .frame(egui::Frame::new())
-        .show(ui, |ui| {
-            statusbar.show(ui, ui_state, app_state);
-        });
+    statusbar.show(ui, ui_state, app_state);
 }
 
 #[cfg(test)]

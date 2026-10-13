@@ -12,6 +12,12 @@ fn store() -> ChunkStore {
 
 const RED: u32 = 0xff0000ff;
 const GREEN: u32 = 0x00ff00ff;
+/// Opaque green, `a<<24 | b<<16 | g<<8 | r`. `GREEN` above is the JS test
+/// fixture's *transparent* green (alpha 0) and must not be used where a covered
+/// pixel is meant.
+const OPAQUE_GREEN: u32 = 0xff00ff00;
+/// Opaque blue, `a<<24 | b<<16 | g<<8 | r`.
+const BLUE: u32 = 0xffff0000;
 
 // ---- the store ----
 
@@ -286,4 +292,75 @@ fn touched_reports_without_draining() {
     // Not drained, so `take_dirty` still sees it.
     assert_eq!(w.take_dirty(), vec![(0, 0)]);
     w.finish();
+}
+
+/// The coverage map is a cache of "alpha != 0", so it must agree with the
+/// bytes after every route into a chunk. This is the invariant the composite
+/// and flatten fast paths lean on; without it they would silently skip pixels.
+#[test]
+fn the_alpha_mask_never_drifts_from_the_bytes() {
+    let mut s = ChunkStore::new(128, 64).expect("valid size");
+    let mut w = PixelWriter::new(&mut s, "layer-0001");
+    // A spread of routes: single pixels, runs, a transparent clear, an
+    // out-of-canvas write, a raw put and a chunk that straddles the 32 boundary.
+    w.set(0, 0, RED);
+    w.set(31, 31, OPAQUE_GREEN);
+    w.set(32, 0, RED);
+    w.set_run(0, 5, 10, &BLUE.to_le_bytes());
+    w.set(0, 5, 0);
+    w.set(200, 0, RED);
+    let _ = w.finish();
+
+    let mut raw = Box::new([0u8; crate::constants::CHUNK_LEN]);
+    raw[0] = 0x11;
+    raw[3] = 0x40; // alpha 40: covered
+    raw[8] = 0x22; // alpha 0: not covered
+    s.put_chunk(1, 1, Some(&raw[..])).expect("valid chunk");
+
+    for cx in 0..4u32 {
+        for cy in 0..2u32 {
+            if let Some((data, mask)) = s.get_chunk_with_mask(cx, cy) {
+                assert_eq!(
+                    *mask,
+                    crate::chunkstore::alpha::from_chunk(data),
+                    "mask drifted in chunk ({cx},{cy})"
+                );
+            }
+        }
+    }
+}
+
+/// `set_run` must leave exactly the pixels the per-pixel loop would, including
+/// when the run straddles a chunk seam.
+#[test]
+fn a_run_writes_the_same_bytes_as_the_pixel_loop() {
+    let mut runs = ChunkStore::new(128, 32).expect("valid size");
+    let mut pixels = ChunkStore::new(128, 32).expect("valid size");
+    let cases: [(u32, usize, [u8; 4]); 4] = [
+        (20, 3, [1, 2, 3, 4]),
+        (63, 3, [5, 6, 7, 8]),
+        (100, 2, [9, 10, 11, 255]),
+        (0, 32, [12, 13, 14, 15]),
+    ];
+    for (x, len, c) in cases {
+        let mut lo = x;
+        let mut left = len;
+        while left > 0 {
+            let lx = lo & 31;
+            let n = (left as u32).min(32 - lx) as usize;
+            runs.set_run(lo >> 5, 0, lx, n, &c);
+            lo += n as u32;
+            left -= n;
+        }
+        for i in 0..len {
+            pixels.set_pixel(
+                x + i as u32,
+                0,
+                crate::pixel::pack_rgba_bytes(c[0], c[1], c[2], c[3]),
+            );
+        }
+    }
+    for cx in 0..4u32 {
+        assert_eq!(runs.get_chunk(cx, 0), pixels.get_chunk(cx, 0), "chunk {cx}");
+    }
 }

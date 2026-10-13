@@ -261,16 +261,15 @@ impl Default for Menubar {
     }
 }
 
-// Integration function for the top-level UI render
+// Integration function for the top-level UI render.
+//
+// `render_ui` in `super::mod` already owns `Panel::top("menubar_panel")`; this
+// used to re-open the same id, nesting a panel inside itself.
 pub fn show(ui: &mut egui::Ui, ui_state: &mut UiState, app_state: &mut AppState) {
     let mut menubar = Menubar::new();
-    egui::Panel::top("menubar_panel")
-        .frame(egui::Frame::new())
-        .show(ui, |ui| {
-            if let Some(action) = menubar.show(ui, ui_state, app_state) {
-                dispatch_action(action, app_state, ui_state);
-            }
-        });
+    if let Some(action) = menubar.show(ui, ui_state, app_state) {
+        dispatch_action(action, app_state, ui_state);
+    }
 }
 
 fn dispatch_action(action: Action, app: &mut AppState, ui_state: &mut UiState) {

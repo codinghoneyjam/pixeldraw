@@ -78,6 +78,15 @@ pub fn stroke_mask(points: &[(i32, i32)], n: usize, w: usize, h: usize) -> Vec<b
 /// `seed == fill` short-circuits before anything is touched, so "already this
 /// colour" is a no-op rather than an infinite loop.
 ///
+/// **What changed and why it is still the same walk.** The body used to spell
+/// both halves out as `sink.get`/`sink.set` loops. It now asks the sink for the
+/// two span operations instead — [`PixelSink::fill_span`] and
+/// [`PixelSink::seed_runs`] — whose *default* bodies are exactly those loops. A
+/// grid sink therefore still gets a pixel-at-a-time walk, while a
+/// [`crate::chunkstore::PixelWriter`] answers both from 32 pixels at a time and
+/// writes the span with one `set_run`. Same seeds popped, same order, same
+/// pixels: the traversal, not the arithmetic, is what this kernel owns.
+///
 /// # Panics
 ///
 /// Neither. Out-of-range coordinates are skipped, as in the JS original.
@@ -93,45 +102,25 @@ pub fn flood_fill_scanline<S: PixelSink>(
     if seed == fill {
         return;
     }
-    let wi = w as isize;
-    let hi = h as isize;
+    let (wi, hi) = (w as i32, h as i32);
     let mut stack: Vec<(isize, isize)> = vec![(sx as isize, sy as isize)];
+    // Reused across the whole walk so a fill does not allocate per span.
+    let mut runs: Vec<(i32, i32)> = Vec::new();
     while let Some((cx, cy)) = stack.pop() {
+        let (cx, cy) = (cx as i32, cy as i32);
         if cx < 0 || cy < 0 || cx >= wi || cy >= hi {
             continue;
         }
-        if sink.get(cx as i32, cy as i32) != seed {
+        let Some((l, r)) = sink.fill_span(cx, cy, wi, hi, seed, fill) else {
             continue;
-        }
-        let mut l = cx;
-        while l >= 0 && sink.get(l as i32, cy as i32) == seed {
-            l -= 1;
-        }
-        l += 1;
-        let mut r = cx;
-        while r < wi && sink.get(r as i32, cy as i32) == seed {
-            r += 1;
-        }
-        r -= 1;
-        for i in l..=r {
-            sink.set(i as i32, cy as i32, fill);
-        }
+        };
         for ny in [cy - 1, cy + 1] {
             if ny < 0 || ny >= hi {
                 continue;
             }
-            let mut i = l;
-            while i <= r {
-                if sink.get(i as i32, ny as i32) == seed {
-                    let s = i;
-                    while i <= r && sink.get(i as i32, ny as i32) == seed {
-                        i += 1;
-                    }
-                    stack.push((s, ny));
-                } else {
-                    i += 1;
-                }
-            }
+            runs.clear();
+            sink.seed_runs(ny, l, r + 1, seed, &mut runs);
+            stack.extend(runs.iter().map(|&(s, _)| (s as isize, ny as isize)));
         }
     }
 }

@@ -83,7 +83,15 @@ impl<'a> PixelWriter<'a> {
     }
 
     fn touch(&mut self, x: u32, y: u32) {
-        let key = chunk_key(x >> 5, y >> 5);
+        self.touch_key(chunk_key(x >> 5, y >> 5));
+    }
+
+    /// The ledger update for one chunk, memoised on the chunk the previous write
+    /// landed in.
+    ///
+    /// `set_run` knows its chunk key directly, so it skips the coordinate
+    /// decomposition `touch` does — the same memo either way.
+    fn touch_key(&mut self, key: u64) {
         if self.last_key == Some(key) {
             return;
         }
@@ -115,6 +123,114 @@ impl<'a> PixelWriter<'a> {
     #[inline]
     pub fn get(&self, x: u32, y: u32) -> u32 {
         self.store.get_pixel(x, y)
+    }
+
+    /// Write a horizontal run of pixels with the same colour.
+    ///
+    /// This is the span write the whole engine now uses: a brush row, a
+    /// flood-fill span, a scanline polygon edge. It replaces `len` calls to
+    /// [`Self::set`] — `len` chunk probes, `len` ledger updates and `len`
+    /// 4-byte writes — with one of each per 32-pixel chunk.
+    ///
+    /// Byte-for-byte equivalent to the `set` loop, including the rule that a
+    /// transparent run never brings a chunk into existence and the rule that a
+    /// run starting off-canvas is **trimmed, not dropped**: `set` clips each
+    /// pixel, so a footprint centred on the left edge still paints the columns
+    /// that land inside.
+    pub fn set_run(&mut self, x: i32, y: i32, len: usize, color: &[u8; 4]) {
+        if self.done {
+            panic!("PixelWriter is finished"); // INVALID_STATE in the JS tree
+        }
+        if len == 0 || y < 0 {
+            return;
+        }
+        let (mut x, mut len) = (x, len);
+        if x < 0 {
+            len = len.saturating_sub(x.unsigned_abs() as usize);
+            x = 0;
+        }
+        if len == 0 {
+            return;
+        }
+        let (x, y) = (x as u32, y as u32);
+        if x >= self.store.width_px || y >= self.store.height_px {
+            return;
+        }
+        let mut left = len;
+        let mut cx = x;
+        while left > 0 {
+            let lx = cx & 31;
+            let n = (left as u32).min(32 - lx) as usize;
+            self.touch_key(chunk_key(cx >> 5, y >> 5));
+            self.store.set_run(cx >> 5, y, lx, n, color);
+            cx += n as u32;
+            left -= n;
+        }
+    }
+
+    /// The packed pixel at `(x, y)`, 0 outside the canvas.
+    #[inline]
+    pub fn pixel_at(&self, x: i32, y: i32) -> u32 {
+        if x < 0 || y < 0 {
+            return 0;
+        }
+        self.store.get_pixel(x as u32, y as u32)
+    }
+
+    /// Append the runs of `seed` on row `y` inside `[lo, hi)`, left to right.
+    ///
+    /// **Why this is chunk-stepped and not a `get` loop.** The scanline fill
+    /// calls this once per neighbour row per span, and a naive version pays a
+    /// `BTreeMap` probe *per pixel* — 2048 probes for one canvas row, which was
+    /// the measured cost of the old fill. Here the row is walked one chunk at a
+    /// time: one probe buys 32 pixel comparisons out of a 4 KB buffer that is
+    /// already hot in L1.
+    ///
+    /// An absent chunk reads back as 32 transparent pixels, which is what
+    /// `get_pixel` returns there; the run continues across the gap only when
+    /// `seed` is 0, exactly as the per-pixel walk would.
+    pub fn row_seed_runs(&self, y: i32, lo: i32, hi: i32, seed: u32, out: &mut Vec<(i32, i32)>) {
+        if y < 0 || y >= self.store.height_px as i32 || lo >= hi {
+            return;
+        }
+        let y_u = y as u32;
+        let hi = hi.min(self.store.width_px as i32);
+        let mut x = lo.max(0);
+        // `start` is the first pixel of the run currently being built, if any.
+        let mut start: Option<i32> = None;
+        while x < hi {
+            let chunk_row_stop = (((x as u32 >> 5) + 1) << 5) as i32;
+            let stop = hi.min(chunk_row_stop);
+            match self.store.get_chunk_row(x as u32 >> 5, y_u, x as u32 & 31) {
+                Some(row) => {
+                    let mut i = x;
+                    for px in row.as_chunks::<4>().0.iter() {
+                        let hit = u32::from_le_bytes([px[0], px[1], px[2], px[3]]) == seed;
+                        if hit {
+                            start.get_or_insert(i);
+                        } else if let Some(s) = start.take() {
+                            out.push((s, i));
+                        }
+                        i += 1;
+                        if i >= stop {
+                            break;
+                        }
+                    }
+                }
+                // Absent chunk: 32 transparent pixels, decided without reading.
+                None => {
+                    if seed == 0 {
+                        start.get_or_insert(x);
+                    } else if let Some(s) = start.take() {
+                        out.push((s, x));
+                    }
+                }
+            }
+            x = stop;
+        }
+        if let Some(s) = start {
+            out.push((s, hi));
+        }
     }
 
     /// `(cy, cx)`-ordered dirty list; empties the internal set so a mid-stroke

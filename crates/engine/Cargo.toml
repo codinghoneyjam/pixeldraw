@@ -13,12 +13,21 @@ license.workspace = true
 # The two "outside" crates are both codecs, not capabilities: `flate2` replaces
 # `CompressionStream("deflate")` for PNG's IDAT, and `base64` replaces the
 # browser's `btoa`/`atob` bridge for chunk payloads. Neither touches the OS.
+#
+# `rayon` is a third kind of "outside": a thread pool. It is here because
+# compositing and flattening are embarrassingly parallel over chunk rows and the
+# CPU is not the bottleneck a single core can carry. It is used only behind an
+# explicit serial twin, so the parallelism is always measurable on its own, and
+# every public parallel entry point has a single-threaded sibling that produces
+# identical bytes — the rayon's own scheduler sizes itself from the host, so no
+# CPU feature detection is involved anywhere.
 [dependencies]
 thiserror = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 base64 = "0.22"
 flate2 = "1.1"
+rayon = "1.10"
 
 [dev-dependencies]
 # Re-derives the `hashes` group of raster_golden.json (masks too big to inline as

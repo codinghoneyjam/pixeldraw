@@ -18,8 +18,8 @@ impl Optionbar {
             .current_tool_options
             .get_or_insert_with(|| self.default_options(active_tool));
 
-        egui::Panel::top("optionbar")
-            .frame(egui::Frame::new().inner_margin(Vec2::new(12.0, 6.0)))
+        egui::Frame::new()
+            .inner_margin(Vec2::new(12.0, 6.0))
             .show(ui, |ui| {
                 ui.horizontal_wrapped(|ui| {
                     ui.spacing_mut().item_spacing = Vec2::new(12.0, 8.0);
@@ -185,14 +185,17 @@ impl Default for Optionbar {
     }
 }
 
-// Integration function
+// Integration function.
+//
+// `render_ui` in `super::mod` already owns `Panel::top("optionbar_panel")`.
+// This used to open the *same* panel id again, nesting a panel inside itself,
+// and `Optionbar::show` then opened a third (`Panel::top("optionbar")`) inside
+// that. egui panels are siblings: each nested one is handed only the space the
+// outer one left over, which clipped the option row. Now the layout happens
+// directly in the caller's `Ui`.
 pub fn show(ui: &mut egui::Ui, ui_state: &mut UiState, app_state: &mut AppState) {
     let mut optionbar = Optionbar::new();
-    egui::Panel::top("optionbar_panel")
-        .frame(egui::Frame::new())
-        .show(ui, |ui| {
-            optionbar.show(ui, ui_state, app_state);
-        });
+    optionbar.show(ui, ui_state, app_state);
 }
 
 #[cfg(test)]

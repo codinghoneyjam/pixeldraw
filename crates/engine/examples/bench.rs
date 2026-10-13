@@ -17,13 +17,14 @@
 //! already-filled canvas would measure the early-out instead of the algorithm.
 
 use pixel_engine::chunkstore::{ChunkStore, PixelWriter};
-use pixel_engine::composite::{self, LayerSource};
+use pixel_engine::composite::{self, LayerSource, composite_canvas, composite_canvas_serial};
 use pixel_engine::constants::{CHUNK_LEN, CHUNK_PX};
-use pixel_engine::io::export::{FlattenOptions, flatten_to_rgba};
+use pixel_engine::io::export::{FlattenOptions, flatten_to_rgba, flatten_to_rgba_serial};
 use pixel_engine::io::png::encode_png;
 use pixel_engine::kernels::flood_fill_scanline;
 use pixel_engine::raster::brush::{stroke_point, stroke_segment};
 use pixel_engine::raster::shape_raster::{FillMode, ShapeKind, ShapeSpec, apply_shape};
+use rayon::prelude::*;
 use std::time::Instant;
 
 // ---------------------------------------------------------------------------
@@ -334,6 +335,43 @@ fn bench_composite() {
             }
         },
     );
+
+    // Same chunks, same `composite_chunk`, different scheduling: chunk rows are
+    // independent, so the rows go to rayon. This row exists so the cost of the
+    // *parallelism* is readable on its own, not folded into the algorithm's.
+    time_it(
+        &format!("composite all {total} chunks x {LAYERS} layers (rayon)"),
+        RUNS,
+        || {
+            (0..cy_total).into_par_iter().for_each(|cy| {
+                let mut out = vec![0u8; CHUNK_LEN];
+                for cx in 0..cx_total {
+                    composite::composite_chunk(&layers, cx as u32, cy as u32, &mut out)
+                        .expect("valid chunk coords");
+                }
+            });
+        },
+    );
+
+    // The canvas-shaped entry point, which also scatters each chunk into the
+    // wide RGBA buffer. Kept separate because it does strictly more work than
+    // the two rows above (one full-canvas buffer instead of one chunk buffer).
+    time_it(
+        &format!("compositeCanvas {WIDTH}x{HEIGHT} (rayon)"),
+        RUNS,
+        || {
+            let buf = composite_canvas(&layers, WIDTH, HEIGHT);
+            assert_eq!(buf.len(), (WIDTH * HEIGHT * 4) as usize);
+        },
+    );
+    time_it(
+        &format!("compositeCanvas {WIDTH}x{HEIGHT} (1 thread)"),
+        RUNS,
+        || {
+            let buf = composite_canvas_serial(&layers, WIDTH, HEIGHT);
+            assert_eq!(buf.len(), (WIDTH * HEIGHT * 4) as usize);
+        },
+    );
 }
 
 fn bench_flatten_and_png() {
@@ -343,6 +381,12 @@ fn bench_flatten_and_png() {
 
     time_it("flattenToRgba 2048x1088", RUNS, || {
         let rgba = flatten_to_rgba(&layers, WIDTH, HEIGHT, FlattenOptions::default());
+        assert_eq!(rgba.len(), expected);
+    });
+
+    // The single-threaded twin, so the parallelism is readable on its own.
+    time_it("flattenToRgba 2048x1088 (1 thread)", RUNS, || {
+        let rgba = flatten_to_rgba_serial(&layers, WIDTH, HEIGHT, FlattenOptions::default());
         assert_eq!(rgba.len(), expected);
     });
 

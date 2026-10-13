@@ -115,13 +115,43 @@ pub fn render_frame(
 ) -> bool {
     let mut render = state.drain_events();
     let visible = state.view_store.visible_chunk_range();
-    let Some(doc) = state.session.doc().cloned() else {
+    // **The document is borrowed, not cloned.**
+    // every layer, every chunk — **once per frame**. `docs/perf_js_vs_rust.md`
+    // §13 measures it. It is not fixed here because it is not a one-liner: the
+    // copy exists because `doc` has to outlive both `comp.update` and the
+    // display params below, and unwiring that means deciding who owns the
+    // document while a frame is in flight.
+    //
+    // The framebuffer does NOT need the same care: `draw_display_into` owns its
+    // own size (`display/frame.rs` calls `resize_clear` with the device size it
+    // just computed), so the shell is free to hand over a 1×1 buffer. An earlier
+    // draft of this function resized it again "for safety", which double-cleared
+    // 2.6 MB every frame for nothing.
+    // **The document is borrowed, not cloned.**
+    //
+    // This used to read `state.session.doc().cloned()`, which deep-copies every
+    // layer and every chunk of them - 64 layers x 586 chunks x 4 KB - once per
+    // frame. Measured at **54 ms** for a 64-layer document
+    // (`docs/perf_js_vs_rust.md` sec 13): 9x the whole 6 ms frame budget on its
+    // own, and 97% of the frame, while sitting *outside* the budget so no amount
+    // of budget tuning could have reached it.
+    //
+    // The copy was never necessary. `Session` and `CompCache` are separate
+    // fields and everything below wants them borrowed at once, so the frame
+    // destructures `state` once and works on disjoint borrows. Rust allows that;
+    // the clone was a way of not trying.
+    //
+    // The framebuffer needs no equivalent care: `draw_display_into` owns its own
+    // size (`display/frame.rs` calls `resize_clear` with the device size it just
+    // computed), so the shell is free to hand over a 1x1 buffer.
+    let AppState { session, comp, .. } = state;
+    let Some(doc) = session.doc() else {
         return render;
     };
-    if state.comp.update(&doc, visible, frame_budget()) {
+    if comp.update(doc, visible, frame_budget()) {
         render = true;
     }
-    let s = state.session.settings();
+    let s = session.settings();
     let params = DisplayParams {
         view: state.view_store.view(),
         canvas_w: doc.canvas.width_px,
@@ -131,7 +161,7 @@ pub fn render_frame(
         dpr,
         background: &doc.canvas.background,
         grid: GridMode::from(s.grid_mode),
-        comp: Some(state.comp.comp()),
+        comp: Some(comp.comp()),
     };
     draw_display_into(&params, fb);
     let mut ops = vec![];
@@ -198,5 +228,105 @@ pub fn show_canvas(
     // Hover preview while idle: a still frame never repaints otherwise.
     if !fi.moves.is_empty() {
         ui.ctx().request_repaint();
+    }
+}
+// <META - ROLE : the frame path's own contract | walk the states a user can
+// actually reach — the view goes through `ViewStore`, which fits and clamps —
+// and draw a real frame in each. Found 2026-10-13 by
+// `cargo run -p pixel-engine --release --example framebench`.>
+#[cfg(test)]
+mod frame_buffer_tests {
+    use super::*;
+    use pixel_engine::view::ViewStore;
+
+    fn params<'a>(
+        view: pixel_engine::view::View,
+        comp: &'a [u8],
+        css_w: f64,
+        css_h: f64,
+    ) -> DisplayParams<'a> {
+        DisplayParams {
+            view,
+            canvas_w: 2048,
+            canvas_h: 1088,
+            css_w,
+            css_h,
+            dpr: 1.0,
+            background: "transparent",
+            grid: GridMode::Off,
+            comp: Some(comp),
+        }
+    }
+
+    /// `draw_display_into` owns its own size: the shell may hand it a 1x1 buffer
+    /// and it must end up correct. A draft of `render_frame` resized the buffer
+    /// again "for safety", double-clearing 2.6 MB per frame for nothing.
+    #[test]
+    fn draw_display_into_sizes_its_own_framebuffer() {
+        let mut store = ViewStore::new();
+        store.set_canvas(2048, 1088).expect("valid canvas size");
+        store.set_viewport(1040.0, 640.0);
+        let comp = vec![0u8; 2048 * 1088 * 4];
+
+        let mut fb = Framebuffer::new(1, 1); // exactly what shell.rs builds
+        draw_display_into(&params(store.view(), &comp, 1040.0, 640.0), &mut fb);
+        let (w, h) = (fb.width, fb.height);
+        assert!(w > 1 && h > 1, "1x1 must have been resized, got {w}x{h}");
+        assert_eq!(fb.rgba.len(), (w * h * 4) as usize);
+
+        // Every frame after the first hands over an already-sized buffer.
+        draw_display_into(&params(store.view(), &comp, 1040.0, 640.0), &mut fb);
+        assert_eq!((fb.width, fb.height), (w, h));
+    }
+
+    /// The whole zoom ladder, every pan corner, both fit and 1:1, at three
+    /// viewport sizes. `blit_visible` indexes `fb.rgba` directly with no
+    /// framebuffer clamp, so any view where the canvas rect is wider or taller
+    /// than the buffer would panic here.
+    #[test]
+    fn every_reachable_view_state_stays_inside_the_framebuffer() {
+        let comp = vec![0u8; 2048 * 1088 * 4];
+        for (vw, vh) in [(1040.0, 640.0), (900.0, 560.0), (1920.0, 1080.0)] {
+            let mut store = ViewStore::new();
+            store.set_canvas(2048, 1088).expect("valid canvas size");
+            store.set_viewport(vw, vh);
+            store.fit();
+            for _ in 0..24 {
+                for &(dx, dy) in &[(0.0, 0.0), (vw / 2.0, vh / 2.0), (-vw, -vh)] {
+                    store.pan_by(dx, dy);
+                    let mut fb = Framebuffer::new(1, 1);
+                    draw_display_into(&params(store.view(), &comp, vw, vh), &mut fb);
+                    assert_eq!(fb.rgba.len(), (fb.width * fb.height * 4) as usize);
+                }
+                store.zoom_in();
+                let mut fb = Framebuffer::new(1, 1);
+                draw_display_into(&params(store.view(), &comp, vw, vh), &mut fb);
+                assert_eq!(fb.rgba.len(), (fb.width * fb.height * 4) as usize);
+            }
+            // And back down to 1:1 and out.
+            store.actual_size();
+            let mut fb = Framebuffer::new(1, 1);
+            draw_display_into(&params(store.view(), &comp, vw, vh), &mut fb);
+            assert_eq!(fb.rgba.len(), (fb.width * fb.height * 4) as usize);
+        }
+    }
+
+    /// A viewport change must be followed, not ignored — this is the resize path
+    /// the frame relies on when the window moves between monitors.
+    #[test]
+    fn draw_display_into_follows_a_viewport_change() {
+        let mut store = ViewStore::new();
+        store.set_canvas(2048, 1088).expect("valid canvas size");
+        store.set_viewport(1040.0, 640.0);
+        let comp = vec![0u8; 2048 * 1088 * 4];
+        let mut fb = Framebuffer::new(1, 1);
+        draw_display_into(&params(store.view(), &comp, 1040.0, 640.0), &mut fb);
+        draw_display_into(&params(store.view(), &comp, 640.0, 480.0), &mut fb);
+        assert_ne!(
+            (fb.width, fb.height),
+            (1040, 640),
+            "the smaller viewport stuck"
+        );
+        assert_eq!(fb.rgba.len(), (fb.width * fb.height * 4) as usize);
     }
 }

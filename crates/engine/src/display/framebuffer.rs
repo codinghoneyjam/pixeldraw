@@ -42,6 +42,25 @@ pub(crate) fn clip_rect(
     Some((x0, y0, x1 - x0, y1 - y0))
 }
 
+/// The intersection of two `(x, y, w, h)` rectangles, or `None` when empty.
+///
+/// [`clip_rect`] trims a rect to one clip box; a caller that has two bounds —
+/// the canvas rect *and* the framebuffer — needs both applied before it indexes
+/// a slice.
+pub(crate) fn intersect_rects(
+    a: (i32, i32, i32, i32),
+    b: (i32, i32, i32, i32),
+) -> Option<(i32, i32, i32, i32)> {
+    let x0 = a.0.max(b.0);
+    let y0 = a.1.max(b.1);
+    let x1 = (a.0 + a.2).min(b.0 + b.2);
+    let y1 = (a.1 + a.3).min(b.1 + b.3);
+    if x1 <= x0 || y1 <= y0 {
+        return None;
+    }
+    Some((x0, y0, x1 - x0, y1 - y0))
+}
+
 impl Framebuffer {
     /// Transparent (all zero) — `new Uint8ClampedArray(w*h*4)`.
     pub fn new(width: u32, height: u32) -> Self {

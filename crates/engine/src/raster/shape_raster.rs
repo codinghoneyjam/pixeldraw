@@ -113,6 +113,13 @@ impl ShapeSpec {
 /// Write every set cell of a mask at an offset.
 ///
 /// No coordinate clipping of its own — `PixelSink::set` drops out-of-canvas.
+///
+/// **Row by row, run by run.** A coverage mask is a byte per cell but a shape is
+/// a solid: an ellipse row is one interval, and so is a polygon edge or a
+/// rounded rect's interior. Emitting runs instead of cells turns a 1024² ellipse
+/// fill from 823,592 `set` calls into roughly 13,000 [`PixelSink::set_run`]
+/// calls — each cell is still written exactly once, with the same value, in the
+/// same order, so the golden `ellipse`/`polygon`/`outline` groups are untouched.
 fn write_mask<S: PixelSink>(
     sink: &mut S,
     mask: &crate::raster::Mask,
@@ -120,12 +127,21 @@ fn write_mask<S: PixelSink>(
     dy: i32,
     packed: u32,
 ) -> usize {
+    let color = packed.to_le_bytes();
     let mut count = 0;
     for y in 0..mask.h {
-        for x in 0..mask.w {
-            if mask.is_set(x, y) {
-                sink.set(dx + x as i32, dy + y as i32, packed);
-                count += 1;
+        let row = &mask.data[y * mask.w..(y + 1) * mask.w];
+        let mut x = 0;
+        while x < mask.w {
+            if row[x] == 1 {
+                let start = x;
+                while x < mask.w && row[x] == 1 {
+                    x += 1;
+                }
+                sink.set_run(dx + start as i32, dy + y as i32, x - start, &color);
+                count += x - start;
+            } else {
+                x += 1;
             }
         }
     }

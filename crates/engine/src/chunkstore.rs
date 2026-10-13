@@ -8,11 +8,16 @@
 //! [`PixelWriter`] or a Command's `do`/`undo`. Out-of-canvas `set` is silently
 //! ignored, which is why callers never clip.
 
+mod alpha;
 mod store;
 mod writer;
 
 #[cfg(test)]
 mod tests;
 
+// The coverage-map primitives are re-exported because `perflab` measures the
+// mask-constant idea against them, and because anyone building their own index
+// has to maintain the very same map to stay correct.
+pub use alpha::{AlphaMask, EMPTY_MASK, MASK_WORDS, from_chunk, mark_range};
 pub use store::{Changeset, Chunk, ChunkDiff, ChunkStore, is_all_zero};
 pub use writer::{PixelWriter, StrokeState};

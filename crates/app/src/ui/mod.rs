@@ -85,32 +85,37 @@ pub fn render_ui(
     ui_state: &mut UiState,
     app_state: &mut crate::session_glue::AppState,
 ) {
+    // Panels are declared here and only here. Each module's `show()` lays out
+    // into the `Ui` handed to it; it must not open a panel of its own. Panels
+    // are siblings in egui, and re-opening one inside itself is what clipped
+    // the toolbar's buttons to their top ~40%.
+    use egui::Vec2;
+    let pad = |x: f32, y: f32| egui::Frame::new().inner_margin(Vec2::new(x, y));
+
     // 1. Menubar (top)
     egui::Panel::top("menubar_panel")
-        .frame(egui::Frame::new())
+        .frame(pad(8.0, 2.0))
         .show(ui, |ui| {
             menubar::show(ui, ui_state, app_state);
         });
 
     // 2. Toolbar (below menubar)
     egui::Panel::top("toolbar_panel")
-        .frame(egui::Frame::new())
+        .frame(pad(8.0, 4.0))
         .show(ui, |ui| {
             toolbar::show(ui, ui_state, app_state);
         });
 
     // 3. Optionbar (context-sensitive, below toolbar)
-    egui::Panel::top("optionbar_panel")
-        .frame(egui::Frame::new())
-        .show(ui, |ui| {
-            optionbar::show(ui, ui_state, app_state);
-        });
+    egui::Panel::top("optionbar_panel").show(ui, |ui| {
+        optionbar::show(ui, ui_state, app_state);
+    });
 
     // 4. Central canvas area is handled by shell.rs show_canvas()
 
     // 5. Statusbar (bottom)
     egui::Panel::bottom("statusbar_panel")
-        .frame(egui::Frame::new())
+        .frame(pad(12.0, 4.0).fill(egui::Color32::from_rgb(255, 0, 0)))
         .show(ui, |ui| {
             statusbar::show(ui, ui_state, app_state);
         });

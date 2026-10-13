@@ -1,7 +1,7 @@
 //! `drawDisplay` order + `blitVisible` — `src/render/renderer_display.js`.
 
 use super::background::paint_background;
-use super::framebuffer::{Framebuffer, clip_rect};
+use super::framebuffer::{Framebuffer, clip_rect, intersect_rects};
 use super::grid::{GridLines, GridMode, grid_lines, paint_grid};
 use crate::blend::over_blend;
 use crate::constants::BORDER_RGBA;
@@ -130,7 +130,18 @@ pub fn blit_visible(
     // Each dest side rounds separately, like dx/dw.
     let ox = round_half_up((view.offset_x() + x0 as f64 * z) * dpr) as i64;
     let oy = round_half_up((view.offset_y() + y0 as f64 * z) * dpr) as i64;
-    let Some((rx, ry, rw, rh)) = clip_rect(rect, ox as i32, oy as i32, ddw as i32, ddh as i32)
+    // **Two** bounds, not one. `rect` is the canvas rect in device px, which is
+    // *not* bounded by the framebuffer: zoom in past 1:1 and it is wider than
+    // the buffer, and pan until the canvas origin goes negative and it starts
+    // left of it. The loop below indexes `fb.rgba` directly, so the framebuffer
+    // has to be applied here — `Framebuffer::blend_rect` clamps the same way for
+    // the border, and `blit_visible` not doing so was a reachable panic
+    // (`every_reachable_view_state_stays_inside_the_framebuffer`, app crate).
+    let fb_rect = (0, 0, fb.width as i32, fb.height as i32);
+    let Some(bounds) = intersect_rects(rect, fb_rect) else {
+        return;
+    };
+    let Some((rx, ry, rw, rh)) = clip_rect(bounds, ox as i32, oy as i32, ddw as i32, ddh as i32)
     else {
         return;
     };

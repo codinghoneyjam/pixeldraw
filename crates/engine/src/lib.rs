@@ -30,6 +30,7 @@ pub mod fixtures;
 pub mod io;
 pub mod kernels;
 pub mod model;
+pub mod perflab;
 pub mod pixel;
 pub mod raster;
 pub mod recipe;
