@@ -1,4 +1,4 @@
-//! `SessionCore` and `Session` — the document/history holder and its API.
+﻿//! `SessionCore` and `Session` — the document/history holder and its API.
 //!
 //! The split from the facade exists for [`crate::model::edit_session`]: an
 //! [`EditHandle`] must borrow the non-document state for as long as a stroke
@@ -304,7 +304,6 @@ impl Session {
         if layer.locked {
             // The JS notified *and* threw; the status message is what the option
             // bar's warning comes from, so it must be emitted before the error
-            // travels.
             core.bus.emit(ModelEvent::status_message(
                 "warn",
                 "레이어가 잠겨 있습니다",

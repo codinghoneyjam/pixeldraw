@@ -1,4 +1,4 @@
-//! Drawing kernels — the tool-level operations that write many pixels.
+﻿//! Drawing kernels — the tool-level operations that write many pixels.
 //!
 //! Ported from `src/features/fill/fill.js` and `src/features/pen/brush.js`.
 //! The JS tree scattered the family across three files; here each kernel is a
@@ -235,7 +235,6 @@ mod tests {
     fn a_stroke_starting_off_canvas_paints_only_what_lands_inside() {
         // The negative-origin golden case: a 3px pen from (-3,2) to (6,2) over a
         // 10x6 canvas covers x 0..6 on rows 2..4 — three rows, because a 3px
-        // footprint is 3 rows tall, and nothing wraps to the far right edge.
         let got = stroke_mask(&[(-3, 2), (6, 2)], 3, 10, 6);
         let rows: Vec<String> = got
             .chunks(10)
@@ -276,7 +275,6 @@ mod tests {
     fn an_enclosed_hole_is_filled_separately() {
         // The JS golden's ring grid: the outer zero region and the inner hole
         // are two disconnected seeds of the same value, so filling the outer
-        // ring must leave the hole alone.
         let mut g = Grid::new(5, 5);
         let ring = [
             [0, 0, 0, 0, 0],

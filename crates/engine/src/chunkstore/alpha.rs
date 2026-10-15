@@ -1,4 +1,4 @@
-//! One bit per chunk pixel: *"this pixel has a non-zero alpha"*.
+﻿//! One bit per chunk pixel: *"this pixel has a non-zero alpha"*.
 //!
 //! **Why this exists.** Compositing and flattening both answer the same
 //! question millions of times per frame: *is any layer opaque here at all?*
@@ -61,8 +61,6 @@ pub fn mark_range(mask: &mut AlphaMask, ly: u32, lx0: u32, lx1: u32) {
     while lx < hi {
         // `locate` gives the word and the bit offset **within that word**, so the
         // run ends at the next word boundary measured from `lx` — not at a fixed
-        // column. Rows are 32 pixels wide, so words straddle row seams and a
-        // fixed boundary would write bits into the neighbouring row.
         let (w, b) = locate(lx, ly);
         let word_end = lx + (64 - b);
         let run_end = hi.min(word_end);

@@ -1,4 +1,4 @@
-//! `<META - FILE SUMMARY - B5.1/B5.2/B5.3/B5.5, ported from tests/model_basic.test.mjs>`
+﻿//! `<META - FILE SUMMARY - B5.1/B5.2/B5.3/B5.5, ported from tests/model_basic.test.mjs>`
 //!
 //! The document-model gate. Every assertion below is the JS one, rewritten
 //! against the Rust API; the `<META - ROLE>` comments name the JS case so a
@@ -380,7 +380,6 @@ fn locked_and_hidden_begin_edit_notifies_then_throws() {
     assert!(edit.is_active());
     // The JS kept the object alive and called `session.undo()` against it.
     // Dropping the handle is the Rust equivalent of abandoning the JS object:
-    // the session stays `editing` and refuses the undo, emitting nothing.
     drop(edit);
     assert!(session.is_editing());
 

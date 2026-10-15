@@ -1,4 +1,4 @@
-//! `PixelWriter` — one stroke's before-snapshot and dirty set.
+﻿//! `PixelWriter` — one stroke's before-snapshot and dirty set.
 //!
 //! Every `set` through here records the chunk's pre-image the first time it is
 //! touched, so `finish` can emit an exact diff and `discard` can restore. The
@@ -99,7 +99,6 @@ impl<'a> PixelWriter<'a> {
             let (cx, cy) = chunk_coords(key);
             // `copy_chunk` returns `None` for an absent chunk, and that `None`
             // *is* the before-image: it lets both `finish` and `discard` put a
-            // brand-new chunk back to *gone* rather than to all-zero.
             self.store.copy_chunk(cx, cy)
         });
         self.dirty.insert(key);
@@ -295,7 +294,6 @@ impl<'a> PixelWriter<'a> {
             let (cx, cy) = chunk_coords(key);
             // `before` is `None` when the chunk did not exist before the stroke,
             // so restoring passes `None` and the chunk is removed rather than
-            // left behind as all-zero bytes.
             let bytes: Option<&[u8]> = before.as_deref().map(|b| &b[..]);
             // Ignoring the error is safe: the coords came from a live key.
             let _ = self.store.put_chunk(cx, cy, bytes);

@@ -1,4 +1,4 @@
-//! Pending/draw transitions — set, discard, commit, cancel, resize, events.
+﻿//! Pending/draw transitions — set, discard, commit, cancel, resize, events.
 
 use pixel_engine::errors::{DrawToolError, EngineResult};
 use pixel_engine::model::{LayerChangeReason, SettingKey, SettingValue};
@@ -167,7 +167,6 @@ impl ShapeTool {
         } else if reason == LayerChangeReason::Remove {
             // The JS also watched `"replace"`; the engine has no such reason
             // (Add/Move/Prop cover the cases), so only a removed layer drops
-            // a pending that points at it.
             let gone = self
                 .pending
                 .as_ref()

@@ -1,4 +1,4 @@
-//! Display/export compositing — ported from `src/render/composite.js`.
+﻿//! Display/export compositing — ported from `src/render/composite.js`.
 //!
 //! This is the **read** half of the engine: it turns a stack of layer bitmaps
 //! into the pixels the screen, the PNG export and the eyedropper all see.
@@ -181,7 +181,6 @@ pub fn composite_chunk(
                 }
                 // The direct-replace shortcut is only valid for source-over:
                 // every other mode has to run the math even when the source is
-                // opaque.
                 if s.normal_opaque && sa8 == 255 {
                     slot.copy_from_slice(&[px[0], px[1], px[2], 255]);
                     continue;
@@ -269,7 +268,6 @@ fn paint_bands(layers: &[LayerSource<'_>], width: u32, buf: &mut [u8], parallel:
             let _ = composite_chunk(layers, cx as u32, cy, &mut chunk);
             // A chunk's rows are 32 pixels wide but a canvas row is `width`
             // pixels, so they land `stride` bytes apart in the band rather than
-            // back to back. Scatter row by row.
             let col = cx * row_bytes;
             for (r, slot) in chunk.chunks_exact(row_bytes).enumerate() {
                 let dst = r * stride + col;
@@ -352,8 +350,6 @@ mod tests {
 
     // <META - ROLE : parity with tests/composite.test.mjs layer-order cases | L20-60>
     // `doc.layers` is bottom-to-top: the panel reverses it to draw top-first
-    // (`panel_layers.js` `topFirst`), and `compositeChunk` accumulates in array
-    // order, so the LAST entry paints last.
     #[test]
     fn visible_source_order_decides_the_top_layer() {
         let red = dotted(RED, 32, 32);
@@ -479,8 +475,6 @@ mod tests {
     fn a_transparent_result_clears_its_channels() {
         // A chunk can legitimately hold a pixel with RGB set and alpha 0 (a
         // raw `putChunk` from a file, or an erase that left the colour bytes).
-        // The composite must still leave the output all-zero, or `isAllZero`
-        // could no longer prune it and the erased region would keep a trace.
         let mut store = ChunkStore::new(64, 64).expect("valid size");
         let mut raw = Box::new([0u8; CHUNK_LEN]);
         raw[0] = 0x11;

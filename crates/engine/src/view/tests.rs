@@ -1,4 +1,4 @@
-//! `view` integration tests.
+﻿//! `view` integration tests.
 //!
 //! The `d1_*` cases mirror `tests/view_basic.test.mjs`; the rest cover what that
 //! suite and `tools/view_check.mjs` leave unstated. The long-form reasoning behind
@@ -50,7 +50,6 @@ fn d1_pan_clamp_fit_actual() {
     assert_eq!(pan_by(v, 10.0, 10.0).offset_x(), 10.0);
     // 512 canvas at zoom 1 in an 800x600 viewport: the canvas fits entirely,
     // so offset 0 already sits inside [32-512, 800-32] and the clamp is a no-op.
-    // That is the JS behaviour too — `clampView` only moves an out-of-range view.
     let c = clamp_view(v, 512.0, 512.0, 800.0, 600.0);
     assert_eq!(c.offset_x(), 0.0);
     assert_eq!(c.offset_y(), 0.0);

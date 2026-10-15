@@ -1,4 +1,4 @@
-//! `<META - FILE SUMMARY - H3 comp_cache integration: dirty chunks, event table, 6 ms budget>`
+﻿//! `<META - FILE SUMMARY - H3 comp_cache integration: dirty chunks, event table, 6 ms budget>`
 //!
 //! Ported from `src/render/renderer_composite.js` + the invalidation half of
 //! `src/render/renderer.js`. The drive-through runs a real `Session`: every write
@@ -221,8 +221,6 @@ fn the_event_table_is_js_exact() {
 
     // Row 4 — `Layers{Prop}` → invalidate_all + frame. The JS also skipped
     // `prop` + `field === "name"`, but no event carries a field name, so `prop`
-    // is treated like every other structural reason (see the `#[ignore]`d unit
-    // test in `src/comp_cache/tests.rs`).
     let mut cache = clean_cache(&d);
     let prop = ModelEvent::layers_changed(pixel_engine::model::LayerChangeReason::Prop, vec![]);
     assert!(cache.apply_event(&prop));
@@ -286,7 +284,6 @@ fn the_budget_skips_the_visible_chunks_entirely() {
 
     // Zero budget on the wall clock: the same visible pass, plus at most the one
     // off-screen chunk whose check read a clock that had not advanced yet (the
-    // JS raced the same way). The next frame with a real budget then finishes.
     let mut cache = clean_cache(&d);
     cache.invalidate_all();
     assert!(cache.update(&d, Some(vis), Duration::ZERO));
@@ -326,7 +323,6 @@ fn a_resize_reallocates_and_dirties_everything() {
     }
     // `dirty_all` counts the grid the buffer still has: the old 2×2. The new
     // 4×2 grid lands when `ensure` runs inside the next `update` — JS
-    // `ensureComp` also re-cut inside `_update`, not inside the event handler.
     assert_eq!(
         cache.dirty_len(),
         4,

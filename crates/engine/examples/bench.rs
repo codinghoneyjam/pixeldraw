@@ -1,4 +1,4 @@
-//! Phase 0.1 mirror — the Rust side of `tools/bench_baseline.mjs`.
+﻿//! Phase 0.1 mirror — the Rust side of `tools/bench_baseline.mjs`.
 //!
 //! Run: `cargo run -p pixel-engine --release --example bench`
 //!
@@ -29,7 +29,6 @@ use std::time::Instant;
 
 // ---------------------------------------------------------------------------
 // CONFIG — identical to the JS `CONFIG` block.
-// ---------------------------------------------------------------------------
 
 const WIDTH: u32 = 2048;
 const HEIGHT: u32 = 1088;
@@ -59,7 +58,6 @@ const PROFILE: &str =
 
 // ---------------------------------------------------------------------------
 // Timers — the same three shapes the JS file uses.
-// ---------------------------------------------------------------------------
 
 /// `timeIt` — median of N runs of the same closure.
 fn time_it(name: &str, runs: usize, mut f: impl FnMut()) {
@@ -100,7 +98,6 @@ fn report(name: &str, mut samples: Vec<f64>) {
 
 // ---------------------------------------------------------------------------
 // The busy document — every layer carries content, the worst case for compositing.
-// ---------------------------------------------------------------------------
 
 struct LayerMeta {
     opacity: f64,
@@ -169,7 +166,6 @@ fn js_round(v: f64) -> f64 {
 
 // ---------------------------------------------------------------------------
 // Items
-// ---------------------------------------------------------------------------
 
 fn bench_strokes() {
     for n in PEN_SIZES {
@@ -212,7 +208,6 @@ fn bench_flood_fill() {
         let seed = if label == "empty canvas" { 0 } else { RED };
         // The walk mutates its input, so each sample gets a FRESH store:
         // re-timing an already-filled canvas would measure the early-out
-        // instead of the algorithm.
         time_fresh(
             &format!("floodFill {label}"),
             FILL_RUNS,
@@ -338,7 +333,6 @@ fn bench_composite() {
 
     // Same chunks, same `composite_chunk`, different scheduling: chunk rows are
     // independent, so the rows go to rayon. This row exists so the cost of the
-    // *parallelism* is readable on its own, not folded into the algorithm's.
     time_it(
         &format!("composite all {total} chunks x {LAYERS} layers (rayon)"),
         RUNS,
@@ -355,7 +349,6 @@ fn bench_composite() {
 
     // The canvas-shaped entry point, which also scatters each chunk into the
     // wide RGBA buffer. Kept separate because it does strictly more work than
-    // the two rows above (one full-canvas buffer instead of one chunk buffer).
     time_it(
         &format!("compositeCanvas {WIDTH}x{HEIGHT} (rayon)"),
         RUNS,
@@ -402,7 +395,6 @@ fn bench_flatten_and_png() {
 
 // ---------------------------------------------------------------------------
 // Warm-up + main
-// ---------------------------------------------------------------------------
 
 /// One cheap pass over every measured path so the first sample is not the
 /// sample that pays for cold caches and an empty footprint cache. The pen=64

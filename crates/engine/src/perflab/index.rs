@@ -1,4 +1,4 @@
-//! Candidate 2: chunk index structures, head to head.
+﻿//! Candidate 2: chunk index structures, head to head.
 //!
 //! The engine went `BTreeMap<u64, Box<Chunk>>` → `Vec<Option<Box<Chunk>>>`
 //! (see `docs/perf_js_vs_rust.md` §11-2-1). This module asks what is *left*:
@@ -90,7 +90,6 @@ pub trait ChunkIndex {
 
 // ---------------------------------------------------------------------------
 // BTreeMap — the previous implementation.
-// ---------------------------------------------------------------------------
 
 pub struct BTreeIdx {
     map: BTreeMap<u64, Cell>,
@@ -162,7 +161,6 @@ impl ChunkIndex for BTreeIdx {
 
 // ---------------------------------------------------------------------------
 // Dense — what the engine uses now.
-// ---------------------------------------------------------------------------
 
 pub struct DenseIdx {
     slots: Vec<Option<Cell>>,
@@ -237,7 +235,6 @@ impl ChunkIndex for DenseIdx {
 
 // ---------------------------------------------------------------------------
 // Arena — `u32` slot table into one contiguous `Vec<Cell>`.
-// ---------------------------------------------------------------------------
 
 pub struct ArenaIdx {
     /// slot -> arena index + 1. `0` = absent, which is why `u32` works here and
@@ -368,7 +365,6 @@ impl ChunkIndex for ArenaIdx {
 
 // ---------------------------------------------------------------------------
 // HashMap — closest to the JS side's `Map`.
-// ---------------------------------------------------------------------------
 
 pub struct HashIdx {
     map: HashMap<u64, Cell>,

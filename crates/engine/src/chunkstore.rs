@@ -1,4 +1,4 @@
-//! Sparse chunk storage + the stroke change tracker — facade.
+﻿//! Sparse chunk storage + the stroke change tracker — facade.
 //!
 //! Ported 1:1 from `src/core/chunkstore.js`. A layer is a map of 32×32 chunks
 //! holding `[u8; CHUNK_LEN]` each; empty chunks are never created, so a
@@ -17,7 +17,6 @@ mod tests;
 
 // The coverage-map primitives are re-exported because `perflab` measures the
 // mask-constant idea against them, and because anyone building their own index
-// has to maintain the very same map to stay correct.
 pub use alpha::{AlphaMask, EMPTY_MASK, MASK_WORDS, from_chunk, mark_range};
 pub use store::{Changeset, Chunk, ChunkDiff, ChunkStore, is_all_zero};
 pub use writer::{PixelWriter, StrokeState};

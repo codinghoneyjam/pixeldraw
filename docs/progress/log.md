@@ -4,6 +4,72 @@
 
 ---
 
+## 2026-10-14 · Phase 3.x · 마커 색 구분·주스·도형 옵션 (2중 브라켓·호버/클릭·bbox/확정취소)
+
+**커밋 대상**: `crates/app/src/ui/{panels,toolbar,optionbar,juice(new),mod}.rs`
+**테스트**: app 149 그린(신규 `slot_mark`·`midpoint`·`lerp_color`) · clippy 그린 · fmt 그린 · 부트 스크린샷(`outputs/native_20261014f.png`) 회귀 확인
+
+- **브라켓 2개 → 슬롯별 색 구분** — 원본(`syncActiveSwatches`)도 전경·배경 둘 다 표시한다. 혼동을 없애려고 전경 일치=파랑, 배경 일치=앰버, 둘 다=전경색으로 구분(`SlotMark`, 대소문자 무시).
+- **주스 티어** — 신규 `ui/juice.rs`. `animate_bool_responsive` 호버 페이드(자동 리페인트), 클릭 플래시/팝(0.18s, 자체 시계+리페인트 요청). 적용: 툴바 아이콘(배경 lerp+팝), 스와치(필 밝아짐+팝+호버링), 브러시 프리셋·레이어 버튼·옵션바 프리셋/확정취소(오버레이 글로우+플래시), 섹션 헤더(글로우).
+- **도형 bbox/확정·취소** — 옵션바 `shape_options`를 도구 직결로 재작성. X/Y/W/H(직선은 x0,y0,x1,y1 그대로), 다각형 정점 행+추가(중점 `Math.round` 재현)·삭제(3점 가드), 확정/취소(pending 있을 때만 활성, 취소=`setPending(None)`). 모드는 직선 비활성, 반경은 rrect만, 선두께는 브러시 패널로 일원화(원본에 없는 컨트롤이었음). 직선을 도형 섹션으로 이동.
+- **작업 중 사고**: PowerShell 텍스트 왕복(`Get/Set-Content`)으로 `optionbar.rs` 한글 32줄이 깨짐. `git show`+리터럴 집합 검증 스크립트로 수리 후 컴파일·테스트·스크린샷으로 확인. 교훈: `.rs`는 셸 텍스트 파이프로 다루지 않는다.
+
+---
+
+## 2026-10-14 · Phase 3.x · 패널 미관 3종 (색상환 배치·rrect 슬롯·2중 테두리)
+
+**커밋 대상**: `crates/app/src/ui/{panels,dialogs}.rs`
+**테스트**: app 146 그린(신규 `slot_radius`) · clippy 그린 · fmt 그린 · 부트 스크린샷(`outputs/native_20261014e.png`) 육안 확인
+
+- **색상환을 전경/배경색 우측으로** — 원본 `.dt-picker-head`가 flex 한 행(슬롯+132px 휠)이다. 슬롯+교체/초기화(아래 2버튼) | 색상환 가로 배치로 변경.
+- **rrect 슬롯 디자인** — 셀 폭의 28% 둥근모서리(클램프 3~8), 1px 엣지, 활성 슬롯(전경·배경 둘 중 일치, 원본 `syncActiveSwatches`)에 코너브라켓 마커+먹 링(원본 `::before` 마커의 네이티브 판), 호버 흰 링, 빈 최근색 칸 체커보드 플레이스홀더(원본 모아레 대응). 덤으로 팔레트 우클릭→보조슬롯 지정(원본 컨텍스트 메뉴) 추가.
+- **2중 테두리** — `section_card` 헬퍼(외곽 8px+내측 헤어라인): 색상/팔레트/최근색/브러시/레이어 섹션 + 레이어 카드(내측 라인 추가) + 다이얼로그 창(둥근 스트로크 프레임). 상단 바 3종은 단일 스트로크 유지.
+
+---
+
+## 2026-10-14 · Phase 3.x · 접기 저장 + 옵션→도구 직결 (ui_prefs·downcast 이음새)
+
+**커밋 대상**: `crates/platform/{Cargo.toml,src/{lib,ui_prefs}.rs}`·`crates/app/src/{shell.rs,tools/{api,manager}.rs,tools/*/…(8종 as_any),ui/{panels,optionbar,mod}.rs,tools/tests/manager.rs}`
+**테스트**: workspace 전체 그린(engine 339+통합 44·platform 24·app 145) · `cargo clippy --workspace --all-targets -- -D warnings` 그린 · `cargo fmt --all --check` 그린 · 부트 스크린샷 회귀 확인
+
+- **접기 상태 파일 저장** — 신규 `platform::ui_prefs`. JS(`collapsible_sections.js`+`storage.js`) 그대로: `settings.json` 객체 내 `collapsedPanels` 필드, 읽기 관대(없음/깨짐→빈 맵, 비bool 스킵), 쓰기 병합(他 필드 보존). 부팅 시 `PixeldrawApp::new`에서 로드, 토글 클릭 때만 저장(매 프레임 저장 아님). 디스크 테스트는 Drop 가드로 백업/복원.
+- **arc/gradient/text 옵션→도구 직결** — `Tool` 트레이트에 `as_any/as_any_mut`(8종 전부 구현) + `ToolManager::get_mut` 추가(JS `toolManager.get(id)` 대응). 옵션바가 매 프레임 도구 실값을 읽고 setter로 씀: 호 시작/끝각·선폭 1..64·현 채움/테두리, 그라디언트 내부반경 0..2048·가장자리, 텍스트 입력(키스트로크 적용)·글꼴 콤보(기본 42px/모노그램 240px)·외곽선 0..16. 기존 `ToolOptions` 임시 필드 8개 삭제(죽은 상태 제거). `&mut (dyn Tool + 'static)` 형태로만 컴파일됨(`&mut` 불변성 — 주석에 기록).
+- 남은 GUI 과제: 도형 bbox/폴리곤 정점 편집 옵션, 자동저장 복원·변경버리기 다이얼로그 배선.
+
+---
+
+## 2026-10-14 · Phase 3.x · 좌측 패널 원본 패리티 2차 (접기·스와치·RGB·입력 격리·창 분리)
+
+**커밋 대상**: `crates/app/src/{input_adapter,canvas_view,shell}.rs`·`ui/{panels,mod}.rs`
+**테스트**: app 144 그린 · `cargo clippy -p pixeldraw --all-targets -- -D warnings` 그린 · `cargo fmt --check` 그린 · 실화면 스크린샷(`outputs/native_20261014b.png`)으로 육안 확인
+
+- **패널 드래그가 캔버스에 스트로크를 그리던 버그 수정** — `poll_frame_input`이 전역 포인터 상태를 rect 검사 없이 도구로 넘겼음. press·wheel은 캔버스 rect 내부 + 다이얼로그 없을 때만 전달, moves/releases는 그대로(진행 중 스트로크 종료 보장). 사용자 제보의 원인 불명 스트로크가 이것이었다.
+- **최근색 세로 버그 수정** — `ui.end_row()`를 셀마다 호출해서 8행×1열이 됐음. 8열 고정 + 플레이스홀더 셀로.
+- **팔레트 간격** — 고정 18px+3px에서 유효폭 기준 자동 셀(`(w-14)/8`, gap 2px)로. 원본(`style_base.css`: 8열·gap 2px·셀 늘어남) 그대로.
+- **RGB/A 필드 추가** — 원본 `panel_color_fields.js`대로 R/G/B(0~255)+A(1~255)+HEX. 채널 편집은他 채널·알파 보존, HEX는 반투명 시 8자리 유지.
+- **접기 섹션** — 색상/팔레트/최근색/브러시/레이어 헤더를 `▼/▶` 토글로(`collapsible_sections.js` 대응, 상태는 인메모리 — 설정파일 저장은 Phase 3.9 후속).
+- **창 분리** — 6개 패널 프레임에 `--border`(#3a3d43) 테두리, 좌/우 패널 너비 상한 420·하한 180/200(원본 리사이즈 핸들 범위).
+- **상태바 커서** — `cursor_pos`를 아무도 안 채우고 있었음(`- , -` 고정). `pixel_at`으로 매 프레임 공급(레터박스 포함, 캡처 중 스트로크는 계속 보고).
+- 남은 과제: 접기 상태 설정파일 저장, arc/gradient/text 옵션→도구 배선(어제 항목 유지).
+
+---
+
+## 2026-10-14 · Phase 3.x · GUI 원본 패리티 수정 (색상환·상태바·레이어·다이얼로그·단축키·옵션바)
+
+**커밋 대상**: `crates/app/src/ui/{panels,statusbar,dialogs,actions,menubar,optionbar,shared}.rs`·`file_ops.rs`·`shell.rs` + clippy 선행 수정 5건
+**테스트**: `cargo test --workspace` 전체 그린(engine 339+통합 44·platform 20·app 144) · `cargo clippy -p pixeldraw --all-targets -- -D warnings` 그린 · `cargo fmt --check` 그린
+
+- **색상환이 동작하지 않던 버그 수정**(`panels.rs`). `show_hsv_wheel`이 `changed && !dragging` 조건으로 색을 돌려줬는데 `changed`가 참이면 `dragging`도 항상 참이라 절대 `Some`이 될 수 없었다. JS(`panel_color_wheel.js`)의 pick/commit 의미로 고침: 드래그 중 라이브 적용(`onChange`), 릴리스 때만 recent 기록(`onCommit`). HSV 수학도 원본 그대로(`d > 0` 정확 동등, 6섹터 테이블, `angleToHue`, `onRing = RING_IN - 6`, `SV_PX = 74`), 슬롯 알파 보존(`withSlotAlpha`) 포함.
+- **상태바 원본 수치 복원**(`statusbar.rs`). 셀/타일 뒤바뀜 수정: 셀 = `/32`(CHUNK), 타일 = `/64`(TILE) — 분석 문서(`ui_ux_port_analysis.md` §2.3)가 둘을 바꿔 적고 있었고 코드가 그걸 따랐다. 캔버스 표기도 `w/64` float 나눗셈으로(JS `${w / TILE_PX}`), 미입장 플레이스홀더 `- , -` 복원.
+- **레이어 썸네일 추가**(`panels.rs`). JS `paintThumb` 그대로 32×32 nearest-neighbour(`sx = floor(tx*w/32)`), 눈 아이콘 `👁/🚫`, 버튼 활성 규칙(`syncButtons`: 최하층 병합/내림 불가, 최상층 올림 불가, 1장이면 삭제 불가).
+- **새 문서/리사이즈 다이얼로그 원본화**(`dialogs.rs`, `file_ops.rs`). 타일 단위(×64, 기본 8×8) + JS 프리셋 4종(128/512/1024/1920×1088) + 문서 이름 필드 + 범위/32px 배수 검증과 확인 버튼 비활성. 환경설정 타일 표기 오류(32/64 뒤바뀜) 수정.
+- **단축키 JS 일치**(`actions.rs`, `shell.rs`, `menubar.rs`). `Ctrl+E` 내보내기, `Ctrl+'` 그리드, `Ctrl+Shift+Z` redo, `Ctrl+Shift+M` 병합, `Ctrl+]/[` 레이어 위/아래, plain `+/-/0/1` 줌, `Shift+[/]` ±5(신규 `BrushSize*Fast` 액션). 기존 Ctrl 조합은 별칭으로 유지.
+- **옵션바 원본 항목**(`optionbar.rs`). 채우기 허용오차 슬라이더 삭제(원본은 허용오차 0 고정, 힌트 문구로 대체 — 기존 슬라이더는 `opacity`를 덮어쓰는 오동작이었다). 호(시작/끝각·선두께·현 채움/테두리), 그라디언트(내부반경·가장자리), 텍스트(입력·외곽선)를 JS 패널 항목대로 표시. 단 arc/gradient/text 값은 아직 `ToolOptions`에만 저장되고 실제 도구 구조체로 흘러들어가지 않는다 → 남은 과제(아래).
+- **토스트 시간 원본화**(`shared.rs`): info/success 4s, warning/error 8s (`toast.js`, `statusbar.js` 싱크 기준).
+- **남은 GUI 과제**: ① arc/gradient/text 옵션바 값 → 도구 구조체 배선(`ToolManager`에 `get_mut`/downcast 심 필요) ② 도형 bbox/폴리곤 정점 편집 옵션 ③ 자동저장 복원·변경버리기 확인 다이얼로그 배선 ④ `Escape` 포커스 해제·입력중 단축키 가드(JS `isEditableTarget`/`isBusyUi`).
+
+---
+
 ## 2026-10-12 · Phase 4.1 · 자산 파이프라인 판단: viewer 제거, 개발 자산 유지(A 선택)
 
 **커밋 대상**: `viewer/` 삭제 · `docs/progress/README.md` 상태 보드 갱신

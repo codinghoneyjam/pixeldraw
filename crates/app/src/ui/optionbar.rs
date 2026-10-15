@@ -1,4 +1,4 @@
-//! Optionbar — port of `src/ui/optionbar/panel_options.js`.
+﻿//! Optionbar — port of `src/ui/optionbar/panel_options.js`.
 
 use super::{ToolOptions, UiState};
 use crate::session_glue::AppState;
@@ -165,12 +165,6 @@ impl Default for Optionbar {
 
 // Integration function.
 //
-// `render_ui` in `super::mod` already owns `Panel::top("optionbar_panel")`.
-// This used to open the *same* panel id again, nesting a panel inside itself,
-// and `Optionbar::show` then opened a third (`Panel::top("optionbar")`) inside
-// that. egui panels are siblings: each nested one is handed only the space the
-// outer one left over, which clipped the option row. Now the layout happens
-// directly in the caller's `Ui`.
 pub fn show(ui: &mut egui::Ui, ui_state: &mut UiState, app_state: &mut AppState) {
     let mut optionbar = Optionbar::new();
     optionbar.show(ui, ui_state, app_state);

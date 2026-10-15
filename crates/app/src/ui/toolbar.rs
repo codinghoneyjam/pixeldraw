@@ -1,4 +1,4 @@
-//! Toolbar — port of `src/ui/toolbar/**`.
+﻿//! Toolbar — port of `src/ui/toolbar/**`.
 
 use super::UiState;
 use crate::session_glue::AppState;
@@ -37,12 +37,6 @@ impl Toolbar {
         Self {
             // No pictographic icons. This font has no U+1F9FD (sponge), U+1FAA3
             // (bucket), U+1F4A7 (droplet), U+1D335 (double-struck T),
-            // U+25AD/U+25B0/U+25B1 (geometric shapes) or U+21B6/U+21B7
-            // (arrows), so eight of the eleven buttons rendered as tofu, and a
-            // pictogram is exactly the sort of thing that renders on the
-            // author's machine and not on anyone else's. The keyboard shortcut
-            // takes the icon slot: it is ASCII, always available, and it
-            // surfaces a mapping that used to be invisible.
             tools: vec![
                 ToolButton {
                     id: "pen",
@@ -192,7 +186,6 @@ impl Toolbar {
 
             // Zoom controls. Plain ASCII, for the same reason the tools dropped
             // their icons: U+1F50D is not in every font, and a missing
-            // magnifying glass is worse than the word "축소".
             if ui.button("축소").on_hover_text("[Ctrl+-]").clicked() {
                 app.view_store.zoom_out();
             }

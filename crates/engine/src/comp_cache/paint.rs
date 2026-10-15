@@ -1,4 +1,4 @@
-//! Painting — `paintDirty` and the `_update` composite half.
+﻿//! Painting — `paintDirty` and the `_update` composite half.
 //!
 //! The two passes and where the frame budget is measured are the whole trap here:
 //! the JS painted every visible chunk with **no** budget and only started the
@@ -76,7 +76,6 @@ impl CompCache {
             }
             // The JS checked the budget *before* painting a chunk, so a frame can
             // still paint one chunk after the budget ran out (the check that
-            // stops it is the next one).
             match budget {
                 Budget::Unlimited => {}
                 Budget::Time(limit) => {

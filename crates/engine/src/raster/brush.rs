@@ -1,4 +1,4 @@
-//! The round pen: footprint, Bresenham enumeration and stamping.
+﻿//! The round pen: footprint, Bresenham enumeration and stamping.
 //!
 //! Ported from `src/features/pen/brush.js` (the JS tree's SSOT; the duplicate in
 //! `core/raster/raster_brush.js` was removed upstream).
@@ -210,7 +210,6 @@ impl PixelSink for crate::chunkstore::PixelWriter<'_> {
     fn set(&mut self, x: i32, y: i32, packed: u32) {
         // Out-of-canvas is dropped here rather than wrapping: the JS tree's
         // `stampBrush` relied on `writer.set` ignoring negatives, and a bare
-        // `u32` cast would land the pixel at the far corner of the canvas.
         if x < 0 || y < 0 {
             return;
         }
@@ -317,7 +316,6 @@ pub fn stroke_segment<S: PixelSink>(
     };
     // A 1px pen has no overlap to skip: consecutive stamps land on new pixels
     // every time. Paying for the memo there measured as a ~2x regression, so the
-    // degenerate case keeps the original one-cell-per-step walk.
     if fp.n == 1 {
         for_each_bresenham(x0, y0, x1, y1, |x, y| sink.set(x, y, packed));
         return;
@@ -325,10 +323,6 @@ pub fn stroke_segment<S: PixelSink>(
     let color = packed.to_le_bytes();
     // The cursor is carried across stamps rather than reset per stamp. A stroke
     // walks rows forwards, so restarting it at 0 made the first footprint row of
-    // every step re-walk the whole memo from the top - ~23M wasted iterations for
-    // one pen-64 bench item. A walk that goes *backwards* is still correct: the
-    // cursor stops advancing, the row reads as "before the cursor", and that path
-    // searches.
     let mut cursor = 0;
     let mut memo: Vec<PaintedRun> = Vec::new();
     for_each_bresenham(x0, y0, x1, y1, |x, y| {
@@ -383,9 +377,6 @@ fn stamp_with_memo<S: PixelSink>(
     let y0 = y - fp.offset as i32;
     // `memo` is sorted by row and a stamp visits rows in ascending order, so one
     // cursor walks both: forward it costs the number of rows the walk has left,
-    // and only a walk that comes *back* to a row it has already passed pays for
-    // a search. It is carried **across** stamps by the caller — see
-    // `stroke_segment`.
     for (by, row) in fp.runs.iter().enumerate() {
         let cy = y0 + by as i32;
         while *cursor < memo.len() && memo[*cursor].row < cy {
@@ -407,7 +398,6 @@ fn stamp_with_memo<S: PixelSink>(
             match known {
                 // Overlapping or touching: the union stays contiguous, so the
                 // new memo interval is the hull and only the two overhangs need
-                // writing.
                 Some(e) if e.lo <= hi && lo <= e.hi => {
                     if lo < e.lo {
                         sink.set_run(lo, cy, (e.lo - lo) as usize, color);

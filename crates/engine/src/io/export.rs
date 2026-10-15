@@ -1,4 +1,4 @@
-//! Flatten + export — the ported `src/io/export_png.js`.
+﻿//! Flatten + export — the ported `src/io/export_png.js`.
 //!
 //! `flattenToRgba` is the **file** half of the compositor: it turns the layer
 //! stack into the RGBA buffer a PNG is cut from. The display compositor in
@@ -134,7 +134,6 @@ fn flatten_bands(
 
     // `srcs` in JS: visible layers, `opacity > 0`, carrying a store. Chunk
     // *presence* is not filtered — an absent chunk reads back as pixel 0, and
-    // the `sa8 === 0` skip treats that as "contributes nothing".
     let visible: Vec<&LayerSource<'_>> = layers
         .iter()
         .filter(|l| l.is_visible() && !l.is_transparent() && l.store.is_some())
@@ -164,7 +163,6 @@ fn flatten_bands(
             flatten_chunk(&srcs, base, &mut chunk_out);
             // A chunk is 32 pixels wide but a canvas row is `width` pixels, so
             // the chunk's own rows are **not** contiguous in the band: they land
-            // `stride` bytes apart. Scatter them row by row.
             let col = cx as usize * row_bytes;
             for (r, slot) in chunk_out.chunks_exact(row_bytes).enumerate() {
                 let dst = r * stride + col;
@@ -377,7 +375,6 @@ mod tests {
     fn alpha_zero_clears_rgb() {
         // A pixel whose alpha is 0 must come out all four bytes zero, or the
         // exported PNG would carry a colour nobody can see and the store could
-        // no longer prune the chunk as empty.
         let out = flatten_to_rgba(
             &[LayerSource::plain(&ghost_rgb())],
             32,

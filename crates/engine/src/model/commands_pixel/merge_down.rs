@@ -1,4 +1,4 @@
-//! `MergeDownCommand` — bake the upper layer into the lower and drop the upper.
+﻿//! `MergeDownCommand` — bake the upper layer into the lower and drop the upper.
 //!
 //! Ported 1:1 from `commands_pixel.js`'s merge half. The general contract is in
 //! `docs/model_internals.md` §4 (what the bake makes permanent, and the ordering
@@ -83,8 +83,6 @@ fn merge_chunks(
         }
         // The JS then did `packRGBA(r,g,b,a)` and `unpackRGBA(p)` before
         // writing; both are the identity on values that `overBlend` has already
-        // clamped, and `a === 0` was skipped above, so the bytes are copied
-        // straight across.
         out[o..o + 4].copy_from_slice(&merged);
         touched = true;
     }

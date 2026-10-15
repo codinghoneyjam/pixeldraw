@@ -1,4 +1,4 @@
-//! Statusbar — port of `src/ui/statusbar/statusbar.js`.
+﻿//! Statusbar — port of `src/ui/statusbar/statusbar.js`.
 
 use super::UiState;
 use crate::session_glue::AppState;
@@ -47,8 +47,6 @@ impl Statusbar {
 
             // Tool help for whatever the pointer is over. This is the
             // only place `ToolbarState::tool_hovered` was ever read from,
-            // so before the toolbar carried help strings the field was
-            // written every frame and never consumed.
             if let Some(help) = super::toolbar::Toolbar::help_for(state) {
                 ui.label(RichText::new(help).size(12.0).color(Color32::GRAY));
             }
@@ -108,8 +106,6 @@ impl Default for Statusbar {
 
 // Integration function.
 //
-// `render_ui` in `super::mod` already owns `Panel::bottom("statusbar_panel")`;
-// this used to re-open the same id, nesting a panel inside itself.
 pub fn show(ui: &mut egui::Ui, ui_state: &mut UiState, app_state: &mut AppState) {
     let mut statusbar = Statusbar::new();
     statusbar.show(ui, ui_state, app_state);

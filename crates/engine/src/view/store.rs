@@ -1,4 +1,4 @@
-//! `ViewStore` — the mutable holder plus what a mutating call produced.
+﻿//! `ViewStore` — the mutable holder plus what a mutating call produced.
 
 use crate::view::clamp::{clamp_view, pan_by};
 use crate::view::fit::{actual_size_view, fit_view};
@@ -330,7 +330,6 @@ mod tests {
         assert!(z.changed);
         // Growing the viewport leaves the clamped view where it was; shrinking
         // it re-clamps and therefore reports a change. Either way the store must
-        // not panic and must stay finite.
         let small = s.set_viewport(200.0, 200.0);
         assert!(small.view.offset_x().is_finite());
         let big = s.set_viewport(4000.0, 4000.0);

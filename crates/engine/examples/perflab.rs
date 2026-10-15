@@ -1,4 +1,4 @@
-//! Module 2 — head-to-head lab. Run:
+﻿//! Module 2 — head-to-head lab. Run:
 //!
 //! ```text
 //! cargo run -p pixel-engine --release --example perflab
@@ -31,7 +31,6 @@ use std::time::Instant;
 const RUNS: usize = 9;
 // ---------------------------------------------------------------------------
 // Harness
-// ---------------------------------------------------------------------------
 fn median_ms(runs: usize, mut f: impl FnMut()) -> f64 {
     let mut s = Vec::with_capacity(runs);
     for _ in 0..runs {
@@ -54,7 +53,6 @@ fn header(title: &str) {
 }
 // ---------------------------------------------------------------------------
 // 1. Mask constants
-// ---------------------------------------------------------------------------
 /// 200k range updates across every legal width — a brush row, a scanline fill
 /// and a polygon edge are all just these.
 const RANGE_OPS: usize = 200_000;
@@ -167,7 +165,6 @@ fn bench_mask_constants() {
 }
 // ---------------------------------------------------------------------------
 // 2. Chunk index
-// ---------------------------------------------------------------------------
 /// **Fixture A — a completely full canvas.** Every one of the 2176 chunks exists.
 /// This is the opposite extreme from the sparse case and the one where an index
 /// has nothing to skip.

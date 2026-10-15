@@ -1,4 +1,4 @@
-//! The stroke edit handle — `beginEdit` / `flush` / `commit` / `cancel`.
+﻿//! The stroke edit handle — `beginEdit` / `flush` / `commit` / `cancel`.
 //!
 //! Ported 1:1 from `src/features/layers/edit_session.js`. The handle owns the
 //! [`crate::chunkstore::PixelWriter`] for one stroke and a borrow of the
@@ -121,7 +121,6 @@ impl<'a> EditHandle<'a> {
         };
         // The JS read `takeDirty()` *after* `finish()`. The Rust `finish`
         // consumes the writer, so the list is drained first; `finish` never
-        // touches it, so the two orders return the same list.
         let dirty = writer.take_dirty();
         let cs = writer.finish();
         self.core.editing = false;

@@ -1,4 +1,4 @@
-//! Core constants — single source of truth (docs/contract.md §1).
+﻿//! Core constants — single source of truth (docs/contract.md §1).
 //!
 //! Ported 1:1 from `src/core/constants.js`. Values are frozen: the schema, the
 //! serializers and the golden fixtures all depend on them, so nothing here may
@@ -38,10 +38,6 @@ pub const DEFAULT_DOC_BACKGROUND: &str = "transparent";
 
 // --- Phase 2 display constants (docs/contract.md §1-2) -----------------------
 //
-// These came from the canvas display layer, where `src/core/constants.js` never
-// reached because the render files live outside `src/core/**` (contract §4 lets
-// them touch the DOM). They are declared here so the CPU display port reads
-// them from one place like everything else.
 
 /// One frame's budget for painting dirty chunks that are *off* screen
 /// (`src/render/renderer_composite.js` L5).

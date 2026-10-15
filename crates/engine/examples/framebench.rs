@@ -1,4 +1,4 @@
-//! The **frame** benchmark — the one path no benchmark has ever measured.
+﻿//! The **frame** benchmark — the one path no benchmark has ever measured.
 //!
 //! Run:
 //!
@@ -84,8 +84,6 @@ fn busy_document(layers: usize) -> pixel_engine::model::Document {
         new_document(NewDocumentOptions::default().size(W, H)).expect("valid canvas size");
     // Each layer needs its **own** id. `Layer::clone` copies the id too, so
     // cloning a layer and calling `get_layer_mut(id)` paints the same one 64
-    // times and leaves the rest empty — which silently understates the very
-    // number this benchmark exists to measure.
     while doc.layers.len() < layers {
         let n = doc.layers.len() + 1;
         let id = format!("layer-{n:04}");

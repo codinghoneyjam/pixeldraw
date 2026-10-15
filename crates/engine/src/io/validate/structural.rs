@@ -1,4 +1,4 @@
-//! Structural schema checks — canvas, chunk, raster, layer
+﻿//! Structural schema checks — canvas, chunk, raster, layer
 //! (JS `io/validate_structural.js`) — plus the error
 //! collector and report types every check shares.
 //!
@@ -15,7 +15,6 @@ use serde_json::Value;
 
 // Schema-shape limits that live only in the JS validator, not in
 // `constants` (which pins engine geometry): the error cap and the
-// string-length bounds. See docs/io_internals.md §schema-limits.
 pub(crate) const MAX_ERRORS: usize = 50;
 const MAX_LAYER_ID_CHARS: usize = 64;
 const MAX_NAME_CHARS: usize = 128;
@@ -156,7 +155,6 @@ fn is_png_b64(s: &str) -> bool {
     };
     // `[A-Za-z0-9+/]*={0,2}$`: strip at most two trailing `=`,
     // then require every remaining byte in the alphabet — an
-    // embedded `=` fails that test, exactly like the regex.
     let unpadded = body
         .strip_suffix("==")
         .or_else(|| body.strip_suffix("="))
@@ -247,8 +245,6 @@ pub fn check_canvas(c: &Value, base: &str, collector: &mut Collector) -> Option<
     }
     // Viewport is optional and `null` counts as absent. When
     // present it must be an integer rect fully inside the
-    // canvas; its size is deliberately NOT required to be a
-    // multiple of 32.
     let mut viewport = None;
     if let Some(vp) = c.get("viewport").filter(|v| !v.is_null()) {
         let vp_base = format!("{base}/viewport");
@@ -428,7 +424,6 @@ pub fn check_layer(ly: &Value, base: &str, collector: &mut Collector) -> LayerIn
     check_no_extra(ly, &LAYER_KEYS, base, collector);
     // JS `.length` counts UTF-16 code units, so a non-BMP
     // character counts double — `encode_utf16().count()` is
-    // the same measure.
     let id_ok = match ly.get("layer_id").and_then(Value::as_str) {
         Some(s) => {
             let n = s.encode_utf16().count();

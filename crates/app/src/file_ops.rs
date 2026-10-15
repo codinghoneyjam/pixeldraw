@@ -1,9 +1,6 @@
-//! Document file operations — new/open/save, PNG/JSON (dialog-free core).
+﻿//! Document file operations — new/open/save, PNG/JSON (dialog-free core).
 //
 // The native pickers live in `platform` and the buttons in `shell`; the
-// functions here take bytes and paths so they stay headless-testable. PNG
-// opens become a fresh document (JS parity for "open"; "import as layer" is
-// Phase 3 UI).
 
 use pixel_engine::errors::{DrawToolError, EngineResult};
 use pixel_engine::io::export::{FlattenOptions, flatten_to_rgba};

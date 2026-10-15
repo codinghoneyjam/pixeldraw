@@ -1,4 +1,4 @@
-//! Menubar — port of `src/ui/menubar/**`.
+﻿//! Menubar — port of `src/ui/menubar/**`.
 
 use super::{
     UiState,
@@ -263,8 +263,6 @@ impl Default for Menubar {
 
 // Integration function for the top-level UI render.
 //
-// `render_ui` in `super::mod` already owns `Panel::top("menubar_panel")`; this
-// used to re-open the same id, nesting a panel inside itself.
 pub fn show(ui: &mut egui::Ui, ui_state: &mut UiState, app_state: &mut AppState) {
     let mut menubar = Menubar::new();
     if let Some(action) = menubar.show(ui, ui_state, app_state) {

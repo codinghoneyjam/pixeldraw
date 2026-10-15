@@ -1,4 +1,4 @@
-//! Shape overlay — preview spec, dashed frame, handles.
+﻿//! Shape overlay — preview spec, dashed frame, handles.
 //!
 //! Mirrors `shape_render.js` `renderToolOverlay`, but the canvas calls become
 //! [`OverlayOp`]s. [`OverlayOp::MaskBlit`] carries **canvas** pixels (W8 scales
@@ -187,7 +187,6 @@ pub(super) fn shape_overlay(tool: &ShapeTool, info: &OverlayInfo, out: &mut Vec<
     });
     // Handles follow the spec kind: a placing line previews legs, not boxes.
     // Mid-edge handles land on x.5 canvas points; the float mapping keeps
-    // them, like the JS `deviceOf`.
     let hs = 8.0 * dpr;
     for h in layout_handles(spec_kind, &geom) {
         let (hx, hy) = devf(h.x, h.y);

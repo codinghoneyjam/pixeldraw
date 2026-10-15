@@ -1,4 +1,4 @@
-//! `chunkstore` tests. The `core_basic` cases mirror `tests/core_basic.test.mjs`;
+﻿//! `chunkstore` tests. The `core_basic` cases mirror `tests/core_basic.test.mjs`;
 //! the writer ones cover the memoised dirty set (`docs/perf_js_vs_rust.md` §4-1).
 
 use super::store::{Changeset, ChunkStore, is_all_zero};
@@ -223,7 +223,6 @@ fn byte_size_counts_both_sides() {
 fn draining_mid_stroke_then_writing_again_re_reports_the_chunk() {
     // `take_dirty` empties the set, so the "last chunk" memo must be reset with
     // it. Otherwise the next write into the same chunk would see the memo hit
-    // and skip the insert, and the render loop would miss it.
     let mut s = ChunkStore::new(128, 128).expect("valid size");
     let mut w = PixelWriter::new(&mut s, "layer-0001");
     w.set(0, 0, RED);
@@ -250,7 +249,6 @@ fn a_wide_stroke_records_every_chunk_it_touched_in_order() {
         let dirty = w.take_dirty();
         // The 64px footprint is a DISC, not a square (3,228 of 4,096 cells), so
         // it straddles the chunk grid rather than filling it. What matters is
-        // that the set is complete and in (cy,cx) order, not that a corner landed.
         assert_eq!(dirty.len(), 8, "a disc this size straddles 8 chunks");
         assert_eq!(dirty[0], (0, 0));
         assert!(

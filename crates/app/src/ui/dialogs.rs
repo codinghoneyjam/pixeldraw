@@ -1,4 +1,4 @@
-//! Dialogs — port of `src/ui/dialogs/**`.
+﻿//! Dialogs — port of `src/ui/dialogs/**`.
 
 use super::UiState;
 use crate::session_glue::AppState;
@@ -259,7 +259,6 @@ pub fn show(ui: &mut egui::Ui, ui_state: &mut UiState, app_state: &mut AppState)
 
     // Handle pending results - for now we'll handle results when dialog is closed
     // The actual result handling would need more sophisticated state management
-    // For now, we'll process results when the dialog is closed
     if let Some(dialog) = ui_state.dialogs.active.as_ref()
         && !dialog.open
     {

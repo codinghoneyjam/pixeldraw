@@ -1,4 +1,4 @@
-use super::crc::{SIG, be32, crc32, push_chunk, read_be32};
+﻿use super::crc::{SIG, be32, crc32, push_chunk, read_be32};
 use super::*;
 use crate::errors::{CODE_PNG_CRC, CODE_PNG_SIGNATURE, CODE_PNG_UNSUPPORTED};
 use crate::io::base64::{base64_to_bytes, bytes_to_base64};
@@ -115,7 +115,6 @@ fn a_truncated_file_is_a_coded_error_not_a_panic() {
     let bytes = encode_png(&rgba, 4, 4).expect("encode");
     // Anything under the 8-byte signature fails there; a file that is only
     // the signature has no IHDR; a mangled chunk stream fails in the walker.
-    // All three are coded errors, none is a panic.
     for cut in [0usize, 4, 7] {
         match decode_png(&bytes[..cut]) {
             Err(e) => assert_eq!(e.code, CODE_PNG_SIGNATURE, "cut at {cut}"),
@@ -158,7 +157,6 @@ fn zero_sized_images_are_unsupported() {
 fn each_row_filter_reverses_exactly() {
     // A gradient image re-encoded with each of the five filters must decode
     // to the same pixels — this is the branch coverage the fixtures only
-    // exercise on their own single image.
     let w = 9usize;
     let h = 6usize;
     let src: Vec<u8> = (0..w * h * 4).map(|i| ((i * 13 + 7) % 256) as u8).collect();

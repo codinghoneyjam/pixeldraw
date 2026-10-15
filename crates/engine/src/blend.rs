@@ -1,4 +1,4 @@
-//! Shared blend math (docs/contract.md §1-1, §2).
+﻿//! Shared blend math (docs/contract.md §1-1, §2).
 //!
 //! Ported 1:1 from `src/core/blend.js`. This is the **single** implementation of
 //! how two RGBA values combine. Four paths consume it in the JS tree — display
@@ -99,7 +99,6 @@ pub fn over_blend(dst: Rgba, src: Rgba, opacity: f64, mode: &str) -> Rgba {
     let inv = 1.0 - sa;
     // A mode of "normal" (or an unknown string) must produce exactly what a
     // plain source-over produces, byte for byte, so the fast paths upstream
-    // stay honest.
     let blend = mode != "normal" && !mode.is_empty() && da > 0.0;
     let c = |i: usize| -> u8 {
         if blend {

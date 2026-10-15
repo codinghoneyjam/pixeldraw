@@ -1,4 +1,4 @@
-//! Canvas frame — viewport, input, tools, comp, display, overlay, texture.
+﻿//! Canvas frame — viewport, input, tools, comp, display, overlay, texture.
 //!
 //! One `show_canvas` call is one frame: read the host input, dispatch it
 //! through the controller into the tools, drain the session queue, repaint
@@ -117,33 +117,6 @@ pub fn render_frame(
     let visible = state.view_store.visible_chunk_range();
     // **The document is borrowed, not cloned.**
     // every layer, every chunk — **once per frame**. `docs/perf_js_vs_rust.md`
-    // §13 measures it. It is not fixed here because it is not a one-liner: the
-    // copy exists because `doc` has to outlive both `comp.update` and the
-    // display params below, and unwiring that means deciding who owns the
-    // document while a frame is in flight.
-    //
-    // The framebuffer does NOT need the same care: `draw_display_into` owns its
-    // own size (`display/frame.rs` calls `resize_clear` with the device size it
-    // just computed), so the shell is free to hand over a 1×1 buffer. An earlier
-    // draft of this function resized it again "for safety", which double-cleared
-    // 2.6 MB every frame for nothing.
-    // **The document is borrowed, not cloned.**
-    //
-    // This used to read `state.session.doc().cloned()`, which deep-copies every
-    // layer and every chunk of them - 64 layers x 586 chunks x 4 KB - once per
-    // frame. Measured at **54 ms** for a 64-layer document
-    // (`docs/perf_js_vs_rust.md` sec 13): 9x the whole 6 ms frame budget on its
-    // own, and 97% of the frame, while sitting *outside* the budget so no amount
-    // of budget tuning could have reached it.
-    //
-    // The copy was never necessary. `Session` and `CompCache` are separate
-    // fields and everything below wants them borrowed at once, so the frame
-    // destructures `state` once and works on disjoint borrows. Rust allows that;
-    // the clone was a way of not trying.
-    //
-    // The framebuffer needs no equivalent care: `draw_display_into` owns its own
-    // size (`display/frame.rs` calls `resize_clear` with the device size it just
-    // computed), so the shell is free to hand over a 1x1 buffer.
     let AppState { session, comp, .. } = state;
     let Some(doc) = session.doc() else {
         return render;
@@ -232,8 +205,6 @@ pub fn show_canvas(
 }
 // <META - ROLE : the frame path's own contract | walk the states a user can
 // actually reach — the view goes through `ViewStore`, which fits and clamps —
-// and draw a real frame in each. Found 2026-10-13 by
-// `cargo run -p pixel-engine --release --example framebench`.>
 #[cfg(test)]
 mod frame_buffer_tests {
     use super::*;

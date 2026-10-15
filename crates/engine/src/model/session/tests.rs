@@ -1,11 +1,10 @@
-use super::core::Session;
+﻿use super::core::Session;
 use crate::model::document::NewDocumentOptions;
 use crate::model::edit_session::EditOptions;
 use crate::model::settings::Settings;
 
 // Keeps the imports honest: `SetLayerPropCommand`/`PaintCommand`/
 // `MoveLayerCommand`/`ResizeCanvasCommand` all belong to the surface the
-// session re-exports through `crate::model`.
 #[test]
 fn sessions_start_empty_and_settings_start_at_the_defaults() {
     let mut s = Session::new();

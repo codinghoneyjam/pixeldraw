@@ -1,4 +1,4 @@
-//! In-crate unit tests for the composite cache.
+﻿//! In-crate unit tests for the composite cache.
 //!
 //! The integration tests (`crates/engine/tests/comp_cache.rs`) assert the
 //! behaviour an app sees; what is left here is the part that needs the module
@@ -100,7 +100,6 @@ fn dirty_all_counts_as_the_whole_grid_until_it_is_expanded() {
 
 // A canvas whose width is not a multiple of CHUNK_PX cannot exist through
 // `is_valid_canvas_size`, which is what lets the row copy run unclipped. The
-// assumption is pinned here rather than trusted.
 #[test]
 fn canvas_sizes_are_chunk_multiples() {
     assert!(crate::constants::is_valid_canvas_size(512, 512));

@@ -1,4 +1,4 @@
-//! Native UI layer — egui port of `src/ui/**`.
+﻿//! Native UI layer — egui port of `src/ui/**`.
 //
 //! This module owns all UI widgets: menubar, toolbar, optionbar, statusbar,
 //! dialogs, panels, and the shared components (toast, tooltip, collapsible).
@@ -91,8 +91,6 @@ pub fn render_ui(
 ) {
     // Panels are declared here and only here. Each module's `show()` lays out
     // into the `Ui` handed to it; it must not open a panel of its own. Panels
-    // are siblings in egui, and re-opening one inside itself is what clipped
-    // the toolbar's buttons to their top ~40%.
     use egui::Vec2;
     let pad = |x: f32, y: f32| egui::Frame::new().inner_margin(Vec2::new(x, y));
 

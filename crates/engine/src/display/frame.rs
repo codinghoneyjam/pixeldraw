@@ -1,4 +1,4 @@
-//! `drawDisplay` order + `blitVisible` — `src/render/renderer_display.js`.
+﻿//! `drawDisplay` order + `blitVisible` — `src/render/renderer_display.js`.
 
 use super::background::paint_background;
 use super::framebuffer::{Framebuffer, clip_rect, intersect_rects};
@@ -132,11 +132,6 @@ pub fn blit_visible(
     let oy = round_half_up((view.offset_y() + y0 as f64 * z) * dpr) as i64;
     // **Two** bounds, not one. `rect` is the canvas rect in device px, which is
     // *not* bounded by the framebuffer: zoom in past 1:1 and it is wider than
-    // the buffer, and pan until the canvas origin goes negative and it starts
-    // left of it. The loop below indexes `fb.rgba` directly, so the framebuffer
-    // has to be applied here — `Framebuffer::blend_rect` clamps the same way for
-    // the border, and `blit_visible` not doing so was a reachable panic
-    // (`every_reachable_view_state_stays_inside_the_framebuffer`, app crate).
     let fb_rect = (0, 0, fb.width as i32, fb.height as i32);
     let Some(bounds) = intersect_rects(rect, fb_rect) else {
         return;
@@ -151,7 +146,6 @@ pub fn blit_visible(
         let py = ry as i64 + row;
         // src = floor((dest_px - dest_origin) * sw / ddw): exact at integer zoom
         // and the contract for the mapping otherwise (the JS delegated it to the
-        // browser's nearest-neighbour sampling).
         let sy = y0 + (py - oy) * sh / ddh;
         let srow = (sy * canvas_w as i64) as usize * 4;
         let mut d = (py as usize * fb_w + rx as usize) * 4;

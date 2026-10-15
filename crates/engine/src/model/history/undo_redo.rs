@@ -1,4 +1,4 @@
-//! The undo/redo stacks: commit, merge, revert, and the listener dispatch.
+﻿//! The undo/redo stacks: commit, merge, revert, and the listener dispatch.
 //!
 //! Ported 1:1 from `src/features/document/history.js`. The budget arithmetic and
 //! the dirty flag live in [`super::budget`]; this half owns the stack movement
@@ -164,8 +164,6 @@ impl UndoManager {
         for listener in listeners.values_mut() {
             // The JS `try { fn(...) } catch (err) { console.error(err) }`: a
             // throwing subscriber must not stop the remaining listeners, and
-            // must not fail the commit. The engine has no console, so the
-            // drop is where `console.error` used to be.
             let _ = listener(&HistoryNotify {
                 kind,
                 command: Some(command),

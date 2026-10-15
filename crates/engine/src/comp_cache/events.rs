@@ -1,4 +1,4 @@
-//! The renderer's four event handlers — JS `_onPixels`/`_onLayers`/`_onSettings`/
+﻿//! The renderer's four event handlers — JS `_onPixels`/`_onLayers`/`_onSettings`/
 //! `_onDocReplaced`.
 //!
 //! The JS renderer subscribed to four of the seven session events and ignored the
@@ -39,8 +39,6 @@ impl CompCache {
             }
             // `_onLayers`: `reason === "active"` returned early. The JS also
             // returned early on `reason === "prop" && d.field === "name"`, but
-            // nothing in the engine (or the JS session) carries a field name
-            // — `tests.rs` pins that, so `prop` invalidates like the rest.
             EventDetail::Layers { reason, .. } => match reason {
                 LayerChangeReason::Active => false,
                 _ => {

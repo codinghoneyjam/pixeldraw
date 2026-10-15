@@ -1,4 +1,4 @@
-//! The sparse layer bitmap, plus the changeset shape the undo budget speaks in.
+﻿//! The sparse layer bitmap, plus the changeset shape the undo budget speaks in.
 
 use std::fmt;
 
@@ -225,7 +225,6 @@ impl ChunkStore {
         let ly = y & 31;
         // A run never crosses a chunk: the caller splits it (PixelWriter::set_run
         // walks the run chunk by chunk). Clipping here keeps that assumption
-        // honest if a future caller forgets.
         let len = len.min((CHUNK_PX - lx) as usize);
         if len == 0 {
             return;
@@ -233,9 +232,6 @@ impl ChunkStore {
         let slot = self.slot_unchecked(cx, y >> 5);
         // A transparent run is exactly `set_pixel(.., 0)` repeated: it clears the
         // bytes of a chunk that is already there and never brings one into
-        // existence. Branching here is what keeps `set_run` and `set_pixel`
-        // interchangeable — including on `chunk_count`, which the file format
-        // and the undo budget both read.
         if color[3] == 0 {
             if let Some(cell) = self.slots[slot].as_mut() {
                 let base = (ly * CHUNK_PX + lx) as usize * 4;
@@ -251,8 +247,6 @@ impl ChunkStore {
         let end = base + len * 4;
         // One colour, many pixels — a 4-byte splat. `chunks_exact_mut` writes it
         // with no allocation, which matters: the obvious `color.repeat(len)`
-        // heap-allocates once per run, and a pen-64 stroke issues millions of
-        // runs, which measured as a 2.6x *regression* on the pen=1 item.
         for slot in cell.data[base..end].as_chunks_mut::<4>().0.iter_mut() {
             slot.copy_from_slice(color);
         }
@@ -397,7 +391,6 @@ impl ChunkStore {
         self.chunks_y = ny;
         // Only the height changes the table's length, and every surviving key
         // `cy * 64 + cx` with `cy < ny` is already below the new length — so a
-        // plain resize is correct in both directions and nothing has to move.
         self.slots.resize(MAX_CHUNKS_X as usize * ny as usize, None);
         debug_assert_eq!(self.live, self.slots.iter().filter(|s| s.is_some()).count());
         Ok(removed)
