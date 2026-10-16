@@ -242,33 +242,8 @@ fn coverage_union(srcs: &[Src<'_>]) -> AlphaMask {
 /// chunks stays on [`composite_chunk`], which is single-threaded on purpose —
 /// the UI thread owns the store and cannot lend it out.
 pub fn composite_canvas(layers: &[LayerSource<'_>], width: u32, height: u32) -> Vec<u8> {
-    let cx_total = (width / CHUNK_PX) as usize;
-    let cy_total = (height / CHUNK_PX) as usize;
-    let nchunks = cx_total * cy_total;
-    // Work at chunk granularity: the flat chunk index is canvas-neutral — it
-    // only describes *which* chunk to composite — and each chunk writes its own
-    // 32×32 RGBA block, so the per-chunk buffers never overlap.
-    let mut flat = vec![[0u8; CHUNK_LEN]; nchunks];
-    flat.par_iter_mut().enumerate().for_each(|(i, chunk)| {
-        let cx = (i % cx_total) as u32;
-        let cy = (i / cx_total) as u32;
-        let _ = composite_chunk(layers, cx, cy, chunk);
-    });
-    // Scatter the independent chunks back into the canvas-strided buffer.
     let mut buf = vec![0u8; (width * height * 4) as usize];
-    let stride = (width * 4) as usize;
-    let row_bytes = CHUNK_PX as usize * 4;
-    for cy in 0..cy_total {
-        for cx in 0..cx_total {
-            let chunk = &flat[cy * cx_total + cx];
-            let col = cx * row_bytes;
-            for r in 0..CHUNK_PX as usize {
-                let src = r * row_bytes;
-                let dst = (cy * CHUNK_PX as usize + r) * stride + col;
-                buf[dst..dst + row_bytes].copy_from_slice(&chunk[src..src + row_bytes]);
-            }
-        }
-    }
+    paint_bands(layers, width, &mut buf, true);
     buf
 }
 

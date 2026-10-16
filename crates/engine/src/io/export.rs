@@ -172,51 +172,9 @@ fn flatten_bands(
     };
 
     if parallel {
-        let cx_total = width / CHUNK_PX;
-        let cy_total = height / CHUNK_PX;
-        let nchunks = cx_total * cy_total;
-        let mut chunks = vec![[0u8; CHUNK_LEN]; nchunks as usize];
-        let visible_ref = &visible;
-        chunks
-            .par_iter_mut()
+        out.par_chunks_mut(band_bytes)
             .enumerate()
-            .for_each(|(i, chunk)| {
-                let cx = (i as u32) % cx_total;
-                let cy = (i as u32) / cx_total;
-                // Build the per-chunk source list inline so the chunk owns its
-                // own slice — `paint` did exactly the same work, just once per
-                // row band, and doing it per chunk keeps the chunk self-contained
-                // and parallel-safe.
-                let mut srcs: Vec<Source<'_>> = Vec::with_capacity(visible_ref.len());
-                for l in visible_ref {
-                    let store = l.store.expect("filtered to Some(store) above");
-                    let Some((data, mask)) = store.get_chunk_with_mask(cx, cy) else {
-                        continue;
-                    };
-                    srcs.push(Source {
-                        data,
-                        mask,
-                        opacity: l.opacity,
-                        mode: l.mode,
-                        normal_opaque: l.mode == "normal" && l.opacity == 1.0,
-                    });
-                }
-                flatten_chunk(&srcs, base, chunk);
-            });
-        // Scatter back into canvas-strided layout.
-        let stride = width as usize * 4;
-        let row_bytes = CHUNK_PX as usize * 4;
-        for cy in 0..cy_total as usize {
-            for cx in 0..cx_total as usize {
-                let chunk = &chunks[cy * cx_total as usize + cx];
-                let col = cx * row_bytes;
-                for r in 0..CHUNK_PX as usize {
-                    let src = r * row_bytes;
-                    let dst = (cy * CHUNK_PX as usize + r) * stride + col;
-                    out[dst..dst + row_bytes].copy_from_slice(&chunk[src..src + row_bytes]);
-                }
-            }
-        }
+            .for_each(|(cy, band)| paint(band, cy as u32));
     } else {
         out.chunks_mut(band_bytes)
             .enumerate()
