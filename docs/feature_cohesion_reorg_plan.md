@@ -19,9 +19,20 @@ crates/app/src/features/
   text.rs + text/optionbar.rs
   eyedropper.rs   fill.rs   hand.rs
 
-Engine (later):
+Engine (optional, deferred):
   crates/engine/src/features/
     arc.rs, gradient.rs, pen.rs, shape.rs
+
+  Engine raster modules are already split by primitive concern (brush/masks,
+  shape_raster, polygon, arc, gradient, text_mask, snap, composite_ops). They are
+  consumed by multiple app features and do not depend on app option-bar code,
+  so feature facades here would be thin re-exports only. Keep the current
+  raster layout unless an ownership or review problem appears.
+
+UI (not needed):
+  Keep UI grouped by presentation concern (panels, dialogs, menubar, toolbar,
+  statusbar, shared). Feature-specific controls already live beside their
+  feature in app/src/features/*/optionbar.rs, so no UI directory move is needed.
 ```
 
 Each façade owns the tool implementation AND its option-bar block, so one feature
