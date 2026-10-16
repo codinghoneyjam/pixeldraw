@@ -1,13 +1,15 @@
-//! Shape option block: mode toggle, radius, lock/snap, bbox editing, polygon
-//! vertices, commit/cancel.
-//!
-//! The enable rules are a function of the active tool AND its pending geometry,
-//! so they live here rather than in the shell - the JS file did the same.
-use super::tools::mid_round_half_up;
+fn mid_round_half_up(a: i32, b: i32) -> i32 {
+    ((a as i64 + b as i64) as f64 / 2.0 + 0.5).floor() as i32
+}
+
+// Shape option block: mode toggle, radius, lock/snap, bbox editing, polygon
+// vertices, commit/cancel.
+//
+// The enable rules are a function of the active tool AND its pending geometry,
+// so they live here rather than in the shell - the JS file did the same.
+use crate::features::shape::PendingValue;
 use crate::session_glue::AppState;
 use crate::tools::api::ToolCx;
-use crate::tools::shape::{PendingValue, ShapeTool};
-use crate::ui::optionbar::switch::segmented_switch;
 use egui::{DragValue, RichText, Ui};
 
 pub fn shape_options(
@@ -21,28 +23,21 @@ pub fn shape_options(
     let settings = app.session.settings();
     let is_filled = settings.shape_fill == "fill";
 
-    ui.label(RichText::new("모드:").size(12.0));
-    if segmented_switch(
-        ui,
-        juice_clicks,
-        "shape:mode",
-        !is_line,
-        "테두리",
-        "채움",
-        is_filled,
-    ) {
+    if ui
+        .button(if is_filled { "Outline" } else { "Fill" })
+        .clicked()
+    {
         let _ = app.session.set_setting(
             "shapeFill",
             pixel_engine::model::SettingInput::Str(if is_filled { "outline" } else { "fill" }),
         );
     }
-
     // Stroke width comes from the brush panel's pen size (JS has no width
     // control in the shape block).
 
     if tool == "rrect" {
         let mut radius = settings.shape_radius;
-        ui.label(RichText::new("반경:").size(12.0));
+        ui.label(RichText::new("반경").size(12.0));
         if ui
             .add(DragValue::new(&mut radius).speed(1.0).suffix(" px"))
             .changed()
@@ -55,7 +50,7 @@ pub fn shape_options(
     }
 
     let mut lock_aspect = settings.shape_lock_aspect;
-    if ui.checkbox(&mut lock_aspect, "정비율 고정").changed() {
+    if ui.checkbox(&mut lock_aspect, "비율 고정").changed() {
         let _ = app.session.set_setting(
             "shapeLockAspect",
             pixel_engine::model::SettingInput::Bool(lock_aspect),
@@ -63,7 +58,7 @@ pub fn shape_options(
     }
 
     let mut snap_unit = settings.snap_unit;
-    if ui.checkbox(&mut snap_unit, "단위 스냅").changed() {
+    if ui.checkbox(&mut snap_unit, "32px 스냅").changed() {
         let _ = app.session.set_setting(
             "snapUnit",
             pixel_engine::model::SettingInput::Bool(snap_unit),
@@ -73,17 +68,17 @@ pub fn shape_options(
     // Pending snapshot: read once, then drive the numeric controls.
     let snap = app
         .tools
-        .get(tool)
-        .and_then(|t| t.as_any().downcast_ref::<ShapeTool>())
+        .get_mut(tool)
+        .and_then(|t| t.shape_tool_mut())
         .map(|s| (s.pending_value(), s.vertices_value(), s.is_placing()));
     let has_pending = snap.as_ref().is_some_and(|(p, _, _)| p.is_some());
 
     if !is_polygon {
         // Bbox fields. Line pendings are end-pairs, so W/H show x1/y1
         // exactly like JS `fill()`; edits write back the same shape.
-        let mut b = match &snap.as_ref().and_then(|(p, _, _)| p.clone()) {
-            Some(PendingValue::LineEnds { x0, y0, x1, y1 }) => [*x0, *y0, *x1, *y1],
-            Some(PendingValue::Box { x, y, w, h, .. }) => [*x, *y, *w, *h],
+        let mut b = match snap.as_ref().and_then(|(p, _, _)| p.clone()) {
+            Some(PendingValue::LineEnds { x0, y0, x1, y1 }) => [x0, y0, x1, y1],
+            Some(PendingValue::Box { x, y, w, h, .. }) => [x, y, w, h],
             _ => [0, 0, 0, 0],
         };
         let mut edited = false;
@@ -162,7 +157,7 @@ pub fn shape_options(
                 .and_then(|(_, v, _)| v.clone())
                 .unwrap_or_default();
             if let (Some(last), Some(first)) = (points.last(), points.first()) {
-                // JS `Math.round((last + first) / 2)` — halves toward +∞
+                // JS `Math.round((last + first) / 2)` rounds halves toward +∞,
                 // unlike Rust integer division (toward zero).
                 points.push((
                     mid_round_half_up(last.0, first.0),
@@ -194,9 +189,7 @@ pub fn shape_options(
             view: view_store.view(),
             need_render: &mut render,
         };
-        if let Some(shape) = tools
-            .get_mut(tool)
-            .and_then(|t| t.as_any_mut().downcast_mut::<ShapeTool>())
+        if let Some(shape) = tools.get_mut(tool).and_then(|t| t.shape_tool_mut())
             && let Err(e) = shape.commit(&mut cx)
         {
             cx.report(e);
@@ -230,9 +223,7 @@ pub fn set_shape_pending(app: &mut AppState, tool: &str, value: Option<PendingVa
         view: view_store.view(),
         need_render: &mut render,
     };
-    if let Some(shape) = tools
-        .get_mut(tool)
-        .and_then(|t| t.as_any_mut().downcast_mut::<ShapeTool>())
+    if let Some(shape) = tools.get_mut(tool).and_then(|t| t.shape_tool_mut())
         && let Err(e) = shape.set_pending(value, &mut cx)
     {
         cx.report(e);

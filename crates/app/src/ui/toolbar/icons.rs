@@ -142,3 +142,27 @@ pub(crate) fn draw_tool_vector_icon(
         }
     }
 }
+
+/// Whether `id` has a hand-drawn arm of its own, as opposed to falling through
+/// to the generic dot above. The rail has no other way to say "this tool has no
+/// icon": it would just paint the dot, so the check lives next to the match.
+#[cfg(test)]
+pub(crate) fn has_icon(id: &str) -> bool {
+    matches!(
+        id,
+        "pen"
+            | "eraser"
+            | "fill"
+            | "eyedropper"
+            | "line"
+            | "rect"
+            | "rrect"
+            | "ellipse"
+            | "polygon"
+            | "arc"
+            | "chord"
+            | "radial_gradient"
+            | "text"
+            | "hand"
+    )
+}

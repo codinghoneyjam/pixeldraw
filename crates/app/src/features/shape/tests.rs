@@ -9,11 +9,11 @@ mod polygon;
 
 use pixel_engine::raster::shape_raster::ShapeKind;
 
+use crate::features::shape::ShapeTool;
 use crate::input::{KeyEvent, build_tool_event};
 use crate::tools::api::{Tool, ToolCx};
-use crate::tools::shape::ShapeTool;
 
-use super::super::tests::{down, view1};
+use crate::tools::tests::{down, view1};
 
 pub(super) fn rect_tool() -> ShapeTool {
     ShapeTool::new(ShapeKind::Rect)

@@ -1,25 +1,22 @@
-//! Text option block: text input (applies per keystroke), font select, and
-//! the stroke width.
-use super::tools::tool_mut;
+//! Text option block.
 use crate::session_glue::AppState;
-use crate::tools::text::TextTool;
 use egui::{DragValue, RichText, Ui};
 
 const FONTS: [(&str, &str); 2] = [
-    ("default-42", "기본 42px"),
-    ("monogram-240", "모노그램 240px"),
+    ("default-42", "Default 42px"),
+    ("monogram-240", "Monogram 240px"),
 ];
 
 pub fn text_options(ui: &mut Ui, app: &mut AppState) {
-    let Some(text_tool) = tool_mut::<TextTool>(app, "text") else {
+    let Some(text_tool) = app.tools.get_mut("text").and_then(|t| t.text_tool_mut()) else {
         return;
     };
-    ui.label(RichText::new("텍스트:").size(12.0));
+    ui.label(RichText::new("Text:").size(12.0));
     let mut text = text_tool.text().to_string();
     if ui.text_edit_singleline(&mut text).changed() {
         text_tool.set_text(text);
     }
-    ui.label(RichText::new("글꼴:").size(12.0));
+    ui.label(RichText::new("Font:").size(12.0));
     let mut font = text_tool.font().to_string();
     let selected_label: String = FONTS
         .iter()
@@ -38,7 +35,7 @@ pub fn text_options(ui: &mut Ui, app: &mut AppState) {
                 }
             }
         });
-    ui.label(RichText::new("외곽선:").size(12.0));
+    ui.label(RichText::new("Stroke:").size(12.0));
     let mut width = text_tool.stroke_width();
     if ui
         .add(

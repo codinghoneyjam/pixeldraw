@@ -1,9 +1,9 @@
 //! Fill acceptance: same-colour notice and region painting.
 
+use crate::features::fill::FillTool;
+use crate::features::pen::PenTool;
 use crate::input::build_tool_event;
 use crate::tools::api::{Tool, ToolCx};
-use crate::tools::fill::FillTool;
-use crate::tools::pen::PenTool;
 
 use super::{down, pixel, session64, view1};
 

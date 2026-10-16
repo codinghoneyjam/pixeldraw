@@ -39,6 +39,10 @@ impl ToolManager {
         self.tools.get(id).map(AsRef::as_ref)
     }
 
+    pub fn get_mut<'a>(&'a mut self, id: &str) -> Option<&'a mut (dyn Tool + 'static)> {
+        self.tools.get_mut(id).map(|tool| &mut **tool)
+    }
+
     /// `get active` — unregistered id is `INVALID_STATE`, like the JS throw.
     pub fn active(&self) -> EngineResult<&dyn Tool> {
         self.tools

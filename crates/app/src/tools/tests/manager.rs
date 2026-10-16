@@ -1,8 +1,8 @@
 //! Manager acceptance: mid-stroke cancellation and id errors.
 
+use crate::features::hand::HandTool;
 use crate::input::build_tool_event;
 use crate::tools::api::{CursorKind, Tool, ToolCx};
-use crate::tools::hand::HandTool;
 use crate::tools::manager::ToolManager;
 
 use super::{down, manager_pen_fill, pixel, session64, view1};

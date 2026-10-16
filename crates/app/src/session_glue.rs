@@ -17,17 +17,17 @@ use pixel_engine::model::event::EventDetail;
 use pixel_engine::model::{ModelEvent, NewDocumentOptions, Session};
 use pixel_engine::view::ViewStore;
 
+use crate::features::arc::ArcTool;
+use crate::features::eyedropper::EyedropperTool;
+use crate::features::fill::FillTool;
+use crate::features::gradient::GradientTool;
+use crate::features::hand::HandTool;
+use crate::features::pen::PenTool;
+use crate::features::shape::shape_tools;
+use crate::features::text::TextTool;
 use crate::input::InputController;
 use crate::tools::api::ToolCx;
-use crate::tools::arc::ArcTool;
-use crate::tools::eyedropper::EyedropperTool;
-use crate::tools::fill::FillTool;
-use crate::tools::gradient::GradientTool;
-use crate::tools::hand::HandTool;
 use crate::tools::manager::ToolManager;
-use crate::tools::pen::PenTool;
-use crate::tools::shape::shape_tools;
-use crate::tools::text::TextTool;
 
 /// The W8 event queue behind `Session::subscribe`.
 pub type EventQueue = Rc<RefCell<VecDeque<ModelEvent>>>;

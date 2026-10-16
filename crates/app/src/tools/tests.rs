@@ -16,10 +16,10 @@ use std::rc::Rc;
 use pixel_engine::model::{ModelEvent, NewDocumentOptions, Session};
 use pixel_engine::view::View;
 
+use crate::features::fill::FillTool;
+use crate::features::pen::PenTool;
 use crate::input::RawPointer;
-use crate::tools::fill::FillTool;
 use crate::tools::manager::ToolManager;
-use crate::tools::pen::PenTool;
 
 type Queue = Rc<RefCell<VecDeque<ModelEvent>>>;
 

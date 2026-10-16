@@ -1,11 +1,11 @@
 //! Pending adjustment — locked layers, handles, nudge, option-bar values.
 
+use crate::features::shape::PendingValue;
 use crate::input::build_tool_event;
 use crate::tools::api::{Tool, ToolCx};
-use crate::tools::shape::PendingValue;
 
-use super::super::super::tests::{down, pixel, session64, view1};
 use super::{drag, key, rect_tool};
+use crate::tools::tests::{down, pixel, session64, view1};
 
 /// Locked layer: the pending shape is discarded, nothing paints.
 #[test]

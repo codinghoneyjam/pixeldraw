@@ -8,12 +8,15 @@
 //! - `paths` — `%APPDATA%/pixeldraw` + settings/autosave/log file names
 //! - `files` — byte IO, atomic writes, the JS file-name rules
 //! - `dialogs` — native modal pickers (blocking, outside the egui frame)
+//! - `ui_prefs` — the `settings.json` UI keys (collapsed panels), merged in
+//!   place so the file keeps every field it did not own
 //! - `logging` — `env_logger` bootstrap
 
 mod dialogs;
 mod files;
 mod logging;
 mod paths;
+mod ui_prefs;
 
 pub use dialogs::{confirm, pick_open_file, pick_save_file};
 pub use files::{
@@ -23,6 +26,7 @@ pub use files::{
 };
 pub use logging::init_logging;
 pub use paths::{app_data_dir, autosave_file, ensure_app_data_dir, log_file, settings_file};
+pub use ui_prefs::{COLLAPSED_FIELD, load_collapsed_panels, save_collapsed_panel};
 
 /// Failures of the platform surface.
 ///

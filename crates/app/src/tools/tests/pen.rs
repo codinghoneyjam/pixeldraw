@@ -2,9 +2,9 @@
 
 use pixel_engine::model::{NewDocumentOptions, SettingInput};
 
+use crate::features::pen::PenTool;
 use crate::input::{RawPointer, build_tool_event};
 use crate::tools::api::{Tool, ToolCx};
-use crate::tools::pen::PenTool;
 
 use super::{active_id, down, manager_pen_fill, pixel, session64, view1};
 

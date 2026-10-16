@@ -169,6 +169,10 @@ impl ArcTool {
 }
 
 impl Tool for ArcTool {
+    fn arc_tool_mut(&mut self) -> Option<&mut crate::features::arc::ArcTool> {
+        Some(self)
+    }
+
     fn id(&self) -> &'static str {
         match self.kind {
             ArcKind::Arc => "arc",

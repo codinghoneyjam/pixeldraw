@@ -190,6 +190,10 @@ impl Default for GradientTool {
 }
 
 impl Tool for GradientTool {
+    fn gradient_tool_mut(&mut self) -> Option<&mut crate::features::gradient::GradientTool> {
+        Some(self)
+    }
+
     fn id(&self) -> &'static str {
         "radial_gradient"
     }

@@ -74,10 +74,22 @@ impl PixeldrawApp {
             eprintln!("pixeldraw: no Korean system font found; Latin fallback only");
         }
         ctx.set_visuals(crate::ui::theme::neon_dark());
-        ctx.style_mut_of(egui::Theme::Dark, |s| crate::ui::theme::apply_spacing(s));
+        ctx.style_mut_of(egui::Theme::Dark, crate::ui::theme::apply_spacing);
+        let mut ui_state = UiState::default();
+        // Restore the collapsed-panel map written by the section headers. Read
+        // once at boot; the file is only written again when a header is clicked.
+        ui_state.panels.collapsed = pixel_platform::load_collapsed_panels()
+            .into_iter()
+            .filter(|(_, collapsed)| *collapsed)
+            .map(|(id, _)| id)
+            .collect();
+        let state = AppState::new();
+        // The option bar dispatches on the active tool, so it has to start
+        // somewhere: without this the strip is empty until the first click.
+        ui_state.toolbar.active_tool = state.session.settings().active_tool.to_string();
         Self {
-            state: AppState::new(),
-            ui_state: UiState::default(),
+            state,
+            ui_state,
             texture: CanvasTexture::new(),
             fb: Framebuffer::new(1, 1),
         }
@@ -205,9 +217,9 @@ impl PixeldrawApp {
                     crate::ui::dialogs::DialogKind::Help,
                 ));
             }
-            ToolPen | ToolEraser | ToolFill | ToolEyedropper | ToolLine | ToolRect
-            | ToolRrect | ToolEllipse | ToolPolygon | ToolArc | ToolChord
-            | ToolRadialGradient | ToolText | ToolHand => {
+            ToolPen | ToolEraser | ToolFill | ToolEyedropper | ToolLine | ToolRect | ToolRrect
+            | ToolEllipse | ToolPolygon | ToolArc | ToolChord | ToolRadialGradient | ToolText
+            | ToolHand => {
                 let tool_id = match action {
                     ToolPen => "pen",
                     ToolEraser => "eraser",

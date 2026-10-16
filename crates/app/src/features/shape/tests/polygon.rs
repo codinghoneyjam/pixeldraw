@@ -2,12 +2,12 @@
 
 use pixel_engine::raster::shape_raster::ShapeKind;
 
+use crate::features::shape::ShapeTool;
 use crate::input::build_tool_event;
 use crate::tools::api::{Tool, ToolCx};
-use crate::tools::shape::ShapeTool;
 
-use super::super::super::tests::{down, pixel, session64, view1};
 use super::key;
+use crate::tools::tests::{down, pixel, session64, view1};
 
 /// Polygon: three clicks place, Enter makes pending, Enter commits.
 #[test]

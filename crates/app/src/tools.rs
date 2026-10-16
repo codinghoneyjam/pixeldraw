@@ -1,18 +1,12 @@
 //! Tool façade and shared overlay API.
 
 pub mod api;
-pub mod arc;
-pub mod eyedropper;
-pub mod fill;
-pub mod gradient;
-pub mod hand;
 pub mod manager;
 pub mod overlay;
-pub mod pen;
-pub mod shape;
-pub mod text;
 pub use api::*;
 pub use overlay::*;
 
+/// Shared test fixtures (`session64`, `view1`, `down`, `pixel`). Public so the
+/// feature-owned test suites can reuse them.
 #[cfg(test)]
-mod tests;
+pub mod tests;

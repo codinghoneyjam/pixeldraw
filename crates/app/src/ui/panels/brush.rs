@@ -1,4 +1,4 @@
-﻿//! The brush section: the size row and the banded size presets.
+//! The brush section: the size row and the banded size presets.
 //!
 //! The size row mirrors the layer panel opacity row (label, slider with a
 //! trailing fill, number box, unit) so both sides of the window speak one
@@ -12,7 +12,7 @@ use egui::{Color32, DragValue, RichText, Slider, Ui};
 pub const SIZE_PRESETS: [u32; 16] = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48, 64];
 
 /// Preset size bands: one band per row, so a 1px tip never shares a line with
-/// a 64px blob. The JS port drew a fixed 4횞4 grid; the native panel lays the
+/// a 4×4 grid; the native panel lays the
 /// same sixteen presets out per size range instead, which is what makes the
 /// rows ordered-by-magnitude rather than a shuffled square.
 pub const SIZE_BANDS: [(&str, &[u32]); 3] = [
@@ -21,9 +21,8 @@ pub const SIZE_BANDS: [(&str, &[u32]); 3] = [
     ("32-64", &[32, 40, 48, 64]),
 ];
 
-/// The preset cells are **half** a palette swatch on each side ??a quarter of
-/// its area ??and square. The 24px swatch at the shared panel default
-/// (`PANEL_W_DEFAULT`) therefore gives a 12px cell.
+/// The preset cells are **half** a palette swatch on each side — a quarter of
+/// its area — and square. A 24px swatch therefore gives a 12px cell.
 pub fn preset_cell(swatch: f32) -> f32 {
     (swatch * 0.5).clamp(10.0, 16.0)
 }
@@ -81,25 +80,25 @@ pub(crate) fn paint_size_preset(
             Color32::from_rgb(0xd0, 0xd4, 0xd9)
         },
     );
-    resp.clone().on_hover_text(format!("釉뚮윭??援듦린 {size}px"));
+    resp.clone().on_hover_text(format!("굵기 {size}px"));
     resp
 }
 
 /// JS `panel_brush.js`: size row + size presets.
 pub fn show_brush(ui: &mut Ui, ui_state: &mut UiState, app: &mut AppState) {
-    // ?? Brush section ???????????????????????????????????????????????????
+    // —— Brush section ——————————————————————————————————————————————————
     // JS `panel_brush.js`: number input + range slider + preview + size presets.
     section_card(ui, |ui| {
-        if !section_header(ui, &mut ui_state.panels, "brush", "釉뚮윭??) {
+        if !section_header(ui, &mut ui_state.panels, "brush", "브러시") {
             return;
         }
         let size = app.session.settings().pen_size;
         let mut v = size;
 
         ui.horizontal(|ui| {
-            ui.label(RichText::new("援듦린:").size(12.0));
+            ui.label(RichText::new("굵기:").size(12.0));
             // Trailing fill + hidden value: the number box is the readout, the
-            // slider is the gesture ??exactly the layer panel's opacity row.
+            // slider is the gesture —— exactly the layer panel's opacity row.
             let slider = ui.add(
                 Slider::new(&mut v, 1..=64)
                     .show_value(false)
@@ -127,12 +126,12 @@ pub fn show_brush(ui: &mut Ui, ui_state: &mut UiState, app: &mut AppState) {
                 }
             }
 
-            // Row 1 ??the same shape as the layers' opacity row: label, slider,
+            // Row 1 —— the same shape as the layers' opacity row: label, slider,
             // number box, unit. No preview here: it used to squeeze the slider
         });
 
         ui.add_space(4.0);
-        // Footprint preview on the left, the size bands stacked beside it ??the
+        // Footprint preview on the left, the size bands stacked beside it —— the
         // extra ragged space on the short lower rows would otherwise be dead.
         ui.horizontal(|ui| {
             let preview = (v as f32 * 0.5).clamp(1.0, 14.0);
@@ -223,8 +222,9 @@ mod tests {
     /// the number grid stays subordinate to the palette it sits under.
     #[test]
     fn preset_cell_is_a_square_quarter_of_a_swatch() {
-        // 24px swatch at the shared panel default -> 12px cell: 144 = 576/4.
-        let swatch = swatch_cell_width(crate::ui::PANEL_W_DEFAULT);
+        // 24px swatch -> 12px cell: 144 = 576/4.
+        let swatch = swatch_cell_width(206.0);
+        assert_eq!(swatch, 24.0);
         assert_eq!(preset_cell(swatch), swatch / 2.0);
         assert_eq!(preset_cell(24.0), 12.0);
         // The floor keeps a 2px label legible on a shrunk panel.

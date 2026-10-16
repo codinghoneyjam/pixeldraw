@@ -6,6 +6,7 @@
 
 pub mod actions;
 pub mod dialogs;
+pub mod juice;
 pub mod menubar;
 pub mod optionbar;
 pub mod panels;
@@ -18,7 +19,6 @@ pub mod toolbar;
 pub use actions::ActionMap;
 pub use dialogs::{Dialog, DialogKind, DialogResult};
 pub use menubar::Menubar;
-pub use optionbar::Optionbar;
 pub use shared::{Toast, ToastKind, Tooltip, collapsible, strings};
 pub use statusbar::Statusbar;
 pub use toolbar::Toolbar;
@@ -34,6 +34,10 @@ pub struct UiState {
     pub panels: panels::PanelsState,
     pub toasts: Vec<Toast>,
     pub tooltip: Option<Tooltip>,
+    /// Widget key → click time, the clock behind `ui::juice`'s click flash and
+    /// press pop. Shared because the clock has to outlive any one widget's
+    /// `Ui`, and several widgets animate off the same table.
+    pub juice_clicks: std::collections::HashMap<String, f64>,
 }
 
 /// Per-widget state structs (minimal for now, expand as needed).
@@ -53,18 +57,15 @@ pub struct ToolbarState {
 
 #[derive(Default)]
 pub struct OptionbarState {
-    pub expanded_sections: std::collections::HashSet<String>,
     pub current_tool_options: Option<ToolOptions>,
 }
 
+/// The only option value the bar still mirrors into UI state: the brush size,
+/// which the pen block reads back as it writes the `penSize` setting. Every
+/// other tool option lives on the tool struct itself.
 #[derive(Default, Clone)]
 pub struct ToolOptions {
     pub size: Option<u32>,
-    pub opacity: Option<f32>,
-    pub hardness: Option<f32>,
-    pub fill_color: Option<[u8; 4]>,
-    pub stroke_color: Option<[u8; 4]>,
-    pub blend_mode: Option<String>,
 }
 
 #[derive(Default)]
@@ -101,25 +102,33 @@ pub fn render_ui(
             menubar::show(ui, ui_state, app_state);
         });
 
-    // 2. Toolbar (below menubar)
-    egui::Panel::top("toolbar_panel")
-        .frame(pad(8.0, 4.0))
+    // 2. Tool rail (left, narrow) — declared before the panels so it takes the
+    //    leftmost strip; egui fills left panels in declaration order.
+    egui::Panel::left("toolbar_panel")
+        .frame(pad(6.0, 6.0))
+        .resizable(false)
         .show(ui, |ui| {
+            ui.set_max_width(52.0);
             toolbar::show(ui, ui_state, app_state);
         });
 
-    // 3. Optionbar (context-sensitive, below toolbar)
-    egui::Panel::top("optionbar_panel").show(ui, |ui| {
-        optionbar::show(ui, ui_state, app_state);
-    });
-
-    // 4. Side panels (JS left/right parity) + central canvas in shell.rs
+    // 3. Left side panels (colour / palette / recent / brush)
     egui::Panel::left("left_panels")
+        .frame(pad(8.0, 6.0))
         .resizable(true)
         .show(ui, |ui| {
             egui::ScrollArea::vertical().show(ui, |ui| {
                 panels::show_left(ui, ui_state, app_state);
             });
+        });
+
+    // 4. Optionbar: the wide top strip below the menubar. This is where the
+    //    active tool's own controls live (X/Y/W/H for shapes, brush size for
+    //    the pen), so the rail above must not grow into this row.
+    egui::Panel::top("optionbar_panel")
+        .frame(pad(8.0, 4.0))
+        .show(ui, |ui| {
+            optionbar::show(ui, ui_state, app_state);
         });
     egui::Panel::right("right_panels")
         .resizable(true)
@@ -162,6 +171,5 @@ mod tests {
     fn tool_options_default_is_none() {
         let opts = ToolOptions::default();
         assert!(opts.size.is_none());
-        assert!(opts.opacity.is_none());
     }
 }

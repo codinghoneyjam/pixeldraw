@@ -39,6 +39,23 @@ pub enum CursorKind {
 }
 
 pub trait Tool {
+    /// Feature-local seam used for option-bar mutation.
+    fn arc_tool_mut(&mut self) -> Option<&mut crate::features::arc::ArcTool> {
+        None
+    }
+
+    fn gradient_tool_mut(&mut self) -> Option<&mut crate::features::gradient::GradientTool> {
+        None
+    }
+
+    fn text_tool_mut(&mut self) -> Option<&mut crate::features::text::TextTool> {
+        None
+    }
+
+    fn shape_tool_mut(&mut self) -> Option<&mut crate::features::shape::ShapeTool> {
+        None
+    }
+
     fn id(&self) -> &'static str;
     fn cursor(&self) -> CursorKind {
         CursorKind::Default

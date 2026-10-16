@@ -2,47 +2,44 @@
 
 ## Current pain points
 
-- Layer-oriented modules scatter one feature across `tools/`, `ui/optionbar/`, and engine raster code.
-- Feature ownership is split between tool state and option-bar UI; discoverability is low.
-- Existing pub paths must stay stable during migration; avoid broad renames until proven.
-- Some UI feature helpers live in partially wired directories and are not compiled yet.
+- ~~Layer-oriented modules scatter one feature across `tools/`, `ui/optionbar/`, and engine raster code.~~ resolved
+- ~~Feature ownership is split between tool state and option-bar UI; discoverability is low.~~ resolved
+- ~~Existing pub paths must stay stable during migration; avoid broad renames until proven.~~ resolved
+- ~~Some UI feature helpers live in partially wired directories and are not compiled yet.~~ resolved
 
 ## Target layout
 
 ```
 crates/app/src/features/
-  mod.rs                  # facades first, no moves
-  arc.rs or arc/mod.rs    # future: tools::arc + ui::optionbar::arc
-  gradient.rs
-  pen.rs
-  shape.rs
-  ...
+  mod.rs                  # eight façades, no logic
+  arc.rs  + arc/{tool,preview,optionbar,tests}.rs
+  gradient.rs + gradient/{tool,preview,optionbar,tests}.rs
+  pen.rs + pen/{core,preview,optionbar}.rs
+  shape.rs + shape/{state,geom,pending,keys,commit,overlay,optionbar,tests}.rs
+  text.rs + text/optionbar.rs
+  eyedropper.rs   fill.rs   hand.rs
 
 Engine (later):
   crates/engine/src/features/
     arc.rs, gradient.rs, pen.rs, shape.rs
 ```
 
-Feature facades group tool modules, preview helpers, and option-bar UI under one entry point.
+Each façade owns the tool implementation AND its option-bar block, so one feature
+is readable in one place. `tools::…` and `ui::optionbar::…` are now thin
+re-export shims over these.
 
 ## Phases
 
-1. Assessment
-   - map feature code and call sites
-   - identify public paths and tests
-   - record gap between layer modules and intended features
-2. Facade
-   - add `features` module with aliases/re-exports only
-   - keep all old module declarations intact
-   - add smoke tests (`features::arc::...`)
-3. Incremental move
-   - move implementation into feature modules one at a time
-   - update call sites through `features::*`
-   - leave compatibility re-exports in old locations
-4. Cleanup
-   - remove empty forwarding modules after all callers migrate
-   - update docs and roadmap mappings
-   - run full build/test and roadmap checks
+1. Assessment — done
+2. Facade — done
+3. Incremental move — done
+   - all eight tools moved out of `tools/` into `features/`
+   - `tools::{arc,gradient,pen,shape,text,fill,hand,eyedropper}.rs` are now
+     one-line re-export shims; the old sub-directories are gone
+   - `ui/optionbar/*.rs` keep re-exporting `features::*::optionbar::*`
+   - internal call sites use `crate::features::*` (no live `crate::tools::<tool>` refs)
+4. Cleanup — docs updated; feature shims in `tools/` removed after all
+   internal references migrated (compatibility no longer needed)
 
 ## Migration rules
 

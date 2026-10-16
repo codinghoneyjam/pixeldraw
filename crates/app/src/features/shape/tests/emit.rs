@@ -2,12 +2,12 @@
 
 use pixel_engine::model::event::EventDetail;
 
+use crate::features::shape::shape_tools;
 use crate::tools::api::OverlayInfo;
 use crate::tools::overlay::OverlayOp;
-use crate::tools::shape::shape_tools;
 
-use super::super::super::tests::{session64, view1};
 use super::{drag, rect_tool};
+use crate::tools::tests::{session64, view1};
 
 /// The emission text is byte-exact `JSON.stringify({pending, vertices})`.
 #[test]

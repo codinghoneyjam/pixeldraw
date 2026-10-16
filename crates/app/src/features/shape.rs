@@ -1,7 +1,8 @@
 //! `features/shape/*` — five shape tools over one pending state machine.
 //!
 //! Facade: state machine in `state`, geometry in `geom`, placing + text in
-//! `pending`, keys in `keys`, commit in `commit`, overlay in `overlay`.
+//! `pending`, keys in `keys`, commit in `commit`, overlay in `overlay`, and
+//! the option-bar block in `optionbar`.
 
 mod commit;
 mod geom;
@@ -9,6 +10,8 @@ mod keys;
 mod overlay;
 mod pending;
 mod state;
+
+pub mod optionbar;
 
 #[cfg(test)]
 mod tests;

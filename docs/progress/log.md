@@ -4,6 +4,104 @@
 
 ---
 
+## 2026-10-15 · Phase 3.x · `tools/` 피처 shim 제거 — 호환 경로 정리
+
+**커밋 대상**: `crates/app/src/tools.rs`·`crates/app/src/tools/{arc,eyedropper,fill,gradient,hand,pen,shape,text}.rs`(삭제)·`docs/feature_cohesion_reorg_plan.md`·`docs/progress/log.md`
+**테스트**: workspace 전체 그린(app 154 포함) · clippy 그린 · fmt 그린
+
+- ①내부 호출부가 모두 `crate::features::*`로 전환되어 `tools::<feature>` re-export shim이 더 이상 사용되지 않았다.
+- ②shim 8개 파일과 `tools.rs`의 `pub mod` 선언을 제거했다. 공유 코어(`api`/`manager`/`overlay`/`tests`)는 그대로 유지.
+- ③`lib.rs`의 `features_are_accessible` 테스트는 `features::arc::ArcTool::arc`로 이미 이관되어 있어 통과.
+
+---
+
+## 2026-10-15 · Phase 3.x · `shell/` 잔재 삭제 — 미배선 모듈 0개
+
+**커밋 대상**: `crates/app/src/shell/`(디렉터리째 삭제)·`docs/progress/log.md`
+**테스트**: workspace 전체 그린(**566**) · clippy 그린 · fmt 그린 · 부트 스크린샷 육안 확인 · **미배선 모듈 전수 검사 0건**
+
+- **`shell/actions.rs`·`shell/fonts.rs` 삭제** — 둘 다 이미 `shell.rs` 안으로 되돌아온 함수의 **정확한 중복**이었다(`dispatch_action`·`open_any`은 `impl PixeldrawApp` 메서드로, `system_font_candidates`·`first_existing`·`install_korean_font`는 자유 함수로). `actions.rs`에는 테스트가 하나도 없어 잃을 검증도 없었다. `shell/`은 빈 채로 남아 있어 디렉터리째 지웠다.
+- **미배선 모듈 전수 검사** — `foo.rs` 옆에 `foo/`가 있는데 `foo.rs`에 `mod <name>;`가 없는 파일을 전부 찾는 검사. 이 세션에서 `ui/{panels,optionbar,dialogs,menubar}`, `ui/toolbar`, `platform/ui_prefs`, `features/*`를 찾아낸 그 도구. 이제 **미배선 0개**다.
+
+---
+
+## 2026-10-15 · Phase 3.x · `ui/toolbar/buttons.rs` 삭제 + 테스트를 진짜 검증에 연결
+
+**커밋 대상**: `crates/app/src/ui/toolbar.rs`·`crates/app/src/ui/toolbar/{icons.rs,buttons.rs(삭제)}`
+**테스트**: workspace 전체 그린(**566**·app 153→154) · clippy 그린 · fmt 그린 · 부트 스크린샷 육안 확인
+
+- **`ui/toolbar/buttons.rs` 삭제** — 라이브 `toolbar.rs`와 `Toolbar`/`ToolButton` 정의를 **중복** 정의하면서 인코딩 손상(`label: "??,` 미닫힌 문자열)까지 있던 고아 파일이었다. `icons.rs`가 실제 아트라 이쪽은 배선할 필요가 전혀 없었다.
+- **살아 있던 테스트가 가짜 통과를 하고 있었다** — `tooltip_leads_with_the_shortcut`가 프로덕션 형식 문자열을 쓰지 않고 `format!("[{}]  {}", t.shortcut, t.help)`를 **자기 자신으로 다시 만들어** 검증했다. 툴팁 형식을 `[B]  펜 — …`로 바꿔도 통과하는 테스트였다. `tool_tip()`을 뽑아 `show`와 테스트가 **같은 코드를** 부르게 했다.
+- **`no_button_text_contains_unrenderable_glyphs` → `the_tooltip_is_the_only_tool_text_and_it_renders`** — 레일이 벡터 아이콘만 그리므로 버튼 텍스트는 사라졌고, 도구 이름이 실제로 도달하는 곳은 툴팁 하나뿐이다. 검증을 그쪽으로 옮기고 em dash(U+2014)도 허용 목록에 넣었다.
+- **`every_tool_has_a_distinct_vector_icon` 신설** — `draw_tool_vector_icon`은 미등록 id를 조용히 일반 점으로 떨어뜨린다. `icons::has_icon()`을 추가해 등록 도구 14종과 표의 14종이 같은지 검사한다(아이콘 누락이 빈 버튼으로 조용히 렌더되는 것을 막음).
+
+---
+
+## 2026-10-15 · Phase 3.x · 좌측 세로 아이콘 레일 복원 + 상단 옵션바 확보 + 캡처 DPI 버그
+
+**커밋 대상**: `crates/app/src/ui/{mod.rs,toolbar.rs,toolbar/icons.rs}`·`crates/app/src/shell.rs`·`capture_native.ps1`
+**테스트**: workspace 전체 그린(565) · clippy 그린 · fmt 그린 · 부트 스크린샷(`outputs/native_current.png`) 육안 확인
+
+- **좌측 세로 아이콘 레일 복원** — `ui/toolbar/icons.rs`(수작업 벡터 아이콘)는 `mod` 선언이 없어 **어떤 커밋에서도 배선된 적이 없었다**(panels와 같은 패턴). `mod icons;`를 넣고 `Toolbar::show`를 세로 `ui.vertical` 아이콘 열로 다시 썼다. 툴팁에 `[단축키] 한글명 — 도움말`을 넣어서 텍스트 버튼 때 쓰이던 `label` 필드도 살렸다. `render_ui`에서 `Panel::top("toolbar_panel")`을 `Panel::left`으로 옮기고, 좌측 패널보다 **먼저** 선언해 왼쪽 끝 레일을 차지하게 했다(egui는 선언 순서로 채운다). 40px 정사각 버튼 + 호버 페이드 + 클릭 팝 + 활성 도구만 파랑 플레이트.
+- **상단 옵션바 확보** — 레일을 좌측으로 빼니 상단이 비었는데, 원인은 `ToolbarState::active_tool`이 빈 문자열로 초기화돼 옵션바 `match`가 `_ => {}`로 떨어지던 것이었다. `PixeldrawApp::new`에서 `settings.active_tool`(기본 `"pen"`)로 초기화. 확인: 펜 → `Brush size: 1px` + 프리셋, 직사각형 → `Fill · 비율 고정 · 32px 스냅 · X/Y/W/H · 확정 · 취소`.
+- **캡처 스크립트 DPI 버그** — `capture_native.ps1`이 DPI 비인지 PowerShell에서 돌아 `GetWindowRect`가 가상화 좌표를 반환했다. 150% 디스플레이에서 실제 1908px 창이 1295px로 측정되어 **오른쪽 32%가 통째로 잘렸고**, 그 탓에 우측 레이어 패널이 "없거나 캔버스에 덮인 것처럼" 보였다. 실제로는 정상 렌더되고 있었다. `SetProcessDpiAwarenessContext(V2)`를 추가해 1942x1286 전체를 받는다.
+- **教训**: 패널이 안 보인다고_layout을 의심하기 전에, egui의 `Rect`는 물리 픽셀이고 `ppp=1.5`였다. 디버그로 좌표를 찍어 캡처 해상도와 대조해 보자마자 원인이 보였다. 캡처 도구를 신뢰하기 전에 창 크기를 먼저 확인할 것.
+- 미배선 잔재 `ui/toolbar/buttons.rs`는 live `toolbar.rs`와 `Toolbar` 정의가 중복되고 인코딩 손상(`label: "??,`)까지 있어 배선할 수 없다. 정리 대상.
+
+---
+
+## 2026-10-15 · Phase 3.x · ui/panels 실배선 — 고아 모듈 복구로 테스트 +21
+
+**커밋 대상**: `crates/app/src/ui/panels.rs`+`ui/panels/{brush,chrome,color,color/hsv,color/hex,layers,palette}.rs`·`crates/platform/{Cargo.toml,src/lib.rs}`·`crates/app/src/shell.rs`·`crates/app/src/ui/{dialogs.rs,menubar.rs}`(고아 디렉터리 삭제)
+**테스트**: workspace 전체 그린(**545 → 565**·platform 20→24·app 136→153) · clippy 그린 · fmt 그린 · 부트 스크린샷(`outputs/native_current.png`) 육안 확인
+
+- **`ui/panels/` 7파일 복구·실배선** — 살아있던 `ui/panels.rs`(369줄·11함수)를 파사드로 줄이고 섹션 모듈(`brush·chrome·color·layers·palette`)로 대체했다. 살아있는 쪽에 없던 것들이 돌아왔다: HSV 휠·RGBA/HEX 필드, `section_card` 2중 테두리, `slot_mark` 슬롯 브라켓(전경 파랑/배경 앰버), 팔레트 우클릭 보조슬롯 지정, 최근색 플레이스홀더 체커보드, 브러시 크기 밴드(4×4 → 3행)·족보형 프리셋 셀, 접기 헤더.
+- **인코딩 손상 2파일 복구** — `brush.rs`·`color.rs`에 미닫힌 문자열(`"브러??`)이 남아 컴파일이 서지 않았다. `index.html` 원문에서 라벨을 뽑아 코드포인트로 되살렸다: `브러시`=U+BE0C/B7EC/C2DC, `굵기`=U+AD75/AE30, `색상`·`교체`(전경·배경 교체 (X))·`초기화`(기본색 (D)). 줄바꿈이 깨진 `—`(U+2014)와 `×`(U+00D7)도 복원. **손상은 커밋에 들어있어 git에 정상본이 없었다.**
+- **`pixel_platform::ui_prefs` 실배선** — `lib.rs`에 `mod` 선언이 없어 컴파일 안 되던 모듈이었다. `mod ui_prefs;` + 재-export 추가. 그 모듈이 `serde_json`을 쓰는데 `pixel-platform`의 Cargo.toml에 의존성이 없어 함께 추가. 섹션 헤더의 `save_collapsed_panel`과 `PixeldrawApp::new`의 `load_collapsed_panels`로 접기 상태 저장·복원이 처음으로 양쪽 다 붙었다.
+- **`RING_MID` 정직하게 사용** — 색상 마커가 `(r_in + r_out) * 0.5`로 같은 값을 재계산하고 있어서 미사용 경고였다. 상수를 쓰도록 바꿔 값은 그대로 두고 의도를 드러냈다.
+- **유령 상수 제거** — `brush.rs` 테스트가 참조하던 `crate::ui::PANEL_W_DEFAULT`는 존재하지 않았다. `swatch_cell_width(206.0) == 24.0` → `preset_cell(24.0) == 12.0`처럼 두 함수의 실제 결합을 검증하도록 바꿨다.
+- **`ui/dialogs/`·`ui/menubar/` 삭제** — 각각 다른 `Dialog` 구조체(`confirmed`·`new_doc_*`)와 존재하지 않는 `Action` 변형(`LayerUp`/`LayerDown`)에 대해 쓰여 있어 어차피 배선 불가했던 낡은 코드였다.
+
+---
+
+## 2026-10-15 · Phase 3.x · 옵션바 실배선 + 고아 모듈 전수 조사
+
+**커밋 대상**: `crates/app/src/ui/{mod.rs,optionbar.rs}`·`crates/app/src/ui/optionbar/`(삭제)·`docs/`
+**테스트**: workspace 전체 그린(app 136 — 스텁과 함께 사라진 테스트 1개) · clippy 그린 · fmt 그린
+
+- **`ui/optionbar.rs`가 죽은 스텁이었다** — 185줄짜리 예전 구현이 실제로 렌더되고 있었고, JS 패리티 버전인 `features/{pen,arc,gradient,shape,text}/optionbar.rs` 5종은 **호출 0건**이었다. 10-14 로그의 "옵션→도구 직결 재작성"이 화면에 반영되지 않은 상태. `ui/optionbar.rs`를 각 피처 블록으로 분기하는 디스패처로 교체해 실배선했다(승인됨).
+- **`UiState::juice_clicks` 신설** — `shape_options`가 요구하는 주스 클릭 시계의 홈이 없었다. 위젯 `Ui`보다 오래 살아야 하므로 `UiState`로.
+- **`ToolOptions` 4필드 삭제**(`hardness`·`fill_color`·`stroke_color`·`blend_mode`) — 죽은 스텁만 읽던 임시 필드. `size`만 남았다. `OptionbarState::expanded_sections`(미사용)도 함께 삭제.
+- **`ui/optionbar/` 8파일 삭제** — `mod` 선언이 없어 **컴파일 자체가 안 되던** 디렉터리. `tools.rs`의 `mid_round_half_up`은 이미 `features/shape/optionbar.rs`로 옮겨진 **중복본**이었고, `tool_mut`은 존재하지 않는 `as_any_mut`을 호출. `switch.rs`(179줄, 세그먼트 스위치·고정 슬롯)는 참조처가 없는 고아.
+
+### 고아 모듈 전수 조사 결과 (HEAD부터 미연결, 이번에 확인)
+
+`foo.rs` + `foo/` 쌍에서 `foo.rs`가 `mod`를 선언하지 않아 `foo/`가 통째로 컴파일 안 되는 상태가 **4곳**이었다. 전수 확인 결과:
+
+| 디렉터리 | 규모 | 분류 |
+|---|---|---|
+| `ui/panels/` | 7파일 ~1392줄 | **미완성 신작**. 살아있는 `ui/panels.rs`(369줄·11함수)보다 풍성함 — `section_card`·`slot_mark`·`slot_radius`·`swatch_cell`·`layer_thumbnail`·HSV/hex 분리. 10-14 로그의 "패널 미관" 작업이 여기 있다. **단 `brush.rs`·`color.rs`가 셸 인코딩 사고로 문법 손상**(`"브러??` 등 미닫힌 문자열), 커밋에 그대로 있어 git에 정상본이 없다 |
+| `ui/dialogs/{forms,validate}.rs` | 2파일 290줄 | **낡은 잔재**. 다른 `Dialog` 구조체(`confirmed`·`new_doc_*` 필드)에 대해 작성되어 현재 `ui/dialogs.rs`와 어긋남 |
+| `ui/menubar/actions.rs` | 1파일 114줄 | **낡은 잔재**. 현재 `Action` 열거에 없는 `LayerUp`/`LayerDown` 매칭, `Action`이 `Copy` 아님 |
+
+→ 뒤의 둘은 삭제가 맞지만, `ui/panels/`는 삭제가 아니라 복구·배선이 필요한 미완성 작업이라 결론을 남겨둔다.
+
+---
+
+## 2026-10-15 · Phase 3.x · 피처 단위 응집 (features/) — 8개 도구 이관 + 한글 인코딩 복구
+
+**커밋 대상**: `crates/app/src/{features/**,tools/**,session_glue.rs,shell.rs,ui/{panels,toolbar}.rs}`·`docs/feature_cohesion_reorg_plan.md`
+**테스트**: workspace 전체 그린(engine 339+통합 44·platform 20·app 137 = 545) · `cargo clippy --workspace --all-targets -- -D warnings` 그린 · `cargo fmt --all --check` 그린
+
+- **도구 8종을 `features/`로 이관** — `arc·gradient·pen·shape·text·fill·hand·eyedropper`가 각자 `features/<name>/` 아래 도구 구현 + 옵션바를 한 곳에 모은다. 파사드가 두 덩어리(`pub use tools::X` + `#[path] optionbar`)였기 때문에 이중 경로가 생겼고, 순환 참조가 컴파일을 막아 `pub mod X;` 단일 선언으로 접었다. `tools/*.rs`는 전부 한 줄 re-export shim이 되었고 하위 디렉터리는 삭제.
+- **호환 경로 유지** — `tools::{arc,gradient,pen,shape,…}`와 `ui/optionbar/{arc,gradient,pen,shape,text}.rs`는 이전 경로 그대로 동작. 내부 호출부만 `crate::features::*`로 전환(살아있는 `crate::tools::<tool>` 참조 0건, 계획 4단계 문서 반영).
+- **shape 옵션바 인코딩 복구** — 이전 작업에서 셸 텍스트 왕복으로 `features/shape/optionbar.rs` 한글 20줄이 깨져 컴파일이 안 서 있었다(로그의 같은 사고 재발). `index.html` 원문을 근거로 복원: `비율 고정`·`32px 스냅`·`반경`·`확정`·`취소`·`정점 추가`·`정점 N 삭제`·`−`. 원본에 없는 섹션 헤더 라벨 한 줄은 제거.
+- **컴파일 API 정정** — `Tool` 트레이트에 `as_any`/`as_any_mut`이 없어서 옵션바 downcast가 어긋나 있었다. JS `toolManager.get(id)`에 대응하는 시그니처 기본 메서드(`shape_tool_mut`/`text_tool_mut`/`arc_tool_mut`/`gradient_tool_mut`)를 쓰도록 고치고, `&dyn Tool`가 아니라 `&mut (dyn Tool + 'static)`에서만 컴파일된다는 점은 주석으로 남겼다.
+- **`tools::tests` 공개화** — 공유 픽스처(`session64`/`view1`/`down`/`pixel`)가 크로스-모듈 테스트에서 쓰이므로 `#[cfg(test)] pub mod tests`로 올렸다.
+- 부수 정리: `clippy::redundant_closure`(`apply_spacing`) 1건, 미사용 import 3건, dead 필드 경고 제거.
+
+---
+
 ## 2026-10-14 · Phase 3.x · 마커 색 구분·주스·도형 옵션 (2중 브라켓·호버/클릭·bbox/확정취소)
 
 **커밋 대상**: `crates/app/src/ui/{panels,toolbar,optionbar,juice(new),mod}.rs`

@@ -1,8 +1,15 @@
-﻿//! Toolbar — port of `src/ui/toolbar/**`.
+//! Toolbar — port of `src/ui/toolbar/**`.
+//!
+//! The tool strip is a **left** vertical column of hand-drawn vector icons
+//! (`icons`), matching the JS tree where the tools sit in a narrow rail and the
+//! wide top strip belongs to the option bar. `render_ui` in `super::mod` owns
+//! the panel; this module only lays out into the `Ui` it is handed.
+
+mod icons;
 
 use super::UiState;
 use crate::session_glue::AppState;
-use egui::{Button, RichText, ScrollArea, Ui, Vec2};
+use egui::{Button, ScrollArea, Ui, Vec2};
 
 #[derive(Default)]
 pub struct ToolbarState {
@@ -126,29 +133,25 @@ impl Toolbar {
         }
     }
 
+    /// The one place a tool's name is spelled out in full. The rail draws a
+    /// vector glyph, so `label` only ever reaches the user here — which is why
+    /// the test below calls this instead of rebuilding the string.
+    fn tool_tip(tool: &ToolButton) -> String {
+        format!("[{}]  {} — {}", tool.shortcut, tool.label, tool.help)
+    }
+
     pub fn show(&mut self, ui: &mut Ui, state: &mut UiState, app: &mut AppState) {
         // Cleared first so the status bar shows nothing once the pointer leaves,
         // rather than keeping the last tool's help forever.
         state.toolbar.tool_hovered = None;
 
-        ui.horizontal(|ui| {
-            ui.spacing_mut().item_spacing.x = 4.0;
+        ui.vertical(|ui| {
+            ui.spacing_mut().item_spacing.y = 2.0;
 
             for tool in &self.tools {
                 let is_active = state.toolbar.active_tool == tool.id;
-                let response = ui
-                    .add(
-                        Button::new(
-                            RichText::new(format!("{} {}", tool.label, tool.shortcut)).size(12.0),
-                        )
-                        .fill(if is_active {
-                            ui.visuals().selection.bg_fill
-                        } else {
-                            egui::Color32::TRANSPARENT
-                        })
-                        .min_size(Vec2::new(56.0, 24.0)),
-                    )
-                    .on_hover_text(format!("[{}]  {}", tool.shortcut, tool.help));
+                let response = tool_icon(ui, tool, is_active, &mut state.juice_clicks)
+                    .on_hover_text(Self::tool_tip(tool));
 
                 if response.clicked() {
                     state.toolbar.active_tool = tool.id.to_string();
@@ -213,22 +216,78 @@ impl Default for Toolbar {
     }
 }
 
+/// One square tool button, painted rather than built from [`Button`] so the
+/// hand-drawn vector glyph can sit on it. Same juice as every other control:
+/// hover fade, press pop, accent fill for the active tool.
+fn tool_icon(
+    ui: &mut Ui,
+    tool: &ToolButton,
+    is_active: bool,
+    clicks: &mut std::collections::HashMap<String, f64>,
+) -> egui::Response {
+    use crate::ui::juice::{click_pop, hover_fade, lerp_color};
+    const S: f32 = 40.0;
+    let key = format!("tool:{}", tool.id);
+    let (rect, resp) = ui.allocate_exact_size(Vec2::splat(S), egui::Sense::click());
+    let hid = ui.id().with("tb").with(tool.id);
+    let fade = hover_fade(ui.ctx(), hid, resp.hovered());
+    let pop = click_pop(clicks, ui.ctx(), &key, resp.clicked());
+    let rect = rect.shrink(2.0 + (1.0 - pop) * S * 0.08);
+
+    let painter = ui.painter();
+    if is_active {
+        painter.rect_filled(
+            rect,
+            6.0,
+            lerp_color(
+                egui::Color32::from_rgb(0x00, 0x63, 0x9e),
+                egui::Color32::from_rgb(0x1e, 0x8f, 0xe0),
+                fade,
+            ),
+        );
+        painter.rect_stroke(
+            rect,
+            6.0,
+            egui::Stroke::new(1.0, egui::Color32::from_rgb(0x4c, 0xc2, 0xff)),
+            egui::StrokeKind::Inside,
+        );
+    } else if fade > 0.0 {
+        painter.rect_filled(
+            rect,
+            6.0,
+            egui::Color32::from_white_alpha((28.0 * fade) as u8),
+        );
+    }
+
+    // The glyph keeps the same colour in both states so the rail reads as one
+    // set; only the plate behind it changes.
+    let glyph = if is_active {
+        egui::Color32::WHITE
+    } else {
+        lerp_color(
+            egui::Color32::from_rgb(0xb6, 0xbb, 0xc4),
+            egui::Color32::WHITE,
+            fade,
+        )
+    };
+    icons::draw_tool_vector_icon(painter, rect, tool.id, glyph);
+    resp
+}
+
 /// Integration function.
 ///
-/// `render_ui` in `super::mod` already owns `Panel::top("toolbar_panel")`. This
-/// used to open the *same* panel id again — a panel nested inside itself — and
-/// [`Toolbar::show`] then opened a third (`Panel::top("toolbar")`) inside that.
-/// egui panels are siblings, not nestable: each nested one is handed only the
-/// space the outer one left over, which clipped every button to its top ~40%.
+/// `render_ui` in `super::mod` owns the rail's panel (`Panel::left`). This used
+/// to open the *same* panel id again — a panel nested inside itself — which
+/// handed the inner one only the sliver the outer one left over and clipped
+/// every button to its top ~40%.
 ///
-/// The row is a horizontal [`ScrollArea`] because eleven tools plus undo/redo
-/// plus the zoom cluster are wider than a narrow window, and before this they
-/// were cut off at the right edge instead of scrolling.
+/// Fourteen tools plus undo/redo plus the zoom cluster do not fit a short
+/// window, so the rail scrolls vertically rather than clipping its tail.
 pub fn show(ui: &mut egui::Ui, ui_state: &mut UiState, app_state: &mut AppState) {
     let mut toolbar = Toolbar::new();
-    ScrollArea::horizontal()
+    ScrollArea::vertical()
         .id_salt("toolbar_scroll")
-        .auto_shrink([false, true])
+        .auto_shrink([true, false])
         .show(ui, |ui| {
             toolbar.show(ui, ui_state, app_state);
         });
@@ -258,7 +317,10 @@ mod tests {
             "text",
             "hand",
         ] {
-            assert!(toolbar.tools.iter().any(|t| t.id == id), "missing tool {id}");
+            assert!(
+                toolbar.tools.iter().any(|t| t.id == id),
+                "missing tool {id}"
+            );
         }
     }
 
@@ -315,34 +377,83 @@ mod tests {
     /// the runtime font cannot draw shows up as U+25A1 WHITE SQUARE. Nothing on
     /// a button may contain one, and nothing may reach outside Latin-1 plus the
     /// Hangul syllables the labels already use.
+    /// The rail draws vector glyphs, so the tooltip is the *only* place tool
+    /// text reaches the screen. That makes the tooltip the thing that has to
+    /// stay inside the font's coverage.
     #[test]
-    fn no_button_text_contains_unrenderable_glyphs() {
+    fn the_tooltip_is_the_only_tool_text_and_it_renders() {
         for t in Toolbar::new().tools {
-            let drawn = format!("{}  {}", t.label, t.shortcut);
+            let tip = Toolbar::tool_tip(&t);
             assert!(
-                !drawn.contains('\u{25A1}') && !drawn.contains('\u{FFFD}'),
-                "tool {} draws a tofu box: {drawn:?}",
+                !tip.contains('\u{25A1}') && !tip.contains('\u{FFFD}'),
+                "tool {} draws a tofu box: {tip:?}",
                 t.id
             );
-            for c in drawn.chars() {
+            for c in tip.chars() {
                 let ok = c.is_ascii()
                     || ('\u{AC00}'..='\u{D7A3}').contains(&c)  // Hangul syllables
-                    || ('\u{3130}'..='\u{318F}').contains(&c); // Hangul compat jamo
+                    || ('\u{3130}'..='\u{318F}').contains(&c)  // Hangul compat jamo
+                    || c == '\u{2014}'; // the em dash joining the halves
                 assert!(ok, "tool {} draws non-Latin glyph {c:?}", t.id);
             }
         }
     }
 
-    /// The hover tooltip is the only place the shortcut is spelled out in full,
-    /// and it is built by `format!` in `show`; pin the shape so a refactor that
-    /// drops the key out of the tooltip is caught.
+    /// The tooltip is the only place the shortcut is spelled out in full. It is
+    /// built by `tool_tip`, which the test calls, so a refactor that drops the
+    /// key — or the Korean name — out of it actually fails here.
     #[test]
-    fn tooltip_leads_with_the_shortcut() {
-        let toolbar = Toolbar::new();
-        for t in &toolbar.tools {
-            let tip = format!("[{}]  {}", t.shortcut, t.help);
+    fn tooltip_leads_with_the_shortcut_and_names_the_tool() {
+        for t in Toolbar::new().tools {
+            let tip = Toolbar::tool_tip(&t);
             assert!(tip.starts_with('['), "tool {} tooltip: {tip:?}", t.id);
-            assert!(tip.contains(t.help));
+            assert!(
+                tip.contains(t.shortcut),
+                "tool {} lost its key: {tip:?}",
+                t.id
+            );
+            assert!(
+                tip.contains(t.label),
+                "tool {} lost its name: {tip:?}",
+                t.id
+            );
+            assert!(tip.contains(t.help), "tool {} lost its help: {tip:?}", t.id);
         }
+    }
+
+    /// Every registered tool must have a glyph: `draw_tool_vector_icon` falls
+    /// through to a blank on an unknown id, which would render as an empty
+    /// button with no error anywhere.
+    #[test]
+    fn every_tool_has_a_distinct_vector_icon() {
+        // The arms the painter takes per id. An id missing from the match would
+        // draw nothing, so the count is the contract: one arm per registered
+        // tool, and the `_` fallback is the only unnamed case.
+        let named = [
+            "pen",
+            "eraser",
+            "fill",
+            "eyedropper",
+            "line",
+            "rect",
+            "rrect",
+            "ellipse",
+            "polygon",
+            "arc",
+            "chord",
+            "radial_gradient",
+            "text",
+            "hand",
+        ];
+        for id in named {
+            assert!(
+                icons::has_icon(id),
+                "no vector icon for tool {id} — it would render as a blank button"
+            );
+        }
+        assert!(
+            Toolbar::new().tools.iter().all(|t| icons::has_icon(t.id)),
+            "a registered tool has no vector icon"
+        );
     }
 }

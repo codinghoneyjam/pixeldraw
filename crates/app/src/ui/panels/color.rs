@@ -1,8 +1,8 @@
-﻿//! The colour section: fg/bg slots, the HSV wheel, channel and hex fields.
+//! The colour section: fg/bg slots, the HSV wheel, channel and hex fields.
 //!
 //! Facade over `color/**` so the panel stays about panels:
-//!   color/hsv  ??the JS-pinned HSV maths
-//!   color/hex  ??hex parsing/formatting
+//!   color/hsv  — the JS-pinned HSV maths
+//!   color/hex  — hex parsing/formatting
 mod hex;
 mod hsv;
 
@@ -128,8 +128,8 @@ fn show_hsv_wheel(ui: &mut Ui, current_hex: &str, current_color: Color32) -> Opt
     // 3. Hue Marker
     let painter = ui.painter();
     let hue_rad = (h - 90.0).to_radians();
-    let marker_pos =
-        center + egui::Vec2::new(hue_rad.cos(), hue_rad.sin()) * ((r_in + r_out) * 0.5);
+    // The marker sits on the ring's mid radius, which is exactly RING_MID.
+    let marker_pos = center + egui::Vec2::new(hue_rad.cos(), hue_rad.sin()) * RING_MID;
     painter.circle_stroke(marker_pos, 4.0, egui::Stroke::new(2.0, Color32::WHITE));
     painter.circle_stroke(marker_pos, 5.0, egui::Stroke::new(1.0, Color32::BLACK));
 
@@ -185,9 +185,9 @@ pub(crate) fn apply_color(
 
 /// JS `panel_color.js`: slots + wheel + RGBA/hex fields in one card.
 pub fn show_color(ui: &mut Ui, ui_state: &mut UiState, app: &mut AppState) {
-    // ?? Color section ??????????????????????????????????????????????????
+    // ── Colour section ──────────────────────────────────────────────
     section_card(ui, |ui| {
-        if !section_header(ui, &mut ui_state.panels, "color", "?됱긽") {
+        if !section_header(ui, &mut ui_state.panels, "color", "색상") {
             return;
         }
         let s = app.session.settings();
@@ -252,7 +252,11 @@ pub fn show_color(ui: &mut Ui, ui_state: &mut UiState, app: &mut AppState) {
                 }
 
                 ui.horizontal(|ui| {
-                    if ui.button("??).on_hover_text("?꾧꼍쨌諛곌꼍 援먯껜 (X)").clicked() {
+                    if ui
+                        .button("교체")
+                        .on_hover_text("전경·배경 교체 (X)")
+                        .clicked()
+                    {
                         let s = app.session.settings();
                         let a = s.primary_color.clone();
                         let b = s.secondary_color.clone();
@@ -265,7 +269,7 @@ pub fn show_color(ui: &mut Ui, ui_state: &mut UiState, app: &mut AppState) {
                             pixel_engine::model::SettingInput::Str(&a),
                         );
                     }
-                    if ui.button("??).on_hover_text("湲곕낯??珥덇린??(D)").clicked() {
+                    if ui.button("초기화").on_hover_text("기본샇 (D)").clicked() {
                         let _ = app.session.set_setting(
                             "primaryColor",
                             pixel_engine::model::SettingInput::Str("#000000"),
@@ -348,7 +352,6 @@ pub fn show_color(ui: &mut Ui, ui_state: &mut UiState, app: &mut AppState) {
     });
 }
 
-#[cfg(test)]
 #[cfg(test)]
 mod tests {
     use super::*;

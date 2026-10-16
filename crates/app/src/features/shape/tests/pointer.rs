@@ -2,12 +2,12 @@
 
 use pixel_engine::raster::shape_raster::ShapeKind;
 
+use crate::features::shape::ShapeTool;
 use crate::input::{RawPointer, build_tool_event};
 use crate::tools::api::{Tool, ToolCx};
-use crate::tools::shape::ShapeTool;
 
-use super::super::super::tests::{down, pixel, session64, view1};
 use super::{drag, key, rect_tool};
+use crate::tools::tests::{down, pixel, session64, view1};
 
 /// Rect drag becomes pending, commits one history entry, undoes cleanly.
 #[test]
@@ -18,7 +18,7 @@ fn rect_drag_commit_and_undo() {
     assert!(tool.has_pending(), "pointer-up leaves a pending shape");
     assert_eq!(
         tool.pending_value(),
-        Some(crate::tools::shape::PendingValue::Box {
+        Some(crate::features::shape::PendingValue::Box {
             x: 10,
             y: 10,
             w: 11,

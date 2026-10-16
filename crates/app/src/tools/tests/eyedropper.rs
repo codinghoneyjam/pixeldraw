@@ -1,9 +1,9 @@
 //! Eyedropper acceptance: the two colour slots by button.
 
+use crate::features::eyedropper::EyedropperTool;
+use crate::features::pen::PenTool;
 use crate::input::{Button, RawPointer, build_tool_event};
 use crate::tools::api::{Tool, ToolCx};
-use crate::tools::eyedropper::EyedropperTool;
-use crate::tools::pen::PenTool;
 
 use super::{down, session64, view1};
 

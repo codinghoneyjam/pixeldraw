@@ -104,6 +104,10 @@ impl Default for TextTool {
 }
 
 impl Tool for TextTool {
+    fn text_tool_mut(&mut self) -> Option<&mut crate::features::text::TextTool> {
+        Some(self)
+    }
+
     fn id(&self) -> &'static str {
         "text"
     }
@@ -434,3 +438,5 @@ mod tests {
         );
     }
 }
+
+pub mod optionbar;

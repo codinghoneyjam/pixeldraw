@@ -1,185 +1,61 @@
-﻿//! Optionbar — port of `src/ui/optionbar/panel_options.js`.
+//! Optionbar — routes the active tool to its own feature block.
+//!
+//! Each block lives beside its feature (`features/<tool>/optionbar.rs`), the
+//! way the JS tree put every control inside the feature module that owns it. This
+//! file only decides which block is visible, so a feature can be read — and
+//! changed — in one place.
 
-use super::{ToolOptions, UiState};
+use crate::features::{arc, gradient, pen, shape, text};
 use crate::session_glue::AppState;
-use egui::{Color32, ComboBox, DragValue, RichText, Slider, Ui, Vec2};
+use crate::ui::{ToolOptions, UiState};
+use egui::{Color32, RichText, Ui, Vec2};
 
-pub struct Optionbar;
+pub fn show(ui: &mut Ui, ui_state: &mut UiState, app: &mut AppState) {
+    let tool = ui_state.toolbar.active_tool.clone();
 
-impl Optionbar {
-    pub fn new() -> Self {
-        Self
-    }
+    egui::Frame::new()
+        .inner_margin(Vec2::new(12.0, 6.0))
+        .show(ui, |ui| {
+            ui.horizontal_wrapped(|ui| {
+                ui.spacing_mut().item_spacing = Vec2::new(12.0, 8.0);
+                // Split the borrow: the option block needs `juice_clicks` and
+                // the pen size at once, and both are separate `UiState` fields.
+                let UiState {
+                    optionbar,
+                    juice_clicks,
+                    ..
+                } = ui_state;
 
-    pub fn show(&mut self, ui: &mut Ui, state: &mut UiState, app: &mut AppState) {
-        let active_tool = &state.toolbar.active_tool;
-        let options = state
-            .optionbar
-            .current_tool_options
-            .get_or_insert_with(|| self.default_options(active_tool));
-
-        egui::Frame::new()
-            .inner_margin(Vec2::new(12.0, 6.0))
-            .show(ui, |ui| {
-                ui.horizontal_wrapped(|ui| {
-                    ui.spacing_mut().item_spacing = Vec2::new(12.0, 8.0);
-
-                    // Tool-specific options (JS parity: the option bar never owned
-                    // opacity/blend — opacity lives in the layer panel).
-                    match active_tool.as_str() {
-                        "pen" | "eraser" | "line" => self.pen_options(ui, options),
-                        "rect" | "ellipse" => self.shape_options(ui, options),
-                        "fill" => self.fill_options(ui, options, app),
-                        "text" => self.text_options(ui, options),
-                        "gradient" => self.gradient_options(ui, options),
-                        "shape" => self.shape_tool_options(ui, options),
-                        _ => self.generic_options(ui, options),
+                match tool.as_str() {
+                    "pen" | "eraser" => {
+                        let options =
+                            optionbar
+                                .current_tool_options
+                                .get_or_insert_with(|| ToolOptions {
+                                    size: Some(app.session.settings().pen_size),
+                                });
+                        pen::optionbar::pen_options(ui, juice_clicks, options, app);
                     }
-                });
+                    "line" | "rect" | "rrect" | "ellipse" | "polygon" => {
+                        shape::optionbar::shape_options(ui, juice_clicks, app, &tool);
+                    }
+                    "arc" | "chord" => {
+                        arc::optionbar::arc_options(ui, juice_clicks, app, &tool);
+                    }
+                    "radial_gradient" => {
+                        gradient::optionbar::gradient_options(ui, juice_clicks, app);
+                    }
+                    "text" => text::optionbar::text_options(ui, app),
+                    // fill / eyedropper / hand own no controls — the JS bar is
+                    // empty for them too, so do not draw a placeholder.
+                    _ => {}
+                }
             });
-    }
-
-    fn default_options(&self, tool: &str) -> ToolOptions {
-        ToolOptions {
-            size: Some(match tool {
-                "pen" | "eraser" | "line" => 4,
-                "fill" => 1,
-                _ => 2,
-            }),
-            opacity: Some(1.0),
-            hardness: if tool == "pen" { Some(1.0) } else { None },
-            fill_color: None,
-            stroke_color: None,
-            blend_mode: Some("normal".to_string()),
-        }
-    }
-
-    fn pen_options(&self, ui: &mut Ui, options: &mut ToolOptions) {
-        ui.label("크기:");
-        if let Some(size) = &mut options.size {
-            ui.add(DragValue::new(size).range(1..=64).speed(1.0).suffix(" px"));
-        }
-        ui.label("경도:");
-        if let Some(hardness) = &mut options.hardness {
-            let mut val = *hardness;
-            if ui.add(Slider::new(&mut val, 0.0..=1.0).text("")).changed() {
-                options.hardness = Some(val);
-            }
-        }
-    }
-
-    fn shape_options(&self, ui: &mut Ui, options: &mut ToolOptions) {
-        ui.label("두께:");
-        if let Some(size) = &mut options.size {
-            ui.add(DragValue::new(size).range(1..=50).speed(1.0).suffix(" px"));
-        }
-        ui.label("모서리 반경:");
-        if let Some(radius) = &mut options.hardness {
-            ui.add(
-                DragValue::new(radius)
-                    .range(0..=100)
-                    .speed(1.0)
-                    .suffix(" px"),
-            );
-        }
-    }
-
-    fn fill_options(&self, ui: &mut Ui, options: &mut ToolOptions, _app: &mut AppState) {
-        ui.label("모드:");
-        ComboBox::from_id_salt("fill_mode")
-            .selected_text("연속")
-            .show_ui(ui, |ui| {
-                ui.selectable_value(&mut options.hardness, Some(0.0), "연속");
-                ui.selectable_value(&mut options.hardness, Some(1.0), "비연속");
-            });
-
-        ui.label("허용 오차:");
-        if let Some(tol) = &mut options.opacity {
-            let mut val = *tol * 255.0;
-            if ui
-                .add(Slider::new(&mut val, 0.0..=255.0).text(""))
-                .changed()
-            {
-                options.opacity = Some(val / 255.0);
-            }
-        }
-    }
-
-    fn text_options(&self, ui: &mut Ui, options: &mut ToolOptions) {
-        ui.label("폰트 크기:");
-        if let Some(size) = &mut options.size {
-            ui.add(DragValue::new(size).range(6..=200).speed(1.0).suffix(" pt"));
-        }
-        ui.label("색상:");
-        if let Some(fill) = &mut options.fill_color {
-            let mut color = [
-                fill[0] as f32 / 255.0,
-                fill[1] as f32 / 255.0,
-                fill[2] as f32 / 255.0,
-                fill[3] as f32 / 255.0,
-            ];
-            if ui.color_edit_button_rgba_unmultiplied(&mut color).changed() {
-                *fill = [
-                    (color[0] * 255.0) as u8,
-                    (color[1] * 255.0) as u8,
-                    (color[2] * 255.0) as u8,
-                    (color[3] * 255.0) as u8,
-                ];
-            }
-        }
-    }
-
-    fn gradient_options(&self, ui: &mut Ui, options: &mut ToolOptions) {
-        ui.label("타입:");
-        ComboBox::from_id_salt("gradient_type")
-            .selected_text("선형")
-            .show_ui(ui, |ui| {
-                ui.selectable_value(&mut options.size, Some(0), "선형");
-                ui.selectable_value(&mut options.size, Some(1), "방사형");
-            });
-    }
-
-    fn shape_tool_options(&self, ui: &mut Ui, options: &mut ToolOptions) {
-        ui.label("도형:");
-        ComboBox::from_id_salt("shape_kind")
-            .selected_text("사각형")
-            .show_ui(ui, |ui| {
-                ui.selectable_value(&mut options.size, Some(0), "사각형");
-                ui.selectable_value(&mut options.size, Some(1), "타원");
-                ui.selectable_value(&mut options.size, Some(2), "둥근 사각형");
-                ui.selectable_value(&mut options.size, Some(3), "다각형");
-                ui.selectable_value(&mut options.size, Some(4), "선");
-            });
-    }
-
-    fn generic_options(&self, ui: &mut Ui, _options: &mut ToolOptions) {
-        ui.label(RichText::new("이 도구에 대한 옵션이 없습니다").color(Color32::GRAY));
-    }
+        });
 }
 
-impl Default for Optionbar {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-// Integration function.
-//
-pub fn show(ui: &mut egui::Ui, ui_state: &mut UiState, app_state: &mut AppState) {
-    let mut optionbar = Optionbar::new();
-    optionbar.show(ui, ui_state, app_state);
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn optionbar_default_options() {
-        let bar = Optionbar::new();
-        let opts = bar.default_options("pen");
-        assert_eq!(opts.size, Some(4));
-        assert_eq!(opts.opacity, Some(1.0));
-        assert_eq!(opts.hardness, Some(1.0));
-    }
+/// Kept for the panels that still fall back to a hint row.
+#[allow(dead_code)]
+pub(crate) fn no_options_note(ui: &mut Ui) {
+    ui.label(RichText::new("이 도구에 대한 옵션이 없습니다").color(Color32::GRAY));
 }
