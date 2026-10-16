@@ -51,6 +51,12 @@ The real `render_frame` path borrows `&Document`; it does not clone the document
 4. PNG filter and deflate tuning without changing decoded pixels.
 5. Optional target-cpu-native or PGO build profiles.
 
+## Experiment log
+
+- Attempt `#[inline(always)]`: no meaningful gain, rolled back.
+- Attempt PNG deflate `fast`: 32.947ms -> 31.308ms; minor tradeoff, rolled back to default.
+- Attempt chunk-granular rayon for composite/flatten: candidate was slower, reverted.
+
 ## Applied build changes
 
 None yet. The default `Cargo.toml` remains:
