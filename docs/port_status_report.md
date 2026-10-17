@@ -31,20 +31,20 @@
 | 0 기반 | 오라클 동결·워크스페이스 | ✅ | `tools/oracle-manifest.json` (단 V1 드리프트) |
 | 1 엔진 | 1.1~1.13 | ✅ | recipe 39/39 · golden 201/201 · png 5/5 |
 | 2 네이티브 캔버스 | 2.1~2.7 | ✅ 구현 완료 (공식 수동 스모크만 미실행) | `crates/app/{canvas_view,canvas_texture,session_glue,input*,overlay_raster}.rs` |
-| 3 UI 전면 이식 | 3.1~3.10 | ✅ 구현 완료 (3.9·3.10 포함; 수동 스모크만 UI-6) | `ui/{settings_store,autosave}.rs` + 셸 배선 · 웍스 585 |
+| 3 UI 전면 이식 | 3.1~3.10 | ✅ 구현 완료 (3.9·3.10 포함; 수동 스모크만 UI-6) | `ui/{settings_store,autosave}.rs` + 셸 배선 · 웍스 599 |
 | 4 자산 파이프라인 | A 선택 | ✅ | viewer 삭제, 개발 자산 유지 |
 | 5 성능 | 5.1~5.7 | ⚠️ 부분 | `perf_js_vs_rust.md` §11+§13+§14: 달성 6 · 미달 4 · 미측정 0. 5.6 완료(§14) · 5.7 미착수 |
 | 7 UI 레이아웃 정리 | 7.1~7.5 | 🔄 7.5 진행 중 | `docs/roadmap/phase7.yaml` (7.1~7.4 completed, 7.5 in_progress) |
 | 6 절삭·패키징 | 6.1~6.7 | ⬜ 미착수 | `src/`·`run.py`·`src-tauri/` 잔존(의도된 상태) |
 
 규모(테스트 포함, 오늘 측정): `engine/src` 19,948줄 + `engine/tests` 1,888 ·
-`app/src` 14,384 · `platform/src` 816 — 합계 약 **37k줄**.
+`app/src` 14,627 · `platform/src` 816 — 합계 약 **37k줄**.
 
 ### 게이트 실측 (2026-10-17)
 
 | 게이트 | 결과 | 비고 |
 |---|---|---|
-| `cargo test --workspace` | **595 pass / 0 fail** (engine lib 342+1 ignored, comp_cache 7, e2e 5, fixtures 5, model_basic 14, model_history 11, recipe 1, text_mask 6, platform 24, app 180) | 그린 |
+| `cargo test --workspace` | **599 pass / 0 fail** (engine lib 342+1 ignored, comp_cache 7, e2e 5, fixtures 5, model_basic 14, model_history 11, recipe 1, text_mask 6, platform 24, app 184) | 그린 |
 | `cargo clippy --workspace --all-targets -- -D warnings` | exit 0 | 그린 |
 | `cargo fmt --all --check` | exit 0 | 그린 |
 | `npm test` | **410 / 410** | 그린 (사용 셸 주의: 부록 A) |
@@ -69,6 +69,7 @@
 | UI-5 | 캔버스 텍스처 매 프레임 전체 업로드 | ✅ 구현 완료 (2026-10-17) | ~~P1~~ |
 | UI-6 | Phase 7.5 / Phase 2~3 수동 스모크 | 미실행 | **P0(사람)** |
 | UI-7 | 잔손질(파일 UX·dead code 등) | 복수 | P2 |
+| UI-8 | 사용자 피드백 6건(프리셋 4×4·미리보기·입력 격리·휠 캐시·좌표·히스토리 버튼) | ✅ 구현 완료 (2026-10-17) | ~~P1~~ |
 
 ### UI-1. 설정 영속화 미구현 (P0)
 
@@ -148,6 +149,35 @@
 - `ui/shared/strings.rs` 중앙화 잔여(일부 라벨이 피처 모듈에 남아 있는지 미확인) —
   기계적 정리 후보.
 - 메뉴 hover 220ms 지연 닫힘 등 JS 세부 동작은 egui 기본 동작과 다르면 조정(선택).
+
+### UI-8. 사용자 피드백 6건 — 브러시 패널·입력 격리·상태바 좌표 (✅ 2026-10-17)
+
+- **① 프리셋 셀이 작았다**(재작성, `ui/panels/brush.rs`): `preset_cell(swatch_half)`가 팔레트
+  스와치의 절반(≈16px)으로 캡했다. JS `panel_brush.js`의 `presetColumns/Rows` 이식 —
+  16개는 4×4, 셀 폭 `(avail−3×3)/cols`의 `1fr`, `min-height:30`(J5). 포트 자체였던 7/5/4
+  밴드는 삭제(원본에 없는 레이아웃).
+- **②③ 행 구조**(같은 파일): 원본 `index.html` 그대로 `굵기:`+숫자(`#dt-pen-size`) 행,
+  `.dt-brush-row`(슬라이더 flex + 56px 박스의 1:1 미리보기 64 그리드) 행. 숫자 칸은 굵기
+  **우측**, 미리보기 칸은 슬라이더 **우측** — 두 해석 모두 원본 배치로 충족.
+- **④a 입력 격리**(`input_adapter.rs`·`canvas_view.rs`): `poll_frame_input`이 전역 포인터를
+  캔버스 로컬로 변환해 좌패널 드래그/휠이 스트로크·줌으로 새고 좌표 move가 매 프레임 캔버스
+  재렌더(느림)를 유발했다. down/wheel은 캔버스 rect(+다이얼로그 없음)만, move/up은 제스처
+  캡처(`is_panning||is_drawing`) 중이면 rect 밖도 통과(JS `setPointerCapture`), 이탈에
+  `pointerleave`. 2026-10-14 로그의 rect 검사가 리팩터에서 유실돼 있었다 — 복원+확장.
+- **④b 컬러휠 텍스처 캐시**(`color.rs`): 매 프레임 132² 픽셀 재생성+업로드 → 링은 1회
+  캐시(`Arc<Vec<Color32>>`+`TextureHandle`), SV 사각형만 hue 1° 양자화 키 변경 시 재빌드.
+- **④c 레일 밀도·폭**(`toolbar.rs`·`icons.rs`·`ui/mod.rs`): 버튼 40px·2px 간격(피치 42) →
+  JS `#dt-toolbar button` 36px·`gap:4`(피치 40)·글리프 24px(pad 6). 레일 폭은 egui 좌패널
+  기본 최소 96px에 눌려 있었다 → `size_range(44..=44)`로 JS `#dt-app` 그리드의 44px 열에
+  고정(실측 96→44, 워크스페이스 +52px).
+- **⑤ 상태바 X/Y**(`canvas_view.rs`·`shell.rs`): `cursor_pos` 생산자가 유실돼 `X: — Y: —`
+  고정이었다 — `show_canvas`가 `pixel_at`으로 공급(호스트 내부만, 문서 밖 좌표는 JS처럼
+  클램프 없음, 다이얼로그 뒤/이탈 시 `None`).
+- **⑥ 히스토리 버튼**(`menubar.rs`): JS J8(26px·`padding:0 10`·12px 라벨). ↶/↷ 접두는 폰트
+  커버리지 리스크로 생략(문자 라벨이 규범).
+- **검증**: release 재빌드 후 캡처 — 4×4 프리셋·56px 미리보기·`X: 83 Y: 279`·44px 레일
+  (36px 버튼)·좌패널 위 휠 9노치에도 줌 100% 유지. 좌패널 폭(≈369pt)은 전후 캡처 A/B로
+  불변 확인(`outputs/native_20261017_ui6.png`).
 
 ---
 

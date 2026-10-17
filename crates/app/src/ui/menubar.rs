@@ -1,11 +1,11 @@
-﻿//! Menubar — port of `src/ui/menubar/**`.
+//! Menubar — port of `src/ui/menubar/**`.
 
 use super::{
     UiState,
     actions::{Action, ActionMap},
 };
 use crate::session_glue::AppState;
-use egui::Ui;
+use egui::{RichText, Ui};
 
 #[derive(Default)]
 pub struct MenubarState {
@@ -57,11 +57,18 @@ impl Menubar {
             }
             ui.separator();
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                // `style_juicy.css` J8: the two history actions are first-class
+                // buttons — 26px minimum height, 10px side padding, 12px
+                // labels — instead of the stock small widgets the top bar had.
+                ui.spacing_mut().button_padding = egui::vec2(10.0, 4.0);
                 let (can_undo, can_redo) = app.history_state();
                 if ui
                     .add_enabled(
                         can_redo && !busy,
-                        egui::Button::new(self.actions.label(&Action::Redo)),
+                        egui::Button::new(
+                            RichText::new(self.actions.label(&Action::Redo)).size(12.0),
+                        )
+                        .min_size(egui::vec2(0.0, 26.0)),
                     )
                     .on_hover_text("[Ctrl+Y]  다시 적용합니다.")
                     .clicked()
@@ -71,7 +78,10 @@ impl Menubar {
                 if ui
                     .add_enabled(
                         can_undo && !busy,
-                        egui::Button::new(self.actions.label(&Action::Undo)),
+                        egui::Button::new(
+                            RichText::new(self.actions.label(&Action::Undo)).size(12.0),
+                        )
+                        .min_size(egui::vec2(0.0, 26.0)),
                     )
                     .on_hover_text("[Ctrl+Z]  되돌립니다.")
                     .clicked()

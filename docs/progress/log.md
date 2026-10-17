@@ -4,6 +4,22 @@
 
 ---
 
+## 2026-10-17 · UI-6 · 사용자 피드백 6건 — 프리셋 4×4·미리보기 우측·입력 격리·휠 캐시·좌표·히스토리 버튼
+
+**커밋 대상**: `crates/app/src/{input_adapter,canvas_view,shell}.rs`·`crates/app/src/ui/{mod,toolbar,menubar}.rs`·`crates/app/src/ui/panels/{brush,color}.rs`·`docs/native_ui_layout_audit.md`·`outputs/native_20261017_ui6.png`·`docs/progress/log.md`
+**테스트**: workspace 그린 **599**(+4 — brush 3·color 2·input_adapter 1, 구 밴드/셀 테스트 2 폐기) · clippy `-D warnings`/fmt 그린 · oracle `--check` 그린(JS 무접촉) · release 재빌드 후 캡처 육안 확인
+
+- **① 브러시 프리셋 4×4**(`brush.rs` 재작성) — 셀이 작았던 원인은 `preset_cell(swatch_half)`: 팔레트 스와치의 절반으로 캡돼 ≈16px였다. JS `presetColumns/Rows`(16→4열)를 이식해 `1fr` 셀(폭 `(avail-3×3)/4`)·`min-height:30`(J5)으로. 포트 자체였던 7/5/4 밴드는 삭제. 신규 테스트 3: divisor 규칙·`presetRows`·"16 = 4×4".
+- **②③ 행 분리 + 미리보기 우측**(`brush.rs`) — 원본 구조 그대로: `굵기:` + 숫자(`#dt-pen-size`) 행, `.dt-brush-row`(슬라이더 flex + 1:1 미리보기) 행. 미리보기는 JS `paintPreview` 그대로 흰 배경 + primary 색 + 64 그리드 1:1(56px 박스). 숫자 칸은 굵기 우측, 미리보기 칸은 슬라이더 우측 — 두 해석 모두 원본 배치로 충족.
+- **④a 입력 격리 복원 + 제스처 캡처**(`input_adapter.rs`·`canvas_view.rs`) — `poll_frame_input(ctx, rect, captured, busy)`: down/wheel은 캔버스 rect(＋다이얼로그 없음)에서만, move/up은 rect 밖이어도 캡처(`is_panning||is_drawing`) 중이면 통과, 이탈 프레임에 `pointerleave` 1회. 2026-10-14 로그의 rect 검사가 리팩터에서 유실돼 있었고, 좌패널 드래그/휠이 캔버스 스트로크·줌으로 새며 매 프레임 재렌더(느림)를 유발했다. 캡처로 확인: 좌패널 위 휠 → 패널만 스크롤, 줌 100% 유지.
+- **④b 컬러휠 텍스처 캐시**(`color.rs`) — 매 프레임 132² 픽셀 재생성+업로드 → 링은 `ctx.data`에 1회 캐시(`Arc<Vec<Color32>>`)하고 `TextureHandle`을 보관, SV 사각형만 hue 1° 양자화 키가 바뀔 때 재빌드. 링이 hue 무관임을 테스트로 고정.
+- **④c 레일 밀도·폭**(`toolbar.rs`·`icons.rs`·`mod.rs`) — 버튼 40px·간격 2px(피치 42)·글리프 패드 7px → JS `#dt-toolbar button` 36px·`gap:4`(피치 40)·글리프 24px(pad 6). 레일 폭은 egui 좌패널 기본 최소(96px)에 눌린 채 남아 있던 것을 `size_range(44..=44)`로 JS `#dt-app` 그리드의 44px 열에 고정 — 실측 96 → 44(워크스페이스 +52px).
+- **⑤ 상태바 X/Y**(`canvas_view.rs`·`shell.rs`) — `cursor_pos`를 아무도 채우지 않아 `X: — Y: —` 고정이었다(같은 로그의 배선도 유실). `show_canvas`가 `pixel_at`으로 매 프레임 공급 — 호스트 내부만, 다이얼로그 뒤/이탈 시 `None`. JS와 같이 문서 밖 좌표는 클램프하지 않는다.
+- **⑥ 히스토리 버튼**(`menubar.rs`) — JS J8: `min-height:26`·`padding:0 10`·12px 라벨. 화살표 접두(↶/↷)는 폰트 커버리지 리스크로 생략.
+- **검증 캡처**(`outputs/native_20261017_ui6.png`) — 4×4 프리셋(활성 `1` 강조)·56px 1:1 미리보기·`X: 83 Y: 279`·44px 레일·26px 히스토리 버튼 동시 확인.
+
+---
+
 ## 2026-10-17 · PERF-1·UI-5 · 프레임 경로 병렬화 + 텍스처 부분 업로드
 
 **커밋 대상**: `crates/engine/src/comp_cache/{paint,cache,tests}.rs`·`crates/engine/src/display/{frame,tests}.rs`·`crates/engine/examples/framebench.rs`·`crates/app/src/{canvas_view,canvas_texture,overlay_raster}.rs`·`docs/perf_js_vs_rust.md`(§14 신설)·`docs/port_status_report.md`·`docs/progress/log.md`

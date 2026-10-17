@@ -46,8 +46,12 @@ canvas occupy the workspace row between the option and status bars. See
 
 - The Rust shell starts at 1280 × 820 logical points and allows a minimum of
   900 × 560 (`crates/app/src/shell.rs`).
-- The tool rail caps its content width at 52 points, but the left and right
-  panels do not set explicit default or minimum widths in `render_ui()`.
+- The tool rail is pinned to 44 points — the JS `#dt-app` toolbar column (a
+  36-point button plus 4-point sides, `#dt-toolbar` gap 4px) — instead of
+  egui's 96-point left-panel default minimum.
+- The left and right panels set explicit default and minimum widths in
+  `render_ui()`; the left panel is content-sized (a wide HEX field pushes it
+  past its 256-point default).
 - Both sidebars are vertically scrollable, and the left sidebar stacks color,
   palette, recent colors, and brush controls. This is a lot of content for the
   560-point minimum window height.
@@ -78,8 +82,9 @@ other panels.
 Use a deliberate width budget rather than relying on widget content to size
 the sidebars. The current Rust implementation sets:
 
-- Tool rail content cap: 52 points; its frame and separators add to the
-  allocated outer width.
+- Tool rail: pinned to 44 points outer (a 36-point button plus 4-point sides) —
+  the JS `#dt-app` toolbar column width, pinned with `size_range(44..=44)` so
+  egui's default 96-point minimum never applies.
 - Left color/tools panel: 256-point default, 180-point minimum.
 - Right layers panel: 282-point default, 200-point minimum.
 - Either side panel can grow up to 440 points, subject to the opposite panel's

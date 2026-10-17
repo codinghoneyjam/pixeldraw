@@ -16,6 +16,8 @@ pub struct FrameInput {
     pub wheel: Option<WheelFrame>,
     pub keys: Vec<(KeyEvent, bool)>,
     pub text_focused: bool,
+    /// The pointer is off the canvas with no captured gesture: `pointerleave`.
+    pub leaving: bool,
 }
 
 pub struct WheelFrame {
@@ -53,19 +55,67 @@ fn raw(pos: (f64, f64), button: Button, down_mask: u8, ctx: &egui::Context) -> R
     }
 }
 
-/// Translate one egui frame. `origin` is the canvas widget's top-left in
-/// screen CSS px; positions come out relative to it (what `build_tool_event`
-/// feeds the view math).
-pub fn poll_frame_input(ctx: &egui::Context, origin: egui::Pos2) -> FrameInput {
+/// Which host event kinds need the pointer on the canvas itself.
+///
+/// `pointer_bindings.js` registered the listeners on the canvas host element,
+/// so a press or a wheel anywhere else belongs to that other widget; only
+/// `up`/`move` also flow while a gesture holds the pointer
+/// (`setPointerCapture`), which is how a released-anywhere stroke still ends.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum HostEvent {
+    Down,
+    Up,
+    Move,
+    Wheel,
+}
+
+fn host_wants(kind: HostEvent, inside: bool, captured: bool) -> bool {
+    match kind {
+        HostEvent::Down | HostEvent::Wheel => inside,
+        HostEvent::Up | HostEvent::Move => inside || captured,
+    }
+}
+
+/// Translate one egui frame. `rect` is the canvas widget in screen CSS px — the
+/// port's stand-in for the canvas host element the JS bound to — and positions
+/// come out relative to it (what `build_tool_event` feeds the view math).
+/// `captured` is a pan or stroke already in flight: the JS
+/// `setPointerCapture` window, during which moves and the release keep flowing
+/// even when the pointer leaves the canvas. `busy` (a dialog is open) covers
+/// the host the way the JS dialog overlay did: nothing new starts behind it.
+pub fn poll_frame_input(
+    ctx: &egui::Context,
+    rect: egui::Rect,
+    captured: bool,
+    busy: bool,
+) -> FrameInput {
     let mut down = vec![];
     let mut moves = vec![];
     let mut up = vec![];
     let mut wheel = None;
     let mut keys = vec![];
+    let mut leaving = false;
     let text_focused = ctx.egui_wants_keyboard_input();
 
     ctx.input(|i| {
-        let to_local = |p: egui::Pos2| (p.x as f64 - origin.x as f64, p.y as f64 - origin.y as f64);
+        let to_local = |p: egui::Pos2| {
+            (
+                p.x as f64 - rect.min.x as f64,
+                p.y as f64 - rect.min.y as f64,
+            )
+        };
+        // A dialog is a floating window over the host, so "on the host" means
+        // inside the rect and not behind a dialog.
+        let inside = |p: egui::Pos2| rect.contains(p) && !busy;
+        let scoped = |kind: HostEvent| {
+            i.pointer
+                .hover_pos()
+                .filter(|p| host_wants(kind, inside(*p), captured))
+        };
+        leaving = i
+            .pointer
+            .hover_pos()
+            .is_none_or(|p| !inside(p) && !captured);
         for &b in &[
             egui::PointerButton::Primary,
             egui::PointerButton::Secondary,
@@ -75,23 +125,23 @@ pub fn poll_frame_input(ctx: &egui::Context, origin: egui::Pos2) -> FrameInput {
                 continue;
             };
             if i.pointer.button_pressed(b)
-                && let Some(pos) = i.pointer.hover_pos().map(to_local)
+                && let Some(pos) = scoped(HostEvent::Down).map(to_local)
             {
                 down.push((button, pos));
             }
             if i.pointer.button_released(b)
-                && let Some(pos) = i.pointer.hover_pos().map(to_local)
+                && let Some(pos) = scoped(HostEvent::Up).map(to_local)
             {
                 up.push((button, pos));
             }
         }
-        if let Some(pos) = i.pointer.hover_pos().map(to_local) {
+        if let Some(pos) = scoped(HostEvent::Move).map(to_local) {
             moves.push(pos);
         }
         // egui scroll-up is +y; the JS `deltaY` it replaces runs the other way.
         let scroll = i.smooth_scroll_delta();
         if scroll.y != 0.0
-            && let Some(pos) = i.pointer.hover_pos().map(to_local)
+            && let Some(pos) = scoped(HostEvent::Wheel).map(to_local)
         {
             wheel = Some(((-scroll.y) as f64, i.modifiers.shift, pos));
         }
@@ -151,6 +201,7 @@ pub fn poll_frame_input(ctx: &egui::Context, origin: egui::Pos2) -> FrameInput {
         }),
         keys,
         text_focused,
+        leaving,
     }
 }
 
@@ -173,4 +224,27 @@ fn translate_key(key: egui::Key) -> Option<(&'static str, &'static str)> {
 pub fn wheel_mode() -> WheelMode {
     // egui reports points; the accumulator's Pixel mode is the match.
     WheelMode::Pixel
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The JS bound every listener to the canvas host element: a press or a
+    /// wheel outside it is another widget's event (the panel drags and zooms
+    /// the user reported), while a captured gesture still gets its moves and
+    /// its release so a stroke can end anywhere.
+    #[test]
+    fn host_events_are_scoped_to_the_canvas_element() {
+        assert!(host_wants(HostEvent::Down, true, false));
+        assert!(!host_wants(HostEvent::Down, false, false));
+        assert!(host_wants(HostEvent::Wheel, true, false));
+        assert!(!host_wants(HostEvent::Wheel, false, false));
+        // Capture (`setPointerCapture`) keeps a gesture alive past the edge.
+        assert!(host_wants(HostEvent::Move, false, true));
+        assert!(host_wants(HostEvent::Up, false, true));
+        // But it never invents a new press or a new wheel outside.
+        assert!(!host_wants(HostEvent::Down, false, true));
+        assert!(!host_wants(HostEvent::Wheel, false, true));
+    }
 }

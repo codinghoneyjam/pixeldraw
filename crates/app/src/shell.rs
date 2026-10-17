@@ -162,7 +162,13 @@ impl eframe::App for PixeldrawApp {
         egui::CentralPanel::default()
             .frame(egui::Frame::new())
             .show(ui, |ui| {
-                show_canvas(ui, &mut self.state, &mut self.texture, &mut self.fb);
+                show_canvas(
+                    ui,
+                    &mut self.state,
+                    &mut self.texture,
+                    &mut self.fb,
+                    &mut self.ui_state.statusbar.cursor_pos,
+                );
             });
 
         // Phase 3.9/3.10 frame persistence: recent-colors snapshot, the 250 ms

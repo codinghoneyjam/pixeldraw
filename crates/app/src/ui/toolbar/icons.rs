@@ -12,7 +12,9 @@ pub(crate) fn draw_tool_vector_icon(
 ) {
     let stroke = egui::Stroke::new(1.8, color);
     let c = rect.center();
-    let pad = 7.0;
+    // JS `#dt-toolbar button svg { width/height: 24px }` inside the 36px
+    // button: a 6px pad leaves the glyph its full JS box.
+    let pad = 6.0;
     let icon_rect = rect.shrink(pad);
 
     match id {

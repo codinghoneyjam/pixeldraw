@@ -146,7 +146,8 @@ impl Toolbar {
         state.toolbar.tool_hovered = None;
 
         ui.vertical(|ui| {
-            ui.spacing_mut().item_spacing.y = 2.0;
+            // JS `#dt-toolbar { gap: 4px }` between 36px buttons.
+            ui.spacing_mut().item_spacing.y = 4.0;
 
             for tool in &self.tools {
                 let is_active = state.toolbar.active_tool == tool.id;
@@ -190,19 +191,23 @@ fn tool_icon(
     clicks: &mut std::collections::HashMap<String, f64>,
 ) -> egui::Response {
     use crate::ui::juice::{click_pop, hover_fade, lerp_color};
-    const S: f32 = 40.0;
+    // JS `#dt-toolbar button { width/height: 36px }` inside the 44px rail
+    // column; the 4px `item_spacing.y` above is the JS `gap: 4px`, so the
+    // pitch is the JS 40px.
+    const S: f32 = 36.0;
     let key = format!("tool:{}", tool.id);
     let (rect, resp) = ui.allocate_exact_size(Vec2::splat(S), egui::Sense::click());
     let hid = ui.id().with("tb").with(tool.id);
     let fade = hover_fade(ui.ctx(), hid, resp.hovered());
     let pop = click_pop(clicks, ui.ctx(), &key, resp.clicked());
-    let rect = rect.shrink(2.0 + (1.0 - pop) * S * 0.08);
+    // The resting plate is the full 36px button (JS); only a press shrinks it.
+    let rect = rect.shrink((1.0 - pop) * 3.0);
 
     let painter = ui.painter();
     if is_active {
         painter.rect_filled(
             rect,
-            6.0,
+            5.0,
             lerp_color(
                 egui::Color32::from_rgb(0x00, 0x63, 0x9e),
                 egui::Color32::from_rgb(0x1e, 0x8f, 0xe0),
@@ -211,14 +216,14 @@ fn tool_icon(
         );
         painter.rect_stroke(
             rect,
-            6.0,
+            5.0,
             egui::Stroke::new(1.0, egui::Color32::from_rgb(0x4c, 0xc2, 0xff)),
             egui::StrokeKind::Inside,
         );
     } else if fade > 0.0 {
         painter.rect_filled(
             rect,
-            6.0,
+            5.0,
             egui::Color32::from_white_alpha((28.0 * fade) as u8),
         );
     }

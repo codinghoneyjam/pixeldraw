@@ -90,7 +90,8 @@ const LEFT_PANEL_DEFAULT_WIDTH: f32 = 256.0;
 const RIGHT_PANEL_MIN_WIDTH: f32 = 200.0;
 const RIGHT_PANEL_DEFAULT_WIDTH: f32 = 282.0;
 const SIDE_PANEL_MAX_WIDTH: f32 = 440.0;
-const TOOL_RAIL_AND_GUTTERS_BUDGET: f32 = 84.0;
+/// JS `#dt-toolbar` column width: 44px — a 36px button plus its 4px sides.
+const TOOL_RAIL_AND_GUTTERS_BUDGET: f32 = 44.0;
 const MIN_CANVAS_WIDTH: f32 = 220.0;
 
 fn side_panel_max_width(space_budget: f32, other_panel_width: f32, min_width: f32) -> f32 {
@@ -129,12 +130,15 @@ pub fn render_ui(
             statusbar::show(ui, ui_state, app_state);
         });
 
-    // The tool rail owns the leftmost strip of the remaining workspace.
+    // The tool rail owns the leftmost strip of the remaining workspace. The JS
+    // `#dt-app` grid fixes its column at 44px (a 36px button plus 4px sides),
+    // so pin the panel to that width — egui's left-panel default is 96px,
+    // which left the rail with a wide empty margin.
     egui::Panel::left("toolbar_panel")
-        .frame(pad(6.0, 6.0))
+        .frame(pad(4.0, 4.0))
         .resizable(false)
+        .size_range(44.0..=44.0)
         .show(ui, |ui| {
-            ui.set_max_width(52.0);
             toolbar::show(ui, ui_state, app_state);
         });
 
@@ -202,16 +206,18 @@ mod tests {
 
     #[test]
     fn side_panel_maxima_preserve_canvas_width_at_minimum_window_size() {
+        // Rail budget is the 44pt JS `#dt-toolbar` column (36pt button + 4pt
+        // sides): 900 − 44 − 220 leaves 636 for both panels.
         let space_budget =
             crate::shell::WINDOW_MIN_SIZE[0] - TOOL_RAIL_AND_GUTTERS_BUDGET - MIN_CANVAS_WIDTH;
-        assert_eq!(space_budget, 596.0);
+        assert_eq!(space_budget, 636.0);
         assert_eq!(
             side_panel_max_width(
                 space_budget,
                 RIGHT_PANEL_DEFAULT_WIDTH,
                 LEFT_PANEL_MIN_WIDTH
             ),
-            314.0
+            354.0
         );
         assert_eq!(
             side_panel_max_width(
@@ -219,7 +225,7 @@ mod tests {
                 LEFT_PANEL_DEFAULT_WIDTH,
                 RIGHT_PANEL_MIN_WIDTH
             ),
-            340.0
+            380.0
         );
         assert_eq!(
             side_panel_max_width(space_budget, 440.0, RIGHT_PANEL_MIN_WIDTH),
@@ -227,11 +233,11 @@ mod tests {
         );
         assert_eq!(
             side_panel_max_width(space_budget, 200.0, LEFT_PANEL_MIN_WIDTH),
-            396.0
+            436.0
         );
         assert_eq!(
             side_panel_max_width(space_budget, LEFT_PANEL_MIN_WIDTH, RIGHT_PANEL_MIN_WIDTH),
-            416.0
+            SIDE_PANEL_MAX_WIDTH
         );
     }
 }

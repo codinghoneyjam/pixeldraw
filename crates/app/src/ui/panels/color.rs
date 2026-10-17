@@ -31,6 +31,85 @@ pub struct WheelPick {
     pub committed: bool,
 }
 
+/// Cached wheel texture: the hue ring is static — the JS cached the same base
+/// in `paintPixels` — so only the SV square follows the hue. The old path
+/// rebuilt all 132×132 pixels and re-uploaded them on every frame, which is
+/// part of what made left-panel drags feel slow.
+#[derive(Clone, Default)]
+struct WheelTexture {
+    handle: Option<egui::TextureHandle>,
+    /// The hue ring pixels, built once and reused for every hue.
+    ring: Option<std::sync::Arc<Vec<Color32>>>,
+    /// Whole-degree hue the cached pixels were built for.
+    hue_deg: i32,
+}
+
+fn wheel_texture_id() -> egui::Id {
+    egui::Id::new("hsv_wheel_texture")
+}
+
+/// Quantised cache key: the SV square is 24 blocks wide, so a whole degree is
+/// already finer than it can show.
+fn wheel_hue_key(h: f32) -> i32 {
+    h.round() as i32
+}
+
+/// The static hue ring: transparent outside `r_in..r_out`, JS `hsvToHex`
+/// inside. No hue parameter — that is what makes caching it safe.
+fn build_ring(n: usize, r_out: f32, r_in: f32) -> Vec<Color32> {
+    let size = n as f32;
+    let mut pixels = vec![Color32::TRANSPARENT; n * n];
+    for py in 0..n {
+        for px in 0..n {
+            let dx = px as f32 - size / 2.0 + 0.5;
+            let dy = py as f32 - size / 2.0 + 0.5;
+            let r = (dx * dx + dy * dy).sqrt();
+            if r > r_out || r < r_in {
+                continue;
+            }
+            // JS `hsvToHex` for the ring pixels.
+            let hue_deg = angle_to_hue(dx, dy);
+            let (cr, cg, cb) = hsv_to_rgb(hue_deg, 1.0, 1.0);
+            pixels[py * n + px] = Color32::from_rgb(cr, cg, cb);
+        }
+    }
+    pixels
+}
+
+/// Paint the hue-dependent SV square (24×24 blocks) over a ring copy.
+/// `sv_left`/`sv_top` are relative to the wheel rect, like the pixels are.
+fn paint_sv_square(
+    pixels: &mut [Color32],
+    n: usize,
+    sv_left: f32,
+    sv_top: f32,
+    sv_size: f32,
+    h: f32,
+) {
+    let grid_n = 24usize;
+    for gy in 0..grid_n {
+        for gx in 0..grid_n {
+            let s_mid = (gx as f32 + 0.5) / grid_n as f32;
+            let v_mid = 1.0 - (gy as f32 + 0.5) / grid_n as f32;
+            let (r, g, b) = hsv_to_rgb(h, s_mid, v_mid);
+            let col = Color32::from_rgb(r, g, b);
+
+            let x0 = ((sv_left + (gx as f32 / grid_n as f32) * sv_size) as usize).min(n - 1);
+            let x1 = ((sv_left + ((gx + 1) as f32 / grid_n as f32) * sv_size) as usize).min(n - 1);
+            let y0 = ((sv_top + (gy as f32 / grid_n as f32) * sv_size) as usize).min(n - 1);
+            let y1 = ((sv_top + ((gy + 1) as f32 / grid_n as f32) * sv_size) as usize).min(n - 1);
+
+            for py in y0..=y1 {
+                for px in x0..=x1 {
+                    if py < n && px < n {
+                        pixels[py * n + px] = col;
+                    }
+                }
+            }
+        }
+    }
+}
+
 fn show_hsv_wheel(ui: &mut Ui, current_hex: &str, current_color: Color32) -> Option<WheelPick> {
     let size = WHEEL_PX;
     let (rect, response) =
@@ -65,59 +144,47 @@ fn show_hsv_wheel(ui: &mut Ui, current_hex: &str, current_color: Color32) -> Opt
         }
     }
 
-    // Build the entire wheel as a ColorImage (like JS paintPixels).
-    // 1. Hue ring pixels (cached base in JS; rebuilt here under one texture id).
+    // The wheel image is cached: the ring is static and the SV square only
+    // follows the hue, so an idle panel reuses both the pixels and the GPU
+    // texture. The cache is pulled out before `load_texture` so no data lock
+    // is held across a texture upload.
     let n = size as usize;
-    let mut pixels = vec![egui::Color32::TRANSPARENT; n * n];
-    for py in 0..n {
-        for px in 0..n {
-            let dx = px as f32 - size / 2.0 + 0.5;
-            let dy = py as f32 - size / 2.0 + 0.5;
-            let r = (dx * dx + dy * dy).sqrt();
-            if r > r_out || r < r_in {
-                continue;
-            }
-            // JS `hsvToHex` for the ring pixels.
-            let hue_deg = angle_to_hue(dx, dy);
-            let (cr, cg, cb) = hsv_to_rgb(hue_deg, 1.0, 1.0);
-            pixels[py * n + px] = Color32::from_rgb(cr, cg, cb);
+    let hue_key = wheel_hue_key(h);
+    let (cached, cached_ring, cached_key) = ui.ctx().data_mut(|d| {
+        let cache = d.get_temp_mut_or_default::<WheelTexture>(wheel_texture_id());
+        (cache.handle.clone(), cache.ring.clone(), cache.hue_deg)
+    });
+    let texture = match cached.filter(|_| cached_key == hue_key) {
+        Some(handle) => handle,
+        None => {
+            let ring =
+                cached_ring.unwrap_or_else(|| std::sync::Arc::new(build_ring(n, r_out, r_in)));
+            let mut pixels = (*ring).clone();
+            paint_sv_square(
+                &mut pixels,
+                n,
+                sv_rect.left() - rect.left(),
+                sv_rect.top() - rect.top(),
+                sv_size,
+                h,
+            );
+            let image = egui::ColorImage {
+                size: [n, n],
+                source_size: egui::vec2(n as f32, n as f32),
+                pixels,
+            };
+            let handle = ui
+                .ctx()
+                .load_texture("hsv_wheel", image, egui::TextureOptions::default());
+            ui.ctx().data_mut(|d| {
+                let cache = d.get_temp_mut_or_default::<WheelTexture>(wheel_texture_id());
+                cache.handle = Some(handle.clone());
+                cache.ring = Some(ring);
+                cache.hue_deg = hue_key;
+            });
+            handle
         }
-    }
-
-    // 2. SV square pixels
-    let grid_n = 24usize;
-    let sv_left = sv_rect.left() - rect.left();
-    let sv_top = sv_rect.top() - rect.top();
-    for gy in 0..grid_n {
-        for gx in 0..grid_n {
-            let s_mid = (gx as f32 + 0.5) / grid_n as f32;
-            let v_mid = 1.0 - (gy as f32 + 0.5) / grid_n as f32;
-            let (r, g, b) = hsv_to_rgb(h, s_mid, v_mid);
-            let col = Color32::from_rgb(r, g, b);
-
-            let x0 = ((sv_left + (gx as f32 / grid_n as f32) * sv_size) as usize).min(n - 1);
-            let x1 = ((sv_left + ((gx + 1) as f32 / grid_n as f32) * sv_size) as usize).min(n - 1);
-            let y0 = ((sv_top + (gy as f32 / grid_n as f32) * sv_size) as usize).min(n - 1);
-            let y1 = ((sv_top + ((gy + 1) as f32 / grid_n as f32) * sv_size) as usize).min(n - 1);
-
-            for py in y0..=y1 {
-                for px in x0..=x1 {
-                    if py < n && px < n {
-                        pixels[py * n + px] = col;
-                    }
-                }
-            }
-        }
-    }
-
-    let image = egui::ColorImage {
-        size: [n, n],
-        source_size: egui::vec2(n as f32, n as f32),
-        pixels,
     };
-    let texture = ui
-        .ctx()
-        .load_texture("hsv_wheel", image, egui::TextureOptions::default());
     ui.painter().image(
         texture.id(),
         rect,
@@ -372,6 +439,35 @@ mod tests {
         assert_eq!(RING_MID, 60.75);
         // floor(2 * (55.5 - 3) / sqrt(2)) = 74
         assert_eq!(SV_PX, 74.0);
+    }
+
+    /// The cache key quantises the hue to whole degrees: enough for a 24-block
+    /// SV square, coarse enough to reuse the texture between small changes.
+    #[test]
+    fn wheel_hue_key_quantises_to_whole_degrees() {
+        assert_eq!(wheel_hue_key(10.0), 10);
+        assert_eq!(wheel_hue_key(10.4), 10);
+        assert_eq!(wheel_hue_key(10.49), 10);
+        assert_eq!(wheel_hue_key(10.6), 11);
+        assert_ne!(wheel_hue_key(10.0), wheel_hue_key(11.0));
+    }
+
+    /// The ring is hue-independent by construction — that is what makes
+    /// caching it safe. Two builds are identical, the annulus is painted, and
+    /// the hole stays clear for the SV square.
+    #[test]
+    fn the_cached_ring_is_hue_independent() {
+        let n = WHEEL_PX as usize;
+        let a = build_ring(n, RING_OUT, RING_IN);
+        let b = build_ring(n, RING_OUT, RING_IN);
+        assert_eq!(a, b);
+        let centre = n / 2;
+        // Corner: outside the ring entirely.
+        assert_eq!(a[0], Color32::TRANSPARENT);
+        // Mid-annulus at +62px from the centre: painted.
+        assert_ne!(a[centre * n + centre + 62], Color32::TRANSPARENT);
+        // The hole the SV square sits in: unpainted.
+        assert_eq!(a[centre * n + centre], Color32::TRANSPARENT);
     }
 
     #[test]

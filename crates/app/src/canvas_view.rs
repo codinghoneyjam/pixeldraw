@@ -45,6 +45,11 @@ fn dispatch_frame_input(state: &mut AppState, fi: &FrameInput) -> bool {
         tool_cursor: cursor,
     };
     let mut outcomes = vec![];
+    // Pointer left the canvas host: clear the tool hover (`pointerleave`),
+    // unless a captured gesture owns the pointer.
+    if fi.leaving && state.input.inside() {
+        outcomes.push(state.input.pointer_leave());
+    }
     for raw in &fi.down {
         outcomes.push(state.input.pointer_down(raw, &ctx));
     }
@@ -218,13 +223,33 @@ pub fn show_canvas(
     state: &mut AppState,
     texture: &mut CanvasTexture,
     fb: &mut Framebuffer,
+    cursor_pos: &mut Option<(i32, i32)>,
 ) {
     let avail = ui.available_rect_before_wrap();
     state
         .view_store
         .set_viewport(avail.width() as f64, avail.height() as f64);
-    let fi = poll_frame_input(ui.ctx(), avail.min);
+    // A pan or a stroke already owns the pointer (JS `setPointerCapture`):
+    // its moves and its release keep flowing past the canvas edge, while a
+    // fresh press or wheel off the canvas belongs to whatever widget it hit.
+    let captured = state.input.is_panning() || state.input.is_drawing();
+    let fi = poll_frame_input(ui.ctx(), avail, captured, state.ui_busy);
     let input_render = dispatch_frame_input(state, &fi);
+    // Statusbar readout (JS `statusbar.js` cursor): the floored document pixel
+    // under the pointer, cleared while it is off the canvas or behind a dialog.
+    let view = state.view_store.view();
+    *cursor_pos = ui
+        .ctx()
+        .pointer_hover_pos()
+        .filter(|p| !state.ui_busy && avail.contains(*p))
+        .map(|p| {
+            let pixel = pixel_engine::view::pixel_at(
+                view,
+                (p.x - avail.min.x) as f64,
+                (p.y - avail.min.y) as f64,
+            );
+            (pixel.x as i32, pixel.y as i32)
+        });
     let ppp = ui.pixels_per_point();
     let (frame_render, upload) = render_frame(
         state,
