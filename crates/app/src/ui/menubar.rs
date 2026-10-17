@@ -28,6 +28,10 @@ impl Menubar {
     /// Render the menubar. Returns any triggered action.
     pub fn show(&mut self, ui: &mut Ui, state: &mut UiState, app: &mut AppState) -> Option<Action> {
         let mut triggered = None;
+        // UI-3: `history_buttons.js` disables the top-bar undo/redo while a
+        // dialog is open (`disabled = busy || !canUndo`). Read before the
+        // closures so no borrow of `state` is live inside them.
+        let busy = state.dialogs.active.is_some();
         ui.horizontal(|ui| {
             // File menu
             triggered = self.file_menu(ui, state, app);
@@ -51,6 +55,30 @@ impl Menubar {
             if triggered.is_none() {
                 triggered = r;
             }
+            ui.separator();
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                let (can_undo, can_redo) = app.history_state();
+                if ui
+                    .add_enabled(
+                        can_redo && !busy,
+                        egui::Button::new(self.actions.label(&Action::Redo)),
+                    )
+                    .on_hover_text("[Ctrl+Y]  다시 적용합니다.")
+                    .clicked()
+                {
+                    triggered = Some(Action::Redo);
+                }
+                if ui
+                    .add_enabled(
+                        can_undo && !busy,
+                        egui::Button::new(self.actions.label(&Action::Undo)),
+                    )
+                    .on_hover_text("[Ctrl+Z]  되돌립니다.")
+                    .clicked()
+                {
+                    triggered = Some(Action::Undo);
+                }
+            });
         });
         triggered
     }
@@ -285,8 +313,11 @@ fn dispatch_action(action: Action, app: &mut AppState, ui_state: &mut UiState) {
             if let Ok(bytes) = crate::file_ops::save_json_bytes(app)
                 && let Some(path) =
                     pixel_platform::pick_save_file(pixel_platform::FileKind::Json, "untitled")
+                && pixel_platform::write_bytes_atomic(&path, &bytes).is_ok()
             {
-                let _ = pixel_platform::write_bytes_atomic(&path, &bytes);
+                // JS `doSave`: `history.markSaved()` only on a successful
+                // write (the statusbar dot and the close guard read this).
+                app.session.history_mut().mark_saved();
             }
         }
         SaveAs => {

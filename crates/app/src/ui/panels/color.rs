@@ -196,9 +196,9 @@ pub fn show_color(ui: &mut Ui, ui_state: &mut UiState, app: &mut AppState) {
         let is_secondary = ui_state.panels.secondary_active;
         let active_color = if is_secondary { secondary } else { primary };
 
-        // JS `.dt-picker-head`: slots on the left, the 132px wheel on the
-        // right (`display: flex`, single row).
-        ui.horizontal(|ui| {
+        // Keep the wheel beside the slots when possible; wrap it below them in
+        // narrow sidebars so neither control is clipped.
+        ui.horizontal_wrapped(|ui| {
             ui.vertical(|ui| {
                 let (slot_rect, slot_resp) =
                     ui.allocate_exact_size(egui::vec2(48.0, 48.0), egui::Sense::click());
@@ -310,25 +310,33 @@ pub fn show_color(ui: &mut Ui, ui_state: &mut UiState, app: &mut AppState) {
                 settings.primary_color.clone()
             };
             let rgba = hex::parse_hex(&active_hex).unwrap_or([0, 0, 0, 255]);
-            ui.horizontal(|ui| {
-                ui.spacing_mut().item_spacing = egui::vec2(4.0, 0.0);
+            ui.horizontal_wrapped(|ui| {
+                ui.spacing_mut().item_spacing = egui::vec2(4.0, 4.0);
                 for (label, ch) in [("R", 0), ("G", 1), ("B", 2), ("A", 3)] {
-                    ui.label(RichText::new(label).size(11.0));
-                    let mut v = u32::from(rgba[ch]);
-                    let range = if ch == 3 { 1..=255 } else { 0..=255 };
-                    if ui
-                        .add(
-                            DragValue::new(&mut v)
-                                .range(range)
-                                .speed(1.0)
-                                .max_decimals(0),
-                        )
-                        .changed()
-                    {
-                        let mut next = rgba;
-                        next[ch] = v as u8;
-                        apply_color(app, &mut ui_state.panels, is_secondary, &to_hex_full(next));
-                    }
+                    ui.horizontal(|ui| {
+                        ui.spacing_mut().item_spacing.x = 4.0;
+                        ui.label(RichText::new(label).size(11.0));
+                        let mut v = u32::from(rgba[ch]);
+                        let range = if ch == 3 { 1..=255 } else { 0..=255 };
+                        if ui
+                            .add(
+                                DragValue::new(&mut v)
+                                    .range(range)
+                                    .speed(1.0)
+                                    .max_decimals(0),
+                            )
+                            .changed()
+                        {
+                            let mut next = rgba;
+                            next[ch] = v as u8;
+                            apply_color(
+                                app,
+                                &mut ui_state.panels,
+                                is_secondary,
+                                &to_hex_full(next),
+                            );
+                        }
+                    });
                 }
             });
         }

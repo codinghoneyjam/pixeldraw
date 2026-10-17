@@ -307,6 +307,17 @@ impl ActionMap {
             .map(|s| s.action.clone())
     }
 
+    /// The shell's entry point (UI-3 guard): the JS keydown order is (2) an
+    /// editable target consumes only Escape as blur, (3) a busy dialog ignores
+    /// everything, and only then do shortcuts resolve (`input.js` +
+    /// `keyboard_bindings.js`). `busy` = a dialog is open this frame.
+    pub fn find_matching_guarded(&self, ctx: &egui::Context, busy: bool) -> Option<Action> {
+        if busy || ctx.egui_wants_keyboard_input() {
+            return None;
+        }
+        self.find_matching(ctx)
+    }
+
     /// Check if a specific action is triggered this frame.
     pub fn is_triggered(&self, ctx: &egui::Context, action: Action) -> bool {
         self.shortcuts

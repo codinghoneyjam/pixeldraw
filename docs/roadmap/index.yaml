@@ -36,6 +36,7 @@ files:                            # 이 폴더의 구성
   - {file: phase4.yaml, role: "자산 파이프라인 판단 (결정 작업)"}
   - {file: phase5.yaml, role: "성능 (P-A~P-D 선행 + 5.1~5.7)"}
   - {file: phase6.yaml, role: "절삭·패키징·문서 (삭제 블로커 4건 포함)"}
+  - {file: phase7.yaml, role: "네이티브 UI 작업공간 레이아웃·도구 역할 정리"}
 
 phase_graph:                      # phase 간 의존. -> = 선행
   phase2: {needs: [], gate: "docs/native_smoke.md 수동 스모크"}
@@ -43,6 +44,7 @@ phase_graph:                      # phase 간 의존. -> = 선행
   phase5: {needs: [phase2.W3, phase2.W8], parallel_with: [phase3], note: "엔진 부분(P-A,P-B,5.1~5.5)은 Phase 2 W1/W3 머지 후 Phase 3와 병행 가능. app 부분(5.6,5.7 HUD)은 W8 후"}
   phase4: {needs: [phase3], note: "사용자 결정 작업. 코드 변경 거의 없음"}
   phase6: {needs: [phase3, phase4, phase5], note: "되돌리기 어려운 삭제 포함 → 사용자 확인"}
+  phase7: {needs: [phase3], note: "기존 네이티브 UI를 바탕으로 레이아웃과 메뉴/도구 역할을 순차 정리"}
   critical_path: [phase2.W0, phase2.W1, phase2.W5, phase2.W8, phase2.W10, phase3.3.8, phase3.panels, phase6]
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -139,6 +141,9 @@ file_conflict_matrix:             # 같은 파일을 만지는 작업 쌍 → �
   docs/contract.md: [phase2.W0, phase6.6.4]
   docs/render.md: [phase2.W2, phase2.W3, phase6.6.6]
   docs/model_internals.md: [phase2.W1]
+  crates/app/src/ui/mod.rs: [phase7.1]
+  crates/app/src/ui/{menubar,toolbar}.rs: [phase7.2]
+  crates/app/src/ui/panels.rs: [phase7.3, phase7.4]
   docs/native_plan.md+docs/progress/*: [오케스트레이터 전용]
 
 known_doc_code_discrepancies:     # 문서를 믿지 말 것(서브에이전트 분석 결과, 파일 직접 확인)

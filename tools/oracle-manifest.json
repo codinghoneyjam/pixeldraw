@@ -1,5 +1,5 @@
 {
-  "frozen_at": "2026-10-10T15:23:45.065Z",
+  "frozen_at": "2026-10-17T01:43:50.225Z",
   "roots": [
     "src",
     "tests",
@@ -9,7 +9,7 @@
     "reference/png_ref.mjs": "0c964fee710f942c807555b0a8a847c37b2faef2269e8b7fb952d4c02a052551",
     "reference/raster_ref.mjs": "6b6f90cf86d2970ac815591daaa74422d9b32aef639e245b67868fca99b089ab",
     "reference/view_ref.mjs": "7233a5d83df3859780484da3ffe489aa28cf43c2a175330b4cfa18b41fc1f914",
-    "src/core/blend.js": "79f5da69691ff8dc633c983f43452e29ce70eec937276aff5442dd15e3e9f04a",
+    "src/core/blend.js": "5f5054a392848186a9bba7303440407b65480e66eeb9fd6fb45eb2128bf21fb7",
     "src/core/chunkstore.js": "713ccc7ed8aa53456878f62d5517dd59493a6115f8f46a092382b147f38aad5e",
     "src/core/constants.js": "17b7134df2e6e7077921ab5d1a1c965218bde1a31d5b8676c9be0015cc192f65",
     "src/core/errors.js": "d35a8dd868ec517281ce0fd60c37674b86a72401bd0163eaf7bb01fce7a3718b",
@@ -52,7 +52,7 @@
     "src/features/layers/layer.js": "b2f297295444498360069474678a1794823b03b806bc6e2b758375c705b44d96",
     "src/features/layers/layer_actions.js": "16373524961d42d81046915065cab80dcba90dfa112feda32604e0c5b6d39260",
     "src/features/layers/layer_operations.js": "52a909546aed9f50e733fe2f06b70c1ee4df29e3c5d4fa4210b5f0aafc7a44e6",
-    "src/features/layers/panel_layers.js": "919243bc7187d5918b07077a7be0e4fb3e5e55f7c2d88667b445c8b5f5f76818",
+    "src/features/layers/panel_layers.js": "132d4f57a6355879e60fcd883d332240f2e82673affdd75010c015045afc493b",
     "src/features/pen/brush.js": "a41e815bd60d6b8779a277832c2e5930a74787155231df5ebfea82a6126e14ce",
     "src/features/pen/brush_actions.js": "69b484c296733efc6f686f51de0001834d6643802e0706f1c91843dd984df121",
     "src/features/pen/panel_brush.js": "a40b3ac5ab1124f4091879712906621bbb4758db9cf04fba6c7720f07d131f98",
@@ -72,7 +72,7 @@
     "src/features/viewport/view_actions.js": "906eb86e75578a9ed0a7aed2a96969b0422ecbb7062cd37ab0132e5878b41aaf",
     "src/features/viewport/view_store.js": "14bf6d4e897351a7fbd5c1abc7aeb3b2291d4c932dbcb52aa2b833f80f62ffc5",
     "src/io/base64.js": "c53080198f681c8cf4a7b30cefc261029dec474b4330161451fa1238abd9d7d3",
-    "src/io/export_png.js": "233f1c2e5a72f14e60d223aadb0b9e737642b787f9d32effb25979fa6d684cb5",
+    "src/io/export_png.js": "10a030a116609670af04f097e15c6d0a09479d0c3e9c13268967460c57304225",
     "src/io/file_io.js": "c86cd44ba7318073c5cb471880394e5f94628485d39d4bb6b0d9f3ef9e58b47a",
     "src/io/idb_loader.js": "70f4924c2f1c3aa1a83bce74a51614bed8d9060d32f360ad4583a0a7ce4a322a",
     "src/io/idb_record_builder.js": "fb74fab5ff276d50ba4ef97bad20a444a0260ab3824d756528b62fd35aa19cde",
@@ -88,7 +88,7 @@
     "src/io/validate_semantic.js": "bb9962de98ae856776e582095a06fb71d6636e63c831a12218c16f593cea9e4e",
     "src/io/validate_structural.js": "d434ee664e964150e1ae8b063d8f0a5953caed7a6185a585ac8d0978ba9fed43",
     "src/render/background.js": "8072fff1f8f7e84b34ae6a901f9605e100b0d080ad3f9eebe66b40fd5e12b344",
-    "src/render/composite.js": "f33118459a5ac4ce6bbaa5309155f4c053985afe5374d12ea4319418a911d4d6",
+    "src/render/composite.js": "65facf614c988b1bcd1bb7a88ee0cc3d5bbab13a8af0f0b4333954ddfbdb233d",
     "src/render/grid.js": "fd46c81e4566087a8420736ee30c0e8b611d32468ad93f052b9a1fa401345794",
     "src/render/renderer.js": "7e14d35c6173226ade839a795082887faca26c401364d8aa0bb0ab72b1b5abd2",
     "src/render/renderer_composite.js": "d79059975b899eea83f425d43fe843310b321d3d3a98d4934f59cd04971ac446",
@@ -200,5 +200,5 @@
     "tests/ui_smoke.test.mjs": "e0d379a114766729c6a69f3316dd8dda9bb00c8908d5cbc537e98ce7913244e6",
     "tests/view_basic.test.mjs": "ad300777514742fa6efe5e88f1d48dacd356977c42b5d0e2ccf08f549160a29f"
   },
-  "digest": "de5de4f52edc2d9cc4945ebfee6a1e61e29c93cf39b5fa26a9287cd664c74450"
+  "digest": "7b8fbd4a26da4c8f9946f96bb47193c36d84cb9c250f91e43d456dce839935a2"
 }

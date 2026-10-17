@@ -9,7 +9,7 @@ mod icons;
 
 use super::UiState;
 use crate::session_glue::AppState;
-use egui::{Button, ScrollArea, Ui, Vec2};
+use egui::{ScrollArea, Ui, Vec2};
 
 #[derive(Default)]
 pub struct ToolbarState {
@@ -165,42 +165,6 @@ impl Toolbar {
                     state.toolbar.tool_hovered = Some(tool.help.to_string());
                 }
             }
-
-            ui.separator();
-
-            // History buttons
-            let (can_undo, can_redo) = app.history_state();
-            if ui
-                .add_enabled(can_undo, Button::new("실행취소"))
-                .on_hover_text("[Ctrl+Z]  되돌립니다.")
-                .clicked()
-            {
-                let _ = app.session.undo();
-            }
-            if ui
-                .add_enabled(can_redo, Button::new("다시실행"))
-                .on_hover_text("[Ctrl+Y]  다시 적용합니다.")
-                .clicked()
-            {
-                let _ = app.session.redo();
-            }
-
-            ui.separator();
-
-            // Zoom controls. Plain ASCII, for the same reason the tools dropped
-            // their icons: U+1F50D is not in every font, and a missing
-            if ui.button("축소").on_hover_text("[Ctrl+-]").clicked() {
-                app.view_store.zoom_out();
-            }
-            if ui.button("확대").on_hover_text("[Ctrl+=]").clicked() {
-                app.view_store.zoom_in();
-            }
-            if ui.button("맞춤").on_hover_text("[Ctrl+0]").clicked() {
-                app.view_store.fit();
-            }
-            if ui.button("1:1").on_hover_text("[Ctrl+1]").clicked() {
-                app.view_store.actual_size();
-            }
         });
     }
 
@@ -281,8 +245,8 @@ fn tool_icon(
 /// handed the inner one only the sliver the outer one left over and clipped
 /// every button to its top ~40%.
 ///
-/// Fourteen tools plus undo/redo plus the zoom cluster do not fit a short
-/// window, so the rail scrolls vertically rather than clipping its tail.
+/// The tool rail scrolls vertically rather than clipping its tail in a short
+/// window.
 pub fn show(ui: &mut egui::Ui, ui_state: &mut UiState, app_state: &mut AppState) {
     let mut toolbar = Toolbar::new();
     ScrollArea::vertical()
@@ -351,9 +315,8 @@ mod tests {
         }
     }
 
-    /// The shortcut is drawn on the button, so it has to be a single character
-    /// that the font can actually render. It was `Option<&'static str>` and
-    /// never shown, which is how a private detail became a public one.
+    /// The shortcut is shown in the tooltip, so it has to be a single
+    /// character that the font can actually render.
     #[test]
     fn shortcuts_are_single_ascii_letters() {
         for t in Toolbar::new().tools {
@@ -373,13 +336,12 @@ mod tests {
         }
     }
 
-    /// Guard the regression that motivated dropping the icons: a pictogram that
+    /// Guard against a font-coverage regression: a pictogram that
     /// the runtime font cannot draw shows up as U+25A1 WHITE SQUARE. Nothing on
     /// a button may contain one, and nothing may reach outside Latin-1 plus the
     /// Hangul syllables the labels already use.
-    /// The rail draws vector glyphs, so the tooltip is the *only* place tool
-    /// text reaches the screen. That makes the tooltip the thing that has to
-    /// stay inside the font's coverage.
+    /// The rail draws vector glyphs, so the tooltip is the only place tool
+    /// text reaches the screen. Keep it inside the font's coverage.
     #[test]
     fn the_tooltip_is_the_only_tool_text_and_it_renders() {
         for t in Toolbar::new().tools {

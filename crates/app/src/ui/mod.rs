@@ -1,15 +1,17 @@
-﻿//! Native UI layer — egui port of `src/ui/**`.
+//! Native UI layer — egui port of `src/ui/**`.
 //
 //! This module owns all UI widgets: menubar, toolbar, optionbar, statusbar,
 //! dialogs, panels, and the shared components (toast, tooltip, collapsible).
 //! The engine (`pixel-engine`) remains pure and knows nothing about egui.
 
 pub mod actions;
+pub mod autosave;
 pub mod dialogs;
 pub mod juice;
 pub mod menubar;
 pub mod optionbar;
 pub mod panels;
+pub mod settings_store;
 pub mod shared;
 pub mod statusbar;
 pub mod theme;
@@ -83,6 +85,18 @@ pub struct DialogsState {
     pub pending_result: Option<DialogResult>,
 }
 
+const LEFT_PANEL_MIN_WIDTH: f32 = 180.0;
+const LEFT_PANEL_DEFAULT_WIDTH: f32 = 256.0;
+const RIGHT_PANEL_MIN_WIDTH: f32 = 200.0;
+const RIGHT_PANEL_DEFAULT_WIDTH: f32 = 282.0;
+const SIDE_PANEL_MAX_WIDTH: f32 = 440.0;
+const TOOL_RAIL_AND_GUTTERS_BUDGET: f32 = 84.0;
+const MIN_CANVAS_WIDTH: f32 = 220.0;
+
+fn side_panel_max_width(space_budget: f32, other_panel_width: f32, min_width: f32) -> f32 {
+    (space_budget - other_panel_width).clamp(min_width, SIDE_PANEL_MAX_WIDTH)
+}
+
 /// Main UI render function — called from the shell each frame.
 /// Takes `&mut egui::Ui` as per eframe 0.36 App::ui signature.
 pub fn render_ui(
@@ -102,8 +116,20 @@ pub fn render_ui(
             menubar::show(ui, ui_state, app_state);
         });
 
-    // 2. Tool rail (left, narrow) — declared before the panels so it takes the
-    //    leftmost strip; egui fills left panels in declaration order.
+    // Full-width bars must be declared before side panels consume horizontal space.
+    egui::Panel::top("optionbar_panel")
+        .frame(pad(8.0, 4.0))
+        .show(ui, |ui| {
+            optionbar::show(ui, ui_state, app_state);
+        });
+
+    egui::Panel::bottom("statusbar_panel")
+        .frame(pad(12.0, 4.0))
+        .show(ui, |ui| {
+            statusbar::show(ui, ui_state, app_state);
+        });
+
+    // The tool rail owns the leftmost strip of the remaining workspace.
     egui::Panel::left("toolbar_panel")
         .frame(pad(6.0, 6.0))
         .resizable(false)
@@ -112,8 +138,17 @@ pub fn render_ui(
             toolbar::show(ui, ui_state, app_state);
         });
 
-    // 3. Left side panels (colour / palette / recent / brush)
+    // Left side panels (colour / palette / recent / brush).
+    let side_panel_budget =
+        (ui.available_width() - TOOL_RAIL_AND_GUTTERS_BUDGET - MIN_CANVAS_WIDTH).max(0.0);
+    let right_panel_width = egui::PanelState::load(ui.ctx(), egui::Id::new("right_panels"))
+        .map(|state| state.size().x)
+        .unwrap_or(RIGHT_PANEL_DEFAULT_WIDTH);
+    let left_panel_max =
+        side_panel_max_width(side_panel_budget, right_panel_width, LEFT_PANEL_MIN_WIDTH);
     egui::Panel::left("left_panels")
+        .default_size(LEFT_PANEL_DEFAULT_WIDTH)
+        .size_range(LEFT_PANEL_MIN_WIDTH..=left_panel_max)
         .frame(pad(8.0, 6.0))
         .resizable(true)
         .show(ui, |ui| {
@@ -122,15 +157,14 @@ pub fn render_ui(
             });
         });
 
-    // 4. Optionbar: the wide top strip below the menubar. This is where the
-    //    active tool's own controls live (X/Y/W/H for shapes, brush size for
-    //    the pen), so the rail above must not grow into this row.
-    egui::Panel::top("optionbar_panel")
-        .frame(pad(8.0, 4.0))
-        .show(ui, |ui| {
-            optionbar::show(ui, ui_state, app_state);
-        });
+    let left_panel_width = egui::PanelState::load(ui.ctx(), egui::Id::new("left_panels"))
+        .map(|state| state.size().x)
+        .unwrap_or(LEFT_PANEL_DEFAULT_WIDTH);
+    let right_panel_max =
+        side_panel_max_width(side_panel_budget, left_panel_width, RIGHT_PANEL_MIN_WIDTH);
     egui::Panel::right("right_panels")
+        .default_size(RIGHT_PANEL_DEFAULT_WIDTH)
+        .size_range(RIGHT_PANEL_MIN_WIDTH..=right_panel_max)
         .resizable(true)
         .show(ui, |ui| {
             egui::ScrollArea::vertical().show(ui, |ui| {
@@ -138,20 +172,13 @@ pub fn render_ui(
             });
         });
 
-    // 5. Statusbar (bottom)
-    egui::Panel::bottom("statusbar_panel")
-        .frame(pad(12.0, 4.0))
-        .show(ui, |ui| {
-            statusbar::show(ui, ui_state, app_state);
-        });
-
-    // 6. Dialogs (modal, on top)
+    // Dialogs (modal, on top)
     dialogs::show(ui, ui_state, app_state);
 
-    // 7. Toasts (top-right, non-blocking)
+    // Toasts (top-right, non-blocking)
     shared::toasts::show(ui, ui_state);
 
-    // 8. Tooltip (follows cursor)
+    // Tooltip (follows cursor)
     shared::tooltip::show(ui, ui_state);
 }
 
@@ -171,5 +198,40 @@ mod tests {
     fn tool_options_default_is_none() {
         let opts = ToolOptions::default();
         assert!(opts.size.is_none());
+    }
+
+    #[test]
+    fn side_panel_maxima_preserve_canvas_width_at_minimum_window_size() {
+        let space_budget =
+            crate::shell::WINDOW_MIN_SIZE[0] - TOOL_RAIL_AND_GUTTERS_BUDGET - MIN_CANVAS_WIDTH;
+        assert_eq!(space_budget, 596.0);
+        assert_eq!(
+            side_panel_max_width(
+                space_budget,
+                RIGHT_PANEL_DEFAULT_WIDTH,
+                LEFT_PANEL_MIN_WIDTH
+            ),
+            314.0
+        );
+        assert_eq!(
+            side_panel_max_width(
+                space_budget,
+                LEFT_PANEL_DEFAULT_WIDTH,
+                RIGHT_PANEL_MIN_WIDTH
+            ),
+            340.0
+        );
+        assert_eq!(
+            side_panel_max_width(space_budget, 440.0, RIGHT_PANEL_MIN_WIDTH),
+            RIGHT_PANEL_MIN_WIDTH
+        );
+        assert_eq!(
+            side_panel_max_width(space_budget, 200.0, LEFT_PANEL_MIN_WIDTH),
+            396.0
+        );
+        assert_eq!(
+            side_panel_max_width(space_budget, LEFT_PANEL_MIN_WIDTH, RIGHT_PANEL_MIN_WIDTH),
+            416.0
+        );
     }
 }

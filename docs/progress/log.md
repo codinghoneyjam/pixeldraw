@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-10-17 · Phase 3.9·3.10 + UI-3 · 설정 영속화·자동저장·busy 가드 + V1 재동결
+
+**커밋 대상**: `crates/app/src/ui/{settings_store.rs,autosave.rs}`(신규)·`crates/app/src/{shell.rs,session_glue.rs,canvas_view.rs}`·`crates/app/src/ui/{mod.rs,actions.rs,dialogs.rs,menubar.rs}`·`tools/oracle-manifest.json`·`docs/port_status_report.md`·`docs/progress/log.md`
+**테스트**: workspace 전체 그린(**567 → 585** · app 173 · 신규 19) · clippy/fmt 그린 · npm 410/410 · golden 201 · recipe 39/39 · oracle `--check` 그린(재동결) · release 7.0 MB 재빌드
+
+- **V1 종결(오라클 재동결)** — `tools/oracle-manifest.json`을 현재 JS/테스트 기준으로 재동결(파일 집합 193개 불변, `frozen_at 2026-10-17T01:43:50.225Z`, digest `7b8fbd4a…`). 드리프트 4건의 원인은 `48953ec`의 zero-alloc 리팩터임을 diff로 확인 — 동작은 동일하며 JS 오라클 동일성은 npm 410/golden 201/recipe 39로 이미 검증된 상태였다. `pixel-engine --test fixtures` 5/5 그린.
+- **3.9 `ui/settings_store.rs`(신규)** — 설정 9키 restore/save, 최근색(8칸) 스냅샷, **trailing 250ms 디바운스**. 저장은 파일 재읽기+**병합**(`collapsedPanels`·미지 키 보존 — D9). 부팅 복원은 첫 문서 생성·이벤트 리스너 부착 **전**에 실행(`ui/app.js` L83-99) — 자기 Settings 이벤트로 되쓰이지 않는다(테스트 고정).
+- **3.10a `ui/autosave.rs`(신규)** — `{format:"pixeldraw.autosave", schema:2, updated_at:<ms>, document}` 형식. document는 엔진 `document_to_json`/`json_to_document` 재사용 → 깊은 시맨틱 검증을 그대로 상속. **800ms 비리셋 + 5000ms 상한** 스케줄러, 실패는 Quota/Other 분류 → warn 토스트. JS IndexedDB의 증분 청크 대신 **전체 재기록**(단순·원자적).
+- **3.10b 배선** — 부팅 시 복원 다이얼로그(복원/버리기/Esc=버리기 — D8), 종료 가드: close 요청 → autosave flush → dirty면 `CancelClose`+확인 다이얼로그(`beforeunload` 대응). `pagehide`/`visibilitychange` 대응으로 창 비포커스·종료 시 flush. 복원은 `load_document(doc, false)` → 큐 경유 설치.
+- **UI-3 가드** — `ActionMap::find_matching_guarded(busy)`: 텍스트 포커스 중엔 단축키 전체 무시, Esc는 포커스 해제(에디터 블러)로만 소비. 다이얼로그 오픈 중(busy) 모든 단축키·상단 Undo/Redo 버튼 비활성, 캔버스 키 스트림도 `ui_busy`로 차단.
+- **부수 수정** — 저장 성공 시 `history.mark_saved()`가 호출되지 않던 버그(성공해도 dirty가 안 꺼져 종료 가드가 오탐) 수정. 셸/멘바 두 Save 경로 모두.
+- **문서 정정(오라클 실측)** — phase3.yaml 3.10b의 "복원 직후 dirty ●" 서술은 JS와 다름: node로 `loadDocument(doc, {markSaved:false})` 후 `history.isDirty() == false`(clean)를 직접 확인. 네이티브도 JS와 동일하게 clean으로 맞춤.
+- **알려진 차이** — autosave `when` 문자열은 chrono 없이 고정 UTC(`YYYY-MM-DD HH:MM:SS`)로 기록(JS는 `toLocaleString()`). 표시 문자열 한정 차이.
+- **테스트 구조** — `AppState::new`(헤르메틱 — 파일 무접촉)와 `AppState::boot`(셸 — 설정+자동저장 부팅)를 분리해 유닛 테스트가 사용자 실파일을 읽지 않게 했다.
+
+---
+
 ## 2026-10-15 · Phase 3.x · `tools/` 피처 shim 제거 — 호환 경로 정리
 
 **커밋 대상**: `crates/app/src/tools.rs`·`crates/app/src/tools/{arc,eyedropper,fill,gradient,hand,pen,shape,text}.rs`(삭제)·`docs/feature_cohesion_reorg_plan.md`·`docs/progress/log.md`

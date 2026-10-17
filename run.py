@@ -111,6 +111,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
+        
         print("\n[draw-tool] stopped")
     finally:
         httpd.shutdown()

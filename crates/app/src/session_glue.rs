@@ -9,13 +9,16 @@
 use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::rc::Rc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use pixel_engine::comp_cache::{Budget, CompCache};
 use pixel_engine::constants::FRAME_BUDGET_MS;
 use pixel_engine::model::event::EventDetail;
 use pixel_engine::model::{ModelEvent, NewDocumentOptions, Session};
 use pixel_engine::view::ViewStore;
+
+use crate::ui::autosave::{AutosaveGlue, FlushError};
+use crate::ui::settings_store::SettingsStore;
 
 use crate::features::arc::ArcTool;
 use crate::features::eyedropper::EyedropperTool;
@@ -60,11 +63,34 @@ pub struct AppState {
     pub history_dirty: bool,
     /// Last pointer position in canvas-widget CSS px, for move synthesis.
     pub last_pointer: Option<(f64, f64)>,
+    /// `settings.json` debounce + merge-save (Phase 3.9).
+    pub settings_store: SettingsStore,
+    /// `autosave.json` schedule + boot record (Phase 3.10).
+    pub autosave: AutosaveGlue,
+    /// A dialog is open this frame: shortcut handling (UI-3) and the canvas
+    /// key stream read this.
+    pub ui_busy: bool,
 }
 
 impl AppState {
+    /// Headless construction: nothing is read from or written to disk. Tests
+    /// and any non-shell caller stay hermetic; the shell uses
+    /// [`AppState::boot`] so settings + autosave join the boot order.
     pub fn new() -> Self {
+        Self::boot_with(SettingsStore::empty(), AutosaveGlue::disabled())
+    }
+
+    /// The shell's boot: read `settings.json` + `autosave.json` before any
+    /// listener attaches (`ui/app.js` L83-99 — `restoreSettings` runs before
+    /// the first document and before the autosave store attaches, so neither
+    /// restore writes itself back).
+    pub fn boot() -> Self {
+        Self::boot_with(SettingsStore::load(), AutosaveGlue::boot())
+    }
+
+    fn boot_with(settings_store: SettingsStore, autosave: AutosaveGlue) -> Self {
         let mut session = Session::new();
+        settings_store.restore_into(&mut session);
         session
             .new_document(NewDocumentOptions::default())
             .expect("default document opens");
@@ -97,6 +123,9 @@ impl AppState {
             status: vec![],
             history_dirty: true,
             last_pointer: None,
+            settings_store,
+            autosave,
+            ui_busy: false,
         };
         state.after_document_replaced();
         let mut render = false;
@@ -129,7 +158,10 @@ impl AppState {
     pub fn drain_events(&mut self) -> bool {
         let mut render = false;
         let events: Vec<ModelEvent> = self.queue.borrow_mut().drain(..).collect();
+        let now = Instant::now();
         for ev in &events {
+            self.settings_store.on_event(ev, now);
+            self.autosave.on_event(ev, now);
             render |= self.comp.apply_event(ev);
             match &ev.detail {
                 EventDetail::Status { level, text, .. } => {
@@ -164,6 +196,64 @@ impl AppState {
     pub fn history_state(&self) -> (bool, bool) {
         let h = self.session.history();
         (h.can_undo(), h.can_redo())
+    }
+
+    /// Frame-loop persistence (Phase 3.9/3.10): the settings debounce and the
+    /// autosave schedule. The shell calls this once per frame after the UI ran.
+    pub fn tick_persistence(&mut self, now: Instant) {
+        self.settings_store.tick(now, &self.session);
+        if let Some(outcome) = self.autosave.flush_if_due(&self.session, now) {
+            self.report_flush(outcome);
+        }
+    }
+
+    /// `pagehide` parity: write the pending autosave right now (window close /
+    /// focus loss); a no-op when nothing is dirty.
+    pub fn flush_autosave(&mut self) {
+        if let Some(outcome) = self.autosave.flush_now(&self.session) {
+            self.report_flush(outcome);
+        }
+    }
+
+    fn report_flush(&mut self, outcome: Result<(), FlushError>) {
+        let Err(kind) = outcome else { return };
+        let (text, code) = match kind {
+            FlushError::Quota => ("자동저장 공간 부족", "STORAGE_QUOTA"),
+            FlushError::Other => ("자동저장 실패", "INVALID_STATE"),
+        };
+        self.session.notify("warn", text, code);
+    }
+
+    /// `(name, when)` for the boot restore dialog; `None` = nothing to offer.
+    pub fn autosave_peek(&self) -> Option<(String, String)> {
+        self.autosave.peek()
+    }
+
+    /// The restore dialog resolved to 복원. Returns whether a document was
+    /// installed; a record failing the deep checks is cleared first
+    /// (3.10a `load` semantics).
+    pub fn restore_autosave(&mut self) -> bool {
+        let Some(result) = self.autosave.restore_pending() else {
+            return false;
+        };
+        match result {
+            Ok(doc) => {
+                let _ = self.session.load_document(doc, false);
+                self.after_document_replaced();
+                self.drain_events();
+                true
+            }
+            Err(err) => {
+                eprintln!("autosave restore failed: {err}");
+                self.autosave.clear();
+                false
+            }
+        }
+    }
+
+    /// The restore dialog resolved to 버리기 / Esc / close: drop the record.
+    pub fn discard_autosave(&mut self) {
+        self.autosave.clear();
     }
 }
 
@@ -284,5 +374,57 @@ mod tests {
             .0
             .iter()
             .all(|px| *px == [255, 255, 255, 255])
+    }
+
+    /// Phase 3.9 boot order: the settings restore runs before the first
+    /// document and before the listener attaches (`app.js` L83-99), so nothing
+    /// is queued and the file cannot be written back by its own events.
+    #[test]
+    fn boot_applies_settings_without_queueing_events() {
+        let path = std::env::temp_dir().join(format!(
+            "pixeldraw-appstate-settings-{}.json",
+            std::process::id()
+        ));
+        std::fs::write(&path, r##"{"penSize": 12, "activeTool": "eraser"}"##).expect("seed");
+        let store = SettingsStore::load_from(Some(path.clone()));
+        let mut state = AppState::boot_with(store, AutosaveGlue::disabled());
+        assert_eq!(state.session.settings().pen_size, 12);
+        assert_eq!(state.session.settings().active_tool, "eraser");
+        assert!(state.queue.borrow().is_empty(), "restore is listener-free");
+        assert!(!state.drain_events());
+        let _ = std::fs::remove_file(&path);
+    }
+
+    /// Phase 3.10b: restoring installs the autosave document through the queue
+    /// and marks the dialog resolved. The restored document reads **clean** —
+    /// the JS oracle returns `isDirty() == false` after
+    /// `loadDocument(doc, {markSaved:false})` (checked with node on
+    /// 2026-10-17; the roadmap's "복원 직후 dirty ●" note is wrong).
+    #[test]
+    fn restoring_an_autosave_installs_the_document_clean() {
+        let path = std::env::temp_dir().join(format!(
+            "pixeldraw-appstate-autosave-{}.json",
+            std::process::id()
+        ));
+        let seed = AppState::new();
+        let doc = seed.session.doc().expect("doc");
+        let doc_id = doc.id.clone();
+        let bytes = crate::ui::autosave::AutosaveRecord::build(doc, 42)
+            .expect("build")
+            .encode();
+        std::fs::write(&path, &bytes).expect("seed");
+
+        let glue = AutosaveGlue::boot_from(Some(path.clone()));
+        assert!(glue.peek().is_some(), "the record is offered");
+        let mut state = AppState::boot_with(SettingsStore::empty(), glue);
+        assert!(state.autosave_peek().is_some());
+        assert!(state.restore_autosave());
+        assert_eq!(state.session.doc().expect("doc").id, doc_id);
+        assert!(
+            !state.session.history().is_dirty(),
+            "matches the JS oracle: loadDocument({{markSaved:false}}) is clean"
+        );
+        assert!(state.autosave_peek().is_none(), "the dialog is resolved");
+        let _ = std::fs::remove_file(&path);
     }
 }

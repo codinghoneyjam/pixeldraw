@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pixeldraw 네이티브 UI 레이아웃 비교</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --page: #171a20;
+      --line: #394452;
+      --text: #eef2f4;
+      --muted: #9ba8b2;
+      --teal: #45d6c5;
+      --coral: #ee806e;
+      --canvas: #29343d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--text);
+      font: 15px/1.55 "Segoe UI", "Malgun Gothic", sans-serif;
+    }
+    main { width: min(1240px, calc(100% - 40px)); margin: 42px auto 64px; }
+    h1 { margin: 0; font-size: 30px; font-weight: 650; }
+    .intro { max-width: 800px; color: var(--muted); margin: 10px 0 28px; }
+    .legend { display: flex; gap: 18px; flex-wrap: wrap; margin: 0 0 20px; color: var(--muted); font-size: 13px; }
+    .key { display: inline-flex; align-items: center; gap: 7px; }
+    .key i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; background: var(--coral); }
+    .key.good i { background: var(--teal); }
+    .comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+    article { min-width: 0; }
+    .heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+    h2 { font-size: 18px; margin: 0; }
+    .tag { font-size: 12px; color: var(--muted); }
+    .frame {
+      display: grid;
+      aspect-ratio: 1.62;
+      min-height: 330px;
+      overflow: hidden;
+      border: 1px solid #4a5663;
+      background: #11161c;
+      box-shadow: 0 12px 32px #0005;
+      font-size: clamp(10px, 1.1vw, 13px);
+    }
+    .current { grid-template-columns: 6% 27% minmax(0, 1fr) 21%; grid-template-rows: 9% 12% minmax(0, 1fr) 8%; }
+    .proposed { grid-template-columns: 6% 25% minmax(0, 1fr) 21%; grid-template-rows: 9% 12% minmax(0, 1fr) 8%; }
+    .region {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+      padding: 5px;
+      border: 1px solid #ffffff20;
+      color: var(--text);
+      text-align: center;
+    }
+    .menu { grid-column: 1 / -1; grid-row: 1; justify-content: space-between; gap: 8px; background: #303942; text-align: left; }
+    .menu-actions { display: flex; gap: 4px; flex: 0 0 auto; }
+    .menu-actions span { padding: 1px 5px; border: 1px solid #65727f; border-radius: 3px; white-space: nowrap; font-size: .82em; }
+    .rail { grid-column: 1; background: #252f38; writing-mode: vertical-rl; }
+    .left { grid-column: 2; background: #33404a; }
+    .right { grid-column: 4; background: #33404a; }
+    .canvas { background: var(--canvas); }
+    .option { background: #7b463e; }
+    .status { background: #514535; }
+    .current .rail, .current .left { grid-row: 2 / 5; }
+    .current .right { grid-row: 3 / 5; }
+    .current .option { grid-column: 3 / -1; grid-row: 2; }
+    .current .canvas { grid-column: 3; grid-row: 3; }
+    .current .status { grid-column: 3; grid-row: 4; }
+    .proposed .option { grid-column: 1 / -1; grid-row: 2; background: #276b67; }
+    .proposed .rail, .proposed .left, .proposed .right { grid-row: 3; }
+    .proposed .canvas { grid-column: 3; grid-row: 3; }
+    .proposed .status { grid-column: 1 / -1; grid-row: 4; background: #4c604a; }
+    .canvas-inner {
+      display: grid;
+      width: min(42%, 180px);
+      aspect-ratio: 1;
+      place-items: center;
+      color: #172029;
+      background-color: #d9dfe2;
+      background-image: conic-gradient(#afb9bf 25%, transparent 0 50%, #afb9bf 0 75%, transparent 0);
+      background-size: 16px 16px;
+      font-size: 12px;
+    }
+    .note { margin: 12px 2px 0; color: var(--muted); font-size: 13px; }
+    .note strong { color: var(--text); font-weight: 600; }
+    .callout {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 6px 16px;
+      margin-top: 28px;
+      padding: 18px 20px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .callout b { color: var(--teal); }
+    .callout span { color: var(--muted); }
+    @media (max-width: 760px) {
+      main { width: min(100% - 24px, 620px); margin-top: 26px; }
+      h1 { font-size: 24px; }
+      .comparison { grid-template-columns: 1fr; gap: 28px; }
+      .frame { min-height: 290px; font-size: 12px; }
+      .callout { grid-template-columns: 1fr; gap: 4px; }
+    }
+    @media (max-width: 420px) {
+      .frame { width: 100%; height: 250px; min-height: 0; aspect-ratio: auto; }
+      .current, .proposed { grid-template-columns: 8% 28% minmax(0, 1fr) 20%; }
+      .current .left, .proposed .left { padding: 2px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>네이티브 UI 공간 배치</h1>
+    <p class="intro">현재 egui 패널 선언 순서와 권장 순서를 같은 화면 비율로 비교합니다. 색상 면은 영역 구분용이며 실제 UI 캡처가 아닙니다.</p>
+    <div class="legend" aria-label="범례">
+      <span class="key"><i></i>현재 순서에서 폭이 잘리는 가로 패널</span>
+      <span class="key good"><i></i>전체 폭을 확보한 가로 패널</span>
+    </div>
+    <section class="comparison" aria-label="현재와 권장 레이아웃 비교">
+      <article>
+        <div class="heading"><h2>현재 코드 순서</h2><span class="tag">mod.rs 선언 순서</span></div>
+          <div class="frame current" role="img" aria-label="메뉴바는 Undo/Redo를 포함해 전체 폭이고 옵션바와 상태바는 패널 순서 때문에 중앙에만 놓인 현재 배치">
+            <div class="region menu"><span>파일　편집　보기　레이어　도움말</span><span class="menu-actions"><span>실행 취소</span><span>다시 실행</span></span></div>
+          <div class="region rail">툴 레일</div>
+          <div class="region left">색상 · 팔레트 · 브러시</div>
+          <div class="region option">옵션바 · 중앙 폭만</div>
+          <div class="region canvas"><div class="canvas-inner">캔버스</div></div>
+          <div class="region right">레이어</div>
+          <div class="region status">상태바 · 중앙 폭만</div>
+        </div>
+        <p class="note"><strong>문제:</strong> 좌측 패널을 먼저 소비한 뒤 옵션바를 만들고, 우측 패널을 소비한 뒤 상태바를 만듭니다.</p>
+      </article>
+      <article>
+        <div class="heading"><h2>권장 순서</h2><span class="tag">가로 행 우선</span></div>
+        <div class="frame proposed" role="img" aria-label="메뉴바는 Undo/Redo를 포함하고 메뉴, 옵션바, 상태바는 전체 폭을 쓰는 권장 배치">
+          <div class="region menu"><span>파일　편집　보기　레이어　도움말</span><span class="menu-actions"><span>실행 취소</span><span>다시 실행</span></span></div>
+          <div class="region option">옵션바 · 전체 폭</div>
+          <div class="region rail">툴 레일</div>
+          <div class="region left">색상 · 팔레트 · 브러시</div>
+          <div class="region canvas"><div class="canvas-inner">캔버스</div></div>
+          <div class="region right">레이어</div>
+          <div class="region status">상태바 · 전체 폭</div>
+        </div>
+        <p class="note"><strong>효과:</strong> 작업영역이 정돈되고 상태 정보도 창 전체에서 일정한 위치를 유지합니다.</p>
+      </article>
+    </section>
+    <div class="callout">
+      <b>수정 순서</b><span>메뉴 → 옵션바 → 상태바 → 툴 레일 → 좌측 패널 → 우측 패널 → 중앙 캔버스</span>
+      <b>폭 목표</b><span>좌측 기본 256pt (최소 180), 우측 기본 282pt (최소 200). 반대 패널 폭에 따라 최대 440pt까지 늘어나며, 900pt 창에서도 캔버스 최소 220pt를 우선 남깁니다. 폭 설정은 앱 재시작 간 저장되지 않습니다.</span>
+      <b>근거 문서</b><span><a href="native_ui_layout_audit.md" style="color:var(--teal)">네이티브 UI 레이아웃 분석</a></span>
+    </div>
+  </main>
+</body>
+</html>

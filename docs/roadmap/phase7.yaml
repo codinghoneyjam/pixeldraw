@@ -1,0 +1,107 @@
+# Phase 7 — 네이티브 UI 작업공간 정리
+# 목적: 픽셀 편집에 집중할 수 있도록 패널 레이아웃과 도구 역할을 정돈한다.
+# 선행: 현재 Rust UI (menubar/toolbar/optionbar/panels/statusbar) 구현.
+# 편집 규칙: index.yaml global_rules 준수. 이 phase는 코드 변경과 수동 화면 확인을 함께 요구한다.
+
+phase: 7
+status: in_progress
+goal: "메뉴바=앱 명령과 히스토리 이동, 툴바=도구 선택, 옵션바=현재 도구 옵션, 사이드바=색/레이어, 캔버스=작업, 상태바=상태 정보로 역할과 공간을 분리"
+design_contract:
+  bars:
+    menubar: "파일/편집/보기/레이어 메뉴와 실행 취소·다시 실행 퀵 액션. 모든 메뉴·버튼은 명령 진입점"
+    optionbar: "활성 툴에 실제로 적용 가능한 설정만 표시. 툴별 옵션은 해당 feature 모듈 소유"
+    statusbar: "문서 크기, 포인터 좌표, 확대율, 레이어, 활성 도구와 상태 메시지"
+  workspace:
+    toolbar: "툴 선택 전용 세로 레일. 히스토리와 확대/축소 컨트롤을 두지 않는다"
+    left_sidebar: "색상, 팔레트, 최근 색, 브러시"
+    right_sidebar: "레이어"
+    canvas: "좌우 패널 사이 남은 영역을 우선 사용"
+  egui_order: [menubar_top, optionbar_top, statusbar_bottom, toolbar_left, left_sidebar_left, right_sidebar_right, central_canvas_last]
+  sizing_reference: "phase3.yaml architecture.design_tokens.sizes/layout 및 3.8 panel_sizes를 재사용. 별도 폭 규칙이 필요하면 기존 계약과 차이를 명시하고 테스트한다"
+
+sequence:
+  mode: serial
+  rule: "한 번에 한 task만 구현. task별 에이전트 검토 → 패치 → 좁은 테스트 → diff/수동 확인 → 완료 보고 후 다음 task"
+  tasks: ["7.1", "7.2", "7.3", "7.4", "7.5"]
+
+tasks:
+  - id: "7.1"
+    title: "가로 패널 전체 폭과 본문 레이아웃 순서 복구"
+    status: completed
+    write_scope: [crates/app/src/ui/mod.rs, docs/native_ui_layout_audit.md]
+    read_first: [crates/app/src/ui/mod.rs, crates/app/src/shell.rs, docs/native_ui_layout_audit.md]
+    change: "menubar → optionbar → statusbar → toolbar → left panels → right panels 순으로 선언. CentralPanel은 shell에서 마지막 유지. 패널 책임과 순서를 설명하는 주석은 실제 순서와 일치시킨다"
+    accept:
+      - "옵션바/상태바가 루트 egui 콘텐츠 전체 폭을 차지"
+      - "툴 레일은 본문 왼쪽, 좌우 사이드바는 옵션바 아래·상태바 위"
+      - "CentralPanel은 좌우 사이드바가 남긴 중앙 영역"
+      - "cargo test -p pixeldraw 통과"
+      - "가능하면 기본 1280×820 및 최소 900×560 창에서 수동 확인"
+    agent_review: "읽기 전용 Explore가 제안 순서, CentralPanel 제약, 검증법을 확인 완료"
+    verification: "cargo test -p pixeldraw: 154 passed. 기본/최소 창 GUI 수동 확인은 아직 안 함"
+
+  - id: "7.2"
+    title: "히스토리 액션을 메뉴바로 모으고 툴바 중복 제거"
+    status: completed
+    needs: ["7.1"]
+    write_scope: [crates/app/src/ui/menubar.rs, crates/app/src/ui/toolbar.rs]
+    read_first: [crates/app/src/ui/menubar.rs, crates/app/src/ui/toolbar.rs, crates/app/src/ui/actions.rs]
+    change: "실행 취소/다시 실행을 메뉴바 우측 퀵 액션으로 제공하고 편집 메뉴 항목은 유지. 툴바의 히스토리·확대/축소 버튼을 제거해 도구 선택 레일을 정리. 확대/축소는 이미 있는 보기 메뉴를 단일 진입점으로 사용"
+    accept:
+      - "Undo/Redo 메뉴와 퀵 액션이 같은 action/세션 경로 사용"
+      - "can_undo/can_redo가 같은 history 상태를 반영. native UI busy 상태는 현재 미구현이며 새 busy 정책을 발명하지 않는다"
+      - "툴바에는 도구만 남거나, 남은 비도구 컨트롤은 명시된 예외로 설명"
+      - "관련 UI/action 테스트 통과"
+    agent_review: "읽기 전용 Explore가 동일 Action 경로, history gating, View 메뉴 중복 제거를 검토 완료"
+    verification: "cargo test -p pixeldraw ui::menubar::tests: 1 passed; cargo test -p pixeldraw ui::toolbar::tests: 7 passed"
+    final_verification: "cargo test -p pixeldraw: 154 passed; cargo fmt --all --check: pass"
+
+  - id: "7.3"
+    title: "사이드바 기본 폭/드래그 범위와 캔버스 폭 예산"
+    status: completed
+    needs: ["7.1"]
+    write_scope: [crates/app/src/ui/mod.rs, docs/roadmap/phase7.yaml]
+    read_first: [docs/roadmap/phase3.yaml, crates/app/src/ui/mod.rs, crates/app/src/shell.rs]
+    change: "우선 egui SidePanel의 default width와 드래그 범위를 명시해 1280×820에서 합리적인 기본 폭을 주고, 최소 900px 창에서는 사이드바 최대 합계를 제한해 캔버스 영역을 보호. 이 저장소는 패널 폭 영속화를 아직 구현하지 않았으므로 별도 설정 스키마 추가는 이번 태스크에서 하지 않고 후속 설계로 남긴다"
+    accept:
+      - "기본/최소 창 크기에서 패널 폭 합이 캔버스를 침범하지 않음"
+      - "좌우 리사이즈가 정상이고 가능한 폭이 부족하면 사용자 우선순위에 맞게 제한"
+      - "패널 폭 범위 계산을 단위 테스트하거나 egui UI 테스트로 고정"
+      - "폭 영속화는 범위 밖이며 미지원으로 기록"
+    agent_review: "Explore가 Panel의 바깥 폭 의미와 900pt 예산을 검토 완료"
+    implementation: "left default 256/min 180; right default 282/min 200; 900pt에서 레일+간격 84pt와 canvas 220pt를 제외한 596pt를 반대 패널 이전 폭에 따라 동적으로 분배. egui 실행 중 패널 폭은 기억하지만 앱 재시작 간 저장은 하지 않음"
+    verification: "동적 최대 폭 경계 단위 테스트 추가; cargo test -p pixeldraw와 cargo fmt --all --check 통과. GUI resize 수동 확인은 아직 안 함"
+
+  - id: "7.4"
+    title: "좁은 창과 짧은 높이에서 정보 밀도 조절"
+    status: completed
+    needs: ["7.3"]
+    write_scope: [crates/app/src/ui/mod.rs, crates/app/src/ui/panels/color.rs]
+    read_first: [crates/app/src/ui/mod.rs, crates/app/src/ui/panels/color.rs, crates/app/src/ui/toolbar.rs, crates/app/src/ui/optionbar.rs, crates/app/src/ui/statusbar.rs]
+    change: "기존 세로 스크롤(툴 레일/사이드바)과 옵션바 줄바꿈을 유지. 최소 폭 좌측 색상 패널에서 슬롯·색상환과 RGBA 입력 줄이 넘치지 않도록 줄바꿈 레이아웃 적용"
+    accept:
+      - "색상 슬롯/색상환 및 RGBA 입력이 좁은 패널에서 줄바꿈"
+      - "문서 크기, 좌표, 확대율 등 상태바 핵심 정보는 유지"
+      - "cargo test -p pixeldraw 통과"
+    agent_review: "Explore가 세로 스크롤/옵션 줄바꿈 기존 지원과 색상 picker의 구체적인 최소폭 넘침을 확인"
+    verification: "cargo test -p pixeldraw: 155 passed; cargo fmt --all --check: pass; 최소 창 GUI 수동 확인은 7.5 게이트에 남김"
+
+  - id: "7.5"
+    title: "레이아웃 회귀 게이트와 기준 캡처 갱신"
+    status: in_progress
+    needs: ["7.1", "7.2", "7.3", "7.4"]
+    write_scope: [docs/native_smoke.md, docs/native_ui_layout_audit.md, docs/native_ui_layout_compare.html]
+    read_first: [docs/native_smoke.md, docs/native_ui_layout_audit.md, docs/native_ui_layout_compare.html]
+    change: "네이티브 UI 스모크 체크에 기본/최소 창, 전체 폭 바, 패널 리사이즈, 도구 전환별 옵션바, Undo/Redo 위치를 추가하고 시각 자료를 구현 결과와 맞춘다"
+    accept:
+      - "수동 스모크 절차만으로 합격/실패 판별 가능"
+      - "비교 목업이 실제 최종 레이아웃과 일치"
+      - "cargo test -p pixeldraw 및 cargo fmt --all --check 통과"
+    implementation: "스모크 항목과 현재 메뉴/폭을 목업에 반영. 네이티브 창 직접 조작/캡처는 이 세션에서 할 수 없어 사람의 실행 확인 대기"
+    verification: "cargo test -p pixeldraw: 155 passed; cargo fmt --all --check: pass; HTML desktop/mobile viewport 확인"
+    pending: ["cargo run -p pixeldraw 후 docs/native_smoke.md UI 레이아웃 체크 항목 수동 확인", "확인 결과로 목업/실행 기록 최종 갱신"]
+
+gate:
+  automated: ["cargo test -p pixeldraw", "cargo fmt --all --check"]
+  manual: ["기본 1280×820", "최소 900×560", "패널 드래그", "각 도구 옵션 전환", "Undo/Redo 가능/불가 상태"]
+  completion: "7.1~7.5 완료, 게이트 통과, 변경 파일과 남은 리스크를 사용자에게 보고"

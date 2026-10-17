@@ -1,4 +1,4 @@
-﻿//! Dialogs — port of `src/ui/dialogs/**`.
+//! Dialogs — port of `src/ui/dialogs/**`.
 
 use super::UiState;
 use crate::session_glue::AppState;
@@ -11,10 +11,20 @@ pub enum DialogKind {
     ResizeCanvas,
     Preferences,
     Help,
-    Confirm { title: String, message: String },
+    Confirm {
+        title: String,
+        message: String,
+    },
     ColorPicker,
     LayerProperties,
     ExportOptions,
+    /// 3.10b boot restore prompt: document name + `updatedAt` string.
+    RestoreAutosave {
+        name: String,
+        when: String,
+    },
+    /// 3.10b close guard (`beforeunload` parity; wording from 3.7c).
+    ConfirmExit,
 }
 
 /// Dialog result returned to caller.
@@ -33,6 +43,10 @@ pub enum DialogResult {
     Confirmed(bool),
     Color([u8; 4]),
     None,
+    /// 3.10b boot prompt: true = 복원, false = 버리기/Esc/닫기.
+    AutosaveRestore(bool),
+    /// 3.10b close guard: true = 버리고 닫기, false = 머무르기.
+    ConfirmExit(bool),
 }
 
 /// Active dialog state.
@@ -84,6 +98,19 @@ impl Dialog {
         })
     }
 
+    /// 3.10b boot prompt: `복원` loads the record, `버리기`/Esc drops it (D8).
+    pub fn restore_autosave(name: impl Into<String>, when: impl Into<String>) -> Self {
+        Self::new(DialogKind::RestoreAutosave {
+            name: name.into(),
+            when: when.into(),
+        })
+    }
+
+    /// 3.10b close guard: `버리기` closes anyway, `취소`/Esc stays.
+    pub fn confirm_exit() -> Self {
+        Self::new(DialogKind::ConfirmExit)
+    }
+
     fn title(&self) -> &str {
         match &self.kind {
             DialogKind::NewDocument => "새 문서",
@@ -94,6 +121,8 @@ impl Dialog {
             DialogKind::ColorPicker => "색상 선택",
             DialogKind::LayerProperties => "레이어 속성",
             DialogKind::ExportOptions => "내보내기 옵션",
+            DialogKind::RestoreAutosave { .. } => "자동저장 복원",
+            DialogKind::ConfirmExit => "변경 버리기",
         }
     }
 }
@@ -113,62 +142,106 @@ impl Dialogs {
     }
 
     pub fn show(&mut self, ui: &mut egui::Ui, ui_state: &mut UiState, _app: &mut AppState) {
-        if ui_state.dialogs.active.is_some() {
-            // Extract dialog and process it
-            if let Some(dialog) = ui_state.dialogs.active.as_mut() {
-                let title = dialog.title().to_string();
+        if let Some(dialog) = ui_state.dialogs.active.as_mut() {
+            let title = dialog.title().to_string();
+            // Results produced by the 3.10b dialogs (restore prompt, close
+            // guard). They resolve through `pending_result`; the older kinds
+            // keep their post-close path in the free `show` below.
+            let mut pending: Option<DialogResult> = None;
 
-                // Don't use .open() - instead handle the open state ourselves
-                // by checking dialog.open before showing and setting it to false when cancelled
-                if dialog.open {
-                    egui::Window::new(title)
-                        .resizable(false)
-                        .collapsible(false)
-                        .anchor(egui::Align2::CENTER_CENTER, Vec2::ZERO)
-                        .show(ui.ctx(), |ui| {
-                            ui.set_min_width(360.0);
-                            ui.spacing_mut().item_spacing = Vec2::new(8.0, 12.0);
+            // Don't use .open() - instead handle the open state ourselves
+            // by checking dialog.open before showing and setting it to false when cancelled
+            if dialog.open {
+                egui::Window::new(title)
+                    .resizable(false)
+                    .collapsible(false)
+                    .anchor(egui::Align2::CENTER_CENTER, Vec2::ZERO)
+                    .show(ui.ctx(), |ui| {
+                        ui.set_min_width(360.0);
+                        ui.spacing_mut().item_spacing = Vec2::new(8.0, 12.0);
 
-                            match &mut dialog.kind {
-                                DialogKind::NewDocument => {
-                                    Self::new_document_form(ui, dialog);
-                                }
-                                DialogKind::ResizeCanvas => {
-                                    Self::resize_canvas_form(ui, dialog);
-                                }
-                                DialogKind::Preferences => {
-                                    Self::preferences_form(ui);
-                                }
-                                DialogKind::Help => {
-                                    Self::help_form(ui);
-                                }
-                                DialogKind::Confirm { message, .. } => {
-                                    Self::confirm_form(ui, message);
-                                }
-                                DialogKind::ColorPicker => {
-                                    // TODO: color picker
-                                }
-                                DialogKind::LayerProperties => {
-                                    // TODO: layer properties
-                                }
-                                DialogKind::ExportOptions => {
-                                    // TODO: export options
-                                }
+                        match &mut dialog.kind {
+                            DialogKind::NewDocument => {
+                                Self::new_document_form(ui, dialog);
                             }
+                            DialogKind::ResizeCanvas => {
+                                Self::resize_canvas_form(ui, dialog);
+                            }
+                            DialogKind::Preferences => {
+                                Self::preferences_form(ui);
+                            }
+                            DialogKind::Help => {
+                                Self::help_form(ui);
+                            }
+                            DialogKind::Confirm { message, .. } => {
+                                Self::confirm_form(ui, message);
+                            }
+                            DialogKind::RestoreAutosave { name, when } => {
+                                Self::restore_autosave_form(ui, name, when);
+                            }
+                            DialogKind::ConfirmExit => {
+                                Self::confirm_exit_form(ui);
+                            }
+                            DialogKind::ColorPicker
+                            | DialogKind::LayerProperties
+                            | DialogKind::ExportOptions => {
+                                // TODO: color picker / layer properties / export
+                            }
+                        }
 
-                            ui.separator();
-                            ui.horizontal(|ui| {
-                                ui.with_layout(
-                                    egui::Layout::right_to_left(egui::Align::Center),
-                                    |ui| {
+                        // 3.10b: Esc is the JS backdrop path — 버리기 for the
+                        // restore prompt (D8), stay for the close guard.
+                        if matches!(
+                            &dialog.kind,
+                            DialogKind::RestoreAutosave { .. } | DialogKind::ConfirmExit
+                        ) && ui.input(|i| i.key_pressed(egui::Key::Escape))
+                        {
+                            pending = Some(match &dialog.kind {
+                                DialogKind::ConfirmExit => DialogResult::ConfirmExit(false),
+                                _ => DialogResult::AutosaveRestore(false),
+                            });
+                            dialog.open = false;
+                        }
+
+                        ui.separator();
+                        ui.horizontal(|ui| {
+                            ui.with_layout(
+                                egui::Layout::right_to_left(egui::Align::Center),
+                                |ui| match &dialog.kind {
+                                    DialogKind::RestoreAutosave { .. } => {
+                                        if ui.button("복원").clicked() {
+                                            pending = Some(DialogResult::AutosaveRestore(true));
+                                            dialog.open = false;
+                                        }
+                                        if ui.button("버리기").clicked() {
+                                            pending = Some(DialogResult::AutosaveRestore(false));
+                                            dialog.open = false;
+                                        }
+                                    }
+                                    DialogKind::ConfirmExit => {
+                                        if ui.button("버리기").clicked() {
+                                            pending = Some(DialogResult::ConfirmExit(true));
+                                            dialog.open = false;
+                                        }
+                                        if ui.button("취소").clicked() {
+                                            pending = Some(DialogResult::ConfirmExit(false));
+                                            dialog.open = false;
+                                        }
+                                    }
+                                    _ => {
                                         if ui.button("취소").clicked() {
                                             dialog.open = false;
                                         }
-                                    },
-                                );
-                            });
+                                    }
+                                },
+                            );
                         });
-                }
+                    });
+            }
+
+            if let Some(result) = pending {
+                ui_state.dialogs.pending_result = Some(result);
+                ui_state.dialogs.active = None;
             }
         }
     }
@@ -243,6 +316,22 @@ impl Dialogs {
 
     fn confirm_form(ui: &mut Ui, message: &str) {
         ui.label(RichText::new(message).size(13.0));
+    }
+
+    /// 3.7d copy: `자동저장된 문서 "name" (when)가 있습니다. 복원하시겠습니까?`
+    fn restore_autosave_form(ui: &mut Ui, name: &str, when: &str) {
+        ui.label(
+            RichText::new(format!(
+                "자동저장된 문서 \"{name}\" ({when})가 있습니다. 복원하시겠습니까?"
+            ))
+            .size(13.0),
+        );
+    }
+
+    /// 3.7c copy for the close guard (the JS used the browser `beforeunload`
+    /// prompt, so no portable string exists).
+    fn confirm_exit_form(ui: &mut Ui) {
+        ui.label(RichText::new("저장하지 않은 변경이 있습니다. 버리시겠습니까?").size(13.0));
     }
 }
 

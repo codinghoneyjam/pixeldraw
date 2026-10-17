@@ -68,7 +68,9 @@ fn dispatch_frame_input(state: &mut AppState, fi: &FrameInput) -> bool {
         );
     }
     for (key, is_down) in &fi.keys {
-        if *is_down && !fi.text_focused {
+        // UI-3 busy gate: a dialog ignores the tool key stream the way the JS
+        // `busy` branch ignores keydown (held-key ups still settle state).
+        if *is_down && !fi.text_focused && !state.ui_busy {
             outcomes.push(state.input.key_down(key, &ctx));
         } else if !*is_down {
             outcomes.push(state.input.key_up(key, &ctx));

@@ -66,6 +66,8 @@ pub struct PixeldrawApp {
     ui_state: UiState,
     texture: CanvasTexture,
     fb: Framebuffer,
+    /// The close guard let the window go (3.10b `beforeunload` parity).
+    allow_close: bool,
 }
 
 impl PixeldrawApp {
@@ -83,7 +85,15 @@ impl PixeldrawApp {
             .filter(|(_, collapsed)| *collapsed)
             .map(|(id, _)| id)
             .collect();
-        let state = AppState::new();
+        // Boot order (`ui/app.js` L83-99): settings + recent colors, then the
+        // autosave peek and its restore dialog. `AppState::boot` restores the
+        // settings before the first document and before any listener attaches.
+        let state = AppState::boot();
+        ui_state.panels.recent = state.settings_store.recent().to_vec();
+        if let Some((name, when)) = state.autosave_peek() {
+            ui_state.dialogs.active =
+                Some(crate::ui::dialogs::Dialog::restore_autosave(name, when));
+        }
         // The option bar dispatches on the active tool, so it has to start
         // somewhere: without this the strip is empty until the first click.
         ui_state.toolbar.active_tool = state.session.settings().active_tool.to_string();
@@ -92,6 +102,7 @@ impl PixeldrawApp {
             ui_state,
             texture: CanvasTexture::new(),
             fb: Framebuffer::new(1, 1),
+            allow_close: false,
         }
     }
 
@@ -102,15 +113,50 @@ impl PixeldrawApp {
 
 impl eframe::App for PixeldrawApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-        let ctx = ui.ctx();
+        // An owned clone (cheap Arc) so the `ui` borrow can be released while
+        // `ctx` is still used across `render_ui`.
+        let ctx = ui.ctx().clone();
 
-        // Handle keyboard shortcuts
-        if let Some(action) = self.ui_state.menubar.actions.find_matching(ctx) {
+        // Phase 3.10b close guard: flush the pending autosave ("pagehide"
+        // parity), then keep unsaved changes behind a confirm dialog
+        // (`beforeunload` parity; the JS relied on the browser prompt).
+        if ctx.input(|i| i.viewport().close_requested()) {
+            self.state.flush_autosave();
+            if self.state.session.history().is_dirty() && !self.allow_close {
+                ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
+                self.ui_state.dialogs.active = Some(crate::ui::dialogs::Dialog::confirm_exit());
+            } else {
+                self.allow_close = true;
+            }
+        } else if !ctx.input(|i| i.focused) {
+            // `visibilitychange` parity: best effort while the window is
+            // unfocused (a no-op unless something is dirty).
+            self.state.flush_autosave();
+        }
+
+        // UI-3 shortcut gates (`input.js` keydown order): an editable target
+        // consumes only Escape, flipping it into a blur; a busy dialog ignores
+        // everything. The canvas key stream reads the same `ui_busy`.
+        let busy = self.ui_state.dialogs.active.is_some();
+        self.state.ui_busy = busy;
+        if ctx.egui_wants_keyboard_input() {
+            if ctx.input(|i| i.key_pressed(egui::Key::Escape))
+                && let Some(id) = ctx.memory(|m| m.focused())
+            {
+                ctx.memory_mut(|m| m.surrender_focus(id));
+            }
+        } else if let Some(action) = self
+            .ui_state
+            .menubar
+            .actions
+            .find_matching_guarded(&ctx, busy)
+        {
             self.dispatch_action(action);
         }
 
         // Render all UI panels using the root ui
         render_ui(ui, &mut self.ui_state, &mut self.state);
+        self.handle_dialog_results(&ctx);
 
         // Central canvas area
         egui::CentralPanel::default()
@@ -118,10 +164,42 @@ impl eframe::App for PixeldrawApp {
             .show(ui, |ui| {
                 show_canvas(ui, &mut self.state, &mut self.texture, &mut self.fb);
             });
+
+        // Phase 3.9/3.10 frame persistence: recent-colors snapshot, the 250 ms
+        // settings debounce, and the 800 ms autosave schedule.
+        let now = std::time::Instant::now();
+        self.state
+            .settings_store
+            .note_recent(&self.ui_state.panels.recent, now);
+        self.state.tick_persistence(now);
     }
 }
 
 impl PixeldrawApp {
+    /// Dialog outcomes the shell owns: the boot autosave prompt (3.10b) and
+    /// the close guard. The older dialog kinds keep their existing post-close
+    /// path inside `ui/dialogs.rs`.
+    fn handle_dialog_results(&mut self, ctx: &egui::Context) {
+        use crate::ui::dialogs::DialogResult;
+        let Some(result) = self.ui_state.dialogs.pending_result.take() else {
+            return;
+        };
+        match result {
+            DialogResult::AutosaveRestore(true) => {
+                self.state.restore_autosave();
+            }
+            DialogResult::AutosaveRestore(false) => {
+                self.state.discard_autosave();
+            }
+            DialogResult::ConfirmExit(true) => {
+                self.allow_close = true;
+                ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+            }
+            DialogResult::ConfirmExit(false) => {}
+            _ => {}
+        }
+    }
+
     fn dispatch_action(&mut self, action: crate::ui::actions::Action) {
         use crate::ui::actions::Action::*;
         match action {
@@ -138,8 +216,16 @@ impl PixeldrawApp {
                     if let Some(path) =
                         pixel_platform::pick_save_file(pixel_platform::FileKind::Json, "untitled")
                     {
-                        let _ = pixel_platform::write_bytes_atomic(&path, &bytes);
-                        self.say("저장됨");
+                        match pixel_platform::write_bytes_atomic(&path, &bytes) {
+                            Ok(()) => {
+                                // JS `doSave`: `history.markSaved()` only on a
+                                // successful write — the statusbar dirty dot
+                                // and the close guard read this.
+                                self.state.session.history_mut().mark_saved();
+                                self.say("저장됨");
+                            }
+                            Err(e) => self.say(format!("저장 실패: {e}")),
+                        }
                     }
                 } else {
                     self.say("저장 실패");
