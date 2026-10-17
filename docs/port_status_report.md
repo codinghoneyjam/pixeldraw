@@ -31,7 +31,7 @@
 | 2 네이티브 캔버스 | 2.1~2.7 | ✅ 구현 완료 (공식 수동 스모크만 미실행) | `crates/app/{canvas_view,canvas_texture,session_glue,input*,overlay_raster}.rs` |
 | 3 UI 전면 이식 | 3.1~3.10 | ✅ 구현 완료 (3.9·3.10 포함; 수동 스모크만 UI-6) | `ui/{settings_store,autosave}.rs` + 셸 배선 · 웍스 585 |
 | 4 자산 파이프라인 | A 선택 | ✅ | viewer 삭제, 개발 자산 유지 |
-| 5 성능 | 5.1~5.7 | ⚠️ 부분 | `perf_js_vs_rust.md` §11: 달성 6 · 미달 3 · 미측정 1. 5.6·5.7 미착수 |
+| 5 성능 | 5.1~5.7 | ⚠️ 부분 | `perf_js_vs_rust.md` §11+§13: 달성 6 · 미달 4 · 미측정 0. 5.6·5.7 미착수 |
 | 7 UI 레이아웃 정리 | 7.1~7.5 | 🔄 7.5 진행 중 | `docs/roadmap/phase7.yaml` (7.1~7.4 completed, 7.5 in_progress) |
 | 6 절삭·패키징 | 6.1~6.7 | ⬜ 미착수 | `src/`·`run.py`·`src-tauri/` 잔존(의도된 상태) |
 
@@ -153,7 +153,7 @@ dense 인덱스·스탬프 중복 제거·rayon)의 효과는 그 문서에 있�
 |---|---|---|---|
 | PERF-1 | 6ms 프레임 경로가 단일 스레드 | 미적용 | P1 |
 | PERF-2 | 목표 미달 3항목(composite/flatten/pen=8) | 미달 | P1 |
-| PERF-3 | 저장(documentToJson) 미측정 | 측정 불가 상태 | P1 |
+| PERF-3 | 저장(documentToJson) 측정·compact·rayon | **완료**(2026-10-17) — 578.9 ms, 목표 4.8× 미달 | P1 |
 | PERF-4 | 5.6 텍스처 부분 업로드·5.7 프레임 HUD | 미착수 | P1/P2 |
 | PERF-5 | 미측정 항목(Undo 메모리 등) | 미측정 | P2 |
 | PERF-6 | 후보 기법(실험 기록 존재) | 보류 | P2 |
@@ -183,18 +183,22 @@ dense 인덱스·스탬프 중복 제거·rayon)의 효과는 그 문서에 있�
   인덱싱 — **5.1 u32 워드 SIMD**와 로드 단위 스킵 확장이 다음 수순(§11-5).
 - pen=8은 스탬프 경로 미세 최적화(스팬 폭 임계, footprint 재사용).
 
-### PERF-3. 저장 성능 미측정 (P1)
+### PERF-3. 저장 성능 — 측정·포맷 전환 완료 (2026-10-17), 목표 미달은 잔존 (P1)
 
-- **현재**: `crates/engine/examples/bench.rs`가 여전히 `documentToJson`을 제외하고
-  "Phase 1.13 owns io/serialize"라는 **낡은 주석**을 달고 있다(1.13은 완료).
-- 저장 경로는 `crates/app/src/file_ops.rs::save_json_bytes` →
-  `document_to_json` + **`serde_json::to_vec_pretty`**(들여쓰기 포함).
-  JS는 compact `JSON.stringify`였다. 출력이 커지고 사용자 체감 저장이 느릴 수 있다.
-- **제안**:
-  1. 벤치에 `documentToJson` 항목 추가(Rust 문자열 직렬화 + `to_vec_pretty`/compact)로
-     목표 ≤120ms 대비 측정 — 지금 문서에 숫자가 없다.
-  2. 필요 시 compact 직렬화로 전환(JSON 파서는 둘 다 읽으므로 저장 호환성 유지) 후
-     파일 크기·시간 비교. 골든 키 순서는 그대로 유지 가능.
+- **측정**: `bench.rs`의 낡은 주석("Phase 1.13 owns io/serialize")을 걷어내고
+  `documentToJson (save)` 항목을 신설했다. 워크로드는 §1·§11과 동일(2048×1088·64레이어,
+  **37,504청크** — JS 오라클 프로브로 청크 수 일치 확인). Rust는 순차 **1159.2 ms** →
+  청크 인코딩 rayon **578.9 ms**(2.0×)로 **JS 2114.6 ms 대비 3.65× 빠름** —
+  그러나 목표 120 ms에는 **4.8× 미달**(잔존 과제).
+- **compact 전환(완료)**: `save_json_bytes`가 `to_vec_pretty` → `to_vec`. 같은 문서에서
+  9806 KB → **7455 KB(−24%)**, 문자열화 9.1 → 6.3 ms(저장 전체의 ~1%).
+  JSON 파서는 둘 다 읽으므로 저장 호환성 불변.
+- **전제 정정**: "JS는 compact `JSON.stringify`였다"는 이전 서술은 틀렸다 — 그건 벤치의
+  크기 측정용 문자열이었고, 실제 JS 저장 파일은 `stringifyReadableJson`(실측 9909 KB)이다.
+  Rust는 readable 포터가 없어 공백만 다른 compact로 정했다(양쪽 파서 호환).
+- **남은 미달의 원인**: 문자열화(6.3 ms)가 아니라 청크당 PNG 인코딩(37,504회)이다.
+  다음 후보(할당 재사용·deflate 튜닝)는 `perf_js_vs_rust.md` §13-4 — deflate는
+  후보 문서에 롤백 이력이 있어 재시도 시 하네스 기록이 필요하다.
 
 ### PERF-4. 5.6·5.7 (P1/P2)
 
@@ -209,7 +213,7 @@ dense 인덱스·스탬프 중복 제거·rayon)의 효과는 그 문서에 있�
 - Undo 바이트 예산 회귀(커버리지 비트마스크가 청크당 +128B = 문서 +3.1%) 미측정.
 - 빈 레이어 메모리(dense 슬롯 테이블 레이어당 최대 17KB) 미측정.
 - 레이어 1~3개의 composite(비트마스크 이득 최대 구간) 미측정.
-- 저장 JSON 크기(JS 7557KB) 비교 미측정.
+- ~~저장 JSON 크기(JS 7557KB) 비교 미측정.~~ **측정(2026-10-17)**: JS 실제 저장 포맷(readable) 9909KB / JS compact 7557KB / Rust compact 7455KB (§13).
 
 ### PERF-6. 보류 중인 후보 (P2, 실험 기록 있음)
 
@@ -298,9 +302,9 @@ dense 인덱스·스탬프 중복 제거·rayon)의 효과는 그 문서에 있�
 2. **(P0) Phase 7.5 수동 스모크 + Phase 2~3 체크리스트 1회** → Phase 7 배치 커밋·로그·보드 (UI-6, V2, D1/D5/D6)
 3. ✅ **(P0) 설정 영속화(3.9) + 자동저장·복원(3.10)** (2026-10-17, UI-1·UI-2)
 4. ✅ **(P0) 단축키/포커스/busy 가드** (2026-10-17, UI-3)
-5. **(P1) 저장 벤치 측정** → 필요 시 compact 직렬화 (PERF-3)
+5. ✅ **(P1) 저장 벤치 측정 + compact 전환 + 청크 인코딩 rayon** (2026-10-17, PERF-3 — 578.9 ms · 목표 4.8× 미달은 잔존)
 6. **(P1) 프레임 경로 병렬화 + 텍스처 부분 업로드** (PERF-1, UI-5)
-7. **(P1) 성능 잔여 3항목(5.1 SIMD 등)** (PERF-2)
+7. **(P1) 성능 잔여 미달 4항목(composite/flatten/pen=8/documentToJson)** (PERF-2·PERF-3 잔여)
 8. **(P1/P2) 파일 UX 잔손질(SaveAs·최근 경로), 패널 폭 영속화** (UI-7, UI-4)
 9. **(P2) 문서 정합성 정리 → Phase 6 착수** (D2~D4, §5)
 
@@ -320,6 +324,7 @@ node tools/view_check.mjs              # OK
 python schema/schema_selfcheck.py      # OK
 node tools/oracle_manifest.mjs --check # OK (193 files, 2026-10-17 재동결)
 cargo build --release -p pixeldraw     # target/release/pixeldraw.exe (7.0 MB, 배선 후 재빌드)
+cargo run -p pixel-engine --release --example bench   # documentToJson 578.9 ms (median) — §13
 ```
 
 ## 부록 B. 참조 파일

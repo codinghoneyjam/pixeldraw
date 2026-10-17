@@ -61,10 +61,17 @@ pub fn open_json_bytes(state: &mut AppState, bytes: &[u8]) -> EngineResult<()> {
 }
 
 /// Serialize the current document (key order pinned by 1.13).
+///
+/// Compact, not pretty: PERF-3 measured 9806 KB → 7455 KB (−24%) on the busy
+/// bench document, and the stringify itself is under 1% of the save (per-chunk
+/// PNG encoding dominates). Both `serde_json` and the JS parser read either
+/// form, so save compatibility is unchanged. (JS writes files through its own
+/// `stringifyReadableJson`; that readable port has not happened yet — the
+/// whitespace difference is cosmetic and both sides parse each other fine.)
 pub fn save_json_bytes(state: &AppState) -> EngineResult<Vec<u8>> {
     let doc = state.session.require_doc()?;
     let value = document_to_json(doc)?;
-    serde_json::to_vec_pretty(&value)
+    serde_json::to_vec(&value)
         .map_err(|e| DrawToolError::invalid_state(format!("document JSON encode failed: {e}")))
 }
 

@@ -8,6 +8,7 @@ use crate::io::{
     validate::{validate_document, validate_layer_file},
 };
 use crate::model::{CanvasInfo, Document, DocumentSpec, IdGen, Layer, Viewport};
+use rayon::prelude::*;
 use serde_json::{Value, json};
 
 fn canvas_json(doc: &Document) -> Value {
@@ -26,11 +27,17 @@ fn layer_json(layer: &Layer) -> EngineResult<Value> {
         }
     });
     chunks.sort_by_key(|(cy, cx, _)| (*cy, *cx));
-    let mut encoded = Vec::with_capacity(chunks.len());
-    for (cy, cx, data) in chunks {
-        let png = encode_png(&data, CHUNK_PX, CHUNK_PX)?;
-        encoded.push(json!({"cx":cx,"cy":cy,"png":bytes_to_base64(&png)}));
-    }
+    // One PNG encode per chunk, none dependent on another: the rows go to
+    // rayon the way composite/flatten already do. `collect` keeps index order,
+    // so the bytes are identical to the sequential loop this replaced — the
+    // same output-byte rule the Phase 5 experiments followed.
+    let encoded: Vec<Value> = chunks
+        .par_iter()
+        .map(|(cy, cx, data)| -> EngineResult<Value> {
+            let png = encode_png(data, CHUNK_PX, CHUNK_PX)?;
+            Ok(json!({"cx":cx,"cy":cy,"png":bytes_to_base64(&png)}))
+        })
+        .collect::<EngineResult<Vec<Value>>>()?;
     let chunks = encoded;
     Ok(
         json!({"layer_id":layer.id,"name":layer.name,"type":"raster","visible":layer.visible,"locked":layer.locked,"opacity":layer.opacity,"blend":layer.blend,"raster":{"chunk_px":CHUNK_PX,"encoding":"png_base64","chunks":chunks}}),

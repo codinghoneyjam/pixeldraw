@@ -4,9 +4,11 @@
 //!
 //! The workload, the labels and the median-of-N rule are deliberately the same
 //! ones the JS benchmark uses, so `docs/perf_js_vs_rust.md` can put the two
-//! numbers in one table. Where the JS item has no Rust counterpart yet
-//! (`documentToJson` — Phase 1.13 owns `io/serialize`) it is **omitted**, not
-//! stubbed: a missing number is not a passing number.
+//! numbers in one table. `documentToJson (save)` mirrors the JS row: the value
+//! build only (per-chunk PNG encode + base64). The two `-> to_vec*` rows are
+//! Rust-only — JS writes files through its own `stringifyReadableJson`
+//! (`src/io/stringify_readable.js`), which has no Rust port yet — and exist to
+//! pick the native save format.
 //!
 //! ```text
 //! cargo run -p pixel-engine --release --example bench
@@ -21,7 +23,9 @@ use pixel_engine::composite::{self, LayerSource, composite_canvas, composite_can
 use pixel_engine::constants::{CHUNK_LEN, CHUNK_PX};
 use pixel_engine::io::export::{FlattenOptions, flatten_to_rgba, flatten_to_rgba_serial};
 use pixel_engine::io::png::encode_png;
+use pixel_engine::io::serialize::document_to_json;
 use pixel_engine::kernels::flood_fill_scanline;
+use pixel_engine::model::{Document, NewDocumentOptions, Session};
 use pixel_engine::raster::brush::{stroke_point, stroke_segment};
 use pixel_engine::raster::shape_raster::{FillMode, ShapeKind, ShapeSpec, apply_shape};
 use rayon::prelude::*;
@@ -162,6 +166,38 @@ impl BusyDoc {
 /// `Math.round(v)` = `floor(v + 0.5)`, the repo's one rounding rule.
 fn js_round(v: f64) -> f64 {
     (v + 0.5).floor()
+}
+
+/// `makeBusyDoc` as a real `Document`: layer metadata is written directly and
+/// pixels go through a `PixelWriter` over each layer's store — exactly what the
+/// JS does, and it keeps the edit/history machinery out of a save measurement.
+fn make_busy_document() -> Document {
+    let mut session = Session::new();
+    session
+        .new_document(NewDocumentOptions::default().size(WIDTH, HEIGHT))
+        .expect("valid canvas size");
+    for _ in 1..LAYERS {
+        session.add_layer(None).expect("layer count under the cap");
+    }
+    let mut doc = session.doc().expect("document just created").clone();
+    for (li, layer) in doc.layers.iter_mut().enumerate() {
+        layer.opacity = if li % 4 == 0 { 0.5 } else { 1.0 };
+        layer.blend = MODES[li % 6];
+        let mut w = PixelWriter::new(&mut layer.store, layer.id.as_str());
+        for k in 0..24i32 {
+            stroke_segment(
+                &mut w,
+                (k * 97) % WIDTH as i32,
+                (k * 61) % HEIGHT as i32,
+                ((k * 97) + 400) % WIDTH as i32,
+                ((k * 61) + 300) % HEIGHT as i32,
+                5,
+                if k % 3 == 0 { BLUE } else { RED },
+            );
+        }
+        let _ = w.finish();
+    }
+    doc
 }
 
 // ---------------------------------------------------------------------------
@@ -393,6 +429,61 @@ fn bench_flatten_and_png() {
     });
 }
 
+/// Phase 1.13 save path. The JS row times `documentToJson(doc)` alone (the
+/// value build), so the first row does the same. The stringify rows answer this
+/// port's open question (`docs/port_status_report.md` PERF-3): the file is
+/// currently written with `serde_json::to_vec_pretty` and compact may be the
+/// better trade.
+fn bench_document_to_json() {
+    let doc = make_busy_document();
+    let mut last: Option<serde_json::Value> = None;
+    time_it("documentToJson (save)", PNG_RUNS, || {
+        last = Some(document_to_json(&doc).expect("valid document"));
+    });
+    let value = last.expect("timed at least once");
+
+    // The strings are built once for the size row, then re-built under the
+    // timer — the same split the JS bench uses for its `json size` line.
+    let compact = serde_json::to_vec(&value).expect("compact encode");
+    let pretty = serde_json::to_vec_pretty(&value).expect("pretty encode");
+    let encoded_chunks: usize = value["layers"]
+        .as_array()
+        .map(|layers| {
+            layers
+                .iter()
+                .map(|l| l["raster"]["chunks"].as_array().map_or(0, Vec::len))
+                .sum()
+        })
+        .unwrap_or(0);
+    println!(
+        "{:<38} | {:>6} chunks encoded ({LAYERS} layers)",
+        "  -> source", encoded_chunks
+    );
+    println!(
+        "{:<38} | {:>6} KB compact / {:>6} KB pretty",
+        "  -> json size",
+        compact.len() / 1024,
+        pretty.len() / 1024
+    );
+    time_it("-> to_vec (compact)", PNG_RUNS, || {
+        let bytes = serde_json::to_vec(&value).expect("compact encode");
+        assert!(!bytes.is_empty());
+    });
+    time_it("-> to_vec_pretty", PNG_RUNS, || {
+        let bytes = serde_json::to_vec_pretty(&value).expect("pretty encode");
+        assert!(!bytes.is_empty());
+    });
+
+    // Same spirit as the JS `text.length` guard: a serializer that silently
+    // drops layers must not read as a fast one.
+    assert!(
+        value["layers"]
+            .as_array()
+            .is_some_and(|layers| layers.len() == LAYERS),
+        "all layers must serialize"
+    );
+}
+
 // ---------------------------------------------------------------------------
 // Warm-up + main
 
@@ -465,6 +556,8 @@ fn main() {
     bench_shapes();
     bench_composite();
     bench_flatten_and_png();
+    bench_document_to_json();
 
-    println!("\nomitted: documentToJson (save) + json size — Phase 1.13 io/serialize");
+    println!("\nnote: only the `-> to_vec*` rows are Rust-only — the JS save");
+    println!("path writes files through `stringifyReadableJson` (no Rust port yet).");
 }

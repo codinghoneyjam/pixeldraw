@@ -4,6 +4,18 @@
 
 ---
 
+## 2026-10-17 · PERF-3 · `documentToJson` 측정 — compact 전환 + 청크 인코딩 rayon
+
+**커밋 대상**: `crates/engine/examples/bench.rs`·`crates/engine/src/io/serialize.rs`·`crates/app/src/file_ops.rs`·`docs/perf_js_vs_rust.md`(§13 신설)·`docs/port_status_report.md`·`docs/progress/log.md`
+**테스트**: workspace 그린 **585**(변동 없음 — 신규 테스트 없음) · clippy/fmt 그린 · JS 무접촉(npm 계열 무변경)
+
+- **측정(§13)**: `bench.rs`에 `documentToJson (save)`+`to_vec`/`to_vec_pretty` 행 신설, 낡은 "1.13 owns io/serialize" 주석 제거. 워크로드 2048×1088·64레이어·**37,504청크**(JS 오라클 프로브와 동일 수). **순차 1159.2 ms → rayon 578.9 ms**(실행 3회 median 554.9/590.0/578.9). JS 2114.6 ms 대비 **3.65×**, 목표 ≤120 ms에는 **4.8× 미달**(잔존 — 원인은 청크당 PNG 인코딩, 문자열화는 6.3 ms).
+- **compact 전환**: `file_ops::save_json_bytes` `to_vec_pretty` → `to_vec`. 같은 문서 9806 → **7455 KB(−24%)**, 문자열화 9.1 → 6.3 ms. 파서 호환 불변.
+- **전제 정정(오라클 실측)**: JS 실제 저장 파일은 compact가 아니라 `stringifyReadableJson`이었다 — 동일 문서 실측 9909 KB. Rust readable 포터는 없음(공백 차이) → compact 유지.
+- **rayon(출력 바이트 불변)**: `io::serialize::layer_json` 청크 PNG 인코딩을 `par_iter` + 순서 보존 collect로. 병렬 2.0× — 남은 후보(§13-4): 청크당 할당 재사용, deflate 튜닝(롤백 이력 — 재시도 시 하네스 기록 필요).
+
+---
+
 ## 2026-10-17 · Phase 3.9·3.10 + UI-3 · 설정 영속화·자동저장·busy 가드 + V1 재동결
 
 **커밋 대상**: `crates/app/src/ui/{settings_store.rs,autosave.rs}`(신규)·`crates/app/src/{shell.rs,session_glue.rs,canvas_view.rs}`·`crates/app/src/ui/{mod.rs,actions.rs,dialogs.rs,menubar.rs}`·`tools/oracle-manifest.json`·`docs/port_status_report.md`·`docs/progress/log.md`
