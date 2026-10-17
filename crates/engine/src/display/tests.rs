@@ -228,3 +228,76 @@ fn grid_mode_parses_the_setting_strings() {
     assert_eq!(GridMode::from(""), GridMode::Off);
     assert_eq!(GridMode::from("Pixel"), GridMode::Off);
 }
+
+/// UI-5 maps each repainted chunk to one device-px box and uploads only that
+/// region. The box has to be a *superset* of every pixel `blit_visible` reads
+/// from the chunk — one pixel short leaves a stale pixel on screen forever.
+#[test]
+fn chunk_device_rect_covers_every_pixel_the_blit_reads_from_it() {
+    use super::frame::{DisplayParams, canvas_device_rect, chunk_device_rect, draw_display_into};
+    use crate::view::View;
+
+    const W: u32 = 128;
+    const H: u32 = 96;
+    const CSS_W: f64 = 96.0;
+    const CSS_H: f64 = 64.0;
+    const A: [u8; 4] = [255, 0, 255, 255];
+
+    let cases = [
+        (View::new(1.0, 0.0, 0.0).expect("valid view"), 1.0),
+        (View::new(2.5, -120.0, -30.0).expect("valid view"), 1.5),
+        (View::new(0.5, 3.7, 1.3).expect("valid view"), 2.0),
+    ];
+    let mut total_painted = 0usize;
+    for (view, dpr) in cases {
+        let canvas = canvas_device_rect(&view, W, H, dpr);
+        for cy in 0..H / 32 {
+            for cx in 0..W / 32 {
+                // Only this chunk carries a colour the background cannot spell.
+                let mut comp = vec![0u8; (W * H * 4) as usize];
+                for y in cy * 32..(cy + 1) * 32 {
+                    for x in cx * 32..(cx + 1) * 32 {
+                        let o = ((y * W + x) * 4) as usize;
+                        comp[o..o + 4].copy_from_slice(&A);
+                    }
+                }
+                let params = DisplayParams {
+                    view,
+                    canvas_w: W,
+                    canvas_h: H,
+                    css_w: CSS_W,
+                    css_h: CSS_H,
+                    dpr,
+                    background: "#000000",
+                    grid: GridMode::Off,
+                    comp: Some(&comp),
+                };
+                let mut fb = Framebuffer::new(1, 1);
+                draw_display_into(&params, &mut fb);
+                let rect = chunk_device_rect(&view, W, H, dpr, cx, cy).expect("on canvas");
+                assert!(
+                    rect.0 >= canvas.0
+                        && rect.1 >= canvas.1
+                        && rect.0 + rect.2 <= canvas.0 + canvas.2
+                        && rect.1 + rect.3 <= canvas.1 + canvas.3,
+                    "chunk box {rect:?} escapes the canvas rect {canvas:?}"
+                );
+                for y in 0..fb.height {
+                    for x in 0..fb.width {
+                        if px(&fb, x, y) == A {
+                            total_painted += 1;
+                            assert!(
+                                (x as i32) >= rect.0
+                                    && (x as i32) < rect.0 + rect.2
+                                    && (y as i32) >= rect.1
+                                    && (y as i32) < rect.1 + rect.3,
+                                "({x},{y}) of chunk ({cx},{cy}) lies outside {rect:?}"
+                            );
+                        }
+                    }
+                }
+            }
+        }
+    }
+    assert!(total_painted > 0, "the fixture must actually paint pixels");
+}

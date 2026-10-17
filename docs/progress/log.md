@@ -4,6 +4,17 @@
 
 ---
 
+## 2026-10-17 · PERF-1·UI-5 · 프레임 경로 병렬화 + 텍스처 부분 업로드
+
+**커밋 대상**: `crates/engine/src/comp_cache/{paint,cache,tests}.rs`·`crates/engine/src/display/{frame,tests}.rs`·`crates/engine/examples/framebench.rs`·`crates/app/src/{canvas_view,canvas_texture,overlay_raster}.rs`·`docs/perf_js_vs_rust.md`(§14 신설)·`docs/port_status_report.md`·`docs/progress/log.md`
+**테스트**: workspace 그린 **595**(+10 — UI-5 9·PERF-1 1) · clippy `-D warnings`/fmt 그린 · oracle `--check` 그린 · JS 무접촉
+
+- **PERF-1 채택(§14-2)** — 무예산 **pass 1**(가시 청크)만 병렬: 합성은 64청크 배치 `par_iter`, blit은 원 스레드·JS 키 순서라 바이트·dirty·`last_painted_keys`가 스케줄 불변(쌍둥이 테스트로 고정, `paint_dirty_budget_serial` = 벤치 A/B·회귀용 1스레드 쌍둥이). 게이트는 `chunks×layers ≥ 3072`: 이하면 기존 순차 그대로 — 게이트 없던 첫 실행의 1L 콜드 그리드 17% 손실을 배제한다. framebench A/B: drag 60청크×64L **8.9 → 1.4 ms(6.4×)**, 콜드 그리드 2176×64L **102.4 → 24.5 ms(4.2×)**. 예산 pass 2(6 ms)는 설계대로 순차 유지.
+- **UI-5 채택(＝5.6, §14-1)** — `CanvasTexture::present(ctx, fb, Upload)`: ①서명 동일+손상 없음 `Skip`(그리기·복사·업로드 전부 생략), ②서명 변경·첫 프레임 `Full`, ③손상 시 union rect 하나를 `set_partial`. 손상 = 이번 프레임이 실제로 그린 청크 device rect(여백 2px·fb 클립) ∪ (이전 ∪ 현재 오버레이 bbox). 전체 fb 복사 **0.281 ms → 영역 ~1 µs**(크로스헤어 ~0.4 µs·wash ~1.1 µs), 무변경 프레임 0. blit 여백·오버레이 보수성·`set_partial` 전제는 모듈 doc과 특성 테스트로 고정.
+- **신규 10**: 엔진 3(`chunk_device_rect_covers_every_pixel_the_blit_reads_from_it`·`last_painted_keys_follow_the_paint_order`·`the_parallel_visible_pass_matches_the_serial_twin`) · 앱 7(UploadTracker/present 델타 4·`overlay_bbox` 3). framebench에서 스테일 `doc().cloned()` 행을 제거하고 UI-5/PERF-1 행을 신설.
+
+---
+
 ## 2026-10-17 · PERF-3 · `documentToJson` 측정 — compact 전환 + 청크 인코딩 rayon
 
 **커밋 대상**: `crates/engine/examples/bench.rs`·`crates/engine/src/io/serialize.rs`·`crates/app/src/file_ops.rs`·`docs/perf_js_vs_rust.md`(§13 신설)·`docs/port_status_report.md`·`docs/progress/log.md`

@@ -16,11 +16,19 @@
 //! number instead of at a hunch:
 //!
 //! ```text
-//!   doc().cloned()            <- render_frame line 118
-//!   comp.update(...)          <- repaint the dirty chunks
-//!   draw_display_into(...)    <- paint the device framebuffer
-//!   upload (framebuffer copy) <- CanvasTexture::upload
+//!   comp.update(...)          <- repaint the dirty chunks (PERF-1: pass 1
+//!                                composites visible chunks on rayon; the
+//!                                blits stay ordered on the calling thread)
+//!   draw_display_into(...)    <- paint the device framebuffer (UI-5: skipped
+//!                                when the stamp and the overlay are unchanged)
+//!   texture upload            <- CanvasTexture::present (UI-5: whole device fb
+//!                                on a stamp change, one damage box otherwise,
+//!                                nothing when skipped)
 //! ```
+//!
+//! The frame used to clone the document and upload the whole framebuffer every
+//! frame; both are gone (`render_frame` borrows, `UploadTracker::begin` decides),
+//! so the rows below measure what actually runs.
 //!
 //! Four scenarios, because they have almost nothing in common:
 //!
@@ -40,7 +48,7 @@ use pixel_engine::display::{DisplayParams, Framebuffer, GridMode, draw_display_i
 use pixel_engine::model::NewDocumentOptions;
 use pixel_engine::model::document::new_document;
 use pixel_engine::raster::brush::{stroke_point, stroke_segment};
-use pixel_engine::view::{View, fit_view};
+use pixel_engine::view::{View, fit_view, visible_chunk_range};
 
 const W: u32 = 2048;
 const H: u32 = 1088;
@@ -157,6 +165,37 @@ struct Frame {
     view: View,
 }
 
+/// The stages one changed frame runs, in the order `show_canvas` runs them.
+struct Stages {
+    /// `comp.update()` — repaint one dirty chunk.
+    update: f64,
+    /// `draw_display_into()` — the whole device framebuffer.
+    draw: f64,
+    /// The upload's CPU half (`ColorImage::from_rgba_unmultiplied` copy) for
+    /// the whole device fb — paid when the stamp changed.
+    upload: f64,
+    /// The same copy for a hover frame's damage box: the pen crosshair
+    /// (`r = 5*dpr` around the cursor) as one small box.
+    hover: f64,
+    /// The footprint wash at `zoom >= 2`: `pen-32 * zoom-2` device px.
+    wash: f64,
+}
+
+/// UI-5's region copy — the same row gathering `CanvasTexture::upload_region`
+/// does (`w*h*4` bytes out of a strided framebuffer).
+fn region_copy_ms(fb: &Framebuffer, w: usize, h: usize) -> f64 {
+    median_ms(RUNS, || {
+        let src = black_box(&fb.rgba);
+        let stride = fb.width as usize * 4;
+        let mut dst = vec![0u8; w * h * 4];
+        for row in 0..h {
+            dst[row * w * 4..(row + 1) * w * 4]
+                .copy_from_slice(&src[row * stride..row * stride + w * 4]);
+        }
+        black_box(dst);
+    })
+}
+
 impl Frame {
     fn new(layers: usize) -> Self {
         let doc = busy_document(layers);
@@ -198,13 +237,8 @@ impl Frame {
         }
     }
 
-    /// The four stages `show_canvas` runs, timed separately.
-    fn measure_stages(&mut self) -> (f64, f64, f64, f64) {
-        let clone = median_ms(RUNS, || {
-            // `canvas_view.rs:118` — `state.session.doc().cloned()`
-            let d = black_box(&self.doc).clone();
-            black_box(&d);
-        });
+    /// The frame stages `show_canvas` runs, timed separately.
+    fn measure_stages(&mut self) -> Stages {
         let update = median_ms(RUNS, || {
             let mut c = self.comp.clone();
             c.invalidate_chunks(&[(10, 9)]);
@@ -223,7 +257,15 @@ impl Frame {
             dst.copy_from_slice(src);
             black_box(dst);
         });
-        (clone, update, draw, upload)
+        let hover = region_copy_ms(&self.fb, 16, 16);
+        let wash = region_copy_ms(&self.fb, 64, 64);
+        Stages {
+            update,
+            draw,
+            upload,
+            hover,
+            wash,
+        }
     }
 }
 
@@ -244,15 +286,21 @@ fn main() {
             .unwrap_or(0);
 
         println!("\n############ {layers} layer(s), {chunks} chunks on the top layer ############");
-        let (clone, update, draw, upload) = f.measure_stages();
+        let s = f.measure_stages();
 
         header("stages, one dirty chunk");
-        row("doc().cloned()  (canvas_view.rs:118)", clone, true);
-        row("comp.update()  repaint 1 chunk", update, true);
-        row("draw_display_into()  whole device fb", draw, true);
-        row("texture upload copy  whole device fb", upload, true);
-        let total = clone + update + draw + upload;
-        row("TOTAL", total, true);
+        row("comp.update()  repaint 1 chunk", s.update, true);
+        row("draw_display_into()  whole device fb", s.draw, true);
+        row("texture upload copy  whole device fb", s.upload, true);
+        row(
+            "TOTAL (redraw + full upload)",
+            s.update + s.draw + s.upload,
+            true,
+        );
+
+        header("UI-5 — the upload a hover frame pays instead");
+        row("crosshair box 16x16", s.hover, false);
+        row("footprint wash 64x64 (zoom>=2)", s.wash, false);
 
         // A real drag: how many chunks a pen-8 sweep over 900 px dirties.
         let mut drag = Frame::new(layers);
@@ -268,14 +316,9 @@ fn main() {
         println!("\n(pen-8 sweep left {n} chunks; the drag scenario dirties a slice of them)");
 
         drag.mark_dirty(&keys[..keys.len().min(60)]);
-        let t60 = median_ms(RUNS, || {
-            let mut c = drag.comp.clone();
-            c.invalidate_chunks(&keys[..keys.len().min(60)]);
-            while c.update_budget(&drag.doc, None, Budget::frame()) {}
-        });
         header("comp.update() with a drag's worth of dirty chunks");
         row(
-            "60 dirty chunks, 1 layer",
+            "60 dirty chunks, 1 layer (session_glue: no visible range)",
             median_ms(RUNS, || {
                 let mut c = drag.comp.clone();
                 c.invalidate_chunks(&keys[..keys.len().min(60)]);
@@ -283,7 +326,68 @@ fn main() {
             }),
             true,
         );
-        let _ = t60;
+
+        // PERF-1: pass 1 — the visible chunks, no budget — which is what
+        // `canvas_view` actually drives. The twin runs the same frame with the
+        // composites on one thread; everything else is identical.
+        let vis = visible_chunk_range(f.view, W as f64, H as f64, CSS_W, CSS_H);
+        let fit = vis.map(|v| ((v.cx1 - v.cx0 + 1) as usize) * ((v.cy1 - v.cy0 + 1) as usize));
+        let drag_layers = drag.doc.layer_sources();
+        let n60 = keys.len().min(60);
+        let mut drag_par = drag.comp.clone();
+        let mut drag_ser = drag.comp.clone();
+        println!(
+            "\n(fit view sees {fit:?} of the {}x{} chunk grid)",
+            W / 32,
+            H / 32
+        );
+        header("PERF-1 — pass 1: shipped scheduler vs one thread");
+        row(
+            &format!("drag, {n60} visible chunks x {layers}L (shipped)"),
+            median_ms(RUNS, || {
+                drag_par.invalidate_chunks(&keys[..n60]);
+                drag_par.paint_dirty_budget(&drag_layers, vis, Budget::Unlimited);
+                black_box(drag_par.comp());
+            }),
+            false,
+        );
+        row(
+            &format!("drag, {n60} visible chunks x {layers}L (1-thread twin)"),
+            median_ms(RUNS, || {
+                drag_ser.invalidate_chunks(&keys[..n60]);
+                drag_ser.paint_dirty_budget_serial(&drag_layers, vis, Budget::Unlimited);
+                black_box(drag_ser.comp());
+            }),
+            false,
+        );
+
+        // The cold grid: every chunk visible and dirty, one pass.
+        let cold_layers = f.doc.layer_sources();
+        let mut cold_par = CompCache::new();
+        cold_par.ensure(W, H);
+        let mut cold_ser = cold_par.clone();
+        let all: Vec<(u32, u32)> = (0..H / 32)
+            .flat_map(|cy| (0..W / 32).map(move |cx| (cx, cy)))
+            .collect();
+        let n_all = all.len();
+        row(
+            &format!("cold grid, {n_all} visible chunks x {layers}L (shipped)"),
+            median_ms(5, || {
+                cold_par.invalidate_chunks(&all);
+                cold_par.paint_dirty_budget(&cold_layers, vis, Budget::Unlimited);
+                black_box(cold_par.comp());
+            }),
+            false,
+        );
+        row(
+            &format!("cold grid, {n_all} visible chunks x {layers}L (1-thread twin)"),
+            median_ms(5, || {
+                cold_ser.invalidate_chunks(&all);
+                cold_ser.paint_dirty_budget_serial(&cold_layers, vis, Budget::Unlimited);
+                black_box(cold_ser.comp());
+            }),
+            false,
+        );
 
         let mut cold = Frame {
             doc: busy_document(layers),
@@ -301,7 +405,9 @@ fn main() {
     }
 
     println!("\nNote: `Budget::frame()` is 6 ms and applies only to the off-screen");
-    println!("pass in paint_dirty. `doc().cloned()`, draw_display_into and the");
-    println!("texture upload are outside it, which is exactly why a frame can");
-    println!("blow the budget no matter how well the budget behaves.");
+    println!("pass in paint_dirty. Pass 1 (every visible chunk) paints regardless —");
+    println!("which is the pass PERF-1 parallelises. draw_display_into and the");
+    println!("texture upload sit outside the budget too: UI-5 makes them");
+    println!("conditional (skip when nothing changed) rather than faster, and turns");
+    println!("a hover frame's upload into one damage box.");
 }

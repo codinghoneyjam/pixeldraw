@@ -14,6 +14,9 @@ mod grid;
 mod tests;
 
 pub use background::{paint_background, paint_checker};
-pub use frame::{DisplayParams, blit_visible, draw_display, draw_display_into};
+pub use frame::{
+    DisplayParams, blit_visible, canvas_device_rect, chunk_device_rect, draw_display,
+    draw_display_into,
+};
 pub use framebuffer::Framebuffer;
 pub use grid::{GridLines, GridMode, GridStroke, grid_lines, grid_stroke_dev_px, paint_grid};

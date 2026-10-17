@@ -6,12 +6,28 @@
 
 use std::time::{Duration, Instant};
 
+use rayon::prelude::*;
+
 use crate::composite::{LayerSource, composite_chunk};
 use crate::constants::{CHUNK_LEN, CHUNK_PX, chunk_coords};
 use crate::model::Document;
 use crate::view::VisibleChunkRange;
 
 use super::cache::{CHUNK_ROW, CompCache};
+
+/// Pass 1 goes parallel once the work clears this many `chunk × layer` units.
+///
+/// A composite unit is cheap (~1 µs for a 1-layer chunk, ~50 µs at 64 layers)
+/// while rayon's fork/join plus the batch staging cost a few hundred µs
+/// regardless, so the product is a proxy for "at least half a millisecond of
+/// serial work". `framebench`'s four A/B rows bracket it
+/// (`docs/perf_js_vs_rust.md` §14): 2176 units *lost* 17 % with rayon (the
+/// 1-layer cold grid) while 3840 units won 5.8–6.4× (a 64-layer drag).
+pub(crate) const PARALLEL_MIN_UNITS: usize = 3072;
+
+/// Visible chunks per parallel batch — bounds the staging buffer (one
+/// `[u8; CHUNK_LEN]` image per chunk in the batch) while keeping the pool fed.
+const PARALLEL_BATCH: usize = 64;
 
 /// How many chunks one frame may composite off screen.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -53,7 +69,34 @@ impl CompCache {
         visible: Option<VisibleChunkRange>,
         budget: Budget,
     ) -> bool {
-        self.last_painted = 0;
+        self.paint_dirty_impl(layers, visible, budget, true)
+    }
+
+    /// [`CompCache::paint_dirty_budget`] with pass 1 on the calling thread —
+    /// the pre-PERF-1 twin the bench A/Bs against and the tests pin the
+    /// parallel path to (byte-identical by design).
+    pub fn paint_dirty_budget_serial(
+        &mut self,
+        layers: &[LayerSource<'_>],
+        visible: Option<VisibleChunkRange>,
+        budget: Budget,
+    ) -> bool {
+        self.paint_dirty_impl(layers, visible, budget, false)
+    }
+
+    /// `parallel` is the PERF-1 switch: pass 1's *composite* half fans out to
+    /// rayon; every blit stays on this thread, in JS key order. The comp bytes,
+    /// the dirty set and `last_painted_keys` therefore do not depend on
+    /// scheduling — `the_parallel_visible_pass_matches_the_serial_twin` proves
+    /// it on a real document.
+    fn paint_dirty_impl(
+        &mut self,
+        layers: &[LayerSource<'_>],
+        visible: Option<VisibleChunkRange>,
+        budget: Budget,
+        parallel: bool,
+    ) -> bool {
+        self.last_painted_keys.clear();
         if self.dirty.is_empty() {
             return self.dirty_all;
         }
@@ -61,13 +104,10 @@ impl CompCache {
         // set while the pass runs is skipped rather than painted twice.
         let keys: Vec<u64> = self.dirty.iter().copied().collect();
         // Pass 1 — visible chunks, no budget, JS order.
-        for &key in &keys {
-            let (cx, cy) = chunk_coords(key);
-            if Self::in_visible(cx, cy, visible) {
-                self.paint_chunk(layers, key);
-            }
-        }
-        // Pass 2 — everything else, and only now the clock starts.
+        self.paint_visible_pass(layers, &keys, visible, parallel);
+        // Pass 2 — everything else, and only now the clock starts. It stays
+        // sequential: the budget is a wall-clock promise measured before each
+        // chunk, and a parallel batch could neither check nor keep it.
         let mut painted_off_screen = 0usize;
         let t0 = Instant::now();
         for &key in &keys {
@@ -95,6 +135,55 @@ impl CompCache {
         !self.dirty.is_empty() || self.dirty_all
     }
 
+    /// Pass 1 of `paint_dirty`: `keys ∩ visible`, no budget.
+    ///
+    /// The sequential shape is one `paint_chunk` per key; the parallel shape
+    /// composites a batch of them on the pool and blits the results in the same
+    /// order afterwards. Out-of-canvas keys are dropped here (the sequential
+    /// path did it inside `paint_chunk`) so both shapes retire the same set.
+    fn paint_visible_pass(
+        &mut self,
+        layers: &[LayerSource<'_>],
+        keys: &[u64],
+        visible: Option<VisibleChunkRange>,
+        parallel: bool,
+    ) {
+        let mut targets: Vec<u64> = Vec::new();
+        for &key in keys {
+            let (cx, cy) = chunk_coords(key);
+            if !Self::in_visible(cx, cy, visible) {
+                continue;
+            }
+            if self.contains_chunk(cx, cy) {
+                targets.push(key);
+            } else {
+                self.dirty.remove(&key);
+            }
+        }
+        if !parallel || targets.len() * layers.len() < PARALLEL_MIN_UNITS {
+            for &key in &targets {
+                self.paint_chunk(layers, key);
+            }
+            return;
+        }
+        for batch in targets.chunks(PARALLEL_BATCH) {
+            let bufs: Vec<[u8; CHUNK_LEN]> = batch
+                .par_iter()
+                .map(|&key| {
+                    let (cx, cy) = chunk_coords(key);
+                    let mut buf = [0u8; CHUNK_LEN];
+                    // The only error is a wrong buffer length; a stack array
+                    // cannot trip it and the chunk stays transparent.
+                    let _ = composite_chunk(layers, cx, cy, &mut buf);
+                    buf
+                })
+                .collect();
+            for (&key, buf) in batch.iter().zip(&bufs) {
+                self.blit_painted(key, buf);
+            }
+        }
+    }
+
     /// `_update`'s composite half: `ensure` (the JS re-checked the size every
     /// frame) → expand `dirtyAll` → `paintDirty`.
     pub fn update(
@@ -114,9 +203,9 @@ impl CompCache {
     ) -> bool {
         self.ensure(doc.canvas.width_px, doc.canvas.height_px);
         self.expand_dirty_all();
-        // `last_painted` must read 0 when nothing was composited, so it is reset
-        // outside the `paintDirty` call rather than inside it.
-        self.last_painted = 0;
+        // `last_painted` must read 0 when nothing was composited, so the list is
+        // reset outside the `paintDirty` call rather than inside it.
+        self.last_painted_keys.clear();
         if !self.dirty.is_empty() {
             let sources = doc.layer_sources();
             self.paint_dirty_budget(&sources, visible, budget);
@@ -145,6 +234,14 @@ impl CompCache {
         // The only error `composite_chunk` raises is a wrong buffer length, which
         // a stack `[u8; CHUNK_LEN]` cannot trip; the chunk stays transparent.
         let _ = composite_chunk(layers, cx, cy, &mut buf);
+        self.blit_painted(key, &buf);
+    }
+
+    /// `putImageData` half of `paint_chunk`, split out so the parallel path can
+    /// composite first and blit later without duplicating this: one row copy
+    /// per chunk row, then the dirty-set retirement and the UI-5 key log.
+    fn blit_painted(&mut self, key: u64, buf: &[u8; CHUNK_LEN]) {
+        let (cx, cy) = chunk_coords(key);
         let stride = (self.width * 4) as usize;
         let x0 = (cx * CHUNK_PX * 4) as usize;
         let y0 = (cy * CHUNK_PX) as usize;
@@ -157,6 +254,6 @@ impl CompCache {
             self.comp[dst..dst + CHUNK_ROW].copy_from_slice(&buf[src..src + CHUNK_ROW]);
         }
         self.dirty.remove(&key);
-        self.last_painted += 1;
+        self.last_painted_keys.push((cx, cy));
     }
 }

@@ -6,6 +6,7 @@
 //! `LayerChangeReason` arm whose JS twin never fires.
 
 use super::{Budget, CompCache};
+use crate::constants::CHUNK_PX;
 use crate::model::command::LayerChangeReason;
 use crate::model::event::ModelEvent;
 use crate::model::settings::{SettingKey, SettingValue};
@@ -53,6 +54,91 @@ fn the_visible_pass_ignores_the_budget() {
     assert!(!c.paint_dirty_budget(&layers, None, Budget::Unlimited));
     assert_eq!(c.dirty_len(), 0);
     assert_eq!(c.last_painted(), 0, "an empty dirty set paints nothing");
+}
+
+#[test]
+fn last_painted_keys_follow_the_paint_order() {
+    let mut c = all_dirty();
+    let layers: Vec<crate::composite::LayerSource<'_>> = Vec::new();
+    // Pass 1 first (visible, unbudgeted) in JS key order, then pass 2's single
+    // budgeted chunk: the first *still dirty* key of the (cy, cx) snapshot.
+    c.paint_dirty_budget(&layers, vis(0, 0, 1, 0), Budget::Chunks(1));
+    assert_eq!(c.last_painted_keys(), [(0, 0), (1, 0), (2, 0)].as_slice());
+    // The next frame reports only what *it* composited — the UI-5 contract: a
+    // frame that paints nothing must not re-upload anything.
+    c.paint_dirty_budget(&layers, None, Budget::Unlimited);
+    assert_eq!(c.last_painted(), 5);
+    assert_eq!(c.last_painted_keys()[0], (3, 0));
+    c.paint_dirty_budget(&layers, None, Budget::Unlimited);
+    assert!(c.last_painted_keys().is_empty());
+}
+
+/// PERF-1 pins the parallel pass-1 scheduler to the sequential one: the comp
+/// bytes, the dirty set and `last_painted_keys` must not depend on how the
+/// composites were spread over threads, because the bench's rayon-vs-one-thread
+/// rows are only evidence for the shipped path if the paths agree.
+#[test]
+fn the_parallel_visible_pass_matches_the_serial_twin() {
+    use crate::chunkstore::{ChunkStore, PixelWriter};
+    use crate::raster::brush::stroke_segment;
+
+    const W: u32 = 512; // 16x4 = 64 chunks
+    const H: u32 = 128;
+    const LAYERS: usize = 64;
+    assert!(
+        (W / CHUNK_PX * H / CHUNK_PX) as usize * LAYERS >= super::paint::PARALLEL_MIN_UNITS,
+        "the twin must exercise the rayon path"
+    );
+
+    let mut doc = crate::model::document::new_document(
+        crate::model::NewDocumentOptions::default().size(W, H),
+    )
+    .expect("valid canvas size");
+    while doc.layers.len() < LAYERS {
+        let n = doc.layers.len() + 1;
+        let mut layer = doc.layers[0].clone();
+        layer.id = format!("layer-{n:04}");
+        doc.layers.push(layer);
+    }
+    let ids: Vec<String> = doc.layers.iter().map(|l| l.id.clone()).collect();
+    for (li, id) in ids.iter().enumerate() {
+        let layer = doc.get_layer_mut(id).expect("layer id");
+        let mut store =
+            std::mem::replace(&mut layer.store, ChunkStore::new(W, H).expect("valid size"));
+        {
+            let mut writer = PixelWriter::new(&mut store, id.clone());
+            for k in 0..3i32 {
+                let y = ((li as i32 * 13 + k * 40) % (H as i32 - 10)) + 2;
+                stroke_segment(&mut writer, 8, y, W as i32 - 12, y + 6, 9, 0x00ff00ff);
+            }
+            writer.finish();
+        }
+        let layer = doc.get_layer_mut(id).expect("layer id");
+        layer.store = store;
+    }
+    let layers = doc.layer_sources();
+
+    let mut par = CompCache::new();
+    par.ensure(W, H);
+    par.expand_dirty_all();
+    let mut ser = par.clone();
+    let visible = vis(0, 0, W / CHUNK_PX - 1, H / CHUNK_PX - 1);
+
+    par.paint_dirty_budget(&layers, visible, Budget::Unlimited);
+    ser.paint_dirty_budget_serial(&layers, visible, Budget::Unlimited);
+    assert_eq!(
+        par.last_painted(),
+        64,
+        "the whole grid is visible and dirty"
+    );
+    assert_eq!(par.comp(), ser.comp(), "bytes must not depend on threads");
+    assert_eq!(par.last_painted_keys(), ser.last_painted_keys());
+
+    // A clean frame paints nothing in either, and reports nothing.
+    assert!(!par.paint_dirty_budget(&layers, visible, Budget::Unlimited));
+    assert!(!ser.paint_dirty_budget_serial(&layers, visible, Budget::Unlimited));
+    assert_eq!(par.last_painted_keys(), ser.last_painted_keys());
+    assert!(par.last_painted_keys().is_empty());
 }
 
 #[test]

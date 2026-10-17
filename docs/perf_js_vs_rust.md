@@ -728,7 +728,7 @@ composite는 1.66배, 병렬 7.2배다. composite가 비싼 이유는 §4-6이 �
 | ~~저장 JSON 크기 (JS 7557 KB)~~ | **측정 완료(§13)** — JS readable 9909 KB / JS compact 7557 KB / Rust compact 7455 KB |
 | Undo/히스토리 바이트 예산 | 커버리지 비트마스크가 청크당 128바이트를 더한다(문서 전체 +3.1%). `UNDO_MAX_BYTES`(96 MB) 예산에 대한 회귀 측정은 **하지 않았다** |
 | 빈 레이어의 메모리 | dense 슬롯 테이블이 레이어당 최대 17 KB(§11-2-1). 실측하지 않았다 |
-| 프레임 시간·UI 반응성 | 미측정. `composite_canvas`/`flatten_to_rgba`에 rayon을 넣었지만, 화면 갱신 경로는 여전히 `comp_cache/paint.rs`의 단일 스레드 `composite_chunk`다. **6 ms 프레임 예산 경로에는 rayon이 들어가지 않았다** |
+| ~~프레임 시간·UI 반응성~~ | **측정·채택(§14, 2026-10-17)** — 가시 청크 pass 1 병렬(게이트 `chunks×layers ≥ 3072`: 64L 콜드 그리드 102.4 → 24.5 ms) + 업로드 부분화(전체 fb 복사 0.281 ms → 영역 ~1 µs, 무변경 프레임은 스킵). `session_glue`의 무가시(None) 경로는 여전히 순차다 |
 | 레이어 수 1~3에서의 composite | 미측정. §11-4 때문에 이 구간에서 비트마스크가 가장 크게 먹을 것으로 보이지만 **숫자로는 없다** |
 
 ### 11-6. 이 작업이 부수적으로 고친 것 (성능 밖)
@@ -764,6 +764,8 @@ composite는 1.66배, 병렬 7.2배다. composite가 비싼 이유는 §4-6이 �
 
 - **rayon을 `comp_cache/paint.rs`에 넣지 않았다.** §11-5에 적었듯 6 ms 프레임 예산
   경로이고, 더티 청크가 수십 개일 때는 스레드 풀 기동 비용이 예산을 그대로 먹는다.
+  — **정정(§14, 2026-10-17)**: 무예산 **pass 1**만 `chunks×layers ≥ 3072` 게이트로
+  병렬화해 채택했다. 예산 **pass 2**는 여전히 순차다(§14-2).
 - **청크당 1비트 존재 비트맵을 넣지 않았다.** §11-2-1의 "무엇을 포기했나"를 본다.
 
 ---
@@ -961,3 +963,111 @@ deflate 상태 초기화 쪽을 의심해야 한다.
 
 셋 다 이번 배치의 범위(측정 + compact 전환)를 벗어난다. 지금 상태로도 저장은
 동작하고, JS보다 3.65× 빠르다 — 부족한 것은 목표치다.
+
+---
+
+## 14. 프레임 경로 — 텍스처 부분 업로드(UI-5) + 가시 청크 병렬 합성(PERF-1) (2026-10-17)
+
+§11-7이 "하지 않은 것"으로 남긴 둘 중 하나(`comp_cache/paint.rs`의 rayon)와
+`port_status_report.md`의 UI-5(=Phase 5.6)를 같은 회차에 처리한다. 둘 다 **출력
+바이트 불변** 기법만 쓴다: 합성 결과와 최종 텍스처 픽셀은 이전과 동일해야 한다.
+
+- 측정 기계: §11과 동일 — AMD Ryzen 7 7800X3D (8코어/16스레드), 31.6 GB, Windows 11
+- 워크로드: `cargo run -p pixel-engine --release --example framebench` —
+  `framebench.rs`에 UI-5·PERF-1 행을 신설했다. 2048×1088 · 레이어 1/64 · fit 뷰
+  (가시 청크 2176 = 64×34) · device 1040×640 · pen-8 스윕 900 px가 남기는 dirty
+  슬라이스 60청크
+- 빌드: release
+
+### 14-1. UI-5 — 매 프레임 전체 업로드를 프레임 서명 + 손상 영역으로
+
+`CanvasTexture::present`가 프레임 서명(view·css·dpr·캔버스 크기·그리드·배경)을 기억하고
+`Upload`를 받는다.
+
+| 결정 | 조건 | 하는 일 |
+|---|---|---|
+| `Skip` | 서명 동일 + 이번 프레임 손상 없음 | 그리기·복사·GPU 업로드 전부 생략 |
+| `Full` | 첫 프레임·서명 변경(팬·줌·리사이즈·문서 교체) | 전체 fb 복사 + `set` |
+| `Region(r)` | 서명 동일 + 손상 영역 존재 | `r`만 행 단위 복사 + `set_partial` 1회 |
+
+손상 영역 = 이번 프레임 실제로 다시 그린 comp 청크의 device rect(∪ fb 클립) ∪
+(이전 오버레이 bbox ∪ 현재 오버레이 bbox). 구현은 앱 쪽
+`crates/app/src/canvas_texture.rs`(`UploadTracker`·`Upload`·`upload_region`)와
+`overlay_raster.rs`(`overlay_bbox`), 엔진 쪽은 `display::chunk_device_rect`다.
+
+| 복사 대상 | median | 전체 fb 대비 |
+|---|---:|---:|
+| 전체 device fb (변경 프레임 — 이전과 동일) | 0.281 ms | 1 |
+| hover 크로스헤어 box 16×16 | 0.000 ms (해상도 미만) | 1/700 이하 |
+| footprint wash 64×64 (zoom ≥ 2) | 0.001 ms | ~1/250 |
+| 무변경 프레임 | 복사 없음 | 0 |
+
+wash는 zoom·펜 크기에 비례해 커지므로 큰 zoom에서는 전체 fb에 접근한다 — 그래도
+상한은 fb이고 정확성 문제는 없다(이득만 줄어든다).
+
+보수성 근거(틀리면 화면이 깨지는 자리라 전부 테스트로 박아 둠):
+
+- blit의 floor 소스 매핑으로 반올림 오차가 ≤1 px 생길 수 있어 `chunk_device_rect`는
+  **여백 2 px**로 blit이 읽은 모든 픽셀을 덮는다
+  (`chunk_device_rect_covers_every_pixel_the_blit_reads_from_it` — 실제 comp 바이트를
+  3개 뷰 × 12청크에서 대조하는 특성 테스트).
+- 오버레이는 MaskBlit이 0셀까지 전 셀을 훑으므로 bbox가 **보수적 상한**이다
+  (`overlay_bbox_covers_every_painted_pixel`, `mask_blit_bbox_scales_with_zoom`).
+- 이전·현재 오버레이 bbox를 **합집합**으로 잡는다 — 펜 hover가 프리뷰를 그리고 지우므로
+  현재 bbox만으로는 지운 자리가 남는다.
+- `set_partial`은 epaint 델타이므로 텍스처 핸들이 살아 있어야 한다는 전제가 있다.
+  eframe glow 데스크톱은 페인터(텍스처 맵)가 egui Context(UI 메타)보다 먼저 사라지는
+  경로가 없고, 창 재생성은 프레임 서명을 깨므로 다음 프레임이 `Full`로 복구한다 —
+  이 전제와 caveat는 `canvas_texture.rs` 모듈 doc에 적어 두었다.
+
+검증은 egui `tex_manager()`의 델타를 직접 검사한다
+(`present_maps_skip_full_and_region_to_texture_deltas`, `take_deltas` 헬퍼):
+`Skip` = 델타 0건, `Region` = `set_partial` 1건 + pos/size/픽셀 일치, `Full` = `set` 1건.
+
+### 14-2. PERF-1 — 무예산 pass 1만 rayon, 예산 pass 2는 순차 유지
+
+`paint_dirty`는 JS 그대로 두 pass다: pass 1은 **보이는 더티 청크 전부, 예산 없음**,
+pass 2가 나머지를 6 ms 예산 안에서 돈다(§11-7이 적은 그 성질). 병렬화할 수 있는 쪽은
+pass 1뿐이다 — pass 2는 "청크마다 벽시계를 확인한다"는 약속이라 배치로 묶는 순간
+약속이 깨진다.
+
+- **합성은 병렬, blit은 원 스레드·원 순서**: `composite_chunk`만 64청크 배치로
+  `par_iter` 합성하고, 결과 `[u8; CHUNK_LEN]`을 JS 키 순서 그대로 이어서 blit한다.
+  comp 쓰기가 청크별로 겹치지 않으므로 **바이트·dirty·`last_painted_keys`가 스케줄과
+  무관**하다 — `the_parallel_visible_pass_matches_the_serial_twin`이 64청크×64레이어
+  문서에서 병렬/순차 쌍둥이를 바이트 비교로 고정한다.
+- **게이트는 `chunks × layers ≥ 3072`**: 청크 하나의 합성 비용은 레이어 수에 거의
+  비례한다(1L ≈ 1 µs, 64L ≈ 50 µs). 작업량이 작으면 rayon의 fork/join + 배치
+  스테이징(수백 µs)이 이긴다. 아래 A/B가 그 경계를 브래킷한다.
+- `paint_dirty_budget_serial`은 같은 함수의 1스레드 쌍둥이다 — 벤치의 A/B 기준이자
+  회귀 감시용으로 남긴다.
+
+A/B (framebench, median; shipped = 게이트가 고른 경로):
+
+| 케이스 (framebench) | shipped | 1-thread twin | 배수 |
+|---|---:|---:|---:|
+| drag 60청크 × 1L | 0.118 ms | 0.115 ms | 1.0×(둘 다 순차 — 60 < 3072) |
+| cold grid 2176 × 1L | 1.832 ms | 1.796 ms | 1.0×(둘 다 순차 — 2176 < 3072) |
+| drag 60청크 × 64L | **1.387 ms** | 8.903 ms | **6.4×** |
+| cold grid 2176 × 64L | **24.491 ms** | 102.416 ms | **4.2×** |
+
+게이트가 없던 첫 실행에서는 cold grid 2176×1L이 **2.197 vs 1.881 ms = 17 % 손실**이었다
+(60×1L은 0.097 vs 0.123 — 이쪽은 이득도 손실도 측정 잡음 수준). 그래서 임계를
+"2176 < 3072 ≤ 3840"으로 잡아 손실 케이스는 순차로, 이득 케이스는 병렬로 남겼다 —
+1L 행 두 개의 값이 같은 것은 shipped가 순차를 골랐기 때문이다. 손실이 나던 구간을
+게이트가 배제하므로 **기존 경로보다 느려지는 케이스가 없다**.
+
+효과는 "프레임이 예산을 지키는가"가 아니라 "보이는 화면이 얼마나 빨리 완성되는가"다:
+pass 1은 원래 무예산이므로 64L 콜드 그리드는 102.4 → **24.5 ms** — 첫 화면 대기
+(정지)가 4.2배 짧아진다. `session_glue`의 무가시(None) 경로는 예산 루프 그대로 순차다.
+
+### 14-3. 채택/기각 기록
+
+- **UI-5 채택**: Skip/Full/Region 3분기 — 스킵·영역 복사 모두 출력 불변.
+- **PERF-1 채택**: 게이트 `chunks × layers ≥ 3072`. 게이트 미만은 기존 순차 경로 그대로.
+- 프레임 벤치의 낡은 `doc().cloned()` 행은 **삭제**했다 — `render_frame`이 문서를
+  빌림으로 바꾼 뒤 측정 대상이 아니게 된 스테일 행이었다.
+
+검증: workspace **595 pass / 0 fail** · clippy `-D warnings` · fmt 클린. 신규 테스트 —
+엔진 3(`chunk_device_rect…` · `last_painted_keys…` · `the_parallel_visible_pass…`) ·
+앱 7(`UploadTracker`/`present` 델타 · `overlay_bbox` 특성·스케일).

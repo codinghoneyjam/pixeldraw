@@ -8,6 +8,7 @@
 use pixel_engine::display::Framebuffer;
 use pixel_engine::view::View;
 
+use crate::canvas_texture::union_rect;
 use crate::tools::overlay::OverlayOp;
 
 /// Device scale for one canvas pixel.
@@ -149,6 +150,66 @@ fn stroke_circle(
             );
         }
     }
+}
+
+/// Device-px box of everything `ops` would paint, or `None` for an empty list.
+///
+/// UI-5 unions this with the previous frame's box: the upload region has to
+/// cover the erasing of the old preview *and* the painting of the new one. The
+/// boxes are conservative supersets — `MaskBlit` scans its whole grid (zero
+/// cells included), the rect/line ops round exactly like the rasterizer, and
+/// the circle carries the ring walk's slack.
+pub fn overlay_bbox(ops: &[OverlayOp], view: View, dpr: f64) -> Option<(i32, i32, i32, i32)> {
+    let cell = scale(view, dpr).max(1.0) as i32;
+    let mut acc: Option<(i32, i32, i32, i32)> = None;
+    for op in ops {
+        let op_box = match op {
+            OverlayOp::MaskBlit { x, y, w, h, data } => {
+                if *w == 0 || *h == 0 || data.is_empty() {
+                    None
+                } else {
+                    let (l, t) = dev(view, dpr, *x, *y);
+                    let (r, b) = dev(view, dpr, *x + *w as i32 - 1, *y + *h as i32 - 1);
+                    Some((l, t, r + cell - l, b + cell - t))
+                }
+            }
+            OverlayOp::FillRect { x, y, w, h, .. } | OverlayOp::StrokeRect { x, y, w, h, .. } => {
+                Some((
+                    x.round() as i32,
+                    y.round() as i32,
+                    w.round().max(1.0) as i32,
+                    h.round().max(1.0) as i32,
+                ))
+            }
+            OverlayOp::Line { x0, y0, x1, y1, .. } => {
+                let (ax, ay) = (x0.round() as i32, y0.round() as i32);
+                let (bx, by) = (x1.round() as i32, y1.round() as i32);
+                let (l, t) = (ax.min(bx), ay.min(by));
+                Some((l, t, ax.max(bx) - l + 1, ay.max(by) - t + 1))
+            }
+            OverlayOp::Circle { cx, cy, r, .. } => {
+                if *r <= 0.0 {
+                    None
+                } else {
+                    let rr = r.ceil() + 1.0;
+                    let side = (2.0 * rr).ceil() as i32 + 2;
+                    Some((
+                        (cx - rr).floor() as i32,
+                        (cy - rr).floor() as i32,
+                        side,
+                        side,
+                    ))
+                }
+            }
+        };
+        if let Some(b) = op_box {
+            acc = Some(match acc {
+                None => b,
+                Some(a) => union_rect(a, b),
+            });
+        }
+    }
+    acc
 }
 
 /// Paint `ops` over the display framebuffer, in order.
@@ -302,5 +363,88 @@ mod tests {
         }];
         rasterize_overlay(&mut fb, &ops, view1(), 1.0);
         assert_eq!(px(&fb, 3, 0)[0], 255, "black inverts to white");
+    }
+
+    fn inside(r: (i32, i32, i32, i32), x: u32, y: u32) -> bool {
+        let (x, y) = (x as i32, y as i32);
+        x >= r.0 && x < r.0 + r.2 && y >= r.1 && y < r.1 + r.3
+    }
+
+    #[test]
+    fn overlay_bbox_is_none_for_an_empty_list() {
+        assert_eq!(overlay_bbox(&[], view1(), 1.0), None);
+    }
+
+    /// The `UI-5` contract: the box must contain every pixel the rasterizer
+    /// could paint, or the erase/repaint upload leaves stale pixels behind.
+    #[test]
+    fn overlay_bbox_covers_every_painted_pixel() {
+        let base = [9, 9, 9, 255];
+        let ops = vec![
+            OverlayOp::MaskBlit {
+                x: 2,
+                y: 1,
+                w: 3,
+                h: 2,
+                data: std::sync::Arc::from(
+                    vec![0xff0000ff, 0, 0, 0, 0xff00ff00, 0].into_boxed_slice(),
+                ),
+            },
+            OverlayOp::StrokeRect {
+                x: 20.0,
+                y: 4.0,
+                w: 8.0,
+                h: 6.0,
+                rgba: [255, 255, 255, 255],
+                dash: Some((2.0, 2.0)),
+                difference: false,
+            },
+            OverlayOp::Line {
+                x0: 2.0,
+                y0: 20.0,
+                x1: 26.0,
+                y1: 21.0,
+                rgba: [255, 0, 0, 255],
+                width: 1.0,
+                difference: true,
+            },
+            OverlayOp::Circle {
+                cx: 16.0,
+                cy: 12.0,
+                r: 3.0,
+                rgba: [0, 255, 0, 255],
+                width: 2.0,
+                dash: None,
+            },
+        ];
+        let box_ = overlay_bbox(&ops, view1(), 1.0).expect("the ops paint something");
+        let mut fb = Framebuffer::new(32, 24);
+        fb.fill_rect(0, 0, 32, 24, base);
+        rasterize_overlay(&mut fb, &ops, view1(), 1.0);
+        let mut painted = 0;
+        for y in 0..fb.height {
+            for x in 0..fb.width {
+                if px(&fb, x, y) != base {
+                    painted += 1;
+                    assert!(inside(box_, x, y), "({x},{y}) sits outside {box_:?}");
+                }
+            }
+        }
+        assert!(painted > 10, "the fixture must actually paint pixels");
+    }
+
+    #[test]
+    fn mask_blit_bbox_scales_with_zoom() {
+        let ops = vec![OverlayOp::MaskBlit {
+            x: 2,
+            y: 1,
+            w: 3,
+            h: 2,
+            data: std::sync::Arc::from(vec![1u32, 0, 0, 0, 0, 0].into_boxed_slice()),
+        }];
+        assert_eq!(overlay_bbox(&ops, view1(), 1.0), Some((2, 1, 3, 2)));
+        // zoom 2: cell 2 at (4, 2), last cell (4, 2) → (8, 4) + cell.
+        let zoomed = View::new(2.0, 0.0, 0.0).expect("valid view");
+        assert_eq!(overlay_bbox(&ops, zoomed, 1.0), Some((4, 2, 6, 4)));
     }
 }

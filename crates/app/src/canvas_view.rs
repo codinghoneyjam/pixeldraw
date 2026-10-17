@@ -6,13 +6,15 @@
 //! the active tool's overlay, and upload the texture. The temporary toolbar
 //! lives in `shell`; this module owns the canvas rectangle.
 
-use pixel_engine::display::{DisplayParams, draw_display_into};
-use pixel_engine::display::{Framebuffer, GridMode};
+use pixel_engine::display::draw_display_into;
+use pixel_engine::display::{DisplayParams, Framebuffer, GridMode, chunk_device_rect};
 
-use crate::canvas_texture::CanvasTexture;
+use crate::canvas_texture::{
+    CanvasTexture, FrameStamp, Upload, UploadTracker, intersect_rect, union_opt,
+};
 use crate::input::{InputCtx, ToolCall};
 use crate::input_adapter::{FrameInput, poll_frame_input, wheel_mode};
-use crate::overlay_raster::rasterize_overlay;
+use crate::overlay_raster::{overlay_bbox, rasterize_overlay};
 use crate::session_glue::{AppState, frame_budget};
 use crate::tools::api::{CursorKind, OverlayInfo, ToolCx};
 
@@ -107,48 +109,91 @@ fn dispatch_frame_input(state: &mut AppState, fi: &FrameInput) -> bool {
     render
 }
 
-/// Paint one canvas frame into `fb` and upload it. Returns repaint demand.
+/// Paint one canvas frame into `fb`. Returns the repaint demand plus what the
+/// GPU texture needs — [`Upload::Skip`] when neither the display nor a hover
+/// overlay changed anything (UI-5: no redraw, no copy, no upload).
 pub fn render_frame(
     state: &mut AppState,
     fb: &mut Framebuffer,
     css_w: f64,
     css_h: f64,
     dpr: f64,
-) -> bool {
+    tracker: &mut UploadTracker,
+) -> (bool, Upload) {
     let mut render = state.drain_events();
     let visible = state.view_store.visible_chunk_range();
-    // **The document is borrowed, not cloned.**
-    // every layer, every chunk — **once per frame**. `docs/perf_js_vs_rust.md`
+    // The document is borrowed, not cloned: the frame walks every layer of
+    // every chunk once, and a clone would double that (`docs/perf_js_vs_rust.md`).
     let AppState { session, comp, .. } = state;
     let Some(doc) = session.doc() else {
-        return render;
+        return (render, Upload::Skip);
     };
     if comp.update(doc, visible, frame_budget()) {
         render = true;
     }
     let s = session.settings();
-    let params = DisplayParams {
-        view: state.view_store.view(),
-        canvas_w: doc.canvas.width_px,
-        canvas_h: doc.canvas.height_px,
+    let view = state.view_store.view();
+    let grid = GridMode::from(s.grid_mode);
+    let stamp = FrameStamp {
+        zoom: view.zoom(),
+        offset_x: view.offset_x(),
+        offset_y: view.offset_y(),
         css_w,
         css_h,
         dpr,
-        background: &doc.canvas.background,
-        grid: GridMode::from(s.grid_mode),
-        comp: Some(comp.comp()),
+        canvas_w: doc.canvas.width_px,
+        canvas_h: doc.canvas.height_px,
+        grid,
+        background: doc.canvas.background.clone(),
     };
-    draw_display_into(&params, fb);
+    let mut upload = tracker.begin(&stamp);
+    // The ops are built every frame either way: the *next* frame needs this
+    // frame's box to erase a preview that has moved on.
     let mut ops = vec![];
-    state.tools.overlay(
-        &OverlayInfo {
-            view: state.view_store.view(),
+    state.tools.overlay(&OverlayInfo { view, dpr }, &mut ops);
+    let overlay_now = overlay_bbox(&ops, view, dpr);
+
+    if !matches!(upload, Upload::Full) {
+        let fb_rect = (0, 0, fb.width as i32, fb.height as i32);
+        // The chunks `comp.update` just repainted are exactly what changed in
+        // the comp buffer since the last upload.
+        for &(cx, cy) in comp.last_painted_keys() {
+            upload.add(
+                chunk_device_rect(
+                    &view,
+                    doc.canvas.width_px,
+                    doc.canvas.height_px,
+                    dpr,
+                    cx,
+                    cy,
+                )
+                .and_then(|r| intersect_rect(r, fb_rect)),
+            );
+        }
+        // Old and new overlay boxes: the erase and the paint.
+        upload.add(
+            union_opt(tracker.overlay_rect(), overlay_now).and_then(|r| intersect_rect(r, fb_rect)),
+        );
+    }
+
+    if !matches!(upload, Upload::Skip) {
+        let params = DisplayParams {
+            view,
+            canvas_w: doc.canvas.width_px,
+            canvas_h: doc.canvas.height_px,
+            css_w,
+            css_h,
             dpr,
-        },
-        &mut ops,
-    );
-    rasterize_overlay(fb, &ops, state.view_store.view(), dpr);
-    render || state.comp.dirty_len() > 0
+            background: &doc.canvas.background,
+            grid,
+            comp: Some(comp.comp()),
+        };
+        draw_display_into(&params, fb);
+        rasterize_overlay(fb, &ops, view, dpr);
+    }
+    tracker.finish(stamp, overlay_now);
+
+    (render || comp.dirty_len() > 0, upload)
 }
 
 fn cursor_icon(cursor: CursorKind) -> egui::CursorIcon {
@@ -181,14 +226,15 @@ pub fn show_canvas(
     let fi = poll_frame_input(ui.ctx(), avail.min);
     let input_render = dispatch_frame_input(state, &fi);
     let ppp = ui.pixels_per_point();
-    let frame_render = render_frame(
+    let (frame_render, upload) = render_frame(
         state,
         fb,
         avail.width() as f64,
         avail.height() as f64,
         ppp as f64,
+        texture.tracker_mut(),
     );
-    texture.upload(ui.ctx(), &fb.rgba, fb.width as usize, fb.height as usize);
+    texture.present(ui.ctx(), fb, upload);
     // 1:1 paint at the widget origin.
     let rect = egui::Rect::from_min_size(
         avail.min,

@@ -4,7 +4,7 @@ use super::background::paint_background;
 use super::framebuffer::{Framebuffer, clip_rect, intersect_rects};
 use super::grid::{GridLines, GridMode, grid_lines, paint_grid};
 use crate::blend::over_blend;
-use crate::constants::BORDER_RGBA;
+use crate::constants::{BORDER_RGBA, CHUNK_PX};
 use crate::view::{View, round_half_up};
 
 /// One frame's worth of display inputs. `comp` is the W3 comp buffer
@@ -44,6 +44,66 @@ pub fn draw_display(p: &DisplayParams) -> Framebuffer {
     fb
 }
 
+/// The canvas rect in device px — the `dx/dy/dw/dh` `draw_display_into` hands
+/// to the background painter, the blit and the border.
+///
+/// Each side rounds on its own: the far edge is never `dx + dw`.
+pub fn canvas_device_rect(
+    view: &View,
+    canvas_w: u32,
+    canvas_h: u32,
+    dpr: f64,
+) -> (i32, i32, i32, i32) {
+    let dpr = effective_dpr(dpr);
+    let dx = round_half_up(view.offset_x() * dpr) as i32;
+    let dy = round_half_up(view.offset_y() * dpr) as i32;
+    let dw = round_half_up(canvas_w as f64 * view.zoom() * dpr) as i32;
+    let dh = round_half_up(canvas_h as f64 * view.zoom() * dpr) as i32;
+    (dx, dy, dw, dh)
+}
+
+/// Two roundings — the continuous corner and the blit's floored per-pixel source
+/// — can each move a chunk edge by a device pixel; the box carries both.
+const RECT_MARGIN: i32 = 2;
+
+/// Conservative device-px box of one comp chunk (`cx*32 .. +32` canvas px),
+/// clipped to [`canvas_device_rect`]; `None` when the chunk is off the canvas
+/// or the clip leaves nothing.
+///
+/// UI-5 feeds this the chunks [`crate::comp_cache::CompCache::last_painted_keys`]
+/// reported and uploads just that texture region. Over-covering a few pixels is
+/// free (they are read from the same framebuffer); under-covering leaves a stale
+/// pixel on screen, so the box only has to be a superset.
+pub fn chunk_device_rect(
+    view: &View,
+    canvas_w: u32,
+    canvas_h: u32,
+    dpr: f64,
+    cx: u32,
+    cy: u32,
+) -> Option<(i32, i32, i32, i32)> {
+    let sx0 = cx * CHUNK_PX;
+    let sy0 = cy * CHUNK_PX;
+    if sx0 >= canvas_w || sy0 >= canvas_h {
+        return None;
+    }
+    let sx1 = (sx0 + CHUNK_PX).min(canvas_w);
+    let sy1 = (sy0 + CHUNK_PX).min(canvas_h);
+    let dpr = effective_dpr(dpr);
+    let z = view.zoom();
+    let x0 = round_half_up((view.offset_x() + sx0 as f64 * z) * dpr) as i32;
+    let y0 = round_half_up((view.offset_y() + sy0 as f64 * z) * dpr) as i32;
+    let x1 = round_half_up((view.offset_x() + sx1 as f64 * z) * dpr) as i32;
+    let y1 = round_half_up((view.offset_y() + sy1 as f64 * z) * dpr) as i32;
+    let rect = (
+        x0 - RECT_MARGIN,
+        y0 - RECT_MARGIN,
+        (x1 - x0) + 2 * RECT_MARGIN,
+        (y1 - y0) + 2 * RECT_MARGIN,
+    );
+    intersect_rects(canvas_device_rect(view, canvas_w, canvas_h, dpr), rect)
+}
+
 /// Paint one frame into a caller-owned buffer, resizing it when the device size
 /// changed (and clearing it either way — the JS `clearRect` ran every frame).
 pub fn draw_display_into(p: &DisplayParams, fb: &mut Framebuffer) {
@@ -52,13 +112,8 @@ pub fn draw_display_into(p: &DisplayParams, fb: &mut Framebuffer) {
     fb.resize_clear(dev_w, dev_h);
 
     let view = p.view;
-    let dx = round_half_up(view.offset_x() * dpr) as i32;
-    let dy = round_half_up(view.offset_y() * dpr) as i32;
-    // Each side rounds on its own: the far edge is never dx + dw.
-    let dw = round_half_up(p.canvas_w as f64 * view.zoom() * dpr) as i32;
-    let dh = round_half_up(p.canvas_h as f64 * view.zoom() * dpr) as i32;
-
     // Clip: background + blit only (the border is drawn outside it in the JS).
+    let (dx, dy, dw, dh) = canvas_device_rect(&view, p.canvas_w, p.canvas_h, dpr);
     let clip = (dx, dy, dw, dh);
     paint_background(
         fb,

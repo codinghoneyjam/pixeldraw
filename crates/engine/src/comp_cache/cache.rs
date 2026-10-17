@@ -34,9 +34,14 @@ pub struct CompCache {
     /// arrived, even when the size was unchanged; the next `ensure` must do the
     /// same instead of no-op'ing.
     pub(crate) reensure: bool,
-    /// Chunks the most recent [`CompCache::paint_dirty`] actually painted.
-    /// Statistics for tests and the HUD; nothing in the cache reads it.
-    pub(crate) last_painted: usize,
+    /// `(cx, cy)` of the chunks the most recent [`CompCache::paint_dirty`]
+    /// actually composited, in paint order.
+    ///
+    /// Statistics for tests and the HUD, plus the list UI-5 maps to device-px
+    /// damage for `TextureHandle::set_partial`; nothing in the cache reads it.
+    /// The JS `paintDirty` knew the same list implicitly — `putImageData` ran
+    /// once per key — so this is that list, kept explicitly.
+    pub(crate) last_painted_keys: Vec<(u32, u32)>,
 }
 
 impl CompCache {
@@ -50,7 +55,7 @@ impl CompCache {
             // the same state through `_setDocument` on attach.
             dirty_all: true,
             reensure: false,
-            last_painted: 0,
+            last_painted_keys: Vec::new(),
         }
     }
 
@@ -117,7 +122,12 @@ impl CompCache {
 
     /// `last_painted` — how many chunks the last `paint_dirty` composited.
     pub fn last_painted(&self) -> usize {
-        self.last_painted
+        self.last_painted_keys.len()
+    }
+
+    /// The chunks the last `paint_dirty` composited, in paint order.
+    pub fn last_painted_keys(&self) -> &[(u32, u32)] {
+        &self.last_painted_keys
     }
 
     /// `for cy in 0..h/CHUNK_PX, for cx in 0..w/CHUNK_PX` — the JS expansion loop.

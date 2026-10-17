@@ -13,13 +13,15 @@
 - **코드 이전은 사실상 완료.** Phase 0·1·2·3·4 완료, Phase 5(성능)는 부분 적용
   (목표 9항목 중 6 달성), Phase 7(UI 정리)은 7.1~7.4 완료·7.5(수동 확인) 진행 중,
   Phase 6(절삭·패키징) 미착수.
-- **오늘 게이트: 사실상 그린.** `cargo test --workspace` **585** · clippy/fmt 그린 ·
+- **오늘 게이트: 사실상 그린.** `cargo test --workspace` **595** · clippy/fmt 그린 ·
   `npm test` 410/410 · golden 201/201 · recipe 39/39 · png 5/5 · view/schema OK.
   **유일한 레드 = 오라클 매니페스트 드리프트 4건**(→ V1 — 같은 날 재동결로 해소).
 - **큰 덩어리 4개 — 1·2는 2026-10-17 해소**
   1. ~~설정 영속화(3.9)·자동저장(3.10) 미구현~~ → `settings_store.rs`·`autosave.rs` + 셸 배선 완료.
   2. ~~단축키/포커스/busy 가드 미구현~~ → `find_matching_guarded` + Esc 블러 + busy 비활성 완료.
-  3. 성능 잔여 3항목 + 프레임 경로 병렬화(5.2 확장)·텍스처 부분 업로드(5.6)·HUD(5.7).
+  3. ~~프레임 경로 병렬화(5.2 확장)·텍스처 부분 업로드(5.6)~~ → `perf_js_vs_rust.md`
+     §14로 해소(2026-10-17). 남은 것: 성능 목표 미달 4항목(composite/flatten/pen=8/
+     documentToJson) + HUD(5.7).
   4. Phase 6 패키징·삭제·문서 재작성(NSIS 결정 포함).
 
 ### Phase 진행도
@@ -31,18 +33,18 @@
 | 2 네이티브 캔버스 | 2.1~2.7 | ✅ 구현 완료 (공식 수동 스모크만 미실행) | `crates/app/{canvas_view,canvas_texture,session_glue,input*,overlay_raster}.rs` |
 | 3 UI 전면 이식 | 3.1~3.10 | ✅ 구현 완료 (3.9·3.10 포함; 수동 스모크만 UI-6) | `ui/{settings_store,autosave}.rs` + 셸 배선 · 웍스 585 |
 | 4 자산 파이프라인 | A 선택 | ✅ | viewer 삭제, 개발 자산 유지 |
-| 5 성능 | 5.1~5.7 | ⚠️ 부분 | `perf_js_vs_rust.md` §11+§13: 달성 6 · 미달 4 · 미측정 0. 5.6·5.7 미착수 |
+| 5 성능 | 5.1~5.7 | ⚠️ 부분 | `perf_js_vs_rust.md` §11+§13+§14: 달성 6 · 미달 4 · 미측정 0. 5.6 완료(§14) · 5.7 미착수 |
 | 7 UI 레이아웃 정리 | 7.1~7.5 | 🔄 7.5 진행 중 | `docs/roadmap/phase7.yaml` (7.1~7.4 completed, 7.5 in_progress) |
 | 6 절삭·패키징 | 6.1~6.7 | ⬜ 미착수 | `src/`·`run.py`·`src-tauri/` 잔존(의도된 상태) |
 
-규모(테스트 포함, 오늘 측정): `engine/src` 19,637줄 + `engine/tests` 1,888 ·
-`app/src` 12,747 · `platform/src` 816 — 합계 약 **35k줄**.
+규모(테스트 포함, 오늘 측정): `engine/src` 19,948줄 + `engine/tests` 1,888 ·
+`app/src` 14,384 · `platform/src` 816 — 합계 약 **37k줄**.
 
 ### 게이트 실측 (2026-10-17)
 
 | 게이트 | 결과 | 비고 |
 |---|---|---|
-| `cargo test --workspace` | **585 pass / 0 fail** (engine lib 339+1 ignored, comp_cache 7, e2e 5, fixtures 5, model_basic 14, model_history 11, recipe 1, text_mask 6, platform 24, app 173) | 그린 |
+| `cargo test --workspace` | **595 pass / 0 fail** (engine lib 342+1 ignored, comp_cache 7, e2e 5, fixtures 5, model_basic 14, model_history 11, recipe 1, text_mask 6, platform 24, app 180) | 그린 |
 | `cargo clippy --workspace --all-targets -- -D warnings` | exit 0 | 그린 |
 | `cargo fmt --all --check` | exit 0 | 그린 |
 | `npm test` | **410 / 410** | 그린 (사용 셸 주의: 부록 A) |
@@ -64,7 +66,7 @@
 | UI-2 | 자동저장 + 복원(Phase 3.10) | ✅ 구현 완료 (2026-10-17) | ~~P0~~ |
 | UI-3 | 단축키 입력 가드 · busy 정책 | ✅ 구현 완료 (2026-10-17) | ~~P0~~ |
 | UI-4 | 패널 폭 영속화 | 미구현(인메모리) | P1 |
-| UI-5 | 캔버스 텍스처 매 프레임 전체 업로드 | 비효율 | P1 |
+| UI-5 | 캔버스 텍스처 매 프레임 전체 업로드 | ✅ 구현 완료 (2026-10-17) | ~~P1~~ |
 | UI-6 | Phase 7.5 / Phase 2~3 수동 스모크 | 미실행 | **P0(사람)** |
 | UI-7 | 잔손질(파일 UX·dead code 등) | 복수 | P2 |
 
@@ -121,8 +123,14 @@
   `ColorImage::from_rgba_unmultiplied`(전체 복사) + `handle.set`(GPU 업로드)이다.
   모듈 주석("uploads happen only when the size or the bytes change")과 실제 동작이 불일치.
 - **제안**: Phase 5.6 명세대로 변경 청크만 부분 업로드(`TextureHandle::set_partial`)하거나,
-  "변경 없음" 플래그로 스킵. 대형 뷰포트에서 마우스 이동 프레임마다 ~0.27ms 복사 +
-  업로드가 발생하는 것을 줄인다(`perf_js_vs_rust.md` 프레임 루프 표).
+  "변경 없음" 플래그로 스킵. 대형 뷰포트에서 마우스 이동 프레임마다 복사 + 업로드가
+  발생하는 것을 줄인다.
+- **결과(2026-10-17)**: `CanvasTexture::present(ctx, fb, Upload)` — ①서명 동일 + 손상
+  없음 `Skip`(그리기·복사·업로드 전부 생략), ②서명 변경·첫 프레임 `Full`, ③그 외에는
+  손상 union rect 하나를 `set_partial`. 손상 = 이번 프레임이 실제로 그린 청크의 device
+  rect(여백 2px, fb 클립) ∪ (이전 ∪ 현재 오버레이 bbox). 전체 fb 복사 **0.281 ms →
+  영역 ~1 µs**(16×16 크로스헤어 ~0.4 µs · 64×64 wash ~1.1 µs), 무변경 프레임은 0.
+  상세·안전성 근거·테스트는 `perf_js_vs_rust.md` §14-1.
 
 ### UI-6. 수동 스모크 미실행 (P0, 사람 확인)
 
@@ -151,10 +159,10 @@ dense 인덱스·스탬프 중복 제거·rayon)의 효과는 그 문서에 있�
 
 | # | 항목 | 상태 | 우선순위 |
 |---|---|---|---|
-| PERF-1 | 6ms 프레임 경로가 단일 스레드 | 미적용 | P1 |
+| PERF-1 | 6ms 프레임 경로가 단일 스레드 | **완료**(2026-10-17) — 무예산 pass 1만 병렬(게이트 `chunks×layers ≥ 3072`), 예산 pass 2는 순차 유지 | ~~P1~~ |
 | PERF-2 | 목표 미달 3항목(composite/flatten/pen=8) | 미달 | P1 |
 | PERF-3 | 저장(documentToJson) 측정·compact·rayon | **완료**(2026-10-17) — 578.9 ms, 목표 4.8× 미달 | P1 |
-| PERF-4 | 5.6 텍스처 부분 업로드·5.7 프레임 HUD | 미착수 | P1/P2 |
+| PERF-4 | 5.6 텍스처 부분 업로드·5.7 프레임 HUD | 5.6 **완료**(2026-10-17) · 5.7 미착수 | P1/P2 |
 | PERF-5 | 미측정 항목(Undo 메모리 등) | 미측정 | P2 |
 | PERF-6 | 후보 기법(실험 기록 존재) | 보류 | P2 |
 
@@ -168,6 +176,14 @@ dense 인덱스·스탬프 중복 제거·rayon)의 효과는 그 문서에 있�
 - **제안**: 예산 인지 병렬 합성(가시 청크 우선 → dirty 청크 병렬) 또는 청크 행 단위
   rayon. `perf_optimization_candidates.md`의 "chunk-granular rayon" 실험은 **느려서
   롤백된 이력**이 있으므로, 프레임 경로용으로는 워크로드·스레드 풀을 달리해 재검증한다.
+- **결과(2026-10-17)**: 무예산 **pass 1**(가시 청크, JS 패리티라 순서·바이트 고정)만
+  병렬 — 합성은 64청크 배치 `par_iter`, blit은 원 스레드·JS 키 순서. 바이트·dirty·
+  `last_painted_keys`가 스케줄과 무관함을 쌍둥이 테스트로 고정
+  (`paint_dirty_budget_serial` = A/B·회귀용 1스레드 쌍둥이). 게이트는
+  `chunks × layers ≥ 3072`: 이하면 기존 순차 경로 그대로라 **느려지는 케이스가 없다**
+  (게이트 없던 첫 실행에서 1L 콜드 그리드가 17% 손실이었다). framebench A/B —
+  drag 60청크×64L **8.9 → 1.4 ms(6.4×)**, 콜드 그리드 2176×64L **102.4 → 24.5 ms(4.2×)**.
+  예산 pass 2(6 ms 약속)는 설계대로 순차 유지. 상세는 `perf_js_vs_rust.md` §14-2/§14-3.
 
 ### PERF-2. 목표 미달 3항목 (P1)
 
@@ -202,7 +218,8 @@ dense 인덱스·스탬프 중복 제거·rayon)의 효과는 그 문서에 있�
 
 ### PERF-4. 5.6·5.7 (P1/P2)
 
-- **5.6 텍스처 부분 업로드**: UI-5와 동일 항목. `set_partial` + dirty rect 계산.
+- ~~**5.6 텍스처 부분 업로드**~~: **완료(2026-10-17)** — UI-5로 처리(`Skip`/`Full`/`Region`
+  + `set_partial`). 측정·근거는 `perf_js_vs_rust.md` §14-1.
 - **5.7 tracing + 프레임 타이밍 HUD**: 미착수. 개발 빌드에서 프레임 ms·dirty 청크 수·
   레이어 수·comp 예산 초과 횟수를 오버레이로 표시하면 회귀를 눈으로 잡는다.
 
@@ -303,7 +320,7 @@ dense 인덱스·스탬프 중복 제거·rayon)의 효과는 그 문서에 있�
 3. ✅ **(P0) 설정 영속화(3.9) + 자동저장·복원(3.10)** (2026-10-17, UI-1·UI-2)
 4. ✅ **(P0) 단축키/포커스/busy 가드** (2026-10-17, UI-3)
 5. ✅ **(P1) 저장 벤치 측정 + compact 전환 + 청크 인코딩 rayon** (2026-10-17, PERF-3 — 578.9 ms · 목표 4.8× 미달은 잔존)
-6. **(P1) 프레임 경로 병렬화 + 텍스처 부분 업로드** (PERF-1, UI-5)
+6. ✅ **(P1) 프레임 경로 병렬화 + 텍스처 부분 업로드** (2026-10-17, PERF-1·UI-5·PERF-4 5.6 — `perf_js_vs_rust.md` §14: 64L 콜드 102.4→24.5 ms · 업로드 0.281 ms→영역 ~1 µs/스킵)
 7. **(P1) 성능 잔여 미달 4항목(composite/flatten/pen=8/documentToJson)** (PERF-2·PERF-3 잔여)
 8. **(P1/P2) 파일 UX 잔손질(SaveAs·최근 경로), 패널 폭 영속화** (UI-7, UI-4)
 9. **(P2) 문서 정합성 정리 → Phase 6 착수** (D2~D4, §5)
@@ -313,7 +330,7 @@ dense 인덱스·스탬프 중복 제거·rayon)의 효과는 그 문서에 있�
 ## 부록 A. 검증 재현 명령 (2026-10-17 실행)
 
 ```powershell
-cargo test --workspace                 # 585 pass / 0 fail
+cargo test --workspace                 # 595 pass / 0 fail
 cargo clippy --workspace --all-targets -- -D warnings   # exit 0
 cargo fmt --all --check                # exit 0
 npm.cmd test                           # 410 / 410  ※ 이 환경에서 `npm`(.ps1)은 실행 정책 차단 → npm.cmd 사용
@@ -325,6 +342,7 @@ python schema/schema_selfcheck.py      # OK
 node tools/oracle_manifest.mjs --check # OK (193 files, 2026-10-17 재동결)
 cargo build --release -p pixeldraw     # target/release/pixeldraw.exe (7.0 MB, 배선 후 재빌드)
 cargo run -p pixel-engine --release --example bench   # documentToJson 578.9 ms (median) — §13
+cargo run -p pixel-engine --release --example framebench  # UI-5/PERF-1 A/B (§14) — 64L 콜드 24.5 ms vs 102.4 ms
 ```
 
 ## 부록 B. 참조 파일
