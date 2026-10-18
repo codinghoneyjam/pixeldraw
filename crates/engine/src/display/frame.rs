@@ -1,10 +1,11 @@
-﻿//! `drawDisplay` order + `blitVisible` — `src/render/renderer_display.js`.
+//! `drawDisplay` order + `blitVisible` — `src/render/renderer_display.js`.
 
 use super::background::paint_background;
 use super::framebuffer::{Framebuffer, clip_rect, intersect_rects};
 use super::grid::{GridLines, GridMode, grid_lines, paint_grid};
-use crate::blend::over_blend;
+use crate::blend::rnd_u8;
 use crate::constants::{BORDER_RGBA, CHUNK_PX};
+use crate::pixel::Rgba;
 use crate::view::{View, round_half_up};
 
 /// One frame's worth of display inputs. `comp` is the W3 comp buffer
@@ -144,6 +145,53 @@ pub fn draw_display_into(p: &DisplayParams, fb: &mut Framebuffer) {
     }
 }
 
+/// `ceil(a / b)` in integers: `b > 0`, `a` any sign (`div_euclid` floors).
+#[inline]
+pub(super) fn ceil_div(a: i64, b: i64) -> i64 {
+    let q = a.div_euclid(b);
+    q + i64::from(a.rem_euclid(b) != 0)
+}
+
+/// One source colour across a destination run: an opaque pixel is a plain copy.
+#[inline]
+pub(super) fn fill_run(dst: &mut [u8], src: Rgba) {
+    for chunk in dst.as_chunks_mut::<4>().0 {
+        chunk.copy_from_slice(&src);
+    }
+}
+
+/// `over_blend(dst, src, 1.0, "normal")` across a run of destination pixels that
+/// all read the **same** source colour.
+///
+/// Byte-identical to the general routine — the loop keeps the exact f64
+/// arithmetic, it just stops re-deriving `sa`, `1 - sa` and the `src * sa`
+/// products, and stops re-testing the mode string, for every pixel of the run
+/// (`blend_run_matches_over_blend` pins the equality).
+#[inline]
+pub(super) fn blend_run(dst: &mut [u8], src: Rgba) {
+    let sa = src[3] as f64 / 255.0;
+    if sa == 0.0 {
+        return;
+    }
+    let inv = 1.0 - sa;
+    let sc = [src[0] as f64 * sa, src[1] as f64 * sa, src[2] as f64 * sa];
+    for chunk in dst.as_chunks_mut::<4>().0 {
+        let da = chunk[3] as f64 / 255.0;
+        let oa = sa + da * inv;
+        let out = [
+            rnd_u8((sc[0] + chunk[0] as f64 * da * inv) / oa),
+            rnd_u8((sc[1] + chunk[1] as f64 * da * inv) / oa),
+            rnd_u8((sc[2] + chunk[2] as f64 * da * inv) / oa),
+            rnd_u8(oa * 255.0),
+        ];
+        if out[3] == 0 {
+            chunk.copy_from_slice(&[0, 0, 0, 0]);
+        } else {
+            chunk.copy_from_slice(&out);
+        }
+    }
+}
+
 /// `blitVisible` — nearest-neighbour blit of the comp buffer into the canvas
 /// rect, source-over (a comp pixel with alpha < 255 blends with what the
 /// background painter already left there).
@@ -197,30 +245,45 @@ pub fn blit_visible(
     };
     let (rw, rh) = (rw as i64, rh as i64);
     let fb_w = fb.width as usize;
+    let cw = canvas_w as i64;
     for row in 0..rh {
         let py = ry as i64 + row;
         // src = floor((dest_px - dest_origin) * sw / ddw): exact at integer zoom
         // and the contract for the mapping otherwise (the JS delegated it to the
         let sy = y0 + (py - oy) * sh / ddh;
         let srow = (sy * canvas_w as i64) as usize * 4;
-        let mut d = (py as usize * fb_w + rx as usize) * 4;
-        for col in 0..rw {
-            let px = rx as i64 + col;
-            let sx = x0 + (px - ox) * sw / ddw;
-            let so = srow + sx as usize * 4;
-            let src = [comp[so], comp[so + 1], comp[so + 2], comp[so + 3]];
-            let dst = &mut fb.rgba[d..d + 4];
-            if src[3] == 255 {
-                dst.copy_from_slice(&src);
-            } else if src[3] != 0 {
-                dst.copy_from_slice(&over_blend(
-                    [dst[0], dst[1], dst[2], dst[3]],
-                    src,
-                    1.0,
-                    "normal",
-                ));
+        // One *run* per source column, not one mapping per pixel: dest pixel
+        // `px` reads column `k = (px - ox) * sw / ddw`, and column `k` owns
+        // `px in [ox + ceil(k*ddw/sw), ox + ceil((k+1)*ddw/sw))` — so the run
+        // boundary is one division per column. The old per-pixel division cost
+        // ~6.6 ms per megapixel of destination at dpr 1.5 (measured on the
+        // 1838x1466 drag framebuffer, 2026-10-18, and that frame is redrawn
+        // whole on every damage). Zoomed far out a column can own no pixel at
+        // all; the inner loop walks on to the next column that does.
+        let row_end = rx as i64 + rw;
+        let mut px = rx as i64;
+        let mut k = (px - ox) * sw / ddw;
+        while px < row_end {
+            let mut end = ox + ceil_div((k + 1) * ddw, sw);
+            while end <= px {
+                k += 1;
+                end = ox + ceil_div((k + 1) * ddw, sw);
             }
-            d += 4;
+            let run_end = end.min(row_end);
+            let sx = x0 + k;
+            if (0..cw).contains(&sx) {
+                let so = srow + sx as usize * 4;
+                let src = [comp[so], comp[so + 1], comp[so + 2], comp[so + 3]];
+                let d = (py as usize * fb_w + px as usize) * 4;
+                let dst = &mut fb.rgba[d..d + (run_end - px) as usize * 4];
+                if src[3] == 255 {
+                    fill_run(dst, src);
+                } else if src[3] != 0 {
+                    blend_run(dst, src);
+                }
+            }
+            px = run_end;
+            k += 1;
         }
     }
 }

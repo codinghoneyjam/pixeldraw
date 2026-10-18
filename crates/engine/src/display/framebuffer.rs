@@ -6,7 +6,7 @@
 //! encoded as `ctx.rect(...); ctx.clip()` become explicit intersections the
 //! caller passes to [`clip_rect`].
 
-use crate::blend::{over_blend, rnd};
+use crate::blend::{over_blend, rnd, rnd_u8};
 use crate::pixel::Rgba;
 
 /// Device-pixel RGBA, row-major, `width * 4` stride — the layout of the JS
@@ -107,17 +107,47 @@ impl Framebuffer {
     ///
     /// Effective source alpha is `a * rgba[3] / 255`, so `BORDER_RGBA` carries
     /// its 0.6 in the byte and a grid pass carries white with the ink in `a`.
-    /// Math is `over_blend` in f64, the same rounding as layer compositing.
+    /// Math is `over_blend` in f64, the same rounding as layer compositing —
+    /// hoisted to one derivation per call, not per pixel (the tool previews
+    /// paint thousands of rects a frame; `blend_rect_matches_the_per_pixel_
+    /// formula` pins the equality).
     pub fn blend_rect(&mut self, x: i32, y: i32, w: i32, h: i32, rgba: Rgba, a: f64) {
+        let sa = (rgba[3] as f64 / 255.0) * a;
+        if sa == 0.0 {
+            return; // `over_blend` hands the destination straight back
+        }
+        if sa == 1.0 && rgba[3] == 255 {
+            // `sa == 1.0` gives `oa == 1.0` and `inv == 0.0`, so every pixel
+            // comes out as the source colour.
+            self.fill_rect(x, y, w, h, rgba);
+            return;
+        }
         let Some((x, y, w, h)) = self.clamp_rect(x, y, w, h) else {
             return;
         };
+        let inv = 1.0 - sa;
+        let sc = [
+            rgba[0] as f64 * sa,
+            rgba[1] as f64 * sa,
+            rgba[2] as f64 * sa,
+        ];
         let stride = self.width as usize * 4;
         let mut base = (y * self.width as usize + x) * 4;
         for _ in 0..h {
             for px in self.rgba[base..base + w * 4].as_chunks_mut::<4>().0 {
-                let out = over_blend([px[0], px[1], px[2], px[3]], rgba, a, "normal");
-                px.copy_from_slice(&out);
+                let da = px[3] as f64 / 255.0;
+                let oa = sa + da * inv;
+                let out = [
+                    rnd_u8((sc[0] + px[0] as f64 * da * inv) / oa),
+                    rnd_u8((sc[1] + px[1] as f64 * da * inv) / oa),
+                    rnd_u8((sc[2] + px[2] as f64 * da * inv) / oa),
+                    rnd_u8(oa * 255.0),
+                ];
+                if out[3] == 0 {
+                    px.copy_from_slice(&[0, 0, 0, 0]);
+                } else {
+                    px.copy_from_slice(&out);
+                }
             }
             base += stride;
         }
