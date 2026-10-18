@@ -4,6 +4,45 @@
 
 ---
 
+## 2026-10-18 · UI-10·PERF-7 · 파일 메뉴 라벨 · 드래그 병목(blit run 매핑 + blend_rect hoist)
+
+**커밋 대상**: `crates/engine/src/display/{frame,framebuffer,tests}.rs`·`crates/app/src/ui/menubar.rs`·`docs/{perf_js_vs_rust,port_status_report,progress/log}.md`·`outputs/native_20261018_{menubar_file,zoom800_preview}.png`
+**테스트**: workspace 그린 **606**(+5 — 파리티 4: `blend_run_matches_over_blend`·`blit_runs_cover_exactly_the_pixels_the_per_pixel_mapping_gives`·`blit_visible_matches_the_per_pixel_oracle`·`blend_rect_matches_the_per_pixel_formula` · UI-10: `the_file_slot_is_labelled_file`) · clippy `-D warnings`/fmt 그린 · oracle `--check` 그린(193 files, digest `7b8fbd4a…` · JS 무접촉) · release 재빌드 후 프로브 재측정
+
+- **① 파일칸 라벨(사용자 보고)** — 메뉴바 첫 슬롯이 "파일"이 아니라 "새 문서"로 표시됐다. File 트리거가 `Action::NewDocument`의 라벨을 그대로 쓴 것이 원인 — `FILE_MENU_LABEL = "파일"` 상수로 바꾸고 회귀 테스트(`the_file_slot_is_labelled_file`) 추가. 메뉴 안 항목 구조는 원본 그대로라 무접촉.
+- **② 드래그 병목(사용자 보고) = 고배율에서 프레임을 통째로 다시 도색하는 경로 2곳** — 100%에서는 캔버스가 뷰포트 일부라 데미지 영역만 그리지만(UI-5), 800%에서는 캔버스 rect가 뷰포트를 전부 덮어 매 프레임 device fb 2.7 Mpx(1838×1466)를 재도색한다.
+  - **① `blit_visible`**(`display/frame.rs`) — device 픽셀마다 i64 나눗셈 + `over_blend` 호출(문자열 mode 비교·f64 나눗셈 4회) = ~6.6 ns/px, blit 단독 **17.4 ms**. **destination column(run) 매핑**으로 전환: run 경계는 나눗셈 1회(`ceil_div`), run 안은 `fill_run`(alpha 255 = 복사) 또는 `blend_run`(계수 `sa`·`1-sa`·`src·sa`를 run당 1회 파생) — `over_blend(…,1.0,"normal")`과 **바이트 동일**. 엔진 벤치(임시) blit: zoom 1 3.89→**2.37 ms**, 4/8/16 ≈17.4→**7.13/6.41/5.97 ms**.
+  - **② 프리뷰 오버레이**(`display/framebuffer.rs`·`features/pen/preview.rs`) — 펜 프리뷰가 셀마다 FillRect op(≈4천 개)를 내고 각 `blend_rect`가 픽셀마다 `over_blend` = 800%에서 ~1.3 Mpx 블렌드 ≈ 10–15 ms. **`blend_rect` 계수 hoist** + `sa==0` 조기 반환 + 완전 불투명(`rgba[3]==255 && a==1.0`)이면 `fill_rect` 직행 — 전부 바이트 동일.
+- **실측(앱, 같은 제스처 전후 · `PIXELDRAW_PROF=1` 임시 계측)**: 고배율 드래그 dt 28.68 → **17.30 ms**(지연 77/77 → 2/128), 드래그2 27.88 → **16.68**(0/134), 팬 27.97 → **16.66**(0/111), draw 20.4~21.1 → **8.2~8.5 ms**; 100%는 16.67 유지(draw 1.74→1.49). 같은 3초 창 프레임 수 77→128. 상세 `perf_js_vs_rust.md` §15.
+- **계측 정리**: 임시 코드(`PIXELDRAW_PROF` 프레임 라인·`t_frame_part_costs` #[ignore] 벤치)는 커밋 전 제거. 캡처 `outputs/native_20261018_menubar_file.png`(100% · 파일칸 "파일") · `outputs/native_20261018_zoom800_preview.png`(800% 프리뷰 wash).
+
+---
+
+## 2026-10-18 · UI-9 · 창 기본 크기 16:9 (1920×1080) + 작은 모니터 자동 축소
+
+**커밋 대상**: `crates/app/src/shell.rs`·`docs/{native_smoke,port_status_report,progress/log}.md`·`outputs/native_20261018_window_16x9.png`
+**테스트**: workspace 그린 **601**(+1 — `the_startup_window_only_shrinks_to_fit`; 기존 창 테스트는 16:9 기대값으로 교체) · clippy `-D warnings`/fmt 그린 · oracle `--check` 그린(JS·`src-tauri/tauri.conf.json` 무접촉) · release 재빌드 후 캡처 확인
+
+- **기본 크기**: `WINDOW_SIZE` 1280×820 → **1920×1080**(16:9). 1280×820은 `src-tauri/tauri.conf.json` 값이라 그 파일은 규범으로 그대로 두고 포트 창만 사용자 요청대로 바꾼다(문서에 명시). 최소 크기 900×560 유지.
+- **동적 축소**(`fit_window_to_monitor`): 첫 프레임 — 모니터 정보가 처음 실린 프레임 — 에 `ViewportInfo.monitor_size`(egui pt)와 현재 `outer_rect`/`inner_rect`를 읽어 `scale = min(1, (monitor−장식−여백)/target)` **단일 스케일**로만 줄인다. 비율은 항상 16:9(가로·세로 동일 비율), 확대는 없음. 장식은 실측(`outer−inner`)이라 타이틀바를 추측하지 않고, 하단은 작업표시줄 48pt·좌우 16pt 여백.
+- **배치**: 목표가 들어가면 `centered: true`가 놓은 자리를 그대로 쓰고(움직임 없음), 축소할 때만 `InnerSize`+`OuterPosition`을 함께 보내 **작업 영역(모니터−작업표시줄 48pt) 안쪽에 좌우 대칭 여백으로 중앙 배치**한다 — 모니터가 아니라 작업 영역 기준이라 상태바가 작업표시줄에 가리지 않는다.
+- **1회 래치**: `window_fitted` — 이후 프레임은 창 크기를 건드리지 않으므로 사용자가 리사이즈한 창이 되돌아가지 않는다. 모니터 정보가 없는 프레임은 다음 프레임에 재시도(비용 무시 가능).
+- **검증**: 4K·150%(3840×2160, 작업 영역 3840×2088)에서 실측 창 2902×1676px(=1934.7×1117.3pt, inner 1920×1080 = 2880×1620px, 장식 15×37.3pt). 축소 경로는 목표를 임시로 3000×1688로 올려 실측 — 3547×2039px(=2364.7×1359.3pt, inner 2350×1322)로 **16:9 그대로** 줄고 작업 영역 안(하단 2063 ≤ 2088)·작업 영역 중앙(중심 1919.5,1043.5 ≈ 작업 영역 중심 1920,1044)에 놓이는 것까지 확인 후 원복. 레이아웃은 넓어진 창에 그대로 재배치(좌패널 369pt·캔버스 확대·상태바 `X: 912 Y: 255`).
+
+---
+
+## 2026-10-18 · UI-8b · 브러시 프리셋 8×2 + 슬라이더/미리보기 재배분 (사용자 피드백)
+
+**커밋 대상**: `crates/app/src/ui/panels/brush.rs`·`docs/progress/log.md`·`docs/port_status_report.md`·`outputs/native_20261018_brush_8x2.png`
+**테스트**: workspace 그린 **600**(+1 — `brush_row_geometry` 신규, 프리셋 테스트 3종은 8×2 기대값으로 갱신) · clippy `-D warnings`/fmt 그린 · oracle `--check` 그린(JS 무접촉, digest 불변) · release 재빌드 후 캡처 확인
+
+- **① 프리셋 8×2 + 정사각 셀**(사용자: "4×4 말고 팔레트랑 통일감 있게 8×2") — JS `presetColumns`는 `4..=8`에서 **최소** 약수를 골라 16→4열이었다. 스캔을 최대 약수로 뒤집어 16→8열·2행(팔레트와 같은 8열). 셀은 팔레트 `#dt-palette` 규격 그대로 정사각(`.dt-swatch { aspect-ratio: 1 }`)·`gap:2`로 바꿨다(JS 프리셋 그리드는 `gap:3`·`min-height:30`). 셀 ≈39×39 — 이전 4×4(≈42×30)보다 크고 아래 그리드도 팔레트와 같은 리듬이 된다.
+- **② 슬라이더 상한 + 미리보기 확대**(같은 피드백: "슬라이더가 너무 길고, 미리보기가 너무 작아") — JS 행은 슬라이더가 flex로 폭 전체를 먹고(≈289pt) 56px 미리보기가 오른쪽에 붙는다. `brush_row_geometry(available)` 신설: 슬라이더 `clamp(80, 남는 폭, 180)`, 미리보기 96×96(JS 56 → 1.7×)로 **행 오른쪽 끝 정렬**(프리셋 그리드·팔레트의 오른쪽 끝과 일치). 좁은 패널에선 미리보기가 먼저 줄어 둘이 넘치지 않는다(카드 폭 156 → 80+10+66).
+- **③ 행 2 수동 배치**(`brush.rs`) — `ui.horizontal`은 먼저 놓인 얇은 슬라이더를 나중에 커진 미리보기 높이에 재정렬하지 않는다(egui는 뒤에 놓인 항목만 교차축 중앙 정렬). 그래서 행 rect를 `allocate_space`로 잡고 슬라이더는 `ui.place`(커서 무영향)로 세로 중앙에, 미리보기는 painter로 직접 그린다 — JS `.dt-brush-row { align-items: center }` 재현. 캡 여파로 슬라이더와 미리보기 사이 ≈61pt 여백이 남는다(의도된 절충 — 채우려면 `SLIDER_MAX`만 올리면 된다).
+- **검증 캡처**(`outputs/native_20261018_brush_8x2.png`, 1942×1286) — 픽셀 스캔: 활성 `1` 셀 39.3×38.7(정사각)·첫 행 경계 9개(8열)·셀 간격 2.7pt, 슬라이더 트랙+핸들 185pt, 흰 미리보기 93×95(오른쪽 끝 601px = 그리드 오른쪽 끝과 동일)에 1px 점 표시. `X: 147 Y: 206`·`100%`·레일 44pt 등 이전 라운드 항목도 그대로.
+
+---
+
 ## 2026-10-17 · UI-6 · 사용자 피드백 6건 — 프리셋 4×4·미리보기 우측·입력 격리·휠 캐시·좌표·히스토리 버튼
 
 **커밋 대상**: `crates/app/src/{input_adapter,canvas_view,shell}.rs`·`crates/app/src/ui/{mod,toolbar,menubar}.rs`·`crates/app/src/ui/panels/{brush,color}.rs`·`docs/native_ui_layout_audit.md`·`outputs/native_20261017_ui6.png`·`docs/progress/log.md`
