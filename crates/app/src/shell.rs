@@ -13,10 +13,53 @@ use crate::file_ops::{export_png_bytes, open_json_bytes, open_png_bytes, save_js
 use crate::session_glue::AppState;
 use crate::ui::{UiState, render_ui};
 
-/// `src-tauri/tauri.conf.json` window geometry, mirrored here.
+/// Window geometry. The title and the minimum still mirror
+/// `src-tauri/tauri.conf.json` (1280×820), but the port opens at the user's
+/// 16:9 default of 1920×1080 and shrinks it — same ratio, never bigger — on a
+/// monitor that cannot hold it (`fit_window_to_monitor`).
 pub const WINDOW_TITLE: &str = "Pixeldraw";
-pub const WINDOW_SIZE: [f32; 2] = [1280.0, 820.0];
+pub const WINDOW_SIZE: [f32; 2] = [1920.0, 1080.0];
 pub const WINDOW_MIN_SIZE: [f32; 2] = [900.0, 560.0];
+/// Room the fitted window must leave: winit reports the whole monitor, not the
+/// work area, so the taskbar strip comes off the bottom and a symmetric side
+/// margin frames the rest. The title bar is not guessed — it comes from the
+/// live window (`outer - inner` decorations), since it counts against the fit.
+const WINDOW_BOTTOM_MARGIN: f32 = 48.0;
+const WINDOW_SIDE_MARGIN: f32 = 16.0;
+
+/// Keep the 16:9 startup target inside `monitor` (egui points): one uniform
+/// scale, never above 1.0, so the ratio survives a small monitor. `None` means
+/// the target already fits, and the window stays where eframe centred it —
+/// nothing moves on a monitor that can hold the target.
+/// `outer`/`inner` are the current window rects; they supply the decoration
+/// size, which does not scale with the client area.
+fn fit_window_to_monitor(
+    target: egui::Vec2,
+    monitor: egui::Vec2,
+    outer: egui::Rect,
+    inner: egui::Vec2,
+) -> Option<(egui::Vec2, egui::Pos2)> {
+    let decorations = (outer.size() - inner).max(egui::Vec2::ZERO);
+    let work = monitor - egui::Vec2::new(0.0, WINDOW_BOTTOM_MARGIN);
+    // The box the outer rect has to fit into: the work area minus the side
+    // margin, so the window lands with a symmetric gap all round.
+    let area = work - egui::Vec2::splat(2.0 * WINDOW_SIDE_MARGIN);
+    let avail = area - decorations;
+    let scale = (avail.x / target.x).min(avail.y / target.y).min(1.0);
+    if !scale.is_finite() || scale >= 1.0 {
+        return None;
+    }
+    // Floor, not round: rounding up could eat the last fraction of the margin.
+    let size = (target * scale).floor();
+    // Decorations do not change with the client area, so the outer box grows
+    // by exactly the inner delta.
+    let outer_size = outer.size() + (size - inner);
+    let pos = egui::pos2(
+        WINDOW_SIDE_MARGIN + (area.x - outer_size.x) / 2.0,
+        WINDOW_SIDE_MARGIN + (area.y - outer_size.y) / 2.0,
+    );
+    Some((size, pos))
+}
 
 /// System Korean fonts, first hit wins. Bundling is undecided (license +
 /// offline-exe size) — see the W7 log note — so the system copy is primary.
@@ -68,6 +111,9 @@ pub struct PixeldrawApp {
     fb: Framebuffer,
     /// The close guard let the window go (3.10b `beforeunload` parity).
     allow_close: bool,
+    /// The one-shot startup size fit already ran (a manual resize after it is
+    /// never snapped back).
+    window_fitted: bool,
 }
 
 impl PixeldrawApp {
@@ -103,6 +149,33 @@ impl PixeldrawApp {
             texture: CanvasTexture::new(),
             fb: Framebuffer::new(1, 1),
             allow_close: false,
+            window_fitted: false,
+        }
+    }
+
+    /// Startup window fit, one shot: the window is created at the 16:9 target
+    /// and the first frame that knows the monitor shrinks it when the target
+    /// does not fit. The latch is what keeps a later manual resize intact.
+    fn fit_startup_window(&mut self, ctx: &egui::Context) {
+        if self.window_fitted {
+            return;
+        }
+        let (monitor, outer, inner) = ctx.input(|i| {
+            let viewport = i.viewport();
+            (
+                viewport.monitor_size,
+                viewport.outer_rect,
+                viewport.inner_rect.map(|rect| rect.size()),
+            )
+        });
+        let (Some(monitor), Some(outer), Some(inner)) = (monitor, outer, inner) else {
+            return; // the integration has not reported the window yet
+        };
+        self.window_fitted = true;
+        let target = egui::Vec2::new(WINDOW_SIZE[0], WINDOW_SIZE[1]);
+        if let Some((size, pos)) = fit_window_to_monitor(target, monitor, outer, inner) {
+            ctx.send_viewport_cmd(egui::ViewportCommand::InnerSize(size));
+            ctx.send_viewport_cmd(egui::ViewportCommand::OuterPosition(pos));
         }
     }
 
@@ -116,6 +189,10 @@ impl eframe::App for PixeldrawApp {
         // An owned clone (cheap Arc) so the `ui` borrow can be released while
         // `ctx` is still used across `render_ui`.
         let ctx = ui.ctx().clone();
+
+        // Startup geometry: shrink the 16:9 window to the monitor if needed
+        // (once — afterwards the user owns the size).
+        self.fit_startup_window(&ctx);
 
         // Phase 3.10b close guard: flush the pending autosave ("pagehide"
         // parity), then keep unsaved changes behind a confirm dialog
@@ -369,6 +446,9 @@ pub fn run() {
             .with_title(WINDOW_TITLE)
             .with_inner_size(WINDOW_SIZE)
             .with_min_inner_size(WINDOW_MIN_SIZE),
+        // The 16:9 target is centred on the primary monitor; the first frame
+        // re-centres it when it had to shrink.
+        centered: true,
         ..Default::default()
     };
     if let Err(e) = eframe::run_native(
@@ -422,9 +502,53 @@ mod tests {
     }
 
     #[test]
-    fn window_geometry_mirrors_tauri_conf() {
+    fn window_defaults_are_a_16x9_target() {
         assert_eq!(WINDOW_TITLE, "Pixeldraw");
-        assert_eq!(WINDOW_SIZE, [1280.0, 820.0]);
+        assert_eq!(WINDOW_SIZE, [1920.0, 1080.0]);
+        // 16:9, the ratio the JS `#dt-app` viewport assumes.
+        assert_eq!(WINDOW_SIZE[0] / WINDOW_SIZE[1], 16.0 / 9.0);
         assert_eq!(WINDOW_MIN_SIZE, [900.0, 560.0]);
+    }
+
+    /// The startup fit only ever shrinks, always uniformly, and keeps the
+    /// window centred while it does.
+    #[test]
+    fn the_startup_window_only_shrinks_to_fit() {
+        let target = egui::Vec2::new(WINDOW_SIZE[0], WINDOW_SIZE[1]);
+        let outer = egui::Rect::from_min_size(egui::pos2(300.0, 150.0), egui::vec2(1930.0, 1120.0));
+        let inner = egui::vec2(1920.0, 1080.0);
+
+        // A monitor the target fits in (the dev box's 2560×1440 points): the
+        // window is left exactly where eframe centred it.
+        assert_eq!(
+            fit_window_to_monitor(target, egui::vec2(2560.0, 1440.0), outer, inner),
+            None
+        );
+
+        // A 1920×1080 desktop: the height is what gives, the ratio stays, and
+        // the outer box (title bar + taskbar margin) stays inside the work area.
+        let (size, pos) = fit_window_to_monitor(target, egui::vec2(1920.0, 1080.0), outer, inner)
+            .expect("a 1080p monitor needs a fit");
+        let deco = outer.size() - inner;
+        let work = egui::vec2(1920.0, 1080.0 - WINDOW_BOTTOM_MARGIN);
+        let new_outer = deco + size;
+        assert!((size.x / size.y - 16.0 / 9.0).abs() < 0.002);
+        assert!(pos.x >= WINDOW_SIDE_MARGIN - 0.001);
+        assert!(pos.x + new_outer.x <= work.x - WINDOW_SIDE_MARGIN + 0.001);
+        assert!(pos.y + new_outer.y <= work.y - WINDOW_SIDE_MARGIN + 0.001);
+        // Centred on the work area, so the taskbar strip stays clear.
+        assert!((pos.x - (work.x - new_outer.x) / 2.0).abs() < 0.001);
+
+        // A laptop panel: a smaller uniform scale, still 16:9 and inside.
+        let (small, small_pos) =
+            fit_window_to_monitor(target, egui::vec2(1366.0, 768.0), outer, inner).expect("fit");
+        let small_outer = outer.size() + (small - inner);
+        assert!(small_pos.x + small_outer.x <= 1366.0 - WINDOW_SIDE_MARGIN + 0.001);
+        assert!(
+            small_pos.y + small_outer.y
+                <= 768.0 - WINDOW_BOTTOM_MARGIN - WINDOW_SIDE_MARGIN + 0.001
+        );
+        assert!((small.x / small.y - 16.0 / 9.0).abs() < 0.002);
+        assert!(small.x < size.x && small.y < size.y);
     }
 }

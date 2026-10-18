@@ -3,9 +3,12 @@
 //! `index.html` splits the section into a `굵기` number row and a
 //! `.dt-brush-row` (slider + 1:1 footprint preview on its right); `panel_brush.js`
 //! fills the sixteen presets into a grid whose column count derives from the
-//! count (`presetColumns` → 4) and whose cells stretch to the panel width. The
-//! fixed 7/5/4 size bands and the bottom-left preview this replaced were the
-//! port's own layout, not the spec.
+//! count. Two user UI rounds then moved away from the JS numbers: the grid now
+//! mirrors the palette (`#dt-palette`: eight square columns on a 2px gap)
+//! instead of the JS four 30px-tall ones, and the row splits into a capped
+//! slider plus an enlarged 96px preview instead of the JS flexing slider and
+//! 56px box. The fixed 7/5/4 size bands and the bottom-left preview this
+//! replaced were the port's own layout, not the spec.
 use super::super::UiState;
 use super::chrome::{EDGE, section_card, section_header};
 use super::color::to_color32;
@@ -14,19 +17,23 @@ use egui::{Color32, DragValue, RichText, Slider, Ui};
 
 pub const SIZE_PRESETS: [u32; 16] = [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48, 64];
 
-/// JS `panel_brush.js` L11-12: `PRESET_COLUMNS = 4`, `PRESET_MAX_COLUMNS = 8`.
+/// JS `panel_brush.js` L11-12: `PRESET_COLUMNS = 4` (the fallback),
+/// `PRESET_MAX_COLUMNS = 8` (the palette's column count).
 pub const PRESET_COLUMNS: usize = 4;
 pub const PRESET_MAX_COLUMNS: usize = 8;
 
-/// JS `presetColumns(count)`: the first divisor of `count` in `4..=8`, else the
-/// 4-column default. Sixteen presets therefore land on the JS 4×4 grid instead
-/// of a hard-coded shape.
+/// The widest divisor of `count` in `4..=8`, else the 4-column default. The JS
+/// `presetColumns` scanned the *narrowest* divisor, which put the sixteen
+/// presets on a 4×4 grid; the user asked for the palette's eight columns, so
+/// the scan runs the other way and the sixteen land on 8×2. The count still
+/// picks the shape — no hard-coded rows.
 pub fn preset_columns(count: usize) -> usize {
     if count == 0 {
         return PRESET_COLUMNS;
     }
     let limit = PRESET_MAX_COLUMNS.min(count);
     (PRESET_COLUMNS..=limit)
+        .rev()
         .find(|columns| count.is_multiple_of(*columns))
         .unwrap_or(PRESET_COLUMNS)
 }
@@ -42,16 +49,34 @@ pub fn preset_rows(count: usize, columns: usize) -> usize {
     }
 }
 
-/// JS `style_juicy.css` J5: `gap: 3px` between cells, every button
-/// `min-height: 30px`; the width comes from the `1fr` grid column, so the cells
-/// follow the panel the way the palette does.
-const PRESET_GAP: f32 = 3.0;
-const PRESET_MIN_HEIGHT: f32 = 30.0;
+/// The preset grid mirrors the palette (`style_base.css` `#dt-palette`:
+/// `repeat(8, 1fr)` with `gap: 2px` and `.dt-swatch { aspect-ratio: 1 }`), so
+/// the cells are square and follow the panel width the way the swatches do.
+/// The JS `#dt-size-presets` instead uses a 3px gap and 30px-tall cells.
+const PRESET_GAP: f32 = 2.0;
 /// The preset buttons inherit the panel's body text in the JS (`1em`).
 const PRESET_FONT: f32 = 12.0;
-/// JS `#dt-brush-preview { width: 56px; height: 56px }` over the 64×64 canvas.
-const PREVIEW_PX: f32 = 56.0;
+/// The 1:1 footprint preview. The JS `#dt-brush-preview` is a 56px box the user
+/// found too small, so it grows to 96 while the slider stops filling the row.
+const PREVIEW_PX: f32 = 96.0;
+/// Narrow-panel floor: the preview gives width back before it stops fitting.
+const PREVIEW_MIN_PX: f32 = 48.0;
 const PREVIEW_GRID: f32 = 64.0;
+/// JS `style_juicy.css` J9 `.dt-brush-row { gap: 10px }`.
+const SLIDER_GAP: f32 = 10.0;
+/// The capped slider: room to drag a 1..=64 range without running the whole
+/// panel width (`brush_row_geometry`); `SLIDER_MIN` is the narrow-panel floor.
+const SLIDER_MAX: f32 = 180.0;
+const SLIDER_MIN: f32 = 80.0;
+
+/// Row-2 geometry: `(slider width, preview box)`. The preview keeps the row's
+/// right edge (the JS row puts it after the flexing slider), the slider is
+/// capped, and both shrink together once the panel cannot hold them.
+fn brush_row_geometry(available: f32) -> (f32, f32) {
+    let preview = PREVIEW_PX.min((available - SLIDER_MIN - SLIDER_GAP).max(PREVIEW_MIN_PX));
+    let slider = (available - preview - SLIDER_GAP).clamp(SLIDER_MIN, SLIDER_MAX);
+    (slider, preview)
+}
 
 /// One size preset: fills its grid cell, hover-pale + press-pop, accent-filled
 /// while it is the active size. The number labels the target, so a 1px tip
@@ -108,10 +133,10 @@ pub(crate) fn paint_size_preset(
 }
 
 /// JS `paintPreview` (`panel_brush.js` L33-55): the 1:1 footprint mask in the
-/// current primary colour on the white 64×64 preview canvas, scaled to the
-/// 56px box so a 64px blob fills it and a 1px tip stays a single dot.
-fn paint_preview(ui: &mut Ui, size: u32, color: Color32) {
-    let (rect, _) = ui.allocate_exact_size(egui::Vec2::splat(PREVIEW_PX), egui::Sense::hover());
+/// current primary colour on the white 64×64 preview canvas, scaled into the
+/// preview box so a 64px blob fills it and a 1px tip stays a single dot. The
+/// caller places the box in the row (`brush_row_geometry`).
+fn paint_preview(ui: &Ui, rect: egui::Rect, size: u32, color: Color32) {
     let painter = ui.painter();
     // JS `#dt-brush-preview { background: #fff; border: 1px solid }`.
     painter.rect_filled(rect, 2.0, Color32::WHITE);
@@ -170,32 +195,50 @@ pub fn show_brush(ui: &mut Ui, ui_state: &mut UiState, app: &mut AppState) {
 
         ui.add_space(6.0);
 
-        // Row 2 (JS `.dt-brush-row`, `style_juicy.css` J9): the slider flexes
-        // and the 1:1 footprint preview stays on its right.
-        ui.horizontal(|ui| {
-            ui.spacing_mut().item_spacing.x = 10.0;
-            ui.spacing_mut().slider_width = (ui.available_width() - PREVIEW_PX - 10.0).max(80.0);
-            let slider = ui.add(
-                Slider::new(&mut v, 1..=64)
-                    .show_value(false)
-                    .trailing_fill(true),
-            );
-            paint_preview(ui, v, primary);
-            if slider.changed() || slider.drag_stopped() {
-                set_pen_size(app, v);
-            }
-        });
+        // Row 2 (JS `.dt-brush-row`, `style_juicy.css` J9): the 1:1 footprint
+        // preview keeps the row's right edge, but the slider is capped and no
+        // longer runs into it. Both rects are placed by hand so the thin slider
+        // sits centered on the tall preview (the JS row's `align-items: center`).
+        let available = ui.available_width();
+        let (slider_w, preview) = brush_row_geometry(available);
+        let (_, row) = ui.allocate_space(egui::vec2(available, preview));
+        let slider_h = ui
+            .text_style_height(&egui::TextStyle::Body)
+            .max(ui.spacing().interact_size.y);
+        let slider_rect = egui::Rect::from_min_size(
+            egui::pos2(row.left(), row.center().y - slider_h * 0.5),
+            egui::vec2(slider_w, slider_h),
+        );
+        ui.spacing_mut().slider_width = slider_w;
+        let slider = ui.place(
+            slider_rect,
+            Slider::new(&mut v, 1..=64)
+                .show_value(false)
+                .trailing_fill(true),
+        );
+        paint_preview(
+            ui,
+            egui::Rect::from_min_size(
+                egui::pos2(row.right() - preview, row.top()),
+                egui::Vec2::splat(preview),
+            ),
+            v,
+            primary,
+        );
+        if slider.changed() || slider.drag_stopped() {
+            set_pen_size(app, v);
+        }
 
         ui.add_space(6.0);
 
-        // Presets (JS `#dt-size-presets`): `cols` columns of width-filling
-        // cells, 30px tall, emitted row-major like `renderPresets`.
+        // Presets (JS `#dt-size-presets`): `cols` palette-width square cells,
+        // emitted row-major like `renderPresets`.
         let current = app.session.settings().pen_size;
         let cols = preset_columns(SIZE_PRESETS.len());
         let rows = preset_rows(SIZE_PRESETS.len(), cols);
         let cell_w =
             ((ui.available_width() - (cols as f32 - 1.0) * PRESET_GAP) / cols as f32).max(18.0);
-        let cell = egui::vec2(cell_w, PRESET_MIN_HEIGHT);
+        let cell = egui::Vec2::splat(cell_w);
         ui.vertical(|ui| {
             ui.spacing_mut().item_spacing = egui::vec2(PRESET_GAP, PRESET_GAP);
             for row in 0..rows {
@@ -234,14 +277,14 @@ mod tests {
         assert_eq!(SIZE_PRESETS[15], 64);
     }
 
-    /// JS `presetColumns`: the first divisor of the count in `4..=8`, else the
-    /// 4-column default. The JS rule is what makes the shape dynamic — the
-    /// count picks it, no hard-coded rows.
+    /// The widest divisor of the count in `4..=8` wins, so the sixteen presets
+    /// land on the palette's eight columns (the JS rule picked the narrowest
+    /// divisor and produced 4×4).
     #[test]
-    fn preset_columns_follow_the_js_divisor_rule() {
-        assert_eq!(preset_columns(16), 4);
-        assert_eq!(preset_columns(8), 4);
-        assert_eq!(preset_columns(20), 4);
+    fn preset_columns_prefer_the_widest_divisor() {
+        assert_eq!(preset_columns(16), 8);
+        assert_eq!(preset_columns(8), 8);
+        assert_eq!(preset_columns(20), 5);
         assert_eq!(preset_columns(5), 5);
         assert_eq!(preset_columns(6), 6);
         assert_eq!(preset_columns(7), 7);
@@ -254,21 +297,36 @@ mod tests {
     /// JS `presetRows`: ceil(count / cols), never zero, trailing buttons kept.
     #[test]
     fn preset_rows_never_drop_a_trailing_button() {
-        assert_eq!(preset_rows(16, 4), 4);
         assert_eq!(preset_rows(16, 8), 2);
+        assert_eq!(preset_rows(16, 4), 4);
         assert_eq!(preset_rows(5, 4), 2);
         assert_eq!(preset_rows(0, 4), 1);
         // A zero column count falls back to the JS default.
         assert_eq!(preset_rows(16, 0), 4);
     }
 
-    /// The sixteen presets multiply out to the JS 4×4 exactly: every cell
-    /// filled, no ragged trailing row.
+    /// The sixteen presets multiply out to the palette's 8×2 exactly: every
+    /// cell filled, no ragged trailing row.
     #[test]
-    fn the_sixteen_presets_form_the_js_4x4() {
+    fn the_sixteen_presets_form_the_palette_8x2() {
         let cols = preset_columns(SIZE_PRESETS.len());
         let rows = preset_rows(SIZE_PRESETS.len(), cols);
-        assert_eq!((cols, rows), (4, 4));
+        assert_eq!((cols, rows), (8, 2));
         assert_eq!(cols * rows, SIZE_PRESETS.len());
+    }
+
+    /// Row 2: the slider is capped (it used to fill the whole row) and the
+    /// preview grows from the JS 56px to 96px, both giving way on a narrow
+    /// panel instead of overflowing.
+    #[test]
+    fn the_brush_row_caps_the_slider_and_grows_the_preview() {
+        // The default panel (~355pt of card content).
+        assert_eq!(brush_row_geometry(355.0), (SLIDER_MAX, PREVIEW_PX));
+        // Mid width: the slider absorbs the slack up to the cap.
+        assert_eq!(brush_row_geometry(260.0), (154.0, PREVIEW_PX));
+        // Narrowest panel: both shrink, neither overflows the row.
+        let (slider, preview) = brush_row_geometry(156.0);
+        assert_eq!((slider, preview), (SLIDER_MIN, 66.0));
+        assert!(slider + SLIDER_GAP + preview <= 156.0);
     }
 }
