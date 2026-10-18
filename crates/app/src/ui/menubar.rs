@@ -7,6 +7,13 @@ use super::{
 use crate::session_glue::AppState;
 use egui::{RichText, Ui};
 
+/// Menu trigger labels — `index.html` L15-58 (`data-menu` buttons).
+///
+/// The File button is the *menu* label, not the first item's action label:
+/// reading `Action::NewDocument`'s label here made the slot show `새 문서`
+/// (user report 2026-10-18).
+const FILE_MENU_LABEL: &str = "파일";
+
 #[derive(Default)]
 pub struct MenubarState {
     pub file_menu_open: bool,
@@ -100,7 +107,7 @@ impl Menubar {
         _app: &mut AppState,
     ) -> Option<Action> {
         let mut triggered = None;
-        ui.menu_button(self.actions.label(&Action::NewDocument), |ui| {
+        ui.menu_button(FILE_MENU_LABEL, |ui| {
             if ui
                 .button(self.actions.label(&Action::NewDocument))
                 .clicked()
@@ -409,5 +416,16 @@ mod tests {
     fn menubar_creation_works() {
         let menubar = Menubar::new();
         assert_eq!(menubar.actions.label(&Action::NewDocument), "새 문서");
+    }
+
+    /// `index.html` L17: the File slot is the menu label. The port read the
+    /// first item's action label here, so the button said `새 문서`.
+    #[test]
+    fn the_file_slot_is_labelled_file() {
+        assert_eq!(FILE_MENU_LABEL, "파일");
+        assert_ne!(
+            FILE_MENU_LABEL,
+            ActionMap::new().label(&Action::NewDocument)
+        );
     }
 }
