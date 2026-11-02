@@ -1,5 +1,8 @@
 ﻿//! The sparse layer bitmap, plus the changeset shape the undo budget speaks in.
 
+mod changeset;
+pub use changeset::{Changeset, ChunkDiff};
+
 use std::fmt;
 
 use crate::chunkstore::alpha::{self, AlphaMask, EMPTY_MASK};
@@ -394,32 +397,6 @@ impl ChunkStore {
         self.slots.resize(MAX_CHUNKS_X as usize * ny as usize, None);
         debug_assert_eq!(self.live, self.slots.iter().filter(|s| s.is_some()).count());
         Ok(removed)
-    }
-}
-
-/// One chunk's before/after pair inside a changeset.
-pub type ChunkDiff = (u32, u32, Option<Box<Chunk>>, Option<Box<Chunk>>);
-
-/// The change shape both `finish` and the undo budget speak in.
-#[derive(Debug, Clone, Default)]
-pub struct Changeset {
-    pub layer_id: String,
-    pub chunks: Vec<ChunkDiff>,
-}
-
-impl Changeset {
-    pub fn is_empty(&self) -> bool {
-        self.chunks.is_empty()
-    }
-
-    /// Total bytes of `before` + `after`, the Undo budget's currency.
-    pub fn byte_size(&self) -> usize {
-        self.chunks
-            .iter()
-            .map(|(_, _, b, a)| {
-                b.as_ref().map_or(0, |_| CHUNK_LEN) + a.as_ref().map_or(0, |_| CHUNK_LEN)
-            })
-            .sum()
     }
 }
 

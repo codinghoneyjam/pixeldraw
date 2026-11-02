@@ -71,6 +71,7 @@ fn drag(tool: &mut ArcTool, session: &mut Session, x0: f64, y0: f64, x1: f64, y1
         &build_tool_event(&RawPointer::new((x1, y1)), &view),
         &mut cx,
     );
+    let _ = tool.commit(&mut cx);
 }
 
 fn red() -> u32 {
@@ -192,6 +193,7 @@ fn drag_ignores_a_mid_drag_colour_change() {
             &build_tool_event(&RawPointer::new((30.0, 26.0)), &view),
             &mut cx,
         );
+        let _ = tool.commit(&mut cx);
     }
     let doc = session.doc().expect("doc");
     let layer = doc.get_layer(&doc.active_layer_id).expect("active");
@@ -254,6 +256,7 @@ fn overlay_preview_matches_the_committed_pixels() {
             &build_tool_event(&RawPointer::new((30.0, 26.0)), &view),
             &mut cx,
         );
+        let _ = tool.commit(&mut cx);
         assert_eq!(painted(cx.session), preview, "preview == commit (WYSIWYG)");
     }
 }
@@ -266,7 +269,13 @@ fn option_setters_follow_the_panel_rules() {
     assert!(!tool.set_start(45.0), "unchanged value reports false");
     assert!(!tool.set_start(f64::NAN), "non-finite start rejected");
     assert!(!tool.set_end(f64::INFINITY), "non-finite end rejected");
-    assert!(tool.set_end(-30.0), "angles are unbounded");
+    assert!(tool.set_end(-30.0));
+    assert_eq!(tool.end(), 0.0, "angles clamp to 0..=360");
+    assert!(tool.set_end(400.0));
+    assert_eq!(tool.end(), 360.0, "angles clamp to 0..=360");
+    assert!(!tool.set_end(360.0), "unchanged value reports false");
+    assert!(tool.set_start(400.0));
+    assert_eq!(tool.start(), 360.0);
     assert!(tool.set_width(100), "clamped into range");
     assert_eq!(tool.width(), 64);
     assert!(tool.set_width(-5));

@@ -75,6 +75,7 @@ fn drag(tool: &mut GradientTool, session: &mut Session, x0: f64, y0: f64, x1: f6
         &build_tool_event(&RawPointer::new((x1, y1)), &view),
         &mut cx,
     );
+    let _ = tool.commit(&mut cx);
 }
 
 #[test]
@@ -173,6 +174,7 @@ fn drag_ignores_a_mid_drag_colour_change() {
             &build_tool_event(&RawPointer::new((40.0, 32.0)), &view),
             &mut cx,
         );
+        let _ = tool.commit(&mut cx);
     }
     assert_eq!(
         pixel(&session, 32, 32),

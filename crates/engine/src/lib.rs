@@ -18,6 +18,7 @@
 //! math the canvas widgets drive, and it depends on nothing but [`constants`]
 //! and [`errors`].
 
+pub mod atlas;
 pub mod blend;
 pub mod chunkstore;
 pub mod comp_cache;

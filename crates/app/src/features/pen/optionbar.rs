@@ -8,7 +8,7 @@ pub fn pen_options(
     options: &mut crate::ui::ToolOptions,
     app: &mut AppState,
 ) {
-    ui.label(RichText::new("Brush size:").size(12.0));
+    ui.label(RichText::new("브러시 크기:").size(12.0));
     let mut cur_size = options.size.unwrap_or(1);
     let resp = ui.add(
         DragValue::new(&mut cur_size)
@@ -24,7 +24,7 @@ pub fn pen_options(
         );
     }
 
-    ui.label(RichText::new("Presets:").size(11.0).color(Color32::GRAY));
+    ui.label(RichText::new("프리셋:").size(11.0).color(Color32::GRAY));
     for preset in [1, 2, 4, 8, 16, 32] {
         let active = cur_size == preset;
         let btn = egui::Button::new(RichText::new(format!("{preset}")).size(11.0))

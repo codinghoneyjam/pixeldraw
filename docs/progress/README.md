@@ -85,7 +85,7 @@ Phase 6  절삭·패키징      [ ] 6.1 ~ 6.7
 
 | 지표 | 현재 (2026-10-11 실측) |
 |---|---|
-| `cargo test --workspace` | **321 / 321** (lib 284 + integration 37, native recipe parity 39/39 포함) |
+| `cargo test --workspace` | **651 / 651** (2026-10-27 실측, F01 아틀라스 +45) |
 | `cargo clippy -D warnings` | 그린 |
 | `cargo fmt --check` | 그린 |
 | JS 오라클(`npm test`) | 410 / 410 |

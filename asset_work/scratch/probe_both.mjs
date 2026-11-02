@@ -1,9 +1,9 @@
-import { Session } from "../../src/features/document/session.js";
-import { ShapeTool } from "../../src/features/shape/shape.js";
-import { applyCommand } from "../../tools/recipe/render_tile.js";
-import { ChunkStore, PixelWriter } from "../../src/core/chunkstore.js";
-import { parseColor, resolveColorToken } from "../../tools/recipe/color_tokens.js";
-import { packRGBA, toHex } from "../../src/core/pixel.js";
+import { Session } from "../../web/src/features/document/session.js";
+import { ShapeTool } from "../../web/src/features/shape/shape.js";
+import { applyCommand } from "../../web/tools/recipe/render_tile.js";
+import { ChunkStore, PixelWriter } from "../../web/src/core/chunkstore.js";
+import { parseColor, resolveColorToken } from "../../web/tools/recipe/color_tokens.js";
+import { packRGBA, toHex } from "../../web/src/core/pixel.js";
 import { readFileSync } from "node:fs";
 
 const recipe = JSON.parse(readFileSync("asset_work/target/assetdb/entity/weapon/weapon_sword.json", "utf-8"));

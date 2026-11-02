@@ -19,7 +19,7 @@ Thumbs.db
 # Rust workspace (Cargo.toml at the repo root)
 /target/
 
-# Desktop shell build artifacts
-/node_modules/
-/build/
-/src-tauri/gen/schemas/
+# Desktop shell build artifacts (under web/ since the 2026-10-18 reorg)
+/web/node_modules/
+/web/build/
+/web/src-tauri/gen/schemas/

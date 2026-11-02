@@ -1,0 +1,20 @@
+[package]
+name = "pixeldraw-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+# Headless companion to the GUI: document inspection, flattening, and atlas
+# planning/export. It links the same `pixel-engine` code the editor uses, so a
+# skill driving this binary cannot drift from what the canvas draws.
+[dependencies]
+pixel-engine = { path = "../engine" }
+serde_json = "1"
+
+[[bin]]
+name = "pixeldraw-cli"
+path = "src/main.rs"
+
+[lints]
+workspace = true

@@ -3,6 +3,7 @@
 //! The guard sequences live in [`super::validate`]; this module owns the shapes
 //! and the accessors, which carry no ordering surprises (`docs/model_internals.md` §5).
 
+use crate::atlas::AtlasLayout;
 use crate::constants::{
     DEFAULT_DOC_BACKGROUND, DEFAULT_DOC_HEIGHT_PX, DEFAULT_DOC_WIDTH_PX, is_valid_canvas_size,
 };
@@ -32,6 +33,8 @@ pub struct Document {
     pub layers: Vec<Layer>,
     pub active_layer_id: String,
     pub ids: IdGen,
+    /// Optional atlas authoring layout, persisted with document JSON.
+    pub atlas: Option<AtlasLayout>,
 }
 
 impl Document {

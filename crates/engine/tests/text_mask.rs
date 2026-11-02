@@ -8,12 +8,12 @@ use pixel_engine::raster::text_mask::{
 use serde_json::Value;
 
 fn cases() -> Value {
-    serde_json::from_str(include_str!("../../../tools/text_mask_cases.json"))
+    serde_json::from_str(include_str!("../../../web/tools/text_mask_cases.json"))
         .expect("oracle JSON parses")
 }
 
 fn glyph_pack() -> Value {
-    serde_json::from_str(include_str!("../../../tools/recipe/text_glyphs.json"))
+    serde_json::from_str(include_str!("../../../web/tools/recipe/text_glyphs.json"))
         .expect("glyph pack parses")
 }
 

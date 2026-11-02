@@ -5,10 +5,12 @@
 
 mod handles;
 mod ops;
+mod preset;
 mod spec;
 mod types;
 
 pub use handles::{hit_handle, inside_shape, layout_handles};
 pub use ops::{drag_geom, move_geom, resize_geom, snap_place_point};
+pub use preset::preset_points;
 pub use spec::{build_spec, draw_spec, parse_box_geom, parse_line_geom, parse_polygon_geom};
-pub use types::{Bbox, DragFlags, PendingGeom, Pt};
+pub use types::{Bbox, DragFlags, PendingGeom, Pt, ShapePreset};

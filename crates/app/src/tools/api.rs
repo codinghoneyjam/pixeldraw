@@ -1,7 +1,11 @@
 //! Shared tool API for the native app shell.
 
 use crate::tools::overlay::OverlayOp;
-use pixel_engine::{errors::DrawToolError, model::Session, view::View};
+use pixel_engine::{
+    errors::{DrawToolError, EngineResult},
+    model::Session,
+    view::View,
+};
 
 pub struct ToolCx<'a> {
     pub session: &'a mut Session,
@@ -76,6 +80,24 @@ pub trait Tool {
     }
     fn has_pending(&self) -> bool {
         false
+    }
+    /// The pending box as `[x, y, w, h]`, when the tool exposes numeric
+    /// geometry. The option bar edits this through [`Self::set_pending_box`].
+    fn pending_box(&self) -> Option<[i32; 4]> {
+        None
+    }
+    /// Create or update the pending box from the option bar.
+    fn set_pending_box(&mut self, _box_: [i32; 4], _cx: &mut ToolCx) -> EngineResult<()> {
+        Ok(())
+    }
+    /// Bake the pending geometry into the layer. `Ok(false)` means there was
+    /// nothing to commit.
+    fn commit_pending(&mut self, _cx: &mut ToolCx) -> EngineResult<bool> {
+        Ok(false)
+    }
+    /// Whether the option bar may edit `w`/`h` (text only moves).
+    fn pending_box_resizable(&self) -> bool {
+        true
     }
     fn discard_pending(&mut self, _cx: &mut ToolCx) {
         let _ = _cx;

@@ -3,7 +3,9 @@
 //! Facade: tool state in `tool`, mask + preview-blit helpers in `preview`,
 //! and the option-bar block in `optionbar`.
 
+mod api;
 mod preview;
+mod state;
 mod tool;
 
 pub mod optionbar;
@@ -11,4 +13,4 @@ pub mod optionbar;
 #[cfg(test)]
 mod tests;
 
-pub use tool::{ArcKind, ArcTool, ChordMode};
+pub use state::{ArcKind, ArcTool, ChordMode};

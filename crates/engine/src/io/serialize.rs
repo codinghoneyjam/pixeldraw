@@ -1,10 +1,12 @@
 use crate::blend::BLEND_MODES;
 use crate::chunkstore::{ChunkStore, is_all_zero};
-use crate::constants::{CHUNK_LEN, CHUNK_PX, SCHEMA_VERSION, TILE_PX, UNIT_PX};
+use crate::constants::{
+    CHUNK_LEN, CHUNK_PX, READABLE_SCHEMA_VERSIONS, SCHEMA_VERSION, TILE_PX, UNIT_PX,
+};
 use crate::errors::{CODE_SCHEMA, CODE_UNSUPPORTED_LAYER_TYPE, DrawToolError, EngineResult};
 use crate::io::{
-    base64_to_bytes, bytes_to_base64, encode_png,
-    png::decode_png,
+    base64_to_bytes, bytes_to_base64,
+    png::{decode_png, encode_png_chunk},
     validate::{validate_document, validate_layer_file},
 };
 use crate::model::{CanvasInfo, Document, DocumentSpec, IdGen, Layer, Viewport};
@@ -20,12 +22,19 @@ fn canvas_json(doc: &Document) -> Value {
     value
 }
 fn layer_json(layer: &Layer) -> EngineResult<Value> {
+    // Borrow the chunk payloads instead of copying every 4 KB chunk: the store
+    // already owns them for the whole call, and `for_each_chunk` walks key
+    // ascending, so the sort below is only a guard for a future store change.
     let mut chunks = Vec::new();
-    layer.store.for_each_chunk(|cx, cy, data| {
-        if !is_all_zero(data) {
-            chunks.push((cy, cx, data.to_vec()));
+    for cy in 0..layer.store.chunks_y {
+        for cx in 0..layer.store.chunks_x {
+            if let Some(data) = layer.store.get_chunk(cx, cy)
+                && !is_all_zero(data)
+            {
+                chunks.push((cy, cx, data));
+            }
         }
-    });
+    }
     chunks.sort_by_key(|(cy, cx, _)| (*cy, *cx));
     // One PNG encode per chunk, none dependent on another: the rows go to
     // rayon the way composite/flatten already do. `collect` keeps index order,
@@ -34,7 +43,7 @@ fn layer_json(layer: &Layer) -> EngineResult<Value> {
     let encoded: Vec<Value> = chunks
         .par_iter()
         .map(|(cy, cx, data)| -> EngineResult<Value> {
-            let png = encode_png(data, CHUNK_PX, CHUNK_PX)?;
+            let png = encode_png_chunk(&data[..])?;
             Ok(json!({"cx":cx,"cy":cy,"png":bytes_to_base64(&png)}))
         })
         .collect::<EngineResult<Vec<Value>>>()?;
@@ -50,6 +59,10 @@ pub fn document_to_json(doc: &Document) -> EngineResult<Value> {
     }
     let mut result = json!({"schema_version":SCHEMA_VERSION,"format":"draw_tool.document","document_id":doc.id,"canvas":canvas_json(doc),"active_layer_id":doc.active_layer_id,"layers":layers});
     result["name"] = json!(doc.name);
+    if let Some(atlas) = &doc.atlas {
+        result["atlas"] = serde_json::to_value(atlas)
+            .map_err(|e| DrawToolError::invalid_state(format!("atlas encode failed: {e}")))?;
+    }
     Ok(result)
 }
 pub fn layer_to_json(doc: &Document, layer_id: &str) -> EngineResult<Value> {
@@ -122,8 +135,50 @@ fn from_canvas(c: &Value) -> CanvasInfo {
         viewport,
     }
 }
+/// Rewrite an older readable schema version to the current one. New optional
+/// fields are left absent (treated as `None`/empty by `json_to_document`).
+pub fn migrate_document(value: &Value) -> EngineResult<Value> {
+    let mut v = value.clone();
+    let ver = v
+        .get("schema_version")
+        .and_then(Value::as_str)
+        .unwrap_or("");
+    if !READABLE_SCHEMA_VERSIONS.contains(&ver) {
+        return Err(DrawToolError::new(
+            CODE_SCHEMA,
+            format!("unsupported schema_version {ver}"),
+        ));
+    }
+    if ver != SCHEMA_VERSION
+        && let Some(obj) = v.as_object_mut()
+    {
+        obj.insert(
+            "schema_version".to_string(),
+            Value::String(SCHEMA_VERSION.to_string()),
+        );
+    }
+    Ok(v)
+}
+
+/// Check that `value` carries a supported schema version (no migration).
+pub fn validate_supported_schema(value: &Value) -> EngineResult<()> {
+    let ver = value
+        .get("schema_version")
+        .and_then(Value::as_str)
+        .unwrap_or("");
+    if READABLE_SCHEMA_VERSIONS.contains(&ver) {
+        Ok(())
+    } else {
+        Err(DrawToolError::new(
+            CODE_SCHEMA,
+            format!("unsupported schema_version {ver}"),
+        ))
+    }
+}
+
 pub fn json_to_document(obj: &Value) -> EngineResult<(Document, Vec<String>)> {
-    let report = validate_document(obj);
+    let obj = migrate_document(obj)?;
+    let report = validate_document(&obj);
     if !report.ok {
         return Err(first_validation_error(report));
     }
@@ -184,7 +239,15 @@ pub fn json_to_document(obj: &Value) -> EngineResult<(Document, Vec<String>)> {
                 .and_then(|l| l["layer_id"].as_str())
                 .unwrap_or_default()
         });
-    let doc = Document::new(DocumentSpec {
+    let atlas = obj
+        .get("atlas")
+        .filter(|value| !value.is_null())
+        .map(|value| {
+            serde_json::from_value::<crate::atlas::AtlasLayout>(value.clone())
+                .map_err(|e| DrawToolError::new(CODE_SCHEMA, format!("invalid atlas layout: {e}")))
+        })
+        .transpose()?;
+    let mut doc = Document::new(DocumentSpec {
         id: obj["document_id"].as_str().unwrap_or_default().into(),
         name: obj
             .get("name")
@@ -196,13 +259,18 @@ pub fn json_to_document(obj: &Value) -> EngineResult<(Document, Vec<String>)> {
         active_layer_id: active.into(),
         ids: idgen,
     })?;
+    // Keep a structurally valid authoring layout even if later layer edits
+    // removed one of its source ids. The document must remain openable so the
+    // user can repair that slot; export validates references before baking.
+    doc.atlas = atlas;
     Ok((doc, Vec::new()))
 }
 pub fn import_layer_json(
     doc: &mut Document,
     obj: &Value,
 ) -> EngineResult<(Layer, usize, Vec<String>)> {
-    let report = validate_layer_file(obj);
+    let obj = migrate_document(obj)?;
+    let report = validate_layer_file(&obj);
     if !report.ok {
         return Err(first_validation_error(report));
     }

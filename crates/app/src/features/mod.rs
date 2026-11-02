@@ -7,6 +7,7 @@
 pub mod arc;
 pub mod eyedropper;
 pub mod fill;
+pub mod geom_options;
 pub mod gradient;
 pub mod hand;
 pub mod pen;

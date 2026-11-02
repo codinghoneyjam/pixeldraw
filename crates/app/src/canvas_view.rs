@@ -13,7 +13,7 @@ use crate::canvas_texture::{
     CanvasTexture, FrameStamp, Upload, UploadTracker, intersect_rect, union_opt,
 };
 use crate::input::{InputCtx, ToolCall};
-use crate::input_adapter::{FrameInput, poll_frame_input, wheel_mode};
+use crate::input_adapter::{FrameInput, poll_frame_input};
 use crate::overlay_raster::{overlay_bbox, rasterize_overlay};
 use crate::session_glue::{AppState, frame_budget};
 use crate::tools::api::{CursorKind, OverlayInfo, ToolCx};
@@ -67,12 +67,30 @@ fn dispatch_frame_input(state: &mut AppState, fi: &FrameInput) -> bool {
         outcomes.push(state.input.pointer_up(raw, &ctx));
         state.last_pointer = Some(raw.pos);
     }
-    if let Some(wheel) = &fi.wheel {
-        outcomes.push(
-            state
-                .input
-                .wheel(wheel.delta_y, wheel_mode(), wheel.shift, wheel.pos, &ctx),
+    // Feed each raw wheel event separately, rebuilding the input context with
+    // the view left by the previous event. Fast flicks then walk several rungs
+    // in one frame, exactly like the JS handler receiving several DOM events.
+    for wheel in &fi.wheels {
+        let wheel_ctx = InputCtx {
+            view: state.view_store.view(),
+            canvas,
+            viewport,
+            active_tool_id: active_id,
+            tool_accepts_button: &accepts,
+            tool_cursor: state.tools.cursor(),
+        };
+        let out = state.input.wheel(
+            wheel.delta_y,
+            wheel.mode,
+            wheel.shift,
+            wheel.pos,
+            &wheel_ctx,
         );
+        render |= out.need_render;
+        if let Some(view) = out.new_view {
+            state.view_store.set(view);
+            render = true;
+        }
     }
     for (key, is_down) in &fi.keys {
         // UI-3 busy gate: a dialog ignores the tool key stream the way the JS
@@ -107,8 +125,6 @@ fn dispatch_frame_input(state: &mut AppState, fi: &FrameInput) -> bool {
                 break;
             }
         }
-        let cursor = state.tools.cursor();
-        let _ = cursor;
     }
     // Re-resolve the cursor for the host after the dust settles.
     render

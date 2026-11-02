@@ -9,8 +9,8 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..
 const TARGET_ROOT = path.join(REPO_ROOT, "asset_work", "target");
 const targetPath = (rel) => path.join(TARGET_ROOT, rel);
 
-import { transpileAndRender } from "../../tools/recipe/transpile.mjs";
-import { decodePng } from "../../src/io/png.js";
+import { transpileAndRender } from "../../web/tools/recipe/transpile.mjs";
+import { decodePng } from "../../web/src/io/png.js";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";

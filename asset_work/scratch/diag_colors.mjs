@@ -5,10 +5,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { resolveColor, resolveColorToken } from "../../tools/recipe/color_tokens.js";
-import { transpileAndRender } from "../../tools/recipe/transpile.mjs";
-import { decodePng } from "../../src/io/png.js";
-import { unpackRGBA } from "../../src/core/pixel.js";
+import { resolveColor, resolveColorToken } from "../../web/tools/recipe/color_tokens.js";
+import { transpileAndRender } from "../../web/tools/recipe/transpile.mjs";
+import { decodePng } from "../../web/src/io/png.js";
+import { unpackRGBA } from "../../web/src/core/pixel.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Scratch probe: assets are read from asset_work/target/, same root the gates use.

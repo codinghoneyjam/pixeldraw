@@ -2,6 +2,7 @@ use super::structural::{
     Collector, LayerInfo, MAX_ERRORS, ValidationReport, check_canvas, check_layer, check_no_extra,
     is_obj,
 };
+use crate::constants::READABLE_SCHEMA_VERSIONS;
 use crate::errors::{
     CODE_ACTIVE_LAYER_MISSING, CODE_CHUNK_BAD_PNG, CODE_CHUNK_DUPLICATE, CODE_CHUNK_OUT_OF_CANVAS,
     CODE_DUP_LAYER_ID, CODE_SCHEMA,
@@ -16,6 +17,10 @@ const DOC_KEYS: &[&str] = &[
     "canvas",
     "active_layer_id",
     "layers",
+    // v2.1 optional (M0-3): all omitted when empty.
+    "atlas",
+    "guides",
+    "tile_mode",
 ];
 const FILE_KEYS: &[&str] = &["schema_version", "format", "source_canvas", "layer"];
 fn is_array(v: Option<&Value>) -> bool {
@@ -95,17 +100,40 @@ pub fn validate_document(obj: &Value) -> ValidationReport {
         return c.report();
     }
     check_no_extra(obj, DOC_KEYS, "", &mut c);
-    for (key, want, msg) in [
-        ("schema_version", "2.0.0", "schema_version must be 2.0.0"),
-        (
-            "format",
-            "draw_tool.document",
-            "format must be draw_tool.document",
-        ),
-    ] {
-        if obj.get(key).and_then(Value::as_str) != Some(want) {
-            c.push(CODE_SCHEMA, format!("/{key}"), msg.into());
+    // schema_version: any readable version accepted (M0-3 migration harness).
+    if let Some(v) = obj.get("schema_version").and_then(Value::as_str) {
+        if !READABLE_SCHEMA_VERSIONS.contains(&v) {
+            c.push(
+                CODE_SCHEMA,
+                "/schema_version".into(),
+                format!(
+                    "schema_version must be one of: {}",
+                    READABLE_SCHEMA_VERSIONS.join(", ")
+                ),
+            );
         }
+    } else {
+        c.push(
+            CODE_SCHEMA,
+            "/schema_version".into(),
+            "schema_version must be a string".into(),
+        );
+    }
+    if obj.get("format").and_then(Value::as_str) != Some("draw_tool.document") {
+        c.push(
+            CODE_SCHEMA,
+            "/format".into(),
+            "format must be draw_tool.document".into(),
+        );
+    }
+    if let Some(atlas) = obj.get("atlas").filter(|value| !value.is_null())
+        && let Err(error) = serde_json::from_value::<crate::atlas::AtlasLayout>(atlas.clone())
+    {
+        c.push(
+            CODE_SCHEMA,
+            "/atlas".into(),
+            format!("invalid atlas layout: {error}"),
+        );
     }
     if !obj
         .get("document_id")
@@ -219,17 +247,31 @@ pub fn validate_layer_file(obj: &Value) -> ValidationReport {
         return c.report();
     }
     check_no_extra(obj, FILE_KEYS, "", &mut c);
-    for (key, want, msg) in [
-        ("schema_version", "2.0.0", "schema_version must be 2.0.0"),
-        (
-            "format",
-            "draw_tool.layer",
-            "format must be draw_tool.layer",
-        ),
-    ] {
-        if obj.get(key).and_then(Value::as_str) != Some(want) {
-            c.push(CODE_SCHEMA, format!("/{key}"), msg.into());
+    // schema_version: any readable version accepted.
+    if let Some(v) = obj.get("schema_version").and_then(Value::as_str) {
+        if !READABLE_SCHEMA_VERSIONS.contains(&v) {
+            c.push(
+                CODE_SCHEMA,
+                "/schema_version".into(),
+                format!(
+                    "schema_version must be one of: {}",
+                    READABLE_SCHEMA_VERSIONS.join(", ")
+                ),
+            );
         }
+    } else {
+        c.push(
+            CODE_SCHEMA,
+            "/schema_version".into(),
+            "schema_version must be a string".into(),
+        );
+    }
+    if obj.get("format").and_then(Value::as_str) != Some("draw_tool.layer") {
+        c.push(
+            CODE_SCHEMA,
+            "/format".into(),
+            "format must be draw_tool.layer".into(),
+        );
     }
     let dims = obj
         .get("source_canvas")

@@ -17,6 +17,10 @@ impl Tool for ShapeTool {
         self.kind.as_str()
     }
 
+    fn shape_tool_mut(&mut self) -> Option<&mut crate::features::shape::ShapeTool> {
+        Some(self)
+    }
+
     fn cursor(&self) -> CursorKind {
         CursorKind::Crosshair
     }

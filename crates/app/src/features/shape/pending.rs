@@ -106,6 +106,7 @@ pub(super) fn finish_placing(tool: &mut ShapeTool, cx: &mut ToolCx) -> bool {
             p1: None,
             radius: 0,
             points: place.points,
+            preset: None,
         },
     });
     tool.place = None;

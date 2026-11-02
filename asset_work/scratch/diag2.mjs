@@ -6,8 +6,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { transpileAndRender } from "../../tools/recipe/transpile.mjs";
-import { decodePng } from "../../src/io/png.js";
+import { transpileAndRender } from "../../web/tools/recipe/transpile.mjs";
+import { decodePng } from "../../web/src/io/png.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Scratch probe: assets are read from asset_work/target/, same root the gates use.

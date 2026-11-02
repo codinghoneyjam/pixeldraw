@@ -4,6 +4,7 @@ use pixel_engine::errors::{DrawToolError, EngineResult};
 use pixel_engine::raster::shape_raster::{FillMode, ShapeKind, ShapeSpec};
 
 use super::ops::drag_geom;
+use super::preset::{PresetParams, preset_points};
 use super::types::{Bbox, DragFlags, PendingGeom, Pt};
 
 /// Option-bar geometry for a line pending.
@@ -14,6 +15,7 @@ pub fn parse_line_geom(x0: i32, y0: i32, x1: i32, y1: i32) -> PendingGeom {
         p1: Some((x1, y1)),
         radius: 0,
         points: vec![],
+        preset: None,
     }
 }
 
@@ -28,6 +30,7 @@ pub fn parse_polygon_geom(points: Vec<Pt>) -> EngineResult<PendingGeom> {
         p1: None,
         radius: 0,
         points,
+        preset: None,
     })
 }
 
@@ -53,6 +56,7 @@ pub fn parse_box_geom(
         p1: None,
         radius: r,
         points: vec![],
+        preset: None,
     })
 }
 
@@ -65,6 +69,17 @@ pub fn build_spec(
     shape_fill: &str,
 ) -> ShapeSpec {
     let sw = pen_size as i32;
+    // Preset geometry: generate points from the bbox, then treat as polygon.
+    let preset_points = geom.preset.and_then(|p| {
+        geom.bbox
+            .map(|b| preset_points(p, b, PresetParams::default()))
+    });
+    let points = preset_points.clone().unwrap_or_else(|| geom.points.clone());
+    let kind = if geom.preset.is_some() {
+        ShapeKind::Polygon
+    } else {
+        kind
+    };
     match kind {
         ShapeKind::Line => ShapeSpec {
             kind,
@@ -84,7 +99,7 @@ pub fn build_spec(
             p0: None,
             p1: None,
             radius: 0,
-            points: geom.points.iter().map(|p| [p.0, p.1]).collect(),
+            points: points.iter().map(|p| [p.0, p.1]).collect(),
         },
         _ => {
             let b = geom.bbox.unwrap_or(Bbox {

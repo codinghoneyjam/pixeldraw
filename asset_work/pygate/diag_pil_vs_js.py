@@ -26,9 +26,9 @@ def pil_poly(pts, fill, outline, width):
 import subprocess, json, tempfile, os
 
 JS = r"""
-import { lineMask } from "./src/core/raster/segment.js";
-import { polygonMask, polygonOutlineMask, polygonBBox } from "./src/core/raster/polygon.js";
-import { rrectMask, outlineRing } from "./src/core/raster/raster_masks.js";
+import { lineMask } from "./web/src/core/raster/segment.js";
+import { polygonMask, polygonOutlineMask, polygonBBox } from "./web/src/core/raster/polygon.js";
+import { rrectMask, outlineRing } from "./web/src/core/raster/raster_masks.js";
 
 const out = {};
 

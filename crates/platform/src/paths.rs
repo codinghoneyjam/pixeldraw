@@ -15,14 +15,19 @@ const APP_NAME: &str = "pixeldraw";
 pub const SETTINGS_FILE_NAME: &str = "settings.json";
 pub const AUTOSAVE_FILE_NAME: &str = "autosave.json";
 pub const LOG_FILE_NAME: &str = "pixeldraw.log";
+const APP_DATA_OVERRIDE_ENV: &str = "PIXELDRAW_APP_DATA";
 
-/// `%APPDATA%/pixeldraw` on Windows.
+/// `%APPDATA%/pixeldraw` on Windows, unless `PIXELDRAW_APP_DATA` selects an
+/// alternate directory for an isolated or portable session.
 ///
 /// TRAP: `ProjectDirs::data_dir()` appends a `data` component on Windows
 /// (`%APPDATA%\pixeldraw\data`) while the retired Tauri shell and the legacy
 /// `app_dir()` stub used `%APPDATA%\pixeldraw`, so the app name is joined onto
 /// the roaming base instead. Falls back to `app_dir()` when no home resolves.
 pub fn app_data_dir() -> Option<PathBuf> {
+    if let Some(path) = std::env::var_os(APP_DATA_OVERRIDE_ENV) {
+        return Some(PathBuf::from(path));
+    }
     directories::BaseDirs::new()
         .map(|dirs| dirs.data_dir().join(APP_NAME))
         .or_else(|| Some(crate::app_dir()))

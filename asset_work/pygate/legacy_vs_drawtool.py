@@ -15,7 +15,7 @@ comparator.
 The pinned Pillow is enforced FIRST via ``version.assert_pillow_matches`` before
 any image is touched, so a pixel comparison is never made under an unpinned
 build. Each of the 8 gate-able assets is rendered by the committed transpiler
-(``tools/recipe/transpile.mjs``) through a node subprocess, then compared on
+(``web/tools/recipe/transpile.mjs``) through a node subprocess, then compared on
 decoded RGBA -- never PNG bytes -- via ``compare.compare_images``.
 
 Classification mirrors ``classify.py``'s amplitude floor: a differing pixel
@@ -42,7 +42,7 @@ from compare import compare_images
 # <META - ROLE : Resolve one target/ asset path | L36-L45>
 TOOL_ROOT: Path = Path(__file__).resolve().parents[2]   # pixeldraw/
 TARGET_ROOT: Path = TOOL_ROOT / "asset_work" / "target"  # recipes + legacy PNGs
-DRAWTOOL_ROOT: Path = TOOL_ROOT
+DRAWTOOL_ROOT: Path = TOOL_ROOT / "web"  # the JS editor tree
 
 
 def target_path(rel: str) -> Path:

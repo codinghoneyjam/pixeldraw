@@ -4,6 +4,20 @@
 
 ---
 
+## 2026-10-27 · F01 · 아틀라스 워크벤치 마감 — dtAt v2·슬롯/시트·CLI
+
+**커밋 대상**: `crates/engine/src/{atlas/*,lib.rs,io/png/*}`·`crates/app/src/{file_ops.rs,ui/{actions,action_router,atlas,dialogs,menubar,mod}.rs}`·`crates/cli/`·`docs/{atlas_plan.md,skills/pixeldraw-atlas/SKILL.md,feature_expansion_plan.md,improvement_plan.md,progress/}`
+**테스트**: workspace 그린 **651**(606→651, +45 — atlas/PNG large 및 동시 WIP 포함) · clippy `-D warnings`/fmt 그린
+
+- **엔진** — `pixel_engine::atlas` 신설: `AtlasLayout`/`AtlasCellSpec`, 레이어(top-first)/합성(bottom→top) 모드, 1×16~16×1, 16셀·셀당 16레이어·64 Mi px 예산, 기본 셀 512 상한·32px 스냅. 셀 베이크는 기존 `flatten_to_rgba` 경로를 재사용해 캔버스와 같은 픽셀을 낸다.
+- **dtAt v2** — `mode`/`preset_all`/`slots[].layer_ids` 추가. v1은 `mode=layers`·`layer_ids` 없음으로 읽는다. PNG ancillary chunk writer/reader와 에디터 캡을 넘는 `encode_png_large`/`decode_png_large` 추가.
+- **GUI** — `ui/atlas.rs` 워크벤치: 모드/열/셀 크기·시트 검증·프레임당 2셀 lazy 프리뷰·포커스(빨강)/선택(파랑) 테두리·슬롯 편집(추가/삭제/순서/이름/레이어 구성/preset)·레이어별/합성 PNG 저장·PNG 가져오기. 가져오기는 **셀 크기 문서**를 만들고 슬롯당 1레이어로 복원한다(시트 크기 문서 아님).
+- **CLI** — `pixeldraw-cli atlas spec|plan|export|inspect|render-cell` + `info|layers|flatten`. 모든 호출은 단일 JSON, 실패는 비0 종료. `docs/skills/pixeldraw-atlas/SKILL.md`가 계약을 고정.
+- **문서 정리** — F01의 초안 설계(`Document.atlas`/`create_atlas_document`/`slice_png_grid`)는 실제 구현과 달라, 현재 상태·수용 기준만 남기고 160줄→30줄로 접었다. 남은 작업은 `docs/atlas_plan.md`(ATL-1~9)로 분리.
+- **막힌 점/발견** — (1) 레이아웃이 문서에 없어 JSON 재열기에서 모드/슬롯이 사라진다. (2) 합성 시트 가져오기는 슬롯당 1레이어로 베이크되어 슬롯 그룹은 복원되지 않는다. (3) 17+레이어, preset+16슬롯은 조용히 절단된다. (4) 메타데이터 없는 PNG 슬라이스/패딩·마진/셀 편집 점프는 미구현. 모두 `atlas_plan.md`의 P0/P1로 이관.
+
+---
+
 ## 2026-10-18 · UI-10·PERF-7 · 파일 메뉴 라벨 · 드래그 병목(blit run 매핑 + blend_rect hoist)
 
 **커밋 대상**: `crates/engine/src/display/{frame,framebuffer,tests}.rs`·`crates/app/src/ui/menubar.rs`·`docs/{perf_js_vs_rust,port_status_report,progress/log}.md`·`outputs/native_20261018_{menubar_file,zoom800_preview}.png`

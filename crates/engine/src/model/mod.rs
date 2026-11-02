@@ -54,7 +54,8 @@ pub mod settings;
 pub use canvas::{CanvasInfo, Viewport, validate_background, validate_viewport};
 pub use command::{Command, CommandEffects, LayerChangeReason, LayerEffect, PixelEffect};
 pub use commands::{
-    AddLayerCommand, MoveLayerCommand, PaintCommand, RemoveLayerCommand, SetLayerPropCommand,
+    AddLayerCommand, MoveLayerCommand, PaintCommand, RemoveLayerCommand, SetAtlasLayoutCommand,
+    SetLayerPropCommand,
 };
 pub use commands_pixel::{MergeDownCommand, ResizeCanvasCommand};
 pub use document::{Document, DocumentSpec, NewDocumentOptions, new_document};

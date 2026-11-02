@@ -12,6 +12,13 @@ pub struct Bbox {
     pub h: i32,
 }
 
+/// Shape preset selector (F04). Geometry is generated from the bbox.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ShapePreset {
+    Heart,
+    Star { points: u8, inner_ratio: u8 },
+}
+
 /// Pending geometry: exactly one variant is live, implied by the tool kind.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PendingGeom {
@@ -20,6 +27,7 @@ pub struct PendingGeom {
     pub p1: Option<Pt>,
     pub radius: i32,
     pub points: Vec<Pt>,
+    pub preset: Option<ShapePreset>,
 }
 
 /// Drag flags — `_flags(ev)` in the JS: shift locks, alt centers.

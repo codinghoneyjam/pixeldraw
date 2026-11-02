@@ -7,6 +7,10 @@ fn mid_round_half_up(a: i32, b: i32) -> i32 {
 //
 // The enable rules are a function of the active tool AND its pending geometry,
 // so they live here rather than in the shell - the JS file did the same.
+use crate::features::geom_options::{
+    center_geometry_group, clamp_coord, clamp_extent, confirm_commit_now, coord_range,
+    extent_range, geometry_field,
+};
 use crate::features::shape::PendingValue;
 use crate::session_glue::AppState;
 use crate::tools::api::ToolCx;
@@ -24,7 +28,7 @@ pub fn shape_options(
     let is_filled = settings.shape_fill == "fill";
 
     if ui
-        .button(if is_filled { "Outline" } else { "Fill" })
+        .button(if is_filled { "윤곽선" } else { "채우기" })
         .clicked()
     {
         let _ = app.session.set_setting(
@@ -74,24 +78,38 @@ pub fn shape_options(
     let has_pending = snap.as_ref().is_some_and(|(p, _, _)| p.is_some());
 
     if !is_polygon {
+        center_geometry_group(ui);
         // Bbox fields. Line pendings are end-pairs, so W/H show x1/y1
         // exactly like JS `fill()`; edits write back the same shape.
         let mut b = match snap.as_ref().and_then(|(p, _, _)| p.clone()) {
             Some(PendingValue::LineEnds { x0, y0, x1, y1 }) => [x0, y0, x1, y1],
             Some(PendingValue::Box { x, y, w, h, .. }) => [x, y, w, h],
-            _ => [0, 0, 0, 0],
+            _ if is_line => [0, 0, 0, 0],
+            _ => [0, 0, 1, 1],
         };
         let mut edited = false;
         for (i, label) in ["X", "Y", "W", "H"].iter().enumerate() {
-            ui.label(RichText::new(*label).size(12.0));
-            if ui
-                .add_enabled(has_pending, DragValue::new(&mut b[i]).speed(1.0))
-                .changed()
-            {
+            // A line spells its fields `x0 y0 x1 y1`, so every field is a
+            // coordinate. Boxes use W/H as extents, which can never be zero.
+            let range = if is_line || i < 2 {
+                coord_range()
+            } else {
+                extent_range()
+            };
+            if geometry_field(ui, label, &mut b[i], range, true) {
                 edited = true;
             }
         }
         if edited {
+            b[0] = clamp_coord(b[0]);
+            b[1] = clamp_coord(b[1]);
+            if is_line {
+                b[2] = clamp_coord(b[2]);
+                b[3] = clamp_coord(b[3]);
+            } else {
+                b[2] = clamp_extent(b[2]);
+                b[3] = clamp_extent(b[3]);
+            }
             let value = if is_line {
                 PendingValue::LineEnds {
                     x0: b[0],
@@ -118,19 +136,13 @@ pub fn shape_options(
         let mut edited = false;
         for (i, p) in points.clone().iter().enumerate() {
             ui.label(RichText::new(format!("{}", i + 1)).size(11.0));
-            let mut x = p.0;
-            let mut y = p.1;
-            if ui
-                .add_enabled(editable, DragValue::new(&mut x).speed(1.0))
-                .changed()
-            {
+            let mut x = clamp_coord(p.0);
+            let mut y = clamp_coord(p.1);
+            if geometry_field(ui, "X", &mut x, coord_range(), editable) {
                 points[i].0 = x;
                 edited = true;
             }
-            if ui
-                .add_enabled(editable, DragValue::new(&mut y).speed(1.0))
-                .changed()
-            {
+            if geometry_field(ui, "Y", &mut y, coord_range(), editable) {
                 points[i].1 = y;
                 edited = true;
             }
@@ -168,15 +180,18 @@ pub fn shape_options(
         }
     }
 
-    if crate::ui::juice::button(
+    // A first edit can create the pending shape above; keep confirm enabled
+    // on that same frame.
+    let has_pending = app.tools.get(tool).is_some_and(|t| t.has_pending());
+    let commit_clicked = crate::ui::juice::button(
         ui,
         juice_clicks,
         "shape:commit",
         has_pending,
         egui::Button::new("확정"),
     )
-    .clicked()
-    {
+    .clicked();
+    if confirm_commit_now(ui, tool, commit_clicked) {
         let mut render = false;
         let AppState {
             session,

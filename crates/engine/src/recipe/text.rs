@@ -7,7 +7,7 @@ use crate::{
 };
 use serde_json::Value;
 
-const GLYPH_DATA: &str = include_str!("../../../../tools/recipe/text_glyphs.json");
+const GLYPH_DATA: &str = include_str!("../../../../web/tools/recipe/text_glyphs.json");
 
 #[derive(Clone)]
 struct Glyph {

@@ -1,8 +1,4 @@
-//! The radial gradient tool: drag state, option setters, [`Tool`] impl.
-//!
-//! `inner_radius`/`edge_mode` are tool-local options (the Phase 3 option bar
-//! owns them through the setters below), while the colours and centre freeze
-//! at `pointer_down` like the JS `_center` snapshot.
+//! Gradient tool state transitions: options, drag/resize/move, and commit.
 
 use std::cell::RefCell;
 
@@ -10,74 +6,13 @@ use pixel_engine::errors::{DrawToolError, EngineResult};
 use pixel_engine::model::edit_session::EditOptions;
 use pixel_engine::pixel::parse_hex;
 use pixel_engine::raster::gradient::{RadialGradient, Stop, radial_gradient_mask};
-use pixel_engine::view::canvas_to_screen;
+use pixel_engine::raster::shape_raster::ShapeKind;
 
-use crate::input::{Button, ToolEvent};
-use crate::tools::api::{CursorKind, OverlayInfo, Tool, ToolCx};
-use crate::tools::overlay::OverlayOp;
+use crate::features::shape::{DragFlags, Pt, resize_geom};
+use crate::input::ToolEvent;
+use crate::tools::api::ToolCx;
 
-use super::preview::blit_preview;
-
-/// Gradient edge falloff — `edgeMode` in the JS (`'transparent'|'solid'`).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum EdgeMode {
-    Transparent,
-    Solid,
-}
-
-impl EdgeMode {
-    fn parse(s: &str) -> Option<Self> {
-        match s {
-            "transparent" => Some(EdgeMode::Transparent),
-            "solid" => Some(EdgeMode::Solid),
-            _ => None,
-        }
-    }
-
-    pub fn as_str(self) -> &'static str {
-        match self {
-            EdgeMode::Transparent => "transparent",
-            EdgeMode::Solid => "solid",
-        }
-    }
-}
-
-/// Frozen `pointer_down` state, exactly the JS `_center` fields.
-#[derive(Debug, Clone)]
-struct Center {
-    x: i32,
-    y: i32,
-    x1: i32,
-    y1: i32,
-    layer_id: String,
-    primary: String,
-    secondary: String,
-    inner_radius: f64,
-    edge_mode: EdgeMode,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-struct PreviewKey {
-    x: i32,
-    y: i32,
-    x1: i32,
-    y1: i32,
-    inner_radius: u64,
-    edge_solid: bool,
-    primary: String,
-    secondary: String,
-}
-
-pub struct GradientTool {
-    inner_radius: f64,
-    edge_mode: EdgeMode,
-    center: Option<Center>,
-    /// Last-seen canvas size — `overlay()` has no session, like
-    /// `ShapeTool.live`.
-    canvas: Option<(u32, u32)>,
-    /// Mask-keyed preview: `radial_gradient_mask` is canvas-sized.
-    preview: RefCell<Option<(PreviewKey, OverlayOp)>>,
-}
+use super::state::{Center, EdgeMode, GradientTool, Mode, Op, circle_of};
 
 impl GradientTool {
     pub fn new() -> Self {
@@ -85,6 +20,9 @@ impl GradientTool {
             inner_radius: 0.0,
             edge_mode: EdgeMode::Transparent,
             center: None,
+            pending: None,
+            op: None,
+            mode: Mode::Idle,
             canvas: None,
             preview: RefCell::new(None),
         }
@@ -103,6 +41,7 @@ impl GradientTool {
         let clamped = v.clamp(0.0, 2048.0);
         let changed = self.inner_radius != clamped;
         self.inner_radius = clamped;
+        self.preview.borrow_mut().take();
         changed
     }
 
@@ -120,6 +59,7 @@ impl GradientTool {
             Some(m) => {
                 let changed = self.edge_mode != m;
                 self.edge_mode = m;
+                self.preview.borrow_mut().take();
                 changed
             }
             None => false,
@@ -130,36 +70,44 @@ impl GradientTool {
         self.center.is_some()
     }
 
-    fn drag_radius(center: &Center) -> f64 {
+    pub fn has_pending(&self) -> bool {
+        self.pending.is_some()
+    }
+
+    pub(super) fn drag_radius(center: &Center) -> f64 {
         f64::from(center.x1 - center.x).hypot(f64::from(center.y1 - center.y))
     }
 
-    fn up_radius(center: &Center, ev: &ToolEvent) -> f64 {
+    pub(super) fn up_radius(center: &Center, ev: &ToolEvent) -> f64 {
         f64::from(ev.x - center.x).hypot(f64::from(ev.y - center.y))
     }
 
     /// The engine gradient for a centre + radius, shared by commit/overlay.
-    fn gradient_for(
-        center: &Center,
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn gradient_for(
+        cx: f64,
+        cy: f64,
         radius: f64,
+        primary: &str,
+        secondary: &str,
+        inner_radius: f64,
+        edge_mode: EdgeMode,
         w: usize,
         h: usize,
     ) -> EngineResult<RadialGradient> {
-        let inner = parse_hex(&center.primary).ok_or_else(|| {
-            DrawToolError::out_of_range(format!("invalid color {}", center.primary))
-        })?;
-        let outer = parse_hex(&center.secondary).ok_or_else(|| {
-            DrawToolError::out_of_range(format!("invalid color {}", center.secondary))
-        })?;
-        let edge_a = if center.edge_mode == EdgeMode::Solid {
+        let inner = parse_hex(primary)
+            .ok_or_else(|| DrawToolError::out_of_range(format!("invalid color {primary}")))?;
+        let outer = parse_hex(secondary)
+            .ok_or_else(|| DrawToolError::out_of_range(format!("invalid color {secondary}")))?;
+        let edge_a = if edge_mode == EdgeMode::Solid {
             f64::from(outer[3])
         } else {
             0.0
         };
         Ok(RadialGradient {
-            cx: f64::from(center.x),
-            cy: f64::from(center.y),
-            r0: center.inner_radius.min(radius),
+            cx,
+            cy,
+            r0: inner_radius.min(radius),
             r1: radius,
             stops: vec![
                 Stop::new(
@@ -181,166 +129,132 @@ impl GradientTool {
             h,
         })
     }
-}
 
-impl Default for GradientTool {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl Tool for GradientTool {
-    fn gradient_tool_mut(&mut self) -> Option<&mut crate::features::gradient::GradientTool> {
-        Some(self)
-    }
-
-    fn id(&self) -> &'static str {
-        "radial_gradient"
-    }
-
-    fn cursor(&self) -> CursorKind {
-        CursorKind::Crosshair
-    }
-
-    fn pointer_down(&mut self, ev: &ToolEvent, cx: &mut ToolCx) {
-        if ev.button != Button::Left {
-            return;
+    pub(super) fn flags(ev: &ToolEvent, cx: &ToolCx) -> DragFlags {
+        let s = cx.session.settings();
+        DragFlags {
+            shift: ev.shift,
+            lock: ev.shift || s.shape_lock_aspect,
+            center: ev.alt,
+            snap: s.snap_unit,
         }
-        let Some(doc) = cx.session.doc() else {
-            return;
-        };
-        let settings = cx.session.settings();
-        self.center = Some(Center {
-            x: ev.x,
-            y: ev.y,
-            x1: ev.x,
-            y1: ev.y,
-            layer_id: doc.active_layer_id.clone(),
-            primary: settings.primary_color,
-            secondary: settings.secondary_color,
-            inner_radius: self.inner_radius,
-            edge_mode: self.edge_mode,
-        });
-        self.canvas = Some((doc.canvas.width_px, doc.canvas.height_px));
-        cx.request_render();
     }
 
-    fn pointer_move(&mut self, ev: &ToolEvent, cx: &mut ToolCx) {
-        let Some(center) = self.center.as_mut() else {
+    pub(super) fn resize_to(&mut self, p: Pt, flags: DragFlags, shift: bool, cx: &mut ToolCx) {
+        let Some(Op::Resize { handle, orig }) = self.op.as_ref() else {
             return;
         };
-        center.x1 = ev.x;
-        center.y1 = ev.y;
-        cx.request_render();
-    }
-
-    fn pointer_up(&mut self, ev: &ToolEvent, cx: &mut ToolCx) {
-        let Some(center) = self.center.take() else {
-            return;
-        };
+        let geom = resize_geom(ShapeKind::Rect, &orig.geom, handle, None, p, flags, shift);
+        if let Some(pending) = self.pending.as_mut() {
+            pending.geom = geom;
+        }
         self.preview.borrow_mut().take();
         cx.request_render();
-        let radius = Self::up_radius(&center, ev);
+    }
+
+    /// Discard everything (document replacement, Delete, tool reset).
+    pub fn discard(&mut self, cx: &mut ToolCx) {
+        self.center = None;
+        self.pending = None;
+        self.op = None;
+        self.mode = Mode::Idle;
+        self.preview.borrow_mut().take();
+        cx.request_render();
+    }
+
+    pub(super) fn cancel_operation(&mut self, cx: &mut ToolCx) {
+        match self.mode {
+            Mode::Drawing => {
+                self.center = None;
+                self.mode = if self.pending.is_some() {
+                    Mode::Pending
+                } else {
+                    Mode::Idle
+                };
+            }
+            Mode::Resizing | Mode::Moving => {
+                if let Some(op) = self.op.take() {
+                    let orig = match op {
+                        Op::Resize { orig, .. } | Op::Move { orig, .. } => orig,
+                    };
+                    self.pending = Some(orig);
+                    self.mode = Mode::Pending;
+                }
+            }
+            _ => {}
+        }
+        self.preview.borrow_mut().take();
+        cx.request_render();
+    }
+
+    /// Bake the pending gradient as one history entry.
+    pub fn commit(&mut self, cx: &mut ToolCx) -> EngineResult<bool> {
+        let Some(pending) = self.pending.clone() else {
+            self.mode = Mode::Idle;
+            return Ok(false);
+        };
+        let Some((cx_i, cy_i, radius)) = circle_of(&pending.geom) else {
+            self.discard(cx);
+            return Ok(false);
+        };
         if radius < 1.0 {
-            return;
+            self.discard(cx);
+            return Ok(false);
         }
-        let Some(doc) = cx.session.doc() else {
-            return;
+        let Some((cw, ch)) = self.canvas.or_else(|| {
+            cx.session
+                .doc()
+                .map(|d| (d.canvas.width_px, d.canvas.height_px))
+        }) else {
+            return Ok(false);
         };
-        let (w, h) = (doc.canvas.width_px as usize, doc.canvas.height_px as usize);
-        let layer_id = center.layer_id.clone();
-        let gradient = match Self::gradient_for(&center, radius, w, h) {
-            Ok(g) => g,
-            Err(e) => {
-                cx.report(e);
-                return;
-            }
-        };
-        let mask = match radial_gradient_mask(&gradient) {
-            Ok(m) => m,
-            Err(e) => {
-                cx.report(e);
-                return;
-            }
-        };
-        if cx
+        let (w, h) = (cw as usize, ch as usize);
+        let label = "방사형 그라디언트";
+        let gradient = Self::gradient_for(
+            f64::from(cx_i),
+            f64::from(cy_i),
+            radius,
+            &pending.primary,
+            &pending.secondary,
+            self.inner_radius,
+            self.edge_mode,
+            w,
+            h,
+        )?;
+        let mask = radial_gradient_mask(&gradient)?;
+        if let Err(e) = cx
             .session
-            .stroke_begin(EditOptions::on_layer(&layer_id).labeled("방사형 그라디언트"))
-            .is_err()
+            .stroke_begin(EditOptions::on_layer(&pending.layer_id).labeled(label))
         {
-            // Locked/hidden/gone: the engine already emitted the status, and
-            // the JS threw here instead of painting.
-            return;
+            if matches!(e.code, "LAYER_LOCKED" | "LAYER_HIDDEN" | "LAYER_NOT_FOUND") {
+                self.discard(cx);
+                return Ok(false);
+            }
+            return Err(e);
         }
-        let _ = cx.session.stroke_with(|wr| {
+        let result = cx.session.stroke_with(|wr| {
             for (i, p) in mask.data.iter().enumerate() {
                 if *p != 0 {
                     wr.set((i % w) as u32, (i / w) as u32, *p);
                 }
             }
         });
-        // Commit failure (layer deleted mid-drag) must not break input.
-        let _ = cx.session.stroke_commit(Some("방사형 그라디언트"));
-    }
-
-    fn cancel(&mut self, cx: &mut ToolCx) {
-        self.center = None;
+        if let Err(e) = result {
+            cx.session.stroke_cancel();
+            return Err(e);
+        }
+        cx.session.stroke_commit(Some(label))?;
+        self.pending = None;
+        self.op = None;
+        self.mode = Mode::Idle;
         self.preview.borrow_mut().take();
         cx.request_render();
+        Ok(true)
     }
+}
 
-    fn deactivate(&mut self, cx: &mut ToolCx) {
-        self.cancel(cx);
-    }
-
-    fn overlay(&self, info: &OverlayInfo, out: &mut Vec<OverlayOp>) {
-        let Some(center) = self.center.as_ref() else {
-            return;
-        };
-        let radius = Self::drag_radius(center);
-        if radius < 1.0 {
-            return;
-        }
-        let Some((cw, ch)) = self.canvas else {
-            return;
-        };
-        let key = PreviewKey {
-            x: center.x,
-            y: center.y,
-            x1: center.x1,
-            y1: center.y1,
-            inner_radius: center.inner_radius.to_bits(),
-            edge_solid: center.edge_mode == EdgeMode::Solid,
-            primary: center.primary.clone(),
-            secondary: center.secondary.clone(),
-        };
-        let cached = self
-            .preview
-            .borrow()
-            .as_ref()
-            .and_then(|(old_key, op)| (*old_key == key).then(|| op.clone()));
-        if let Some(op) = cached {
-            out.push(op);
-        } else {
-            let op = Self::gradient_for(center, radius, cw as usize, ch as usize)
-                .ok()
-                .and_then(|g| radial_gradient_mask(&g).ok())
-                .and_then(|m| blit_preview(m.w, m.h, &m.data));
-            if let Some(op) = op {
-                out.push(op.clone());
-                *self.preview.borrow_mut() = Some((key, op));
-            }
-        }
-        // The dashed radius ring: `setLineDash([4,3])` verbatim (no dpr
-        // factor) and `rgba(255,255,255,0.9)` ≈ 230, like the JS.
-        let dev = canvas_to_screen(info.view, f64::from(center.x), f64::from(center.y));
-        out.push(OverlayOp::Circle {
-            cx: dev.x * info.dpr,
-            cy: dev.y * info.dpr,
-            r: radius * info.view.zoom() * info.dpr,
-            rgba: [255, 255, 255, 230],
-            width: 1.0,
-            dash: Some((4.0, 3.0)),
-        });
+impl Default for GradientTool {
+    fn default() -> Self {
+        Self::new()
     }
 }

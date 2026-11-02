@@ -21,7 +21,10 @@ pub const PEN_DEFAULT: u32 = 1;
 pub const MAX_LAYERS: usize = 64;
 pub const UNDO_MAX_STEPS: usize = 200;
 pub const UNDO_MAX_BYTES: usize = 96 * 1024 * 1024;
-pub const SCHEMA_VERSION: &str = "2.0.0";
+pub const SCHEMA_VERSION: &str = "2.1.0";
+/// Schema versions this build can read (oldest → newest). M0-3 migration
+/// harness: `migrate_document` accepts these and rewrites to `SCHEMA_VERSION`.
+pub const READABLE_SCHEMA_VERSIONS: &[&str] = &["2.0.0", "2.1.0"];
 
 /// Zoom ladder = CSS px per canvas px, 12 rungs, frozen.
 pub const ZOOM_LEVELS: [f64; 12] = [
@@ -131,7 +134,7 @@ mod tests {
         assert_eq!(MAX_LAYERS, 64);
         assert_eq!(UNDO_MAX_STEPS, 200);
         assert_eq!(UNDO_MAX_BYTES, 96 * 1024 * 1024);
-        assert_eq!(SCHEMA_VERSION, "2.0.0");
+        assert_eq!(SCHEMA_VERSION, "2.1.0");
     }
 
     #[test]

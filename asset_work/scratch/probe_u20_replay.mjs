@@ -1,10 +1,10 @@
 // Phase-1 proof: replay U20 sword albedo_layers through the UI ShapeTools
 // (polygon placing, line/rect drags) and compare against the recipe renderer.
-import { Session } from "../../src/features/document/session.js";
-import { ShapeTool } from "../../src/features/shape/shape.js";
-import { renderTile } from "../../tools/recipe/render_tile.js";
-import { parseColor, resolveColorToken } from "../../tools/recipe/color_tokens.js";
-import { toHex } from "../../src/core/pixel.js";
+import { Session } from "../../web/src/features/document/session.js";
+import { ShapeTool } from "../../web/src/features/shape/shape.js";
+import { renderTile } from "../../web/tools/recipe/render_tile.js";
+import { parseColor, resolveColorToken } from "../../web/tools/recipe/color_tokens.js";
+import { toHex } from "../../web/src/core/pixel.js";
 import { readFileSync } from "node:fs";
 
 const recipe = JSON.parse(readFileSync("asset_work/target/assetdb/entity/weapon/weapon_sword.json", "utf-8"));

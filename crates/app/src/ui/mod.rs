@@ -4,7 +4,9 @@
 //! dialogs, panels, and the shared components (toast, tooltip, collapsible).
 //! The engine (`pixel-engine`) remains pure and knows nothing about egui.
 
+pub mod action_router;
 pub mod actions;
+pub mod atlas;
 pub mod autosave;
 pub mod dialogs;
 pub mod juice;
@@ -48,6 +50,10 @@ pub struct MenubarState {
     pub file_menu_open: bool,
     pub edit_menu_open: bool,
     pub view_menu_open: bool,
+    /// One flag per top-level menu block: File, Edit, View, Layer, Help.
+    /// A detached block leaves a same-sized socket in the bar, so the rest of
+    /// the menubar never reflows.
+    pub detached: [bool; 5],
     pub actions: ActionMap,
 }
 
@@ -119,6 +125,7 @@ pub fn render_ui(
 
     // Full-width bars must be declared before side panels consume horizontal space.
     egui::Panel::top("optionbar_panel")
+        .exact_size(44.0)
         .frame(pad(8.0, 4.0))
         .show(ui, |ui| {
             optionbar::show(ui, ui_state, app_state);
@@ -196,6 +203,7 @@ mod tests {
         assert!(state.toasts.is_empty());
         assert!(state.tooltip.is_none());
         assert!(!state.menubar.file_menu_open);
+        assert_eq!(state.menubar.detached, [false; 5]);
     }
 
     #[test]

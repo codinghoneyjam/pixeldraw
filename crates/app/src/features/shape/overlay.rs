@@ -64,6 +64,7 @@ fn preview(tool: &ShapeTool) -> Option<(ShapeKind, PendingGeom, String, u32, Fil
                     p1: None,
                     radius: 0,
                     points: trail,
+                    preset: None,
                 };
                 return Some((
                     ShapeKind::Polygon,
@@ -80,6 +81,7 @@ fn preview(tool: &ShapeTool) -> Option<(ShapeKind, PendingGeom, String, u32, Fil
                     p1: Some(hov),
                     radius: 0,
                     points: vec![],
+                    preset: None,
                 };
                 return Some((
                     ShapeKind::Line,
@@ -96,6 +98,7 @@ fn preview(tool: &ShapeTool) -> Option<(ShapeKind, PendingGeom, String, u32, Fil
                     p1: None,
                     radius: 0,
                     points: placed.clone(),
+                    preset: None,
                 };
                 return Some((
                     ShapeKind::Polygon,
@@ -165,6 +168,38 @@ pub(super) fn shape_overlay(tool: &ShapeTool, info: &OverlayInfo, out: &mut Vec<
     let Some([bx, by, bw, bh]) = frame_box(spec_kind, &geom) else {
         return;
     };
+    draw_frame_and_handles(spec_kind, &geom, [bx, by, bw, bh], info, out, true);
+}
+
+/// Shared frame/handle painter for the pending-geometry tools (arc, gradient,
+/// text). Text passes `handles = false` because it only translates.
+pub(crate) fn boxed_frame_overlay(
+    geom: &PendingGeom,
+    info: &OverlayInfo,
+    out: &mut Vec<OverlayOp>,
+    handles: bool,
+) {
+    let Some(b) = geom.bbox else {
+        return;
+    };
+    draw_frame_and_handles(
+        ShapeKind::Rect,
+        geom,
+        [b.x, b.y, b.w, b.h],
+        info,
+        out,
+        handles,
+    );
+}
+
+fn draw_frame_and_handles(
+    spec_kind: ShapeKind,
+    geom: &PendingGeom,
+    [bx, by, bw, bh]: [i32; 4],
+    info: &OverlayInfo,
+    out: &mut Vec<OverlayOp>,
+    show_handles: bool,
+) {
     let dpr = info.dpr;
     let dev = |x: i32, y: i32| {
         let p = canvas_to_screen(info.view, x as f64, y as f64);
@@ -185,10 +220,13 @@ pub(super) fn shape_overlay(tool: &ShapeTool, info: &OverlayInfo, out: &mut Vec<
         dash: Some((4.0 * dpr, 3.0 * dpr)),
         difference: false,
     });
+    if !show_handles {
+        return;
+    }
     // Handles follow the spec kind: a placing line previews legs, not boxes.
     // Mid-edge handles land on x.5 canvas points; the float mapping keeps
     let hs = 8.0 * dpr;
-    for h in layout_handles(spec_kind, &geom) {
+    for h in layout_handles(spec_kind, geom) {
         let (hx, hy) = devf(h.x, h.y);
         out.push(OverlayOp::FillRect {
             x: hx - hs / 2.0,

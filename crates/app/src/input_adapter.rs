@@ -13,7 +13,10 @@ pub struct FrameInput {
     pub down: Vec<RawPointer>,
     pub moves: Vec<RawPointer>,
     pub up: Vec<RawPointer>,
-    pub wheel: Option<WheelFrame>,
+    /// Every raw wheel event in the frame, in arrival order. Keeping the list
+    /// (instead of one coalesced delta) is what makes a fast wheel move the
+    /// zoom ladder at the same rate as the JS per-event handler.
+    pub wheels: Vec<WheelFrame>,
     pub keys: Vec<(KeyEvent, bool)>,
     pub text_focused: bool,
     /// The pointer is off the canvas with no captured gesture: `pointerleave`.
@@ -22,6 +25,7 @@ pub struct FrameInput {
 
 pub struct WheelFrame {
     pub delta_y: f64,
+    pub mode: WheelMode,
     pub shift: bool,
     pub pos: (f64, f64),
 }
@@ -92,7 +96,7 @@ pub fn poll_frame_input(
     let mut down = vec![];
     let mut moves = vec![];
     let mut up = vec![];
-    let mut wheel = None;
+    let mut wheels = vec![];
     let mut keys = vec![];
     let mut leaving = false;
     let text_focused = ctx.egui_wants_keyboard_input();
@@ -138,12 +142,48 @@ pub fn poll_frame_input(
         if let Some(pos) = scoped(HostEvent::Move).map(to_local) {
             moves.push(pos);
         }
-        // egui scroll-up is +y; the JS `deltaY` it replaces runs the other way.
-        let scroll = i.smooth_scroll_delta();
-        if scroll.y != 0.0
-            && let Some(pos) = scoped(HostEvent::Wheel).map(to_local)
-        {
-            wheel = Some(((-scroll.y) as f64, i.modifiers.shift, pos));
+        // egui/JS content movement is +y; the JS `deltaY` the accumulator
+        // expects runs the other way. Read the *raw* events so each wheel notch
+        // reaches the controller separately. `smooth_scroll_delta` deliberately
+        // spreads one notch over several frames, which made fast flicks lag
+        // behind the pointer.
+        if let Some(pos) = scoped(HostEvent::Wheel).map(to_local) {
+            for ev in &i.events {
+                if let egui::Event::MouseWheel {
+                    unit,
+                    delta,
+                    modifiers,
+                    ..
+                } = ev
+                {
+                    let (mode, delta_y) = match unit {
+                        egui::MouseWheelUnit::Point => (WheelMode::Pixel, -f64::from(delta.y)),
+                        egui::MouseWheelUnit::Line => (WheelMode::Line, -f64::from(delta.y)),
+                        egui::MouseWheelUnit::Page => (WheelMode::Page, -f64::from(delta.y)),
+                    };
+                    if delta_y.is_finite() && delta_y != 0.0 {
+                        wheels.push(WheelFrame {
+                            delta_y,
+                            mode,
+                            shift: modifiers.shift,
+                            pos,
+                        });
+                    }
+                }
+            }
+            // Backends that do not expose raw wheel events still get the
+            // smoothed path as a fallback.
+            if wheels.is_empty() {
+                let scroll = i.smooth_scroll_delta();
+                if scroll.y != 0.0 {
+                    wheels.push(WheelFrame {
+                        delta_y: -f64::from(scroll.y),
+                        mode: WheelMode::Pixel,
+                        shift: i.modifiers.shift,
+                        pos,
+                    });
+                }
+            }
         }
         for ev in &i.events {
             if let egui::Event::Key { key, pressed, .. } = ev
@@ -194,11 +234,7 @@ pub fn poll_frame_input(
         down,
         moves,
         up,
-        wheel: wheel.map(|(delta_y, shift, pos)| WheelFrame {
-            delta_y,
-            shift,
-            pos,
-        }),
+        wheels,
         keys,
         text_focused,
         leaving,
@@ -219,11 +255,6 @@ fn translate_key(key: egui::Key) -> Option<(&'static str, &'static str)> {
         egui::Key::ArrowDown => ("ArrowDown", "ArrowDown"),
         _ => return None,
     })
-}
-
-pub fn wheel_mode() -> WheelMode {
-    // egui reports points; the accumulator's Pixel mode is the match.
-    WheelMode::Pixel
 }
 
 #[cfg(test)]

@@ -103,6 +103,23 @@ fn arrow_keys_nudge_pending() {
     }
 }
 
+/// The option bar reaches the live shape through `Tool::shape_tool_mut`; before
+/// this hook existed the X/Y/W/H fields silently fell back to `0,0,1,1`.
+#[test]
+fn option_bar_hook_sees_the_pending_geometry() {
+    let (mut session, _queue) = session64();
+    let mut tool = rect_tool();
+    drag(&mut tool, &mut session, 10.0, 10.0, 20.0, 12.0);
+    let pending = tool
+        .shape_tool_mut()
+        .expect("shape tools expose themselves to the option bar")
+        .pending_value();
+    match pending {
+        Some(PendingValue::Box { x, y, w, h, .. }) => assert_eq!((x, y, w, h), (10, 10, 11, 3)),
+        other => panic!("option-bar hook sees pending box, got {other:?}"),
+    }
+}
+
 /// `set_pending(None)` discards; a box value installs pending.
 #[test]
 fn set_pending_round_trip() {

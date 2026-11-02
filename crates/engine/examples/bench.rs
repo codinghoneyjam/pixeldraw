@@ -1,4 +1,4 @@
-﻿//! Phase 0.1 mirror — the Rust side of `tools/bench_baseline.mjs`.
+//! Phase 0.1 mirror — the Rust side of `tools/bench_baseline.mjs`.
 //!
 //! Run: `cargo run -p pixel-engine --release --example bench`
 //!
@@ -18,17 +18,19 @@
 //! mutates its own input and the JS file explains why: re-timing an
 //! already-filled canvas would measure the early-out instead of the algorithm.
 
+#[path = "bench/mod.rs"]
+mod bench;
+use bench::{bench_composite, bench_document_to_json, bench_flatten_and_png};
+
 use pixel_engine::chunkstore::{ChunkStore, PixelWriter};
-use pixel_engine::composite::{self, LayerSource, composite_canvas, composite_canvas_serial};
+use pixel_engine::composite::{self, LayerSource};
 use pixel_engine::constants::{CHUNK_LEN, CHUNK_PX};
-use pixel_engine::io::export::{FlattenOptions, flatten_to_rgba, flatten_to_rgba_serial};
+use pixel_engine::io::export::{FlattenOptions, flatten_to_rgba};
 use pixel_engine::io::png::encode_png;
-use pixel_engine::io::serialize::document_to_json;
 use pixel_engine::kernels::flood_fill_scanline;
 use pixel_engine::model::{Document, NewDocumentOptions, Session};
 use pixel_engine::raster::brush::{stroke_point, stroke_segment};
 use pixel_engine::raster::shape_raster::{FillMode, ShapeKind, ShapeSpec, apply_shape};
-use rayon::prelude::*;
 use std::time::Instant;
 
 // ---------------------------------------------------------------------------
@@ -347,151 +349,6 @@ fn bench_shapes() {
     let _ = w.finish();
 }
 
-fn bench_composite() {
-    let doc = make_busy_doc();
-    let layers = doc.sources();
-    let cx_total = (WIDTH / CHUNK_PX) as usize;
-    let cy_total = (HEIGHT / CHUNK_PX) as usize;
-    let total = cx_total * cy_total;
-    let mut out = vec![0u8; CHUNK_LEN];
-    time_it(
-        &format!("composite all {total} chunks x {LAYERS} layers"),
-        RUNS,
-        || {
-            for cy in 0..cy_total {
-                for cx in 0..cx_total {
-                    composite::composite_chunk(&layers, cx as u32, cy as u32, &mut out)
-                        .expect("valid chunk coords");
-                }
-            }
-        },
-    );
-
-    // Same chunks, same `composite_chunk`, different scheduling: chunk rows are
-    // independent, so the rows go to rayon. This row exists so the cost of the
-    time_it(
-        &format!("composite all {total} chunks x {LAYERS} layers (rayon)"),
-        RUNS,
-        || {
-            (0..cy_total).into_par_iter().for_each(|cy| {
-                let mut out = vec![0u8; CHUNK_LEN];
-                for cx in 0..cx_total {
-                    composite::composite_chunk(&layers, cx as u32, cy as u32, &mut out)
-                        .expect("valid chunk coords");
-                }
-            });
-        },
-    );
-
-    // The canvas-shaped entry point, which also scatters each chunk into the
-    // wide RGBA buffer. Kept separate because it does strictly more work than
-    time_it(
-        &format!("compositeCanvas {WIDTH}x{HEIGHT} (rayon)"),
-        RUNS,
-        || {
-            let buf = composite_canvas(&layers, WIDTH, HEIGHT);
-            assert_eq!(buf.len(), (WIDTH * HEIGHT * 4) as usize);
-        },
-    );
-    time_it(
-        &format!("compositeCanvas {WIDTH}x{HEIGHT} (1 thread)"),
-        RUNS,
-        || {
-            let buf = composite_canvas_serial(&layers, WIDTH, HEIGHT);
-            assert_eq!(buf.len(), (WIDTH * HEIGHT * 4) as usize);
-        },
-    );
-}
-
-fn bench_flatten_and_png() {
-    let doc = make_busy_doc();
-    let layers = doc.sources();
-    let expected = (WIDTH * HEIGHT * 4) as usize;
-
-    time_it("flattenToRgba 2048x1088", RUNS, || {
-        let rgba = flatten_to_rgba(&layers, WIDTH, HEIGHT, FlattenOptions::default());
-        assert_eq!(rgba.len(), expected);
-    });
-
-    // The single-threaded twin, so the parallelism is readable on its own.
-    time_it("flattenToRgba 2048x1088 (1 thread)", RUNS, || {
-        let rgba = flatten_to_rgba_serial(&layers, WIDTH, HEIGHT, FlattenOptions::default());
-        assert_eq!(rgba.len(), expected);
-    });
-
-    // The JS `exportPngBytes` includes the flatten, so this one does too.
-    time_it("exportPngBytes 2048x1088", PNG_RUNS, || {
-        let rgba = flatten_to_rgba(&layers, WIDTH, HEIGHT, FlattenOptions::default());
-        assert_eq!(rgba.len(), expected);
-        let bytes = encode_png(&rgba, WIDTH, HEIGHT).expect("valid png");
-        // Cheap sanity guard, the same spirit as the JS `rgba.length` check.
-        assert_eq!(&bytes[..8], b"\x89PNG\r\n\x1a\n");
-    });
-}
-
-/// Phase 1.13 save path. The JS row times `documentToJson(doc)` alone (the
-/// value build), so the first row does the same. The stringify rows answer this
-/// port's open question (`docs/port_status_report.md` PERF-3): the file is
-/// currently written with `serde_json::to_vec_pretty` and compact may be the
-/// better trade.
-fn bench_document_to_json() {
-    let doc = make_busy_document();
-    let mut last: Option<serde_json::Value> = None;
-    time_it("documentToJson (save)", PNG_RUNS, || {
-        last = Some(document_to_json(&doc).expect("valid document"));
-    });
-    let value = last.expect("timed at least once");
-
-    // The strings are built once for the size row, then re-built under the
-    // timer — the same split the JS bench uses for its `json size` line.
-    let compact = serde_json::to_vec(&value).expect("compact encode");
-    let pretty = serde_json::to_vec_pretty(&value).expect("pretty encode");
-    let encoded_chunks: usize = value["layers"]
-        .as_array()
-        .map(|layers| {
-            layers
-                .iter()
-                .map(|l| l["raster"]["chunks"].as_array().map_or(0, Vec::len))
-                .sum()
-        })
-        .unwrap_or(0);
-    println!(
-        "{:<38} | {:>6} chunks encoded ({LAYERS} layers)",
-        "  -> source", encoded_chunks
-    );
-    println!(
-        "{:<38} | {:>6} KB compact / {:>6} KB pretty",
-        "  -> json size",
-        compact.len() / 1024,
-        pretty.len() / 1024
-    );
-    time_it("-> to_vec (compact)", PNG_RUNS, || {
-        let bytes = serde_json::to_vec(&value).expect("compact encode");
-        assert!(!bytes.is_empty());
-    });
-    time_it("-> to_vec_pretty", PNG_RUNS, || {
-        let bytes = serde_json::to_vec_pretty(&value).expect("pretty encode");
-        assert!(!bytes.is_empty());
-    });
-
-    // Same spirit as the JS `text.length` guard: a serializer that silently
-    // drops layers must not read as a fast one.
-    assert!(
-        value["layers"]
-            .as_array()
-            .is_some_and(|layers| layers.len() == LAYERS),
-        "all layers must serialize"
-    );
-}
-
-// ---------------------------------------------------------------------------
-// Warm-up + main
-
-/// One cheap pass over every measured path so the first sample is not the
-/// sample that pays for cold caches and an empty footprint cache. The pen=64
-/// stroke is deliberately shortened to two segments — it is the same code path,
-/// which is what needs warming, and a full 20-segment warm-up would cost more
-/// than the measurement itself.
 fn warm_up() {
     let mut store = ChunkStore::new(WIDTH, HEIGHT).expect("valid canvas size");
     {

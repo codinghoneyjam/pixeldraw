@@ -5,7 +5,7 @@ use serde_json::Value;
 fn rust_recipe_renderer_matches_all_legacy_cases() {
     let root = pixel_engine::fixtures::repo_root();
     let manifest: Value =
-        serde_json::from_str(include_str!("../../../tools/recipe_cases.json")).unwrap();
+        serde_json::from_str(include_str!("../../../web/tools/recipe_cases.json")).unwrap();
     let cases = manifest["cases"]
         .as_array()
         .unwrap()

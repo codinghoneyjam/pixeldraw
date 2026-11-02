@@ -9,9 +9,13 @@ pub enum Action {
     // File
     NewDocument,
     OpenFile,
+    ImportPng,
+    ImportLayer,
     Save,
     SaveAs,
     ExportPng,
+    ExportLayer,
+    Atlas,
     CloseDocument,
 
     // Edit
@@ -124,6 +128,10 @@ impl ActionMap {
             "PNG 내보내기",
             Shortcut::new(E, Modifiers::COMMAND | Modifiers::SHIFT, ExportPng),
         );
+        self.labels.insert(ImportPng, "PNG 가져오기");
+        self.labels.insert(ImportLayer, "레이어 가져오기…");
+        self.labels.insert(ExportLayer, "레이어 저장…");
+        self.labels.insert(Atlas, "아틀라스 내보내기…");
         self.add(
             CloseDocument,
             "닫기",

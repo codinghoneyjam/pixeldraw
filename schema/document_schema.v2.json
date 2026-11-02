@@ -18,6 +18,36 @@
       "minItems": 1,
       "maxItems": 64,
       "items": { "$ref": "layer_schema.v2.json#/$defs/layer" }
+    },
+    "atlas": {
+      "type": "object",
+      "description": "Optional authoring layout for atlas PNG export. Omitted by documents that have never saved an atlas layout.",
+      "additionalProperties": false,
+      "required": ["mode", "columns", "cell_w", "cell_h", "preset_all", "slots"],
+      "properties": {
+        "mode": { "enum": ["layers", "composed"] },
+        "columns": { "type": "integer", "minimum": 1, "maximum": 16 },
+        "rows": { "type": "integer", "minimum": 1, "maximum": 16, "description": "Optional fixed row count; omitted rows grow to fit the cells." },
+        "cell_w": { "type": "integer", "minimum": 1 },
+        "cell_h": { "type": "integer", "minimum": 1 },
+        "margin": { "type": "integer", "minimum": 0, "maximum": 4096, "default": 0 },
+        "padding": { "type": "integer", "minimum": 0, "maximum": 4096, "default": 0 },
+        "preset_all": { "type": "boolean" },
+        "slots": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "layer_ids", "merged"],
+            "properties": {
+              "name": { "type": "string" },
+              "layer_ids": { "type": "array", "maxItems": 16, "items": { "type": "string", "minLength": 1 } },
+              "merged": { "type": "boolean" }
+            }
+          }
+        }
+      }
     }
   }
 }

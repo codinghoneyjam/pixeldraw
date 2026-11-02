@@ -7,7 +7,7 @@
 mod commit;
 mod geom;
 mod keys;
-mod overlay;
+pub(crate) mod overlay;
 mod pending;
 mod state;
 
@@ -17,7 +17,10 @@ pub mod optionbar;
 mod tests;
 
 pub use commit::{commit_spec, paint_preview};
-pub use geom::{Bbox, DragFlags, PendingGeom, Pt};
+pub use geom::{
+    Bbox, DragFlags, PendingGeom, Pt, ShapePreset, drag_geom, hit_handle, inside_shape,
+    layout_handles, move_geom, preset_points, resize_geom,
+};
 pub use pending::PendingValue;
 pub use state::{PendingShape, ShapeTool};
 

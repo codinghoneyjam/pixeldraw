@@ -32,6 +32,7 @@ pub fn drag_geom(
             p1: Some((x, y)),
             radius: 0,
             points: vec![],
+            preset: None,
         };
     }
     let mut b = drag_bbox(
@@ -54,6 +55,7 @@ pub fn drag_geom(
         p1: None,
         radius: shape_radius,
         points: vec![],
+        preset: None,
     }
 }
 

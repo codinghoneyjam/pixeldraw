@@ -14,7 +14,7 @@ TARGET_ROOT: Path = TOOL_ROOT / "asset_work" / "target"  # recipes + legacy PNGs
 DT = TOOL_ROOT
 
 JS = r"""
-import { polygonMask, polygonOutlineMask, polygonBBox } from "./src/core/raster/polygon.js";
+import { polygonMask, polygonOutlineMask, polygonBBox } from "./web/src/core/raster/polygon.js";
 
 const out = {};
 

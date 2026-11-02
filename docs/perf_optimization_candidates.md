@@ -24,7 +24,7 @@ rolled back.
 | composite (rayon) | - | 15.810 ms | 13.461 ms |
 | flattenToRgba | 1810.042 ms | 14.934 ms | 13.996 ms |
 | exportPngBytes | 1877.174 ms | 32.947 ms | - |
-| documentToJson (save) | 1702.710 ms | omitted | - |
+| documentToJson (save) | 1702.710 ms | 153.558 ms (2026-10-20) | - |
 
 ## Current frame-loop measurements (64 layers)
 
@@ -36,6 +36,20 @@ rolled back.
 | texture upload copy | 0.269 ms |
 
 The real `render_frame` path borrows `&Document`; it does not clone the document.
+
+## Applied 2026-10-20 — save path per-thread reuse
+
+`documentToJson (save)` on the busy 2048×1088 · 64-layer document (37,504 chunks):
+
+| Variant | median | min | max | JSON size |
+|---|---:|---:|---:|---:|
+| before (re-measured) | 481–539 ms | 301.884 | 607.346 | 7455 KB |
+| per-thread `Compress` + borrowed chunks | **153.558 ms** | **150.790** | **160.589** | **7455 KB** |
+
+The encoded PNG bytes are identical to `encode_png` (pinned by
+`reusable_chunk_encoder_is_byte_identical_to_encode_png`). The remaining
+1.28× gap to the 120 ms target is per-chunk `Vec`/base64/`Value` allocation, not
+deflate settings. See `docs/perf_js_vs_rust.md` §13-5.
 
 ## Rollback policy
 

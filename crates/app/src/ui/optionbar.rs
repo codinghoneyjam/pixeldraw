@@ -14,43 +14,51 @@ pub fn show(ui: &mut Ui, ui_state: &mut UiState, app: &mut AppState) {
     let tool = ui_state.toolbar.active_tool.clone();
 
     egui::Frame::new()
-        .inner_margin(Vec2::new(12.0, 6.0))
+        .inner_margin(Vec2::new(12.0, 4.0))
         .show(ui, |ui| {
-            ui.horizontal_wrapped(|ui| {
-                ui.spacing_mut().item_spacing = Vec2::new(12.0, 8.0);
-                // Split the borrow: the option block needs `juice_clicks` and
-                // the pen size at once, and both are separate `UiState` fields.
-                let UiState {
-                    optionbar,
-                    juice_clicks,
-                    ..
-                } = ui_state;
+            ui.set_height(24.0);
+            egui::ScrollArea::horizontal()
+                .id_salt("optionbar_scroll")
+                .auto_shrink([false, false])
+                .show(ui, |ui| {
+                    ui.horizontal(|ui| {
+                        ui.spacing_mut().item_spacing = Vec2::new(10.0, 6.0);
+                        // Split the borrow: the option block needs `juice_clicks` and
+                        // the pen size at once, and both are separate `UiState` fields.
+                        let UiState {
+                            optionbar,
+                            juice_clicks,
+                            ..
+                        } = ui_state;
 
-                match tool.as_str() {
-                    "pen" | "eraser" => {
-                        let options =
-                            optionbar
-                                .current_tool_options
-                                .get_or_insert_with(|| ToolOptions {
-                                    size: Some(app.session.settings().pen_size),
-                                });
-                        pen::optionbar::pen_options(ui, juice_clicks, options, app);
-                    }
-                    "line" | "rect" | "rrect" | "ellipse" | "polygon" => {
-                        shape::optionbar::shape_options(ui, juice_clicks, app, &tool);
-                    }
-                    "arc" | "chord" => {
-                        arc::optionbar::arc_options(ui, juice_clicks, app, &tool);
-                    }
-                    "radial_gradient" => {
-                        gradient::optionbar::gradient_options(ui, juice_clicks, app);
-                    }
-                    "text" => text::optionbar::text_options(ui, app),
-                    // fill / eyedropper / hand own no controls — the JS bar is
-                    // empty for them too, so do not draw a placeholder.
-                    _ => {}
-                }
-            });
+                        match tool.as_str() {
+                            "pen" | "eraser" => {
+                                let options =
+                                    optionbar.current_tool_options.get_or_insert_with(|| {
+                                        ToolOptions {
+                                            size: Some(app.session.settings().pen_size),
+                                        }
+                                    });
+                                pen::optionbar::pen_options(ui, juice_clicks, options, app);
+                            }
+                            "line" | "rect" | "rrect" | "ellipse" | "polygon" => {
+                                shape::optionbar::shape_options(ui, juice_clicks, app, &tool);
+                            }
+                            "arc" | "chord" => {
+                                arc::optionbar::arc_options(ui, juice_clicks, app, &tool);
+                            }
+                            "radial_gradient" => {
+                                gradient::optionbar::gradient_options(ui, juice_clicks, app);
+                            }
+                            "text" => {
+                                text::optionbar::text_options(ui, juice_clicks, app);
+                            }
+                            // fill / eyedropper / hand own no controls — the JS bar is
+                            // empty for them too, so do not draw a placeholder.
+                            _ => {}
+                        }
+                    });
+                });
         });
 }
 

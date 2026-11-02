@@ -17,5 +17,8 @@ mod encode;
 #[cfg(test)]
 mod tests;
 
-pub use decode::{PngImage, decode_png};
-pub use encode::encode_png;
+pub use decode::{PngImage, decode_png, decode_png_large};
+pub(crate) use encode::encode_png_chunk;
+pub use encode::{
+    encode_png, encode_png_large, encode_png_large_with_chunks, encode_png_with_chunks,
+};

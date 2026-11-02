@@ -5,7 +5,7 @@
 //! fixture immediately — before an engine port silently grades itself against
 //! nothing.
 
-use pixel_engine::fixtures::{case_count, golden, group, repo_path};
+use pixel_engine::fixtures::{case_count, golden, group, repo_path, web_path};
 
 // <META - ROLE : group sizes as baked on 2026-10-10; bump only with the fixture | L8-24>
 #[test]
@@ -75,9 +75,9 @@ fn every_case_has_rows_or_data() {
 // <META - ROLE : the JS oracle manifest must still match, or parity means nothing | L48-58>
 #[test]
 fn oracle_manifest_is_present_and_current() {
-    let path = repo_path("tools/oracle-manifest.json");
+    let path = web_path("tools/oracle-manifest.json");
     let text = std::fs::read_to_string(&path)
-        .expect("tools/oracle-manifest.json — run `node tools/oracle_manifest.mjs`");
+        .expect("web/tools/oracle-manifest.json — run `node tools/oracle_manifest.mjs` from web/");
     let manifest: serde_json::Value = serde_json::from_str(&text).expect("manifest parses");
     let files = manifest["files"].as_object().expect("files object");
     assert!(

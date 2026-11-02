@@ -73,6 +73,7 @@ impl Document {
             layers,
             active_layer_id,
             ids,
+            atlas: None,
         })
     }
 

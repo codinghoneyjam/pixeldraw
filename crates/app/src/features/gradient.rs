@@ -3,7 +3,9 @@
 //! Facade: tool state in `tool`, packed-mask preview blit in `preview`, and
 //! the option-bar block in `optionbar`.
 
+mod api;
 mod preview;
+mod state;
 mod tool;
 
 pub mod optionbar;
@@ -11,4 +13,5 @@ pub mod optionbar;
 #[cfg(test)]
 mod tests;
 
-pub use tool::{EdgeMode, GradientTool};
+pub use state::EdgeMode;
+pub use state::GradientTool;

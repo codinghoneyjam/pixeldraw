@@ -1,7 +1,7 @@
 //! Shared fixture harness — the Rust side of the parity gate.
 //!
-//! The JS tree's golden vectors live in `tests/fixtures/*.json` and were baked by
-//! `tools/gen_fixtures.py` against a PIL oracle. They are loaded through this
+//! The JS tree's golden vectors live in `web/tests/fixtures/*.json` and were baked by
+//! `web/tools/gen_fixtures.py` against a PIL oracle. They are loaded through this
 //! module by **both** the in-crate unit tests and the integration tests, so there
 //! is exactly one reader and a mismatch in either direction fails the build.
 //!
@@ -17,23 +17,27 @@ use std::sync::OnceLock;
 
 static ROOT: OnceLock<PathBuf> = OnceLock::new();
 
-/// Walk up from the crate to the repo root, so this works whether cargo was
+/// Walk up from the crate to the repository root: the directory that holds
+/// `web/` (the JS oracle tree) and `asset_work/`. This works whether cargo was
 /// invoked from the workspace root or from `crates/engine`.
 pub fn repo_root() -> &'static Path {
     ROOT.get_or_init(|| {
         let mut dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         loop {
-            if dir.join("tests/fixtures").is_dir() && dir.join("src/core").is_dir() {
+            if dir.join("web/tests/fixtures").is_dir() && dir.join("web/src/core").is_dir() {
                 return dir;
             }
             if !dir.pop() {
-                panic!("could not locate repo root from CARGO_MANIFEST_DIR");
+                panic!(
+                    "could not locate the repository root (a directory with \
+                     web/tests/fixtures and web/src/core) from CARGO_MANIFEST_DIR"
+                );
             }
         }
     })
 }
 
-/// Path of a repo-relative file.
+/// Path of a repo-relative file (`asset_work/...`, or `web/...`).
 pub fn repo_path(rel: &str) -> PathBuf {
     repo_root().join(rel)
 }
@@ -43,11 +47,22 @@ pub fn repo_file(rel: &str) -> String {
     std::fs::read_to_string(repo_path(rel)).unwrap_or_else(|e| panic!("cannot read {rel}: {e}"))
 }
 
+/// Path of a file under the JS oracle tree (`web/`): `src/`, `tests/`, `tools/`,
+/// `reference/`.
+pub fn web_path(rel: &str) -> PathBuf {
+    repo_root().join("web").join(rel)
+}
+
+/// Read a text file under `web/`.
+pub fn web_file(rel: &str) -> String {
+    std::fs::read_to_string(web_path(rel)).unwrap_or_else(|e| panic!("cannot read web/{rel}: {e}"))
+}
+
 /// Parsed `tests/fixtures/raster_golden.json`.
 pub fn golden() -> &'static serde_json::Value {
     static GOLDEN: OnceLock<serde_json::Value> = OnceLock::new();
     GOLDEN.get_or_init(|| {
-        let text = std::fs::read_to_string(repo_path("tests/fixtures/raster_golden.json"))
+        let text = std::fs::read_to_string(web_path("tests/fixtures/raster_golden.json"))
             .expect("tests/fixtures/raster_golden.json");
         serde_json::from_str(&text).expect("raster_golden.json parses")
     })

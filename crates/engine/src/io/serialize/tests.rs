@@ -58,6 +58,7 @@ fn empty_chunks_are_not_serialized() {
         0
     );
 }
+
 #[test]
 fn bundled_sample_document_loads_and_reemits_as_valid_schema() {
     let source = include_str!("../../../../../schema/sample_document.json");

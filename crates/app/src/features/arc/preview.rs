@@ -12,7 +12,7 @@ use pixel_engine::raster::arc::{Box2, arc_mask, chord_fill_mask, chord_outline_m
 
 use crate::tools::overlay::OverlayOp;
 
-use super::tool::{ArcKind, ChordMode, Draw};
+use super::state::{ArcKind, ChordMode, Draw};
 
 /// `pixel_preview.js`: preview alpha is `Math.round(a * 0.82)`.
 const PREVIEW_ALPHA: f64 = 0.82;
